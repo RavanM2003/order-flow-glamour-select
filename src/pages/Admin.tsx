@@ -1,24 +1,8 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { 
-  Settings, 
-  Users, 
-  Home,
-  ChevronRight, 
-  Calendar, 
-  PieChart,
-  Scissors,
-  Package,
-  Calendar as CalendarIcon,
-  Plus
-} from "lucide-react";
-import { Link } from "react-router-dom";
-import AdminHeader from '@/components/admin/AdminHeader';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import { Plus } from "lucide-react";
+import AdminVerticalNav from '@/components/admin/AdminVerticalNav';
 import DashboardTab from '@/components/admin/DashboardTab';
 import CustomersTab from '@/components/admin/CustomersTab';
 import ServicesTab from '@/components/admin/ServicesTab';
@@ -29,16 +13,38 @@ import StaffTab from '@/components/admin/StaffTab';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [notifications] = useState(5); // Example notifications count
+  
+  const getAddButtonText = () => {
+    switch (activeTab) {
+      case "customers":
+        return "Add Customer";
+      case "services":
+        return "Add Service";
+      case "products":
+        return "Add Product";
+      case "appointments":
+        return "New Appointment";
+      case "staff":
+        return "Add Staff Member";
+      default:
+        return "";
+    }
+  };
+  
+  const showAddButton = ["customers", "services", "products", "appointments", "staff"].includes(activeTab);
   
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <AdminSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+      {/* Vertical Sidebar */}
+      <AdminVerticalNav 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        notifications={notifications} 
+      />
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <AdminHeader />
-        
+      <div className="flex-1 flex flex-col overflow-auto">
         <main className="flex-1 p-6 overflow-auto">
           <div className="mb-6 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-glamour-800">
@@ -51,38 +57,10 @@ const Admin = () => {
               {activeTab === "staff" && "Staff Management"}
             </h1>
             
-            {activeTab === "customers" && (
+            {showAddButton && (
               <Button className="bg-glamour-700 hover:bg-glamour-800">
                 <Plus size={16} className="mr-2" />
-                Add Customer
-              </Button>
-            )}
-            
-            {activeTab === "services" && (
-              <Button className="bg-glamour-700 hover:bg-glamour-800">
-                <Plus size={16} className="mr-2" />
-                Add Service
-              </Button>
-            )}
-            
-            {activeTab === "products" && (
-              <Button className="bg-glamour-700 hover:bg-glamour-800">
-                <Plus size={16} className="mr-2" />
-                Add Product
-              </Button>
-            )}
-            
-            {activeTab === "appointments" && (
-              <Button className="bg-glamour-700 hover:bg-glamour-800">
-                <Plus size={16} className="mr-2" />
-                New Appointment
-              </Button>
-            )}
-            
-            {activeTab === "staff" && (
-              <Button className="bg-glamour-700 hover:bg-glamour-800">
-                <Plus size={16} className="mr-2" />
-                Add Staff Member
+                {getAddButtonText()}
               </Button>
             )}
           </div>

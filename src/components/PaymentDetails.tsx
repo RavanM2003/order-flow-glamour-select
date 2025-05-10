@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useOrder } from '@/context/OrderContext';
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,13 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Banknote, Building, Terminal } from "lucide-react";
+import { CreditCard, Banknote, Building, Terminal, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 // Mock data
 const services = [
@@ -24,11 +31,28 @@ const products = [
   { id: 3, name: "Hair Care Kit", price: 60 }
 ];
 
+// Bank account information
+const bankAccounts = [
+  {
+    bankName: "AzerTurk Bank",
+    accountName: "Glamour Studio LLC",
+    accountNumber: "AZ12 AZRT 1234 5678 9012 3456",
+    swiftCode: "AZRTAZ22"
+  },
+  {
+    bankName: "Kapital Bank",
+    accountName: "Glamour Studio LLC",
+    accountNumber: "AZ45 KAPI 6789 0123 4567 8901",
+    swiftCode: "KAPIAZ22"
+  }
+];
+
 const PaymentDetails = () => {
   const { orderState, completeOrder, goToStep } = useOrder();
   const { toast } = useToast();
-  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [paymentMethod, setPaymentMethod] = useState('cash');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [orderId, setOrderId] = useState("");
 
   // Get selected services details
   const selectedServices = services.filter(service => 
@@ -51,9 +75,20 @@ const PaymentDetails = () => {
     goToStep(2);
   };
 
+  const generateOrderId = () => {
+    const prefix = "GS";
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `${prefix}-${timestamp}-${random}`;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsProcessing(true);
+    
+    // Generate unique order ID
+    const newOrderId = generateOrderId();
+    setOrderId(newOrderId);
     
     // Simulate payment processing
     setTimeout(() => {
@@ -61,7 +96,7 @@ const PaymentDetails = () => {
       completeOrder();
       toast({
         title: "Payment Successful!",
-        description: "Your appointment has been booked successfully.",
+        description: `Your appointment has been booked successfully. Order ID: ${newOrderId}`,
       });
     }, 1500);
   };
@@ -74,7 +109,7 @@ const PaymentDetails = () => {
           
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
-              {/* Order summary - Moved to the top */}
+              {/* Order summary - Kept at the top */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
                 
@@ -126,20 +161,11 @@ const PaymentDetails = () => {
               
               <Separator />
               
-              {/* Payment method selection - Moved to the bottom */}
+              {/* Payment method selection - Reordered */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-                  <div className="flex items-center space-x-3 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
-                    <RadioGroupItem value="card" id="payment-card" />
-                    <Label htmlFor="payment-card" className="cursor-pointer flex-1">
-                      <div className="font-medium flex items-center">
-                        <CreditCard className="mr-2 h-5 w-5" />
-                        Credit/Debit Card
-                      </div>
-                      <div className="text-sm text-gray-500">Pay securely with your card</div>
-                    </Label>
-                  </div>
+                  {/* Cash on Arrival */}
                   <div className="flex items-center space-x-3 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
                     <RadioGroupItem value="cash" id="payment-cash" />
                     <Label htmlFor="payment-cash" className="cursor-pointer flex-1">
@@ -150,6 +176,20 @@ const PaymentDetails = () => {
                       <div className="text-sm text-gray-500">Pay when you arrive for your appointment</div>
                     </Label>
                   </div>
+
+                  {/* POS Terminal */}
+                  <div className="flex items-center space-x-3 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
+                    <RadioGroupItem value="pos" id="payment-pos" />
+                    <Label htmlFor="payment-pos" className="cursor-pointer flex-1">
+                      <div className="font-medium flex items-center">
+                        <Terminal className="mr-2 h-5 w-5" />
+                        POS Terminal
+                      </div>
+                      <div className="text-sm text-gray-500">Pay using POS terminal on arrival</div>
+                    </Label>
+                  </div>
+
+                  {/* Bank Transfer */}
                   <div className="flex items-center space-x-3 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
                     <RadioGroupItem value="bank" id="payment-bank" />
                     <Label htmlFor="payment-bank" className="cursor-pointer flex-1">
@@ -160,14 +200,43 @@ const PaymentDetails = () => {
                       <div className="text-sm text-gray-500">Pay via bank transfer</div>
                     </Label>
                   </div>
+                  
+                  {/* Bank account details accordion */}
+                  {paymentMethod === 'bank' && (
+                    <div className="pl-8 pr-4">
+                      <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="bank-details">
+                          <AccordionTrigger className="text-glamour-700">
+                            View Bank Account Details
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-4 pt-2">
+                              {bankAccounts.map((account, index) => (
+                                <div key={index} className="bg-gray-50 p-3 rounded-md">
+                                  <h4 className="font-semibold text-sm">{account.bankName}</h4>
+                                  <div className="text-sm space-y-1 mt-2">
+                                    <p>Account Name: {account.accountName}</p>
+                                    <p>Account Number: {account.accountNumber}</p>
+                                    <p>Swift Code: {account.swiftCode}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </div>
+                  )}
+
+                  {/* Credit/Debit Card */}
                   <div className="flex items-center space-x-3 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
-                    <RadioGroupItem value="pos" id="payment-pos" />
-                    <Label htmlFor="payment-pos" className="cursor-pointer flex-1">
+                    <RadioGroupItem value="card" id="payment-card" />
+                    <Label htmlFor="payment-card" className="cursor-pointer flex-1">
                       <div className="font-medium flex items-center">
-                        <Terminal className="mr-2 h-5 w-5" />
-                        POS Terminal
+                        <CreditCard className="mr-2 h-5 w-5" />
+                        Credit/Debit Card
                       </div>
-                      <div className="text-sm text-gray-500">Pay using POS terminal on arrival</div>
+                      <div className="text-sm text-gray-500">Pay securely with your card</div>
                     </Label>
                   </div>
                 </RadioGroup>
@@ -220,6 +289,18 @@ const PaymentDetails = () => {
                   {isProcessing ? 'Processing...' : 'Complete Payment'}
                 </Button>
               </div>
+
+              {/* Display Order ID after successful payment */}
+              {orderId && (
+                <div className="p-4 bg-green-50 border border-green-200 rounded-md mt-4">
+                  <p className="text-center text-green-800 font-medium">
+                    Your order has been confirmed!
+                  </p>
+                  <p className="text-center text-green-600">
+                    Order ID: <span className="font-mono font-bold">{orderId}</span>
+                  </p>
+                </div>
+              )}
             </div>
           </form>
         </CardContent>

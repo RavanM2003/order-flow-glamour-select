@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, Scissors } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const services = [
   { id: 1, name: "Facial Treatment", price: 150, duration: "60 min", description: "Deep cleansing facial with premium products", relatedProducts: [1, 2] },
@@ -115,14 +116,26 @@ const ServiceSelection = () => {
               onClick={() => setView('services')}
               className={view === 'services' ? "bg-glamour-700 hover:bg-glamour-800" : ""}
             >
+              <Scissors className="h-4 w-4 mr-2" />
               Services
+              {selectedServices.length > 0 && (
+                <Badge variant="secondary" className="ml-2 bg-white text-glamour-700">
+                  {selectedServices.length}
+                </Badge>
+              )}
             </Button>
             <Button 
               variant={view === 'products' ? 'default' : 'outline'} 
               onClick={() => setView('products')}
               className={view === 'products' ? "bg-glamour-700 hover:bg-glamour-800" : ""}
             >
-              Products {selectedProducts.length > 0 && `(${selectedProducts.length})`}
+              <Box className="h-4 w-4 mr-2" />
+              Products
+              {selectedProducts.length > 0 && (
+                <Badge variant="secondary" className="ml-2 bg-white text-glamour-700">
+                  {selectedProducts.length}
+                </Badge>
+              )}
             </Button>
           </div>
           
@@ -181,12 +194,15 @@ const ServiceSelection = () => {
                 />
               </div>
               
+              {/* Only show recommended products section if there are any */}
               {recommendedProducts.length > 0 && (
                 <div className="mb-4">
                   <h4 className="font-medium text-sm text-glamour-700 mb-2">Recommended products based on your services:</h4>
                   <div className="space-y-3">
+                    {/* Use a Set to ensure unique products */}
                     {products
                       .filter(product => recommendedProducts.includes(product.id))
+                      .filter((product, index, self) => self.findIndex(p => p.id === product.id) === index)
                       .map((product) => (
                         <div key={product.id} className="flex items-start space-x-3 border border-glamour-200 bg-glamour-50 rounded-md p-4 hover:bg-glamour-100 transition-colors">
                           <Checkbox 

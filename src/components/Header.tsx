@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Scissors, Info, Phone, Box, ChevronRight } from "lucide-react";
+import { Home, Scissors, Info, Phone, Box, ChevronRight, Calendar } from "lucide-react";
 
 const Header = () => {
   const location = useLocation();
@@ -48,6 +48,7 @@ const Header = () => {
           </Button>
           <Button className="bg-glamour-700 hover:bg-glamour-800" asChild>
             <Link to="/booking" className="flex items-center">
+              <Calendar className="h-4 w-4 md:mr-2" /> {/* Added Calendar icon */}
               <span className="hidden md:inline">Book Now</span>
               <ChevronRight className="h-4 w-4 md:ml-2" />
             </Link>
