@@ -5,12 +5,12 @@ import CustomerInfo from './CustomerInfo';
 import ServiceSelection from './ServiceSelection';
 import PaymentDetails from './PaymentDetails';
 import { Card } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { Check, CalendarDays, CreditCard } from "lucide-react";
 
 const CheckoutSteps = [
-  { number: 1, title: 'Customer Info' },
-  { number: 2, title: 'Select Services' },
-  { number: 3, title: 'Payment' },
+  { number: 1, title: 'Customer Info', icon: <CalendarDays size={18} /> },
+  { number: 2, title: 'Select Services', icon: <Check size={18} /> },
+  { number: 3, title: 'Payment', icon: <CreditCard size={18} /> },
 ];
 
 const CheckoutStepper = () => {
@@ -38,7 +38,7 @@ const CheckoutStepper = () => {
                     ${step.number < currentStep ? 'bg-glamour-700 text-white' : step.number === currentStep ? 'bg-glamour-600 text-white' : 'bg-gray-200'}
                   `}
                 >
-                  {step.number < currentStep ? <Check size={18} /> : step.number}
+                  {step.number < currentStep ? <Check size={18} /> : step.icon}
                 </div>
                 <div className="mt-2 text-sm font-medium">{step.title}</div>
               </div>
