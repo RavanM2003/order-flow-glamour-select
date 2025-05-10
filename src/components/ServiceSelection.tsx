@@ -1,147 +1,155 @@
 
 import React, { useState } from 'react';
-import { Card } from "@/components/ui/card";
+import { useOrder } from '@/context/OrderContext';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check } from "lucide-react";
-import { ServiceItem, ProductItem, CartItem, useOrder } from "@/context/OrderContext";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
+
+const services = [
+  { id: 1, name: "Facial Treatment", price: 150, duration: "60 min", description: "Deep cleansing facial with premium products" },
+  { id: 2, name: "Massage Therapy", price: 120, duration: "45 min", description: "Relaxing full body massage" },
+  { id: 3, name: "Manicure", price: 50, duration: "30 min", description: "Nail care and polish application" },
+  { id: 4, name: "Hair Styling", price: 80, duration: "45 min", description: "Professional hair styling" },
+  { id: 5, name: "Makeup Application", price: 90, duration: "60 min", description: "Full face makeup for special events" }
+];
+
+const products = [
+  { id: 1, name: "Moisturizer Cream", price: 45, description: "Hydrating face cream for daily use" },
+  { id: 2, name: "Anti-Aging Serum", price: 75, description: "Premium anti-aging formula with collagen" },
+  { id: 3, name: "Hair Care Kit", price: 60, description: "Complete kit for healthy hair" }
+];
 
 const ServiceSelection = () => {
-  const { services, products, addToCart, removeFromCart, orderState, getTotal, nextStep } = useOrder();
-  const [selectedTab, setSelectedTab] = useState<string>("services");
-  
-  const isSelected = (id: string): boolean => {
-    return orderState.cartItems.some(item => item.id === id);
+  const { orderState, selectService, selectProduct, goToStep, updateTotal } = useOrder();
+  const [selectedServices, setSelectedServices] = useState<number[]>(orderState.selectedServices || []);
+  const [selectedProducts, setSelectedProducts] = useState<number[]>(orderState.selectedProducts || []);
+
+  const handleServiceToggle = (serviceId: number) => {
+    const updatedServices = selectedServices.includes(serviceId)
+      ? selectedServices.filter(id => id !== serviceId)
+      : [...selectedServices, serviceId];
+    
+    setSelectedServices(updatedServices);
   };
 
-  const handleServiceToggle = (service: ServiceItem) => {
-    if (isSelected(service.id)) {
-      removeFromCart(service.id);
-    } else {
-      const cartItem: CartItem = {
-        id: service.id,
-        name: service.name,
-        price: service.price,
-        quantity: 1,
-        type: 'service'
-      };
-      addToCart(cartItem);
-    }
+  const handleProductToggle = (productId: number) => {
+    const updatedProducts = selectedProducts.includes(productId)
+      ? selectedProducts.filter(id => id !== productId)
+      : [...selectedProducts, productId];
+    
+    setSelectedProducts(updatedProducts);
   };
 
-  const handleProductToggle = (product: ProductItem) => {
-    if (isSelected(product.id)) {
-      removeFromCart(product.id);
-    } else {
-      const cartItem: CartItem = {
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-        type: 'product'
-      };
-      addToCart(cartItem);
-    }
+  const calculateTotal = () => {
+    const servicesTotal = services
+      .filter(service => selectedServices.includes(service.id))
+      .reduce((sum, service) => sum + service.price, 0);
+    
+    const productsTotal = products
+      .filter(product => selectedProducts.includes(product.id))
+      .reduce((sum, product) => sum + product.price, 0);
+    
+    return servicesTotal + productsTotal;
   };
 
-  const categoryMap = {
-    services: [...new Set(services.map(service => service.category))],
-    products: [...new Set(products.map(product => product.category))]
+  const handleContinue = () => {
+    // Save selected services and products to order context
+    selectedServices.forEach(serviceId => {
+      selectService(serviceId);
+    });
+    
+    selectedProducts.forEach(productId => {
+      selectProduct(productId);
+    });
+    
+    // Update total
+    updateTotal(calculateTotal());
+    
+    // Go to payment step
+    goToStep(3);
+  };
+
+  const handleBack = () => {
+    goToStep(1);
   };
 
   return (
-    <div className="checkout-step space-y-6 pb-12 pt-4">
-      <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight text-glamour-800">Select Services & Products</h2>
-        <p className="text-muted-foreground">Choose the services and products you would like to book.</p>
-      </div>
-
-      <Tabs defaultValue="services" className="w-full" value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="services">Services</TabsTrigger>
-          <TabsTrigger value="products">Products</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="services" className="space-y-6 pt-4">
-          {categoryMap.services.map(category => (
-            <div key={`service-category-${category}`} className="space-y-4">
-              <h3 className="text-xl font-semibold text-glamour-700">{category}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {services
-                  .filter(service => service.category === category)
-                  .map(service => (
-                    <Card key={service.id} className={`service-card p-4 cursor-pointer relative overflow-hidden transition-all ${isSelected(service.id) ? 'selected' : ''}`} onClick={() => handleServiceToggle(service)}>
-                      <div className="flex justify-between">
-                        <div className="space-y-1">
-                          <h4 className="font-medium">{service.name}</h4>
-                          <p className="text-sm text-muted-foreground">{service.description}</p>
-                        </div>
-                        {isSelected(service.id) && (
-                          <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
-                            <Check size={16} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="mt-3 flex items-center justify-between">
-                        <Badge variant="outline">{service.duration}</Badge>
-                        <p className="font-bold text-glamour-700">${service.price}</p>
-                      </div>
-                    </Card>
-                  ))}
-              </div>
+    <div className="mt-6">
+      <Card>
+        <CardContent className="pt-6">
+          <h2 className="text-2xl font-bold mb-6 text-glamour-800">Select Services & Products</h2>
+          
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">Services</h3>
+            <div className="space-y-4">
+              {services.map((service) => (
+                <div key={service.id} className="flex items-start space-x-3 border rounded-md p-4 hover:bg-glamour-50 transition-colors">
+                  <Checkbox 
+                    id={`service-${service.id}`} 
+                    checked={selectedServices.includes(service.id)}
+                    onCheckedChange={() => handleServiceToggle(service.id)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor={`service-${service.id}`} className="font-medium text-base cursor-pointer flex justify-between">
+                      <span>{service.name}</span>
+                      <span>${service.price}</span>
+                    </Label>
+                    <p className="text-sm text-gray-500 mt-1">{service.description}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Duration: {service.duration}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </TabsContent>
-
-        <TabsContent value="products" className="space-y-6 pt-4">
-          {categoryMap.products.map(category => (
-            <div key={`product-category-${category}`} className="space-y-4">
-              <h3 className="text-xl font-semibold text-glamour-700">{category}</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {products
-                  .filter(product => product.category === category)
-                  .map(product => (
-                    <Card key={product.id} className={`service-card p-4 cursor-pointer relative overflow-hidden transition-all ${isSelected(product.id) ? 'selected' : ''}`} onClick={() => handleProductToggle(product)}>
-                      <div className="flex justify-between">
-                        <div className="space-y-1">
-                          <h4 className="font-medium">{product.name}</h4>
-                          <p className="text-sm text-muted-foreground">{product.description}</p>
-                        </div>
-                        {isSelected(product.id) && (
-                          <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
-                            <Check size={16} />
-                          </div>
-                        )}
-                      </div>
-                      <div className="mt-3 flex items-end justify-end">
-                        <p className="font-bold text-glamour-700">${product.price}</p>
-                      </div>
-                    </Card>
-                  ))}
-              </div>
-            </div>
-          ))}
-        </TabsContent>
-      </Tabs>
-
-      <div className="border-t pt-4 mt-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <p className="text-sm text-muted-foreground">
-              {orderState.cartItems.length} {orderState.cartItems.length === 1 ? 'item' : 'items'} selected
-            </p>
-            <p className="text-xl font-bold">Total: ${getTotal()}</p>
           </div>
-          <Button 
-            onClick={nextStep} 
-            className="bg-glamour-700 hover:bg-glamour-800"
-            disabled={orderState.cartItems.length === 0}
-          >
-            Continue to Payment
-          </Button>
-        </div>
-      </div>
+          
+          <Separator className="my-6" />
+          
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">Products</h3>
+            <div className="space-y-4">
+              {products.map((product) => (
+                <div key={product.id} className="flex items-start space-x-3 border rounded-md p-4 hover:bg-glamour-50 transition-colors">
+                  <Checkbox 
+                    id={`product-${product.id}`} 
+                    checked={selectedProducts.includes(product.id)}
+                    onCheckedChange={() => handleProductToggle(product.id)}
+                    className="mt-1"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor={`product-${product.id}`} className="font-medium text-base cursor-pointer flex justify-between">
+                      <span>{product.name}</span>
+                      <span>${product.price}</span>
+                    </Label>
+                    <p className="text-sm text-gray-500 mt-1">{product.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="bg-gray-50 p-4 rounded-md mb-6">
+            <div className="flex justify-between text-lg font-medium">
+              <span>Total:</span>
+              <span>${calculateTotal()}</span>
+            </div>
+          </div>
+          
+          <div className="flex justify-between">
+            <Button variant="outline" onClick={handleBack}>Back</Button>
+            <Button 
+              onClick={handleContinue}
+              disabled={selectedServices.length === 0}
+              className="bg-glamour-700 hover:bg-glamour-800"
+            >
+              Continue to Payment
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

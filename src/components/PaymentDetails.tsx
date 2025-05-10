@@ -1,184 +1,204 @@
 
 import React, { useState } from 'react';
+import { useOrder } from '@/context/OrderContext';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { PaymentMethod, useOrder } from "@/context/OrderContext";
-import { Check, CreditCard, Banknote, Package } from "lucide-react";
-import { toast } from "sonner";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
-const PaymentMethods = [
-  { 
-    id: 'credit_card', 
-    name: 'Credit Card', 
-    description: 'Pay with Visa, Mastercard, or American Express',
-    icon: <CreditCard className="h-5 w-5" />
-  },
-  { 
-    id: 'cash', 
-    name: 'Cash', 
-    description: 'Pay in cash at the salon',
-    icon: <Banknote className="h-5 w-5" />
-  },
-  { 
-    id: 'paypal', 
-    name: 'PayPal', 
-    description: 'Fast and secure online payments',
-    icon: <Package className="h-5 w-5" />
-  }
+// Mock data
+const services = [
+  { id: 1, name: "Facial Treatment", price: 150, duration: "60 min" },
+  { id: 2, name: "Massage Therapy", price: 120, duration: "45 min" },
+  { id: 3, name: "Manicure", price: 50, duration: "30 min" },
+  { id: 4, name: "Hair Styling", price: 80, duration: "45 min" },
+  { id: 5, name: "Makeup Application", price: 90, duration: "60 min" }
+];
+
+const products = [
+  { id: 1, name: "Moisturizer Cream", price: 45 },
+  { id: 2, name: "Anti-Aging Serum", price: 75 },
+  { id: 3, name: "Hair Care Kit", price: 60 }
 ];
 
 const PaymentDetails = () => {
-  const { 
-    orderState, 
-    setPaymentMethod, 
-    setNotes, 
-    getTotal, 
-    previousStep, 
-    goToStep, 
-    resetOrder 
-  } = useOrder();
+  const { orderState, completeOrder, goToStep } = useOrder();
+  const { toast } = useToast();
+  const [paymentMethod, setPaymentMethod] = useState('card');
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const [notes, setNotesState] = useState(orderState.notes || '');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Get selected services details
+  const selectedServices = services.filter(service => 
+    orderState.selectedServices && orderState.selectedServices.includes(service.id)
+  );
+  
+  // Get selected products details
+  const selectedProducts = products.filter(product => 
+    orderState.selectedProducts && orderState.selectedProducts.includes(product.id)
+  );
+  
+  // Calculate subtotal, tax and total
+  const servicesSubtotal = selectedServices.reduce((sum, service) => sum + service.price, 0);
+  const productsSubtotal = selectedProducts.reduce((sum, product) => sum + product.price, 0);
+  const subtotal = servicesSubtotal + productsSubtotal;
+  const tax = subtotal * 0.18; // 18% tax
+  const total = subtotal + tax;
 
-  const handlePaymentMethodChange = (value: string) => {
-    setPaymentMethod(value as PaymentMethod);
+  const handleBack = () => {
+    goToStep(2);
   };
 
-  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setNotesState(e.target.value);
-  };
-
-  const handleSubmit = () => {
-    if (!orderState.paymentMethod) {
-      toast.error("Please select a payment method");
-      return;
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsProcessing(true);
     
-    setNotes(notes);
-    setIsSubmitting(true);
-    
-    // Simulate API call
+    // Simulate payment processing
     setTimeout(() => {
-      toast.success("Your booking has been confirmed!");
-      setIsSubmitting(false);
-      resetOrder();
-      goToStep(1);
+      setIsProcessing(false);
+      completeOrder();
+      toast({
+        title: "Payment Successful!",
+        description: "Your appointment has been booked successfully.",
+        variant: "success"
+      });
     }, 1500);
   };
 
   return (
-    <div className="checkout-step space-y-6 pb-12 pt-4">
-      <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight text-glamour-800">Payment Details</h2>
-        <p className="text-muted-foreground">Review your order and choose a payment method.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Payment Method</CardTitle>
-              <CardDescription>Select how you would like to pay</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <RadioGroup 
-                value={orderState.paymentMethod} 
-                onValueChange={handlePaymentMethodChange}
-              >
-                {PaymentMethods.map((method) => (
-                  <div key={method.id} className="flex items-center space-x-2">
-                    <RadioGroupItem value={method.id} id={method.id} />
-                    <Label 
-                      htmlFor={method.id}
-                      className="flex cursor-pointer items-center rounded-md border p-4 w-full"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="text-muted-foreground">
-                          {method.icon}
-                        </div>
-                        <div>
-                          <p className="font-medium">{method.name}</p>
-                          <p className="text-sm text-muted-foreground">{method.description}</p>
-                        </div>
-                      </div>
+    <div className="mt-6">
+      <Card>
+        <CardContent className="pt-6">
+          <h2 className="text-2xl font-bold mb-6 text-glamour-800">Payment Details</h2>
+          
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-6">
+              {/* Payment method selection */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
+                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                  <div className="flex items-center space-x-3 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
+                    <RadioGroupItem value="card" id="payment-card" />
+                    <Label htmlFor="payment-card" className="cursor-pointer flex-1">
+                      <div className="font-medium">Credit/Debit Card</div>
+                      <div className="text-sm text-gray-500">Pay securely with your card</div>
                     </Label>
                   </div>
-                ))}
-              </RadioGroup>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Special Requests</CardTitle>
-              <CardDescription>Add any special requirements or preferences</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Textarea 
-                placeholder="Enter any special requests or notes here..."
-                value={notes}
-                onChange={handleNotesChange}
-                rows={4}
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        <div>
-          <Card>
-            <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {orderState.cartItems.map((item) => (
-                <div key={item.id} className="flex justify-between">
-                  <div className="flex items-center space-x-1">
-                    <span>{item.name}</span>
-                    {item.quantity > 1 && (
-                      <span className="text-muted-foreground">×{item.quantity}</span>
-                    )}
+                  <div className="flex items-center space-x-3 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
+                    <RadioGroupItem value="cash" id="payment-cash" />
+                    <Label htmlFor="payment-cash" className="cursor-pointer flex-1">
+                      <div className="font-medium">Cash on Arrival</div>
+                      <div className="text-sm text-gray-500">Pay when you arrive for your appointment</div>
+                    </Label>
                   </div>
-                  <div className="font-medium">${(item.price * item.quantity).toFixed(2)}</div>
+                </RadioGroup>
+              </div>
+              
+              {/* Card details (shown only if card payment selected) */}
+              {paymentMethod === 'card' && (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="card-name">Name on Card</Label>
+                    <Input id="card-name" placeholder="Enter name as shown on card" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="card-number">Card Number</Label>
+                    <Input 
+                      id="card-number" 
+                      placeholder="1234 5678 9012 3456" 
+                      required 
+                      pattern="[0-9\s]{13,19}"
+                      inputMode="numeric"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="expiry-date">Expiry Date</Label>
+                      <Input id="expiry-date" placeholder="MM/YY" required />
+                    </div>
+                    <div>
+                      <Label htmlFor="cvv">CVV</Label>
+                      <Input 
+                        id="cvv" 
+                        placeholder="123" 
+                        required 
+                        pattern="[0-9]{3,4}"
+                        inputMode="numeric"
+                        maxLength={4}
+                      />
+                    </div>
+                  </div>
                 </div>
-              ))}
-              <div className="border-t pt-4">
-                <div className="flex justify-between font-bold text-lg">
-                  <span>Total</span>
-                  <span>${getTotal().toFixed(2)}</span>
+              )}
+              
+              <Separator />
+              
+              {/* Order summary */}
+              <div>
+                <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
+                
+                {selectedServices.length > 0 && (
+                  <>
+                    <h4 className="font-medium mb-2">Selected Services:</h4>
+                    <div className="space-y-2 mb-4">
+                      {selectedServices.map(service => (
+                        <div key={service.id} className="flex justify-between">
+                          <span>{service.name}</span>
+                          <span>${service.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                
+                {selectedProducts.length > 0 && (
+                  <>
+                    <h4 className="font-medium mb-2">Selected Products:</h4>
+                    <div className="space-y-2 mb-4">
+                      {selectedProducts.map(product => (
+                        <div key={product.id} className="flex justify-between">
+                          <span>{product.name}</span>
+                          <span>${product.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                
+                <Separator className="my-4" />
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>${subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Tax (18%):</span>
+                    <span>${tax.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-glamour-800">
+                    <span>Total:</span>
+                    <span>${total.toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
-              <Button 
-                onClick={handleSubmit} 
-                className="w-full bg-glamour-700 hover:bg-glamour-800"
-                disabled={isSubmitting || !orderState.paymentMethod}
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-glamour-100 border-r-transparent"></div>
-                    <span>Processing...</span>
-                  </div>
-                ) : (
-                  'Complete Booking'
-                )}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={previousStep}
-                className="w-full"
-                disabled={isSubmitting}
-              >
-                Back to Services
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
+              
+              <div className="flex justify-between pt-4">
+                <Button type="button" variant="outline" onClick={handleBack}>Back</Button>
+                <Button 
+                  type="submit" 
+                  disabled={isProcessing}
+                  className="bg-glamour-700 hover:bg-glamour-800"
+                >
+                  {isProcessing ? 'Processing...' : 'Complete Payment'}
+                </Button>
+              </div>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 };
