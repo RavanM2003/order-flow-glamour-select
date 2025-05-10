@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useOrder } from '@/context/OrderContext';
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { CreditCard, Banknote, Bank, Terminal } from "lucide-react";
+import { CreditCard, Banknote, Building, Terminal } from "lucide-react";
 
 // Mock data
 const services = [
@@ -155,7 +154,7 @@ const PaymentDetails = () => {
                     <RadioGroupItem value="bank" id="payment-bank" />
                     <Label htmlFor="payment-bank" className="cursor-pointer flex-1">
                       <div className="font-medium flex items-center">
-                        <Bank className="mr-2 h-5 w-5" />
+                        <Building className="mr-2 h-5 w-5" />
                         Bank Transfer
                       </div>
                       <div className="text-sm text-gray-500">Pay via bank transfer</div>
