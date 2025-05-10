@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 // Define types
@@ -9,6 +8,7 @@ interface CustomerInfo {
   date: string;
   time: string;
   notes?: string;
+  gender: string; // Add gender field to the interface
 }
 
 interface OrderState {

@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
-import { Search, Scissors } from "lucide-react";
+import { Search, Scissors, Package } from "lucide-react"; // Replace Box with Package
 import { Badge } from "@/components/ui/badge";
 
 const services = [
@@ -129,7 +129,7 @@ const ServiceSelection = () => {
               onClick={() => setView('products')}
               className={view === 'products' ? "bg-glamour-700 hover:bg-glamour-800" : ""}
             >
-              <Box className="h-4 w-4 mr-2" />
+              <Package className="h-4 w-4 mr-2" />
               Products
               {selectedProducts.length > 0 && (
                 <Badge variant="secondary" className="ml-2 bg-white text-glamour-700">
