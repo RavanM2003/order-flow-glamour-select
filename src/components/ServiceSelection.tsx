@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useOrder } from '@/context/OrderContext';
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,7 @@ const ServiceSelection = () => {
   const [selectedProducts, setSelectedProducts] = useState<number[]>(orderState.selectedProducts || []);
   const [serviceSearchTerm, setServiceSearchTerm] = useState("");
   const [productSearchTerm, setProductSearchTerm] = useState("");
-  const [view, setView] = useState<'services' | 'products'>('services');
+  const [view, setView<'services' | 'products'>('services');
   const [recommendedProducts, setRecommendedProducts] = useState<number[]>([]);
 
   useEffect(() => {

@@ -161,7 +161,7 @@ const PaymentDetails = () => {
               
               <Separator />
               
-              {/* Payment method selection - Reordered */}
+              {/* Payment method selection - Reordered as requested */}
               <div>
                 <h3 className="text-lg font-semibold mb-4">Payment Method</h3>
                 <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
