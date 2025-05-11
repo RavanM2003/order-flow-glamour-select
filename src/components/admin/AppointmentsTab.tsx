@@ -17,7 +17,8 @@ import {
   X, 
   Calendar as CalendarIcon,
   Clock,
-  User
+  User,
+  CalendarPlus
 } from 'lucide-react';
 
 const AppointmentsTab = () => {
@@ -121,7 +122,12 @@ const AppointmentsTab = () => {
         </Card>
         
         <Card className="lg:col-span-2 p-6">
+        <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-medium mb-4">Appointments for {date?.toLocaleDateString()}</h3>
+          <Button className="bg-glamour-700 hover:bg-glamour-800 text-white" onClick={() => setAddProductOpen(true)}>
+            <CalendarPlus className="w-4 h-4 mr-2" /> Add Appointment
+          </Button>
+        </div>
           
           {filteredAppointments.length > 0 ? (
             <div className="border rounded-md overflow-hidden">

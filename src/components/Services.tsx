@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Search } from "lucide-react";
@@ -14,7 +13,14 @@ const Services = () => {
     {
       id: 1,
       title: "Facial Treatments",
-      description: "Rejuvenate your skin with our advanced facial treatments that target specific skin concerns. Our expert estheticians customize each facial according to your skin type and needs.",
+      description: "Our signature facial treatment begins with a detailed consultation to understand your skin concerns and goals. The procedure starts with a gentle cleansing to remove surface impurities, followed by a deeper cleanse to prepare your skin for treatment. Next, our esthetician will perform a careful exfoliation to remove dead skin cells, unclog pores, and reveal fresh skin underneath. Depending on your skin's needs, we may incorporate steam to soften the skin and facilitate extraction of clogged pores. A specialized mask will then be applied to address your specific concerns, whether it's hydration, purification, or anti-aging. During the mask application, you'll enjoy a relaxing hand and arm massage. The treatment concludes with the application of toner, serums, moisturizer, and SPF protection tailored to your skin type. Our specialists will also provide you with personalized skincare recommendations to maintain your results at home.",
+      benefits: [
+        "Deep cleansing and pore purification",
+        "Improved skin texture and tone",
+        "Reduced appearance of fine lines and wrinkles",
+        "Hydration boost for glowing skin",
+        "Customized treatment for your skin type"
+      ],
       image: "facial.jpg",
       duration: "60 min",
       price: 150
@@ -22,7 +28,14 @@ const Services = () => {
     {
       id: 2,
       title: "Massage Therapy",
-      description: "Relax and unwind with our therapeutic massage treatments. Our skilled massage therapists use various techniques to relieve muscle tension and promote overall wellness.",
+      description: "Experience ultimate relaxation with our therapeutic massage treatments. Our skilled massage therapists use various techniques to relieve muscle tension, reduce stress, and promote overall wellness. Each session begins with a consultation to understand your specific needs and preferences. We offer a range of massage styles, from gentle Swedish massage to deep tissue therapy, all performed in our serene, private treatment rooms. Our therapists use premium massage oils and lotions to enhance the experience and nourish your skin. The treatment includes a brief consultation, the main massage session, and time to relax afterward. We also provide personalized recommendations for maintaining the benefits between sessions.",
+      benefits: [
+        "Relieves muscle tension and pain",
+        "Reduces stress and anxiety",
+        "Improves circulation and flexibility",
+        "Promotes better sleep quality",
+        "Enhances overall well-being"
+      ],
       image: "massage.jpg",
       duration: "45-90 min",
       price: 120
@@ -101,7 +114,25 @@ const Services = () => {
                   <div className="text-glamour-700 font-semibold">${service.price}</div>
                 </div>
                 <p className="text-sm text-gray-500 mb-4">Duration: {service.duration}</p>
-                <p className="text-gray-600 mb-6 line-clamp-3">{service.description}</p>
+                <p className="text-gray-600 mb-4 line-clamp-3">{service.description}</p>
+                {service.benefits && service.benefits.length > 0 && (
+                  <div className="mb-4">
+                    <h3 className="text-sm font-medium text-glamour-800 mb-2">Benefits:</h3>
+                    <ul className="space-y-1">
+                      {service.benefits.slice(0, 3).map((benefit, index) => (
+                        <li key={index} className="text-sm text-gray-600 flex items-center">
+                          <span className="text-glamour-700 mr-2">✓</span>
+                          {benefit}
+                        </li>
+                      ))}
+                      {service.benefits.length > 3 && (
+                        <li className="text-sm text-glamour-700">
+                          +{service.benefits.length - 3} more benefits
+                        </li>
+                      )}
+                    </ul>
+                  </div>
+                )}
                 <Button className="w-full bg-glamour-700 hover:bg-glamour-800" asChild>
                   <Link to={`/services/${service.id}`}>
                     View Details

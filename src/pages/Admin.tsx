@@ -40,22 +40,6 @@ const Admin: React.FC<AdminProps> = ({ initialTab }) => {
     setActiveTab(tabFromPath(location.pathname));
   }, [location.pathname]);
   
-  const getAddButtonText = () => {
-    switch (activeTab) {
-      case "services":
-        return "Add Service";
-      case "products":
-        return "Add Product";
-      case "appointments":
-        return "New Appointment";
-      case "staff":
-        return "Add Staff Member";
-      default:
-        return "";
-    }
-  };
-  
-  const showAddButton = ["services", "products", "appointments", "staff"].includes(activeTab);
   
   return (
     <div className="min-h-screen bg-background flex">
@@ -75,8 +59,6 @@ const Admin: React.FC<AdminProps> = ({ initialTab }) => {
               {isCustomerDetail
                 ? "Customer Details"
                 : activeTab === "dashboard" ? "Dashboard"
-                : activeTab === "services" ? "Services"
-                : activeTab === "products" ? "Products"
                 : activeTab === "appointments" ? "Appointments"
                 : activeTab === "settings" ? "Settings"
                 : activeTab === "staff" ? "Staff Management"
@@ -84,12 +66,6 @@ const Admin: React.FC<AdminProps> = ({ initialTab }) => {
                 : ""
               }
             </h1>
-            {(!isCustomerDetail && showAddButton) && (
-              <Button className="bg-glamour-700 hover:bg-glamour-800">
-                <Plus size={16} className="mr-2" />
-                {getAddButtonText()}
-              </Button>
-            )}
           </div>
           {isCustomerDetail ? (
             <CustomerDetailPage />
