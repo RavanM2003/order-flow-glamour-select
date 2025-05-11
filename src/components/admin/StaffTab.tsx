@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -19,7 +18,8 @@ import {
   ChevronRight,
   DollarSign,
   Percent,
-  Scissors
+  Scissors,
+  CalendarPlus
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
@@ -108,6 +108,12 @@ const StaffTab = () => {
   return (
     <div className="space-y-6">
       <Card className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-glamour-800">Staff Management</h2>
+          <Button className="bg-glamour-700 hover:bg-glamour-800 text-white" onClick={() => setAddServiceOpen(true)}>
+            <CalendarPlus className="w-4 h-4 mr-2" /> Add Staff
+          </Button>
+        </div>
         <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />

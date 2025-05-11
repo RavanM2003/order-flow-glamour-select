@@ -224,7 +224,7 @@ const ProductsTab = () => {
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {product.relatedServices.map((service, index) => (
-                        <span key={index} className="text-xs bg-glamour-100 text-glamour-800 px-2 py-1 rounded-full">
+                        <span key={index} className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
                           {service}
                         </span>
                       ))}

@@ -67,6 +67,21 @@ const BookingDetails = () => {
   const total = selectedServices.reduce((sum, service) => sum + service.price, 0) +
                 selectedProducts.reduce((sum, product) => sum + product.price, 0);
 
+  // Calculate total duration in minutes
+  const totalDuration = selectedServices.reduce((sum, service) => {
+    const match = service.duration.match(/(\d+)/);
+    return sum + (match ? parseInt(match[1], 10) : 0);
+  }, 0);
+
+  // Calculate inTime and outTime
+  const inTime = data.customerInfo.time || "00:00";
+  const [inHour, inMinute] = inTime.split(":").map(Number);
+  const extraMinutes = 10;
+  const outTotalMinutes = inHour * 60 + inMinute + totalDuration + extraMinutes;
+  const outHour = Math.floor(outTotalMinutes / 60) % 24;
+  const outMinute = outTotalMinutes % 60;
+  const outTime = `${outHour.toString().padStart(2, '0')}:${outMinute.toString().padStart(2, '0')}`;
+
   return (
     <Card>
       <CardContent className="pt-6">
@@ -102,6 +117,9 @@ const BookingDetails = () => {
                     </div>
                   );
                 })}
+                <div className="text-sm text-glamour-700 font-medium mt-2">
+                  Selected Services Total duration: {totalDuration} min
+                </div>
 
                 {selectedProducts.length > 0 && (
                   <>
@@ -145,6 +163,14 @@ const BookingDetails = () => {
               <div>
                 <span className="font-semibold">Status</span><br />
                 {localStatus}
+              </div>
+              <div>
+                <span className="font-semibold">In time</span><br />
+                {inTime}
+              </div>
+              <div>
+                <span className="font-semibold">Out time</span><br />
+                {outTime}
               </div>
               <div>
                 <span className="font-semibold">{data.customerInfo.name}</span>

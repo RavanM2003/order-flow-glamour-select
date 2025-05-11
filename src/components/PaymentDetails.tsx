@@ -73,6 +73,12 @@ const PaymentDetails = () => {
   const tax = subtotal * 0.18; // 18% tax
   const total = subtotal + tax;
 
+  // Calculate total duration in minutes
+  const totalDuration = selectedServices.reduce((sum, service) => {
+    const match = service.duration.match(/(\d+)/);
+    return sum + (match ? parseInt(match[1], 10) : 0);
+  }, 0);
+
   const handleBack = () => {
     goToStep(2);
   };
@@ -195,6 +201,9 @@ const PaymentDetails = () => {
                             <span>${service.price}</span>
                           </div>
                         ))}
+                      </div>
+                      <div className="text-sm text-glamour-700 font-medium mb-2">
+                        Total duration: {totalDuration} min
                       </div>
                     </>
                   )}

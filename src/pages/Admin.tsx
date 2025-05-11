@@ -51,17 +51,15 @@ const Admin: React.FC<AdminProps> = ({ initialTab }) => {
       />
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex-1 flex flex-col h-screen">
         <AdminHeader />
-        <main className="flex-1 p-2 overflow-auto">
+        <main className="flex-1 overflow-y-auto p-6">
           <div className="mb-3 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-glamour-800">
               {isCustomerDetail
                 ? "Customer Details"
                 : activeTab === "dashboard" ? "Dashboard"
-                : activeTab === "appointments" ? "Appointments"
                 : activeTab === "settings" ? "Settings"
-                : activeTab === "staff" ? "Staff Management"
                 : activeTab === "profile" ? "Profile"
                 : ""
               }
