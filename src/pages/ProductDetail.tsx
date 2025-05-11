@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { DollarSign, ChevronRight } from "lucide-react";
+import { DollarSign, ChevronRight, ShoppingCart } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -124,16 +123,6 @@ const ProductDetail = () => {
           
           <div className="lg:w-1/3">
             <div className="bg-white rounded-lg shadow-md p-6 sticky top-24">
-              <h3 className="text-xl font-bold text-glamour-800 mb-4">Purchase this Product</h3>
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-gray-600">Price:</span>
-                <span className="text-2xl font-bold text-glamour-800">${product.price}</span>
-              </div>
-              
-              <Button className="w-full bg-glamour-700 hover:bg-glamour-800 mb-4" size="lg">
-                Add to Cart
-              </Button>
-              
               {product.relatedServices && product.relatedServices.length > 0 && (
                 <>
                   <h3 className="text-lg font-semibold text-glamour-800 mt-8 mb-4">Related Services</h3>

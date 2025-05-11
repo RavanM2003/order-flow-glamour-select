@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
-import { Search, Scissors, Package } from "lucide-react"; // Replace Box with Package
+import { Search, Scissors, Package, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const services = [
@@ -30,7 +30,7 @@ const ServiceSelection = () => {
   const [selectedProducts, setSelectedProducts] = useState<number[]>(orderState.selectedProducts || []);
   const [serviceSearchTerm, setServiceSearchTerm] = useState("");
   const [productSearchTerm, setProductSearchTerm] = useState("");
-  const [view, setView<'services' | 'products'>('services');
+  const [view, setView] = useState<'services' | 'products'>('services');
   const [recommendedProducts, setRecommendedProducts] = useState<number[]>([]);
 
   useEffect(() => {
@@ -75,14 +75,13 @@ const ServiceSelection = () => {
   };
 
   const handleContinue = () => {
-    // Save selected services and products to order context
-    selectedServices.forEach(serviceId => {
-      selectService(serviceId);
-    });
+    // Clear existing selections
+    orderState.selectedServices.forEach(serviceId => unselectService(serviceId));
+    orderState.selectedProducts.forEach(productId => unselectProduct(productId));
     
-    selectedProducts.forEach(productId => {
-      selectProduct(productId);
-    });
+    // Add new selections
+    selectedServices.forEach(serviceId => selectService(serviceId));
+    selectedProducts.forEach(productId => selectProduct(productId));
     
     // Update total
     updateTotal(calculateTotal());
@@ -115,7 +114,7 @@ const ServiceSelection = () => {
               onClick={() => setView('services')}
               className={view === 'services' ? "bg-glamour-700 hover:bg-glamour-800" : ""}
             >
-              <Scissors className="h-4 w-4 mr-2" />
+              <Sparkles className="h-4 w-4 mr-2" />
               Services
               {selectedServices.length > 0 && (
                 <Badge variant="secondary" className="ml-2 bg-white text-glamour-700">
@@ -193,12 +192,10 @@ const ServiceSelection = () => {
                 />
               </div>
               
-              {/* Only show recommended products section if there are any */}
               {recommendedProducts.length > 0 && (
                 <div className="mb-4">
                   <h4 className="font-medium text-sm text-glamour-700 mb-2">Recommended products based on your services:</h4>
                   <div className="space-y-3">
-                    {/* Use a Set to ensure unique products */}
                     {products
                       .filter(product => recommendedProducts.includes(product.id))
                       .filter((product, index, self) => self.findIndex(p => p.id === product.id) === index)

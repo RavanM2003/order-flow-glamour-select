@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Sparkles, Scissors, Hand, Brush, Calendar } from "lucide-react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -67,15 +66,17 @@ const Index = () => {
                   Experience personalized beauty treatments in a luxurious environment. 
                   Our expert staff is dedicated to enhancing your natural beauty.
                 </p>
-                <div className="flex gap-4 pt-4">
-                  <Button className="bg-glamour-700 hover:bg-glamour-800 px-6 py-6" size="lg" asChild>
+                <div className="flex gap-4 pt-4 flex-col xs:flex-row">
+                  <Button className="bg-glamour-700 hover:bg-glamour-800 px-6 py-6 flex items-center justify-center" size="lg" asChild>
                     <Link to="/booking">
+                      <Calendar className="mr-2 h-5 w-5 inline-block" />
                       Book an Appointment
                       <ChevronRight className="ml-2 h-5 w-5" />
                     </Link>
                   </Button>
-                  <Button variant="outline" size="lg" asChild>
+                  <Button variant="outline" size="lg" className="flex items-center justify-center" asChild>
                     <Link to="/services">
+                      <Scissors className="mr-2 h-5 w-5 inline-block" />
                       View Our Services
                     </Link>
                   </Button>

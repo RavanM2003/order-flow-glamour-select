@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { OrderProvider, useOrder } from '@/context/OrderContext';
 import CustomerInfo from './CustomerInfo';
@@ -40,7 +39,9 @@ const CheckoutStepper = () => {
                 >
                   {step.number < currentStep ? <Check size={18} /> : step.icon}
                 </div>
-                <div className="mt-2 text-sm font-medium">{step.title}</div>
+                <div className="mt-2 text-sm font-medium">
+                  <span className="hidden md:inline">{step.title}</span>
+                </div>
               </div>
               {index < CheckoutSteps.length - 1 && (
                 <div className={`w-16 h-[2px] mx-1 ${step.number < currentStep ? 'bg-glamour-700' : 'bg-gray-200'}`}></div>

@@ -1,8 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import AdminVerticalNav from '@/components/admin/AdminVerticalNav';
+import AdminHeader from '@/components/admin/AdminHeader';
 import DashboardTab from '@/components/admin/DashboardTab';
 import CustomersTab from '@/components/admin/CustomersTab';
 import ServicesTab from '@/components/admin/ServicesTab';
@@ -10,15 +10,38 @@ import ProductsTab from '@/components/admin/ProductsTab';
 import AppointmentsTab from '@/components/admin/AppointmentsTab';
 import SettingsTab from '@/components/admin/SettingsTab';
 import StaffTab from '@/components/admin/StaffTab';
+import AdminProfile from '@/components/admin/AdminProfile';
+import CustomerDetailPage from './CustomerDetailPage';
+import { useLocation, useParams } from 'react-router-dom';
 
-const Admin = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
+interface AdminProps {
+  initialTab?: string;
+}
+
+const tabFromPath = (pathname: string) => {
+  if (pathname.endsWith('/profile')) return 'profile';
+  if (pathname.endsWith('/products')) return 'products';
+  if (pathname.endsWith('/customers')) return 'customers';
+  if (pathname.endsWith('/services')) return 'services';
+  if (pathname.endsWith('/appointments')) return 'appointments';
+  if (pathname.endsWith('/staff')) return 'staff';
+  if (pathname.endsWith('/settings')) return 'settings';
+  return 'dashboard';
+};
+
+const Admin: React.FC<AdminProps> = ({ initialTab }) => {
+  const location = useLocation();
+  const { customerId } = useParams();
+  const isCustomerDetail = location.pathname.startsWith('/admin/customers/') && customerId;
+  const [activeTab, setActiveTab] = useState(tabFromPath(location.pathname));
   const [notifications] = useState(5); // Example notifications count
+  
+  useEffect(() => {
+    setActiveTab(tabFromPath(location.pathname));
+  }, [location.pathname]);
   
   const getAddButtonText = () => {
     switch (activeTab) {
-      case "customers":
-        return "Add Customer";
       case "services":
         return "Add Service";
       case "products":
@@ -32,7 +55,7 @@ const Admin = () => {
     }
   };
   
-  const showAddButton = ["customers", "services", "products", "appointments", "staff"].includes(activeTab);
+  const showAddButton = ["services", "products", "appointments", "staff"].includes(activeTab);
   
   return (
     <div className="min-h-screen bg-background flex">
@@ -45,33 +68,43 @@ const Admin = () => {
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-auto">
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="mb-6 flex items-center justify-between">
+        <AdminHeader />
+        <main className="flex-1 p-2 overflow-auto">
+          <div className="mb-3 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-glamour-800">
-              {activeTab === "dashboard" && "Dashboard"}
-              {activeTab === "customers" && "Customers"}
-              {activeTab === "services" && "Services"}
-              {activeTab === "products" && "Products"}
-              {activeTab === "appointments" && "Appointments"}
-              {activeTab === "settings" && "Settings"}
-              {activeTab === "staff" && "Staff Management"}
+              {isCustomerDetail
+                ? "Customer Details"
+                : activeTab === "dashboard" ? "Dashboard"
+                : activeTab === "services" ? "Services"
+                : activeTab === "products" ? "Products"
+                : activeTab === "appointments" ? "Appointments"
+                : activeTab === "settings" ? "Settings"
+                : activeTab === "staff" ? "Staff Management"
+                : activeTab === "profile" ? "Profile"
+                : ""
+              }
             </h1>
-            
-            {showAddButton && (
+            {(!isCustomerDetail && showAddButton) && (
               <Button className="bg-glamour-700 hover:bg-glamour-800">
                 <Plus size={16} className="mr-2" />
                 {getAddButtonText()}
               </Button>
             )}
           </div>
-          
-          {activeTab === "dashboard" && <DashboardTab />}
-          {activeTab === "customers" && <CustomersTab />}
-          {activeTab === "services" && <ServicesTab />}
-          {activeTab === "products" && <ProductsTab />}
-          {activeTab === "appointments" && <AppointmentsTab />}
-          {activeTab === "settings" && <SettingsTab />}
-          {activeTab === "staff" && <StaffTab />}
+          {isCustomerDetail ? (
+            <CustomerDetailPage />
+          ) : (
+            <>
+              {activeTab === "dashboard" && <DashboardTab />}
+              {activeTab === "customers" && <CustomersTab />}
+              {activeTab === "services" && <ServicesTab />}
+              {activeTab === "products" && <ProductsTab />}
+              {activeTab === "appointments" && <AppointmentsTab />}
+              {activeTab === "settings" && <SettingsTab />}
+              {activeTab === "staff" && <StaffTab />}
+              {activeTab === "profile" && <AdminProfile />}
+            </>
+          )}
         </main>
       </div>
     </div>

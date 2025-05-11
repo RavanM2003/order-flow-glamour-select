@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Calendar,
@@ -11,6 +10,7 @@ import {
   User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from 'react-router-dom';
 
 type NavItem = {
   id: string;
@@ -25,6 +25,7 @@ const navItems: NavItem[] = [
   { id: "products", label: "Products", icon: Package },
   { id: "appointments", label: "Appointments", icon: Calendar },
   { id: "staff", label: "Staff", icon: User },
+  // { id: "profile", label: "Profile", icon: User },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -33,6 +34,17 @@ interface AdminVerticalNavProps {
   setActiveTab: (tab: string) => void;
   notifications?: number;
 }
+
+const tabToUrl: Record<string, string> = {
+  dashboard: '/admin',
+  customers: '/admin/customers',
+  services: '/admin/services',
+  products: '/admin/products',
+  appointments: '/admin/appointments',
+  staff: '/admin/staff',
+  settings: '/admin/settings',
+  profile: '/admin/profile',
+};
 
 const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminVerticalNavProps) => {
   return (
@@ -48,10 +60,11 @@ const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminV
       
       <div className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
-          <button
+          <Link
             key={item.id}
+            to={tabToUrl[item.id]}
             className={cn(
-              "flex items-center w-full px-4 py-2.5 rounded-md text-sm",
+              "flex items-center w-full px-4 py-2.5 rounded-md text-sm transition-colors",
               activeTab === item.id
                 ? "bg-glamour-700 text-white"
                 : "text-gray-700 hover:bg-gray-100"
@@ -60,7 +73,7 @@ const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminV
           >
             <item.icon className="h-5 w-5 mr-3" />
             {item.label}
-          </button>
+          </Link>
         ))}
       </div>
       
@@ -81,6 +94,9 @@ const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminV
               </div>
             )}
           </div>
+        </div>
+        <div className="mt-4">
+          <a href="/admin/profile" className="block w-full text-center py-2 rounded bg-glamour-700 text-white font-semibold hover:bg-glamour-800 transition-colors">Profil</a>
         </div>
       </div>
     </div>

@@ -18,6 +18,10 @@ interface OrderState {
   selectedProducts: number[];
   total: number;
   completed: boolean;
+  orderId: string | null;
+  paymentMethod: string;
+  serviceProviders: { serviceId: number, name: string }[];
+  status: string;
 }
 
 interface OrderContextType {
@@ -42,7 +46,11 @@ const initialState: OrderState = {
   selectedServices: [],
   selectedProducts: [],
   total: 0,
-  completed: false
+  completed: false,
+  orderId: null,
+  paymentMethod: "",
+  serviceProviders: [],
+  status: "Gözləmədə"
 };
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
@@ -101,11 +109,19 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     setOrderState(initialState);
   };
   
+  const generateOrderId = () => {
+    const prefix = "GS";
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `${prefix}-${timestamp}-${random}`;
+  };
+  
   const completeOrder = () => {
     setOrderState(prev => ({
       ...prev,
       completed: true,
-      step: 1
+      step: 1,
+      orderId: generateOrderId()
     }));
   };
   

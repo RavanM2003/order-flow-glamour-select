@@ -1,12 +1,14 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Search } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const Services = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  
   const services = [
     {
       id: 1,
@@ -57,6 +59,11 @@ const Services = () => {
       price: 140
     }
   ];
+
+  const filteredServices = services.filter(service => 
+    service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    service.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
   
   return (
     <div className="min-h-screen bg-background">
@@ -64,12 +71,25 @@ const Services = () => {
 
       <main className="container py-12">
         <h1 className="text-4xl font-bold text-glamour-800 mb-2">Our Services</h1>
-        <p className="text-lg text-gray-600 mb-10 max-w-3xl">
+        <p className="text-lg text-gray-600 mb-6 max-w-3xl">
           Discover our comprehensive range of beauty and wellness services designed to enhance your natural beauty and promote wellbeing.
         </p>
         
+        {/* Search Bar */}
+        <div className="mb-8 max-w-md">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input 
+              placeholder="Search services..." 
+              value={searchTerm} 
+              onChange={e => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {services.map((service) => (
+          {filteredServices.map((service) => (
             <div key={service.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
               <div className="h-48 bg-gray-200 flex items-center justify-center">
                 <p className="text-glamour-600">Service Image</p>
@@ -91,6 +111,12 @@ const Services = () => {
             </div>
           ))}
         </div>
+        
+        {filteredServices.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-lg text-gray-600">No services found matching "{searchTerm}"</p>
+          </div>
+        )}
         
         <div className="mt-12 text-center">
           <p className="text-lg text-gray-600 mb-6">Ready to experience our premium services?</p>

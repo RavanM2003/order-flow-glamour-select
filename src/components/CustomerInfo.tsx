@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useOrder } from '@/context/OrderContext';
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CalendarIcon, Clock, User } from "lucide-react";
+import { CalendarIcon, Clock, User, UserCircle, UserPlus, UserMinus } from "lucide-react";
 
 const CustomerInfo = () => {
   const { orderState, updateCustomerInfo, goToStep } = useOrder();
@@ -77,27 +76,27 @@ const CustomerInfo = () => {
                 <RadioGroup 
                   value={formData.gender} 
                   onValueChange={handleGenderChange}
-                  className="flex space-x-4"
+                  className="grid grid-cols-3 gap-4"
                 >
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
                     <RadioGroupItem value="female" id="gender-female" />
-                    <Label htmlFor="gender-female" className="flex items-center cursor-pointer">
-                      <User className="h-4 w-4 mr-1" />
-                      <span>Female</span>
+                    <Label htmlFor="gender-female" className="flex items-center cursor-pointer flex-1">
+                      <UserPlus className="h-5 w-5 mr-2 text-pink-500" />
+                      <span className="hidden md:inline">Female</span>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
                     <RadioGroupItem value="male" id="gender-male" />
-                    <Label htmlFor="gender-male" className="flex items-center cursor-pointer">
-                      <User className="h-4 w-4 mr-1" />
-                      <span>Male</span>
+                    <Label htmlFor="gender-male" className="flex items-center cursor-pointer flex-1">
+                      <UserMinus className="h-5 w-5 mr-2 text-blue-500" />
+                      <span className="hidden md:inline">Male</span>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
                     <RadioGroupItem value="other" id="gender-other" />
-                    <Label htmlFor="gender-other" className="flex items-center cursor-pointer">
-                      <User className="h-4 w-4 mr-1" />
-                      <span>Other</span>
+                    <Label htmlFor="gender-other" className="flex items-center cursor-pointer flex-1">
+                      <UserCircle className="h-5 w-5 mr-2 text-gray-500" />
+                      <span className="hidden md:inline">Other</span>
                     </Label>
                   </div>
                 </RadioGroup>
@@ -180,7 +179,7 @@ const CustomerInfo = () => {
                 />
               </div>
               
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-end">
                 <Button 
                   type="submit"
                   className="bg-glamour-700 hover:bg-glamour-800"

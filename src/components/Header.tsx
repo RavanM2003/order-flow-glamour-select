@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
@@ -14,7 +13,7 @@ const Header = () => {
   return (
     <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50 w-full">
       <div className="container flex h-16 items-center justify-between">
-        <div className="font-bold text-2xl text-glamour-800">Glamour Studio</div>
+        <div className="font-bold text-2xl text-glamour-800 hidden md:block">Glamour Studio</div>
         <div className="flex items-center space-x-2 md:space-x-4">
           <Button variant={isActive('/') ? 'default' : 'ghost'} className={isActive('/') ? "bg-glamour-700" : ""} asChild>
             <Link to="/" className="flex items-center">
