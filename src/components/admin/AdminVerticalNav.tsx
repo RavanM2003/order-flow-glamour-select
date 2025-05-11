@@ -7,7 +7,8 @@ import {
   Settings,
   Home,
   Bell,
-  User
+  User,
+  DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from 'react-router-dom';
@@ -24,6 +25,7 @@ const navItems: NavItem[] = [
   { id: "services", label: "Services", icon: Scissors },
   { id: "products", label: "Products", icon: Package },
   { id: "appointments", label: "Appointments", icon: Calendar },
+  { id: "cash", label: "Cash", icon: DollarSign },
   { id: "staff", label: "Staff", icon: User },
   // { id: "profile", label: "Profile", icon: User },
   { id: "settings", label: "Settings", icon: Settings },

@@ -13,6 +13,7 @@ import StaffTab from '@/components/admin/StaffTab';
 import AdminProfile from '@/components/admin/AdminProfile';
 import CustomerDetailPage from './CustomerDetailPage';
 import { useLocation, useParams } from 'react-router-dom';
+import CashTab from '@/components/admin/CashTab';
 
 interface AdminProps {
   initialTab?: string;
@@ -26,6 +27,7 @@ const tabFromPath = (pathname: string) => {
   if (pathname.endsWith('/appointments')) return 'appointments';
   if (pathname.endsWith('/staff')) return 'staff';
   if (pathname.endsWith('/settings')) return 'settings';
+  if (pathname.endsWith('/cash')) return 'cash';
   return 'dashboard';
 };
 
@@ -74,6 +76,7 @@ const Admin: React.FC<AdminProps> = ({ initialTab }) => {
               {activeTab === "services" && <ServicesTab />}
               {activeTab === "products" && <ProductsTab />}
               {activeTab === "appointments" && <AppointmentsTab />}
+              {activeTab === "cash" && <CashTab />}
               {activeTab === "settings" && <SettingsTab />}
               {activeTab === "staff" && <StaffTab />}
               {activeTab === "profile" && <AdminProfile />}
