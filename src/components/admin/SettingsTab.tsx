@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +10,16 @@ import {
   Separator,
   Switch,
 } from '@/components/ui/index';
-import { Clock, Calendar } from 'lucide-react';
+import { Clock, Calendar, Edit, Trash } from 'lucide-react';
+import DetailDrawer from '@/components/common/DetailDrawer';
+
+// Bank type
+type Bank = {
+  id: number;
+  name: string;
+  iban: string;
+  branch?: string;
+};
 
 const SettingsTab = () => {
   const { toast } = useToast();
@@ -35,6 +43,21 @@ const SettingsTab = () => {
     saturday: { open: true, start: "10:00", end: "18:00" },
     sunday: { open: false, start: "10:00", end: "16:00" }
   });
+  
+  // TAX state
+  const [tax, setTax] = useState(18);
+  const [taxSaved, setTaxSaved] = useState(false);
+
+  // Bank state
+  const [banks, setBanks] = useState<Bank[]>([
+    { id: 1, name: 'Kapital Bank', iban: 'AZ00XXXX1234567890', branch: 'Bakı' },
+    { id: 2, name: 'PAŞA Bank', iban: 'AZ11YYYY9876543210', branch: 'Sumqayıt' },
+  ]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [selected, setSelected] = useState<Bank | null>(null);
+  const [bankForm, setBankForm] = useState<Omit<Bank, 'id'>>({ name: '', iban: '', branch: '' });
+  const [formError, setFormError] = useState('');
   
   const handleCompanyInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -71,14 +94,50 @@ const SettingsTab = () => {
       description: "Your booking configuration has been updated successfully.",
     });
   };
-  
+
+  // TAX save handler
+  const saveTax = () => {
+    setTaxSaved(true);
+    setTimeout(() => setTaxSaved(false), 1500);
+  };
+
+  // Bank handlers
+  const handleBankSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bankForm.name || !bankForm.iban) {
+      setFormError('Bank adı və IBAN vacibdir');
+      return;
+    }
+    if (editMode && selected) {
+      setBanks(banks.map(b => b.id === selected.id ? { ...b, ...bankForm } : b));
+      setEditMode(false);
+      setSelected(null);
+    } else {
+      setBanks([{ id: Date.now(), ...bankForm }, ...banks]);
+    }
+    setDrawerOpen(false);
+    setBankForm({ name: '', iban: '', branch: '' });
+    setFormError('');
+  };
+  const handleEdit = (bank: Bank) => {
+    setSelected(bank);
+    setBankForm({ name: bank.name, iban: bank.iban, branch: bank.branch || '' });
+    setEditMode(true);
+    setDrawerOpen(true);
+  };
+  const handleDelete = (id: number) => {
+    setBanks(banks.filter(b => b.id !== id));
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 w-full">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-3 max-w-md">
+        <TabsList className="grid grid-cols-5 max-w-2xl">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="hours">Working Hours</TabsTrigger>
           <TabsTrigger value="booking">Booking</TabsTrigger>
+          <TabsTrigger value="tax">Tax</TabsTrigger>
+          <TabsTrigger value="banks">Bank Accounts</TabsTrigger>
         </TabsList>
         
         <TabsContent value="general" className="mt-6">
@@ -264,6 +323,74 @@ const SettingsTab = () => {
               </form>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="tax" className="mt-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-bold mb-4 text-glamour-800">Vergi Sazlamaları</h2>
+            <div className="flex items-end gap-4">
+              <div>
+                <label className="block mb-1 font-medium">Vergi dərəcəsi (%)</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={tax}
+                  onChange={e => setTax(Number(e.target.value))}
+                  className="w-32 border rounded px-3 py-2"
+                />
+              </div>
+              <Button className="bg-glamour-700 text-white" onClick={saveTax}>Saxla</Button>
+              {taxSaved && <span className="text-green-600 font-medium">Yadda saxlanıldı!</span>}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="banks" className="mt-6">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-glamour-800">Bank Hesabları</h2>
+              <Button className="bg-glamour-700 text-white" onClick={() => { setDrawerOpen(true); setEditMode(false); setSelected(null); }}>Bank əlavə et</Button>
+            </div>
+            <div className="divide-y">
+              {banks.length === 0 && <div className="text-gray-500 py-4">Bank hesabı əlavə olunmayıb.</div>}
+              {banks.map(b => (
+                <div key={b.id} className="flex flex-col sm:flex-row sm:items-center justify-between py-3 gap-2">
+                  <div>
+                    <div className="font-medium text-glamour-800">{b.name}</div>
+                    <div className="text-sm text-gray-600">{b.iban}</div>
+                    {b.branch && <div className="text-xs text-gray-400">Filial: {b.branch}</div>}
+                  </div>
+                  <div className="flex gap-2 mt-2 sm:mt-0">
+                    <Button variant="outline" size="icon" onClick={() => handleEdit(b)} aria-label="Düzəliş et">
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="text-red-500 hover:text-red-700" onClick={() => handleDelete(b.id)} aria-label="Sil">
+                      <Trash className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DetailDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={editMode ? 'Bankı Düzəliş et' : 'Bank əlavə et'}>
+            <form className="space-y-4 p-2" onSubmit={handleBankSubmit}>
+              <div>
+                <label className="block mb-1 font-medium">Bank adı <span className="text-red-500">*</span></label>
+                <input className="w-full border rounded px-3 py-2" value={bankForm.name} onChange={e => setBankForm(f => ({ ...f, name: e.target.value }))} required />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">IBAN <span className="text-red-500">*</span></label>
+                <input className="w-full border rounded px-3 py-2" value={bankForm.iban} onChange={e => setBankForm(f => ({ ...f, iban: e.target.value }))} required />
+              </div>
+              <div>
+                <label className="block mb-1 font-medium">Filial</label>
+                <input className="w-full border rounded px-3 py-2" value={bankForm.branch} onChange={e => setBankForm(f => ({ ...f, branch: e.target.value }))} />
+              </div>
+              {formError && <div className="text-red-600 text-sm">{formError}</div>}
+              <Button type="submit" className="bg-glamour-700 text-white w-full">{editMode ? 'Yadda saxla' : 'Əlavə et'}</Button>
+            </form>
+          </DetailDrawer>
         </TabsContent>
       </Tabs>
     </div>
