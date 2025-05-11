@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Search, Edit, Trash, ChevronLeft, ChevronRight, Clock, DollarSign, CalendarPlus } from 'lucide-react';
 import DetailDrawer from '@/components/common/DetailDrawer';
+import { useToast } from '@/hooks/use-toast';
 
 const allProducts = [
   "Moisturizer Cream", "Anti-Aging Serum", "Massage Oil", "Nail Polish", "Cuticle Oil", "Hair Care Kit", "Styling Gel", "Foundation", "Lipstick", "Mascara", "Body Scrub", "Body Lotion", "Color Protection Shampoo", "Eyebrow Gel", "Foot Cream", "Soothing Gel", "Hair Mask", "Hair Serum", "Eyelash Cleanser"
@@ -21,7 +22,6 @@ const ServicesTab = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [addServiceOpen, setAddServiceOpen] = useState(false);
-  const [deleteServiceId, setDeleteServiceId] = useState(null);
   const [services, setServices] = useState([
     { 
       id: 1, 
@@ -84,6 +84,7 @@ const ServicesTab = () => {
     benefits: []
   });
   const [editServiceError, setEditServiceError] = useState('');
+  const { toast, dismiss } = useToast();
 
   // Filter services based on search term
   const filteredServices = services.filter(service => 
@@ -126,9 +127,32 @@ const ServicesTab = () => {
   };
 
   // Delete Service logic
-  const handleDeleteService = () => {
-    setServices(services.filter(s => s.id !== deleteServiceId));
-    setDeleteServiceId(null);
+  const handleDeleteService = (id) => {
+    toast({
+      title: 'Silmək istədiyinizə əminsiniz?',
+      action: (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            className="bg-red-600 text-white"
+            onClick={() => {
+              setServices(services => services.filter(s => s.id !== id));
+              dismiss();
+            }}
+          >
+            Bəli, sil
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => dismiss()}
+          >
+            Ləğv et
+          </Button>
+        </div>
+      ),
+      duration: 10000,
+    });
   };
 
   // Multi-select handler
@@ -240,8 +264,8 @@ const ServicesTab = () => {
                       <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => handleEditService(service)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-700" onClick={() => setDeleteServiceId(service.id)}>
-                        <Trash className="h-4 w-4" />
+                      <Button variant="outline" size="icon" className="text-red-500 hover:text-red-700" onClick={() => handleDeleteService(service.id)} aria-label="Sil">
+                        <Trash className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>
@@ -449,19 +473,6 @@ const ServicesTab = () => {
           <Button type="submit" className="bg-glamour-700 hover:bg-glamour-800 text-white w-full">Save Changes</Button>
         </form>
       </DetailDrawer>
-      {/* Delete Service Popup */}
-      {deleteServiceId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
-            <h2 className="text-lg font-bold mb-4 text-glamour-800">Delete Service</h2>
-            <p className="mb-6">Are you sure you want to delete this service?</p>
-            <div className="flex gap-2 justify-end">
-              <Button onClick={() => setDeleteServiceId(null)} variant="outline">Cancel</Button>
-              <Button onClick={handleDeleteService} className="bg-red-600 hover:bg-red-700 text-white">Delete</Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

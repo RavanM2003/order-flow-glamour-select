@@ -24,6 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import DetailDrawer from '@/components/common/DetailDrawer';
 import MultiSelect from '@/components/common/MultiSelect';
+import { useToast } from '@/hooks/use-toast';
 
 // Define Staff type
 type Staff = {
@@ -88,6 +89,7 @@ const StaffTab = () => {
   const [selected, setSelected] = useState<Staff | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [formError, setFormError] = useState('');
+  const { toast, dismiss } = useToast();
 
   // Form state
   const [staffForm, setStaffForm] = useState<Omit<Staff, 'id'>>({
@@ -157,6 +159,34 @@ const StaffTab = () => {
     });
     setEditMode(true);
     setDrawerOpen(true);
+  };
+
+  const handleDeleteStaff = (id: number) => {
+    toast({
+      title: 'Silmək istədiyinizə əminsiniz?',
+      action: (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            className="bg-red-600 text-white"
+            onClick={() => {
+              setStaff(staff => staff.filter(s => s.id !== id));
+              dismiss();
+            }}
+          >
+            Bəli, sil
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => dismiss()}
+          >
+            Ləğv et
+          </Button>
+        </div>
+      ),
+      duration: 10000,
+    });
   };
 
   return (
@@ -230,8 +260,8 @@ const StaffTab = () => {
                       <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => handleEdit(s)}>
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-700">
-                        <Trash className="h-4 w-4" />
+                      <Button variant="outline" size="icon" className="text-red-500 hover:text-red-700" onClick={() => handleDeleteStaff(s.id)} aria-label="Sil">
+                        <Trash className="w-4 h-4" />
                       </Button>
                     </div>
                   </TableCell>

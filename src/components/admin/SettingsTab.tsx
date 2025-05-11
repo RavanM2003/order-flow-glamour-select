@@ -22,7 +22,7 @@ type Bank = {
 };
 
 const SettingsTab = () => {
-  const { toast } = useToast();
+  const { toast, dismiss } = useToast();
   const [activeTab, setActiveTab] = useState("general");
   const [maxBookingDays, setMaxBookingDays] = useState("7");
   
@@ -126,7 +126,31 @@ const SettingsTab = () => {
     setDrawerOpen(true);
   };
   const handleDelete = (id: number) => {
-    setBanks(banks.filter(b => b.id !== id));
+    toast({
+      title: 'Silmək istədiyinizə əminsiniz?',
+      action: (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            className="bg-red-600 text-white"
+            onClick={() => {
+              setBanks(banks => banks.filter(b => b.id !== id));
+              dismiss();
+            }}
+          >
+            Bəli, sil
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => dismiss()}
+          >
+            Ləğv et
+          </Button>
+        </div>
+      ),
+      duration: 10000,
+    });
   };
 
   return (
