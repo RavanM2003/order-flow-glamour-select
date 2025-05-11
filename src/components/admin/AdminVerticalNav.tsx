@@ -27,7 +27,6 @@ const navItems: NavItem[] = [
   { id: "appointments", label: "Appointments", icon: Calendar },
   { id: "cash", label: "Cash", icon: DollarSign },
   { id: "staff", label: "Staff", icon: User },
-  // { id: "profile", label: "Profile", icon: User },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 

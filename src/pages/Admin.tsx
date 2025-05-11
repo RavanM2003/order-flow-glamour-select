@@ -36,7 +36,7 @@ const Admin: React.FC<AdminProps> = ({ initialTab }) => {
   const { customerId } = useParams();
   const isCustomerDetail = location.pathname.startsWith('/admin/customers/') && customerId;
   const [activeTab, setActiveTab] = useState(tabFromPath(location.pathname));
-  const [notifications] = useState(5); // Example notifications count
+  const [notifications] = useState(90); // Example notifications count
   
   useEffect(() => {
     setActiveTab(tabFromPath(location.pathname));
