@@ -1,10 +1,17 @@
+
 import React from 'react';
-import { OrderProvider, useOrder } from '@/context/OrderContext';
+import { useOrder } from '@/context/OrderContext';
 import CustomerInfo from './CustomerInfo';
 import ServiceSelection from './ServiceSelection';
 import PaymentDetails from './PaymentDetails';
 import { Card } from "@/components/ui/card";
 import { Check, CalendarDays, CreditCard } from "lucide-react";
+
+export type BookingMode = 'customer' | 'staff';
+
+interface CheckoutFlowProps {
+  bookingMode?: BookingMode;
+}
 
 const CheckoutSteps = [
   { number: 1, title: 'Customer Info', icon: <CalendarDays size={18} /> },
@@ -14,7 +21,7 @@ const CheckoutSteps = [
 
 const CheckoutStepper = () => {
   const { orderState, goToStep } = useOrder();
-  const currentStep = orderState.step;
+  const currentStep = orderState.currentStep;
 
   return (
     <div className="py-6">
@@ -54,15 +61,15 @@ const CheckoutStepper = () => {
   );
 };
 
-const CheckoutContent = () => {
+const CheckoutContent: React.FC<CheckoutFlowProps> = ({ bookingMode = 'customer' }) => {
   const { orderState } = useOrder();
-  const currentStep = orderState.step;
+  const currentStep = orderState.currentStep;
 
   return (
     <>
       <CheckoutStepper />
       <div className="mt-6">
-        {currentStep === 1 && <CustomerInfo />}
+        {currentStep === 1 && <CustomerInfo bookingMode={bookingMode} />}
         {currentStep === 2 && <ServiceSelection />}
         {currentStep === 3 && <PaymentDetails />}
       </div>
@@ -70,11 +77,11 @@ const CheckoutContent = () => {
   );
 };
 
-const CheckoutFlow = () => {
+const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode = 'customer' }) => {
   return (
-    <OrderProvider>
-      <CheckoutContent />
-    </OrderProvider>
+    <div>
+      <CheckoutContent bookingMode={bookingMode} />
+    </div>
   );
 };
 

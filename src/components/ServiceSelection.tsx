@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useOrder } from '@/context/OrderContext';
 import { Button } from "@/components/ui/button";
@@ -7,31 +8,71 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
-import { Search, Scissors, Package, Sparkles } from "lucide-react";
+import { Search, Scissors, Package, Sparkles, UserCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { API } from '@/lib/api';
+import MultiSelect from '@/components/common/MultiSelect';
+import { ServiceProvider } from '@/context/OrderContext';
 
-const services = [
-  { id: 1, name: "Facial Treatment", price: 150, duration: "60 min", description: "Deep cleansing facial with premium products", relatedProducts: [1, 2] },
-  { id: 2, name: "Massage Therapy", price: 120, duration: "45 min", description: "Relaxing full body massage", relatedProducts: [3] },
-  { id: 3, name: "Manicure", price: 50, duration: "30 min", description: "Nail care and polish application", relatedProducts: [] },
-  { id: 4, name: "Hair Styling", price: 80, duration: "45 min", description: "Professional hair styling", relatedProducts: [3] },
-  { id: 5, name: "Makeup Application", price: 90, duration: "60 min", description: "Full face makeup for special events", relatedProducts: [1, 2] }
-];
+interface Service {
+  id: number;
+  name: string;
+  price: number;
+  duration: string;
+  description: string;
+  relatedProducts?: number[];
+}
 
-const products = [
-  { id: 1, name: "Moisturizer Cream", price: 45, description: "Hydrating face cream for daily use" },
-  { id: 2, name: "Anti-Aging Serum", price: 75, description: "Premium anti-aging formula with collagen" },
-  { id: 3, name: "Hair Care Kit", price: 60, description: "Complete kit for healthy hair" }
-];
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  description: string;
+}
+
+interface Staff {
+  id: number;
+  name: string;
+  position: string;
+  specializations: string[];
+}
 
 const ServiceSelection = () => {
-  const { orderState, selectService, unselectService, selectProduct, unselectProduct, goToStep, updateTotal } = useOrder();
+  const { orderState, selectService, unselectService, selectProduct, unselectProduct, goToStep, updateTotal, updateServiceProviders } = useOrder();
+  const [services, setServices] = useState<Service[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
   const [selectedServices, setSelectedServices] = useState<number[]>(orderState.selectedServices || []);
   const [selectedProducts, setSelectedProducts] = useState<number[]>(orderState.selectedProducts || []);
+  const [selectedStaff, setSelectedStaff] = useState<Record<number, string[]>>({});
   const [serviceSearchTerm, setServiceSearchTerm] = useState("");
   const [productSearchTerm, setProductSearchTerm] = useState("");
   const [view, setView] = useState<'services' | 'products'>('services');
   const [recommendedProducts, setRecommendedProducts] = useState<number[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [servicesRes, productsRes, staffRes] = await Promise.all([
+          API.services.list(),
+          API.products.list(),
+          API.staff.list()
+        ]);
+        
+        setServices(servicesRes.data || []);
+        setProducts(productsRes.data || []);
+        setStaff(staffRes.data || []);
+      } catch (error) {
+        console.error("Failed to load services, products, and staff:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
 
   useEffect(() => {
     // Find all unique related products based on selected services
@@ -44,7 +85,7 @@ const ServiceSelection = () => {
     );
     
     setRecommendedProducts(uniqueRelatedProducts);
-  }, [selectedServices]);
+  }, [selectedServices, services]);
 
   const handleServiceToggle = (serviceId: number) => {
     const updatedServices = selectedServices.includes(serviceId)
@@ -52,6 +93,11 @@ const ServiceSelection = () => {
       : [...selectedServices, serviceId];
     
     setSelectedServices(updatedServices);
+    
+    // Initialize staff selection for this service if it's newly selected
+    if (!selectedServices.includes(serviceId) && !selectedStaff[serviceId]) {
+      setSelectedStaff(prev => ({ ...prev, [serviceId]: [] }));
+    }
   };
 
   const handleProductToggle = (productId: number) => {
@@ -60,6 +106,10 @@ const ServiceSelection = () => {
       : [...selectedProducts, productId];
     
     setSelectedProducts(updatedProducts);
+  };
+
+  const handleStaffSelect = (serviceId: number, staffIds: string[]) => {
+    setSelectedStaff(prev => ({ ...prev, [serviceId]: staffIds }));
   };
 
   const calculateTotal = () => {
@@ -75,6 +125,10 @@ const ServiceSelection = () => {
   };
 
   const handleContinue = () => {
+    if (selectedServices.length === 0) {
+      return; // Don't proceed if no services selected
+    }
+
     // Clear existing selections
     orderState.selectedServices.forEach(serviceId => unselectService(serviceId));
     orderState.selectedProducts.forEach(productId => unselectProduct(productId));
@@ -85,6 +139,26 @@ const ServiceSelection = () => {
     
     // Update total
     updateTotal(calculateTotal());
+    
+    // Prepare service providers information
+    const serviceProviders: ServiceProvider[] = [];
+    Object.entries(selectedStaff).forEach(([serviceId, staffIds]) => {
+      const serviceIdNum = parseInt(serviceId, 10);
+      if (selectedServices.includes(serviceIdNum)) {
+        staffIds.forEach(staffId => {
+          const staffMember = staff.find(s => s.id === parseInt(staffId, 10));
+          if (staffMember) {
+            serviceProviders.push({
+              serviceId: serviceIdNum,
+              name: staffMember.name
+            });
+          }
+        });
+      }
+    });
+    
+    // Update service providers in context
+    updateServiceProviders(serviceProviders);
     
     // Go to payment step
     goToStep(3);
@@ -101,6 +175,14 @@ const ServiceSelection = () => {
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(productSearchTerm.toLowerCase())
   );
+
+  // Format staff options for MultiSelect
+  const getStaffOptions = () => {
+    return staff.map(member => ({
+      value: member.id.toString(),
+      label: `${member.name} (${member.position})`
+    }));
+  };
 
   return (
     <div className="mt-6">
@@ -137,78 +219,140 @@ const ServiceSelection = () => {
             </Button>
           </div>
           
-          {view === 'services' && (
-            <div className="mb-8">
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input 
-                  placeholder="Search services..." 
-                  value={serviceSearchTerm} 
-                  onChange={e => setServiceSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <div className="space-y-4">
-                {filteredServices.map((service) => (
-                  <div key={service.id} className="flex items-start space-x-3 border rounded-md p-4 hover:bg-glamour-50 transition-colors">
-                    <Checkbox 
-                      id={`service-${service.id}`} 
-                      checked={selectedServices.includes(service.id)}
-                      onCheckedChange={() => handleServiceToggle(service.id)}
-                      className="mt-1"
+          {loading ? (
+            <div className="text-center py-8">Loading services and products...</div>
+          ) : (
+            <>
+              {view === 'services' && (
+                <div className="mb-8">
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input 
+                      placeholder="Search services..." 
+                      value={serviceSearchTerm} 
+                      onChange={e => setServiceSearchTerm(e.target.value)}
+                      className="pl-10"
                     />
-                    <div className="flex-1">
-                      <Label htmlFor={`service-${service.id}`} className="font-medium text-base cursor-pointer flex justify-between">
-                        <span>{service.name}</span>
-                        <span>${service.price}</span>
-                      </Label>
-                      <p className="text-sm text-gray-500 mt-1">{service.description}</p>
-                      <div className="flex justify-between items-center mt-2">
-                        <p className="text-xs text-muted-foreground">Duration: {service.duration}</p>
-                        <Link 
-                          to={`/services/${service.id}`} 
-                          className="text-xs text-glamour-700 hover:text-glamour-800 underline"
-                        >
-                          View details
-                        </Link>
-                      </div>
-                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {view === 'products' && (
-            <div className="mb-8">
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <Input 
-                  placeholder="Search products..." 
-                  value={productSearchTerm} 
-                  onChange={e => setProductSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+                  
+                  <div className="space-y-6">
+                    {filteredServices.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">No services match your search</div>
+                    ) : (
+                      filteredServices.map((service) => (
+                        <div key={service.id} className="border rounded-md p-4 hover:bg-glamour-50 transition-colors">
+                          <div className="flex items-start space-x-3">
+                            <Checkbox 
+                              id={`service-${service.id}`} 
+                              checked={selectedServices.includes(service.id)}
+                              onCheckedChange={() => handleServiceToggle(service.id)}
+                              className="mt-1"
+                            />
+                            <div className="flex-1">
+                              <Label htmlFor={`service-${service.id}`} className="font-medium text-base cursor-pointer flex justify-between">
+                                <span>{service.name}</span>
+                                <span>${service.price}</span>
+                              </Label>
+                              <p className="text-sm text-gray-500 mt-1">{service.description}</p>
+                              <div className="flex justify-between items-center mt-2">
+                                <p className="text-xs text-muted-foreground">Duration: {service.duration}</p>
+                                <Link 
+                                  to={`/services/${service.id}`} 
+                                  className="text-xs text-glamour-700 hover:text-glamour-800 underline"
+                                >
+                                  View details
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Staff selection for this service */}
+                          {selectedServices.includes(service.id) && staff.length > 0 && (
+                            <div className="mt-4 pt-3 border-t">
+                              <Label htmlFor={`staff-${service.id}`} className="block text-sm font-medium mb-1">
+                                Select Staff for this Service:
+                              </Label>
+                              <MultiSelect 
+                                options={getStaffOptions()}
+                                value={selectedStaff[service.id] || []}
+                                onChange={staffIds => handleStaffSelect(service.id, staffIds)}
+                                placeholder="Select staff..."
+                              />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                You can select multiple staff for this service
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
               
-              {recommendedProducts.length > 0 && (
-                <div className="mb-4">
-                  <h4 className="font-medium text-sm text-glamour-700 mb-2">Recommended products based on your services:</h4>
-                  <div className="space-y-3">
-                    {products
-                      .filter(product => recommendedProducts.includes(product.id))
-                      .filter((product, index, self) => self.findIndex(p => p.id === product.id) === index)
-                      .map((product) => (
-                        <div key={product.id} className="flex items-start space-x-3 border border-glamour-200 bg-glamour-50 rounded-md p-4 hover:bg-glamour-100 transition-colors">
+              {view === 'products' && (
+                <div className="mb-8">
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Input 
+                      placeholder="Search products..." 
+                      value={productSearchTerm} 
+                      onChange={e => setProductSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  
+                  {recommendedProducts.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="font-medium text-sm text-glamour-700 mb-2">Recommended products based on your services:</h4>
+                      <div className="space-y-3">
+                        {products
+                          .filter(product => recommendedProducts.includes(product.id))
+                          .filter((product, index, self) => self.findIndex(p => p.id === product.id) === index)
+                          .map((product) => (
+                            <div key={product.id} className="flex items-start space-x-3 border border-glamour-200 bg-glamour-50 rounded-md p-4 hover:bg-glamour-100 transition-colors">
+                              <Checkbox 
+                                id={`recommended-product-${product.id}`} 
+                                checked={selectedProducts.includes(product.id)}
+                                onCheckedChange={() => handleProductToggle(product.id)}
+                                className="mt-1"
+                              />
+                              <div className="flex-1">
+                                <Label htmlFor={`recommended-product-${product.id}`} className="font-medium text-base cursor-pointer flex justify-between">
+                                  <span>{product.name}</span>
+                                  <span>${product.price}</span>
+                                </Label>
+                                <p className="text-sm text-gray-500 mt-1">{product.description}</p>
+                                <div className="flex justify-end mt-2">
+                                  <Link 
+                                    to={`/products/${product.id}`} 
+                                    className="text-xs text-glamour-700 hover:text-glamour-800 underline"
+                                  >
+                                    View details
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                      <Separator className="my-4" />
+                    </div>
+                  )}
+                  
+                  <div className="space-y-4">
+                    {filteredProducts.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">No products match your search</div>
+                    ) : (
+                      filteredProducts.map((product) => (
+                        <div key={product.id} className="flex items-start space-x-3 border rounded-md p-4 hover:bg-glamour-50 transition-colors">
                           <Checkbox 
-                            id={`recommended-product-${product.id}`} 
+                            id={`product-${product.id}`} 
                             checked={selectedProducts.includes(product.id)}
                             onCheckedChange={() => handleProductToggle(product.id)}
                             className="mt-1"
                           />
                           <div className="flex-1">
-                            <Label htmlFor={`recommended-product-${product.id}`} className="font-medium text-base cursor-pointer flex justify-between">
+                            <Label htmlFor={`product-${product.id}`} className="font-medium text-base cursor-pointer flex justify-between">
                               <span>{product.name}</span>
                               <span>${product.price}</span>
                             </Label>
@@ -223,40 +367,12 @@ const ServiceSelection = () => {
                             </div>
                           </div>
                         </div>
-                      ))}
+                      ))
+                    )}
                   </div>
-                  <Separator className="my-4" />
                 </div>
               )}
-              
-              <div className="space-y-4">
-                {filteredProducts.map((product) => (
-                  <div key={product.id} className="flex items-start space-x-3 border rounded-md p-4 hover:bg-glamour-50 transition-colors">
-                    <Checkbox 
-                      id={`product-${product.id}`} 
-                      checked={selectedProducts.includes(product.id)}
-                      onCheckedChange={() => handleProductToggle(product.id)}
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <Label htmlFor={`product-${product.id}`} className="font-medium text-base cursor-pointer flex justify-between">
-                        <span>{product.name}</span>
-                        <span>${product.price}</span>
-                      </Label>
-                      <p className="text-sm text-gray-500 mt-1">{product.description}</p>
-                      <div className="flex justify-end mt-2">
-                        <Link 
-                          to={`/products/${product.id}`} 
-                          className="text-xs text-glamour-700 hover:text-glamour-800 underline"
-                        >
-                          View details
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            </>
           )}
           
           <div className="bg-gray-50 p-4 rounded-md mb-6">

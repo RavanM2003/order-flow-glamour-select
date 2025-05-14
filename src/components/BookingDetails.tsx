@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useOrder } from '@/context/OrderContext';
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,8 +44,15 @@ const demoOrder = {
 const BookingDetails = () => {
   const { orderState } = useOrder();
   // Use demo data if orderState is missing or incomplete
-  const [localStatus, setLocalStatus] = useState((orderState && orderState.orderId ? orderState.status : demoOrder.status) || "Gözləmədə");
-  const data = orderState && orderState.orderId ? orderState : { ...demoOrder, status: localStatus };
+  const [localStatus, setLocalStatus] = useState(
+    (orderState && orderState.orderId ? orderState.status : demoOrder.status) || "Gözləmədə"
+  );
+  
+  // Merge demo data with actual order state or use demo data if no order state is available
+  const data = orderState && orderState.orderId 
+    ? { ...orderState, status: localStatus } 
+    : { ...demoOrder, status: localStatus };
+  
   const bookingUrl = `${window.location.origin}/booking-details/${data.orderId}`;
   const [cancelMsg, setCancelMsg] = useState("");
 
@@ -205,4 +213,4 @@ const BookingDetails = () => {
   );
 };
 
-export default BookingDetails; 
+export default BookingDetails;

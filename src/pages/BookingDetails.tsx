@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { OrderProvider } from '@/context/OrderContext';
@@ -26,4 +27,4 @@ const BookingDetailsPage = () => {
   );
 };
 
-export default BookingDetailsPage; 
+export default BookingDetailsPage;

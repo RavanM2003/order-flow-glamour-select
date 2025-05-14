@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-// Define types
 export interface CustomerInfo {
   name: string;
   email: string;
@@ -12,6 +11,11 @@ export interface CustomerInfo {
   gender: string;
 }
 
+export interface ServiceProvider {
+  serviceId: number;
+  name: string;
+}
+
 interface OrderState {
   currentStep: number;
   customerInfo: CustomerInfo | null;
@@ -20,6 +24,8 @@ interface OrderState {
   paymentMethod: string;
   total: number;
   orderId: string | null;
+  status?: string;
+  serviceProviders?: ServiceProvider[];
 }
 
 interface OrderContextType {
@@ -33,8 +39,20 @@ interface OrderContextType {
   setPaymentMethod: (method: string) => void;
   updateTotal: (total: number) => void;
   completeOrder: (orderId: string) => void;
+  updateStatus: (status: string) => void;
+  updateServiceProviders: (providers: ServiceProvider[]) => void;
   resetOrder: () => void;
 }
+
+const defaultCustomer: CustomerInfo = {
+  name: '',
+  email: '',
+  phone: '',
+  date: '',
+  time: '',
+  notes: '',
+  gender: 'female'
+};
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
@@ -62,7 +80,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     selectedProducts: [],
     paymentMethod: 'cash',
     total: 0,
-    orderId: null
+    orderId: null,
+    status: 'pending',
+    serviceProviders: []
   });
 
   const goToStep = (step: number) => {
@@ -74,30 +94,30 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
   };
 
   const selectService = (serviceId: number) => {
-    setOrderState(prev => ({
-      ...prev,
-      selectedServices: [...prev.selectedServices, serviceId]
+    setOrderState(prev => ({ 
+      ...prev, 
+      selectedServices: [...prev.selectedServices, serviceId] 
     }));
   };
 
   const unselectService = (serviceId: number) => {
-    setOrderState(prev => ({
-      ...prev,
-      selectedServices: prev.selectedServices.filter(id => id !== serviceId)
+    setOrderState(prev => ({ 
+      ...prev, 
+      selectedServices: prev.selectedServices.filter(id => id !== serviceId) 
     }));
   };
 
   const selectProduct = (productId: number) => {
-    setOrderState(prev => ({
-      ...prev,
-      selectedProducts: [...prev.selectedProducts, productId]
+    setOrderState(prev => ({ 
+      ...prev, 
+      selectedProducts: [...prev.selectedProducts, productId] 
     }));
   };
 
   const unselectProduct = (productId: number) => {
-    setOrderState(prev => ({
-      ...prev,
-      selectedProducts: prev.selectedProducts.filter(id => id !== productId)
+    setOrderState(prev => ({ 
+      ...prev, 
+      selectedProducts: prev.selectedProducts.filter(id => id !== productId) 
     }));
   };
 
@@ -113,6 +133,14 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     setOrderState(prev => ({ ...prev, orderId }));
   };
 
+  const updateStatus = (status: string) => {
+    setOrderState(prev => ({ ...prev, status }));
+  };
+
+  const updateServiceProviders = (providers: ServiceProvider[]) => {
+    setOrderState(prev => ({ ...prev, serviceProviders: providers }));
+  };
+
   const resetOrder = () => {
     setOrderState({
       currentStep: 1,
@@ -121,7 +149,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
       selectedProducts: [],
       paymentMethod: 'cash',
       total: 0,
-      orderId: null
+      orderId: null,
+      status: 'pending',
+      serviceProviders: []
     });
   };
 
@@ -137,6 +167,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
       setPaymentMethod,
       updateTotal,
       completeOrder,
+      updateStatus,
+      updateServiceProviders,
       resetOrder
     }}>
       {children}

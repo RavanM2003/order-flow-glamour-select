@@ -7,9 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CalendarIcon, Clock, UserCircle } from "lucide-react";
-
-export type BookingMode = 'customer' | 'staff';
+import { CalendarIcon, Clock, UserCircle, UserPlus, UserMinus } from "lucide-react";
+import { BookingMode } from './CheckoutFlow';
 
 interface CustomerInfoProps {
   bookingMode?: BookingMode;
@@ -28,7 +27,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode = 'customer' })
   });
 
   useEffect(() => {
-    // Update form data if customerInfo changes (e.g. from context)
+    // If we have customer info in context, use it
     if (orderState.customerInfo) {
       setFormData({
         name: orderState.customerInfo.name || '',
@@ -112,22 +111,22 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode = 'customer' })
                   <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
                     <RadioGroupItem value="female" id="gender-female" />
                     <Label htmlFor="gender-female" className="flex items-center cursor-pointer flex-1">
-                      <UserCircle className="h-5 w-5 mr-2 text-pink-500" />
-                      <span>Female</span>
+                      <UserPlus className="h-5 w-5 mr-2 text-pink-500" />
+                      <span className="hidden md:inline">Female</span>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
                     <RadioGroupItem value="male" id="gender-male" />
                     <Label htmlFor="gender-male" className="flex items-center cursor-pointer flex-1">
-                      <UserCircle className="h-5 w-5 mr-2 text-blue-500" />
-                      <span>Male</span>
+                      <UserMinus className="h-5 w-5 mr-2 text-blue-500" />
+                      <span className="hidden md:inline">Male</span>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
                     <RadioGroupItem value="other" id="gender-other" />
                     <Label htmlFor="gender-other" className="flex items-center cursor-pointer flex-1">
                       <UserCircle className="h-5 w-5 mr-2 text-gray-500" />
-                      <span>Other</span>
+                      <span className="hidden md:inline">Other</span>
                     </Label>
                   </div>
                 </RadioGroup>
@@ -167,7 +166,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode = 'customer' })
                 <div>
                   <Label htmlFor="date" className="flex items-center">
                     <CalendarIcon className="h-4 w-4 mr-2" />
-                    Appointment Date
+                    Preferred Date
                   </Label>
                   <Input
                     id="date"
@@ -185,7 +184,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode = 'customer' })
                 <div>
                   <Label htmlFor="time" className="flex items-center">
                     <Clock className="h-4 w-4 mr-2" />
-                    Appointment Time
+                    Preferred Time
                   </Label>
                   <Input
                     id="time"

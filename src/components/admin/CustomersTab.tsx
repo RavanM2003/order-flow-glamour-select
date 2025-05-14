@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Search, Eye, ChevronLeft, ChevronRight, CalendarPlus, UserCircle } from 'lucide-react';
+import { Search, Eye, ChevronLeft, ChevronRight, CalendarPlus, UserCircle, UserPlus } from 'lucide-react';
 import DetailDrawer from '@/components/common/DetailDrawer';
 import CustomerDetailPage from '@/pages/CustomerDetailPage';
 import CheckoutFlow from '@/components/CheckoutFlow';
@@ -104,6 +104,10 @@ const CustomersTab = () => {
           title: "Customer added",
           description: `${data.name} has been added successfully`,
         });
+        
+        // Automatically open appointment drawer for the new customer
+        setSelectedCustomerForAppointment(data);
+        setAddAppointmentOpen(true);
       }
     } catch (error) {
       console.error('Failed to add customer:', error);
@@ -127,7 +131,7 @@ const CustomersTab = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-glamour-800">Customers</h2>
             <Button className="bg-glamour-700 hover:bg-glamour-800 text-white" onClick={() => setAddCustomerOpen(true)}>
-              <UserCircle className="w-4 h-4 mr-2" /> Add Customer
+              <UserPlus className="w-4 h-4 mr-2" /> Add Customer
             </Button>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
@@ -243,52 +247,24 @@ const CustomersTab = () => {
           {viewCustomer && <CustomerDetailPage customer={viewCustomer} />}
         </DetailDrawer>
         
-        {/* Add Customer Drawer - Improved UI */}
+        {/* Add Customer Drawer */}
         <DetailDrawer open={addCustomerOpen} onOpenChange={setAddCustomerOpen} title="Add New Customer">
           <form onSubmit={handleAddCustomer} className="space-y-6 p-6">
             <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <Label htmlFor="name" className="text-base font-medium">Full Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter customer name"
-                    value={newCustomer.name}
-                    onChange={e => setNewCustomer({ ...newCustomer, name: e.target.value })}
-                    className="mt-1"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="phone" className="text-base font-medium">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel" 
-                    placeholder="+994 XX XXX XX XX"
-                    value={newCustomer.phone}
-                    onChange={e => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-                    className="mt-1"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="email" className="text-base font-medium">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="customer@example.com"
-                    value={newCustomer.email}
-                    onChange={e => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Optional for communications</p>
-                </div>
+              <div>
+                <Label htmlFor="name" className="text-base font-medium">Full Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Enter customer name"
+                  value={newCustomer.name}
+                  onChange={e => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                  className="mt-1"
+                  required
+                />
               </div>
               
               <div>
-                <Label className="text-base font-medium mb-2 block">Gender</Label>
+                <Label className="text-base font-medium">Gender</Label>
                 <RadioGroup 
                   value={newCustomer.gender} 
                   onValueChange={value => setNewCustomer({ ...newCustomer, gender: value })}
@@ -317,6 +293,35 @@ const CustomersTab = () => {
                   </div>
                 </RadioGroup>
               </div>
+              
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="phone" className="text-base font-medium">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel" 
+                    placeholder="+994 XX XXX XX XX"
+                    value={newCustomer.phone}
+                    onChange={e => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                    className="mt-1"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Required for customer identification</p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="email" className="text-base font-medium">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="customer@example.com"
+                    value={newCustomer.email}
+                    onChange={e => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Optional for communications</p>
+                </div>
+              </div>
             </div>
             
             <div className="flex gap-2 justify-end pt-4">
@@ -330,18 +335,19 @@ const CustomersTab = () => {
           </form>
         </DetailDrawer>
         
-        {/* Add Appointment Drawer with pre-populated customer info */}
+        {/* Add Appointment Drawer */}
         <DetailDrawer 
           open={addAppointmentOpen} 
           onOpenChange={open => {
             setAddAppointmentOpen(open);
             if (!open) setSelectedCustomerForAppointment(null);
-          }} 
+          }}
           title="Book Appointment"
+          className="w-full md:max-w-3xl"
         >
-          {selectedCustomerForAppointment && (
-            <div className="p-4 mb-4 bg-gray-50 rounded-md border">
-              <h3 className="font-medium mb-2">Customer Information</h3>
+          <div className="p-4 mb-4 bg-gray-50 rounded-md border">
+            <h3 className="font-medium mb-2">Customer Information</h3>
+            {selectedCustomerForAppointment && (
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <span className="font-medium">Name:</span> {selectedCustomerForAppointment.name}
@@ -349,9 +355,15 @@ const CustomersTab = () => {
                 <div>
                   <span className="font-medium">Phone:</span> {selectedCustomerForAppointment.phone}
                 </div>
+                {selectedCustomerForAppointment.email && (
+                  <div>
+                    <span className="font-medium">Email:</span> {selectedCustomerForAppointment.email}
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
+          
           <OrderProvider initialCustomer={selectedCustomerForAppointment}>
             <CheckoutFlow bookingMode="staff" />
           </OrderProvider>
