@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface CustomerInfo {
@@ -17,16 +16,26 @@ export interface ServiceProvider {
 }
 
 export interface OrderState {
-  currentStep: number;
-  customerInfo: CustomerInfo | null;
+  step?: number;
+  customerId?: number;
+  customerInfo?: {
+    name: string;
+    email: string;
+    phone: string;
+    gender: string;
+    date: string;
+    time: string;
+    notes: string;
+  };
   selectedServices: number[];
   selectedProducts: number[];
-  paymentMethod: string;
-  total: number;
-  orderId: string | null;
-  status: string;
-  serviceProviders: ServiceProvider[];
-  appliedProducts?: Record<number, number[]>;
+  serviceProviders?: Array<{ serviceId: number; name: string }>;
+  paymentMethod?: string;
+  orderId?: string;
+  status?: string;
+  totalAmount?: number;
+  amountPaid?: number;
+  remainingBalance?: number;
 }
 
 interface OrderContextType {
@@ -76,20 +85,19 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
   } : null;
 
   const [orderState, setOrderState] = useState<OrderState>({
-    currentStep: 1,
+    step: 1,
     customerInfo: initialCustomerInfo,
     selectedServices: [],
     selectedProducts: [],
-    paymentMethod: 'cash',
-    total: 0,
-    orderId: null,
-    status: 'pending',
     serviceProviders: [],
-    appliedProducts: {}
+    paymentMethod: 'cash',
+    totalAmount: 0,
+    amountPaid: 0,
+    remainingBalance: 0
   });
 
   const goToStep = (step: number) => {
-    setOrderState(prev => ({ ...prev, currentStep: step }));
+    setOrderState(prev => ({ ...prev, step }));
   };
 
   const updateCustomerInfo = (info: CustomerInfo) => {
@@ -131,7 +139,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
   };
 
   const updateTotal = (total: number) => {
-    setOrderState(prev => ({ ...prev, total }));
+    setOrderState(prev => ({ ...prev, totalAmount: total }));
   };
 
   const completeOrder = (orderId: string) => {
@@ -152,16 +160,15 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
 
   const resetOrder = () => {
     setOrderState({
-      currentStep: 1,
+      step: 1,
       customerInfo: null,
       selectedServices: [],
       selectedProducts: [],
-      paymentMethod: 'cash',
-      total: 0,
-      orderId: null,
-      status: 'pending',
       serviceProviders: [],
-      appliedProducts: {}
+      paymentMethod: 'cash',
+      totalAmount: 0,
+      amountPaid: 0,
+      remainingBalance: 0
     });
   };
 

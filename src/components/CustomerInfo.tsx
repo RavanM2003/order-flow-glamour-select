@@ -1,230 +1,217 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useOrder } from '@/context/OrderContext';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { format, addMonths } from 'date-fns';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CalendarIcon, Clock, UserCircle } from "lucide-react";
-import { BookingMode } from './CheckoutFlow';
+import { toast } from "@/components/ui/use-toast";
 
-interface CustomerInfoProps {
-  bookingMode?: BookingMode;
-}
-
-const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode = 'customer' }) => {
-  const { orderState, updateCustomerInfo, goToStep } = useOrder();
+const CustomerInfo = () => {
+  const { orderState, updateOrder } = useOrder();
   const [formData, setFormData] = useState({
     name: orderState.customerInfo?.name || '',
     email: orderState.customerInfo?.email || '',
     phone: orderState.customerInfo?.phone || '',
+    gender: orderState.customerInfo?.gender || 'female',
     date: orderState.customerInfo?.date || '',
     time: orderState.customerInfo?.time || '',
-    notes: orderState.customerInfo?.notes || '',
-    gender: orderState.customerInfo?.gender || 'female'
+    notes: orderState.customerInfo?.notes || ''
   });
-
-  useEffect(() => {
-    // If we have customer info in context, use it
-    if (orderState.customerInfo) {
-      setFormData({
-        name: orderState.customerInfo.name || '',
-        email: orderState.customerInfo.email || '',
-        phone: orderState.customerInfo.phone || '',
-        date: orderState.customerInfo.date || '',
-        time: orderState.customerInfo.time || '',
-        notes: orderState.customerInfo.notes || '',
-        gender: orderState.customerInfo.gender || 'female'
-      });
-    }
-  }, [orderState.customerInfo]);
-
-  // Work hours
-  const workHours = {
-    start: "09:00",
-    end: "19:00"
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleGenderChange = (value: string) => {
-    setFormData(prev => ({ ...prev, gender: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateCustomerInfo(formData);
-    goToStep(2);
-  };
-
-  // Calculate min and max date (today + 7 days) for date picker
-  const today = new Date();
-  const minDate = today.toISOString().split('T')[0];
+  const [formErrors, setFormErrors] = useState({
+    name: false,
+    phone: false,
+    email: false,
+    date: false
+  });
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(formData.date ? new Date(formData.date) : undefined);
   
-  // Calculate max date (today + 7 days)
-  const maxDate = new Date();
-  maxDate.setDate(today.getDate() + 7);
-  const maxDateString = maxDate.toISOString().split('T')[0];
-
-  // For staff mode with existing customer
-  const isExistingCustomerInStaffMode = 
-    bookingMode === 'staff' && 
-    orderState.customerInfo && 
-    (orderState.customerInfo.name || orderState.customerInfo.phone);
-
+  const availableTimeSlots = [
+    "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30",
+    "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30",
+    "17:00", "17:30", "18:00"
+  ];
+  
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    
+    if (!formData.name || !formData.phone) {
+      setFormErrors({
+        name: !formData.name,
+        phone: !formData.phone,
+        email: false,
+        date: false
+      });
+      return;
+    }
+    
+    updateOrder({
+      step: 2,
+      customerInfo: {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        gender: formData.gender,
+        date: formData.date,
+        time: formData.time,
+        notes: formData.notes
+      }
+    });
+    
+    toast({
+      title: "Customer information saved",
+      description: "Continue to service selection"
+    });
+  };
+  
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+      setFormData({ ...formData, date: format(date, 'yyyy-MM-dd') });
+      setFormErrors({ ...formErrors, date: false });
+    }
+  };
+  
   return (
-    <div className="mt-6">
-      <Card>
-        <CardContent className="pt-6">
-          <h2 className="text-2xl font-bold mb-6 text-glamour-800">Customer Information</h2>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="name" className="text-base">Full Name</Label>
+          <Input
+            id="name"
+            placeholder="Enter your full name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className={`mt-1 ${formErrors.name ? 'border-red-500' : ''}`}
+          />
+          {formErrors.name && <p className="text-red-500 text-xs mt-1">Name is required</p>}
+        </div>
+        
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+          <div>
+            <Label htmlFor="phone" className="text-base">Phone Number</Label>
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="+994 XX XXX XX XX"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className={`mt-1 ${formErrors.phone ? 'border-red-500' : ''}`}
+            />
+            {formErrors.phone && <p className="text-red-500 text-xs mt-1">Phone number is required</p>}
+          </div>
           
-          <form onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter full name"
-                  required
-                  disabled={isExistingCustomerInStaffMode}
-                  className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
-                />
-              </div>
-
-              {/* Gender Selection */}
-              <div>
-                <Label className="mb-2 block">Gender</Label>
-                <RadioGroup 
-                  value={formData.gender} 
-                  onValueChange={handleGenderChange}
-                  className="grid grid-cols-3 gap-4"
-                >
-                  <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
-                    <RadioGroupItem value="female" id="gender-female" disabled={isExistingCustomerInStaffMode} />
-                    <Label htmlFor="gender-female" className="flex items-center cursor-pointer flex-1">
-                      <UserCircle className="h-5 w-5 mr-2 text-pink-500" />
-                      <span className="hidden md:inline">Female</span>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
-                    <RadioGroupItem value="male" id="gender-male" disabled={isExistingCustomerInStaffMode} />
-                    <Label htmlFor="gender-male" className="flex items-center cursor-pointer flex-1">
-                      <UserCircle className="h-5 w-5 mr-2 text-blue-500" />
-                      <span className="hidden md:inline">Male</span>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
-                    <RadioGroupItem value="other" id="gender-other" disabled={isExistingCustomerInStaffMode} />
-                    <Label htmlFor="gender-other" className="flex items-center cursor-pointer flex-1">
-                      <UserCircle className="h-5 w-5 mr-2 text-gray-500" />
-                      <span className="hidden md:inline">Other</span>
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="your.email@example.com"
-                    disabled={isExistingCustomerInStaffMode}
-                    className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
-                    required={!isExistingCustomerInStaffMode}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="+994 XX XXX XX XX"
-                    disabled={isExistingCustomerInStaffMode}
-                    className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <Label htmlFor="date" className="flex items-center">
-                    <CalendarIcon className="h-4 w-4 mr-2" />
-                    Preferred Date
-                  </Label>
-                  <Input
-                    id="date"
-                    name="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={handleChange}
-                    min={minDate}
-                    max={maxDateString}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">You can only book up to 7 days in advance</p>
-                </div>
-                
-                <div>
-                  <Label htmlFor="time" className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2" />
-                    Preferred Time
-                  </Label>
-                  <Input
-                    id="time"
-                    name="time"
-                    type="time"
-                    value={formData.time}
-                    onChange={handleChange}
-                    min={workHours.start}
-                    max={workHours.end}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Business hours: {workHours.start} - {workHours.end}</p>
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="notes">Special Requests or Notes (Optional)</Label>
-                <Textarea
-                  id="notes"
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  placeholder="Any specific requests or information we should know about"
-                  rows={3}
-                />
-              </div>
-              
-              <div className="flex justify-end">
-                <Button 
-                  type="submit"
-                  className="bg-glamour-700 hover:bg-glamour-800"
-                >
-                  Continue to Services
-                </Button>
-              </div>
+          <div>
+            <Label htmlFor="email" className="text-base">Email (Optional)</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="your@email.com"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <Label className="text-base">Gender</Label>
+          <div className="grid grid-cols-3 gap-3">
+            <div 
+              className={`flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-glamour-50 transition-colors ${formData.gender === 'female' ? 'bg-glamour-50 border-glamour-300' : ''}`}
+              onClick={() => setFormData({ ...formData, gender: 'female' })}
+            >
+              <input type="radio" checked={formData.gender === 'female'} readOnly />
+              <span>Female</span>
             </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+            <div 
+              className={`flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-glamour-50 transition-colors ${formData.gender === 'male' ? 'bg-glamour-50 border-glamour-300' : ''}`}
+              onClick={() => setFormData({ ...formData, gender: 'male' })}
+            >
+              <input type="radio" checked={formData.gender === 'male'} readOnly />
+              <span>Male</span>
+            </div>
+            <div 
+              className={`flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-glamour-50 transition-colors ${formData.gender === 'other' ? 'bg-glamour-50 border-glamour-300' : ''}`}
+              onClick={() => setFormData({ ...formData, gender: 'other' })}
+            >
+              <input type="radio" checked={formData.gender === 'other'} readOnly />
+              <span>Other</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <Label className="text-base">Appointment Date & Time</Label>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+            <div>
+              <Label htmlFor="date">Select Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={`w-full mt-1 justify-start text-left font-normal ${
+                      formErrors.date ? 'border-red-500' : ''
+                    }`}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {formData.date ? format(selectedDate, 'PPP') : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={(date) => handleDateSelect(date)}
+                    disabled={(date) => date < new Date() || date > addMonths(new Date(), 3)}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              {formErrors.date && <p className="text-red-500 text-xs mt-1">Date is required</p>}
+            </div>
+            
+            <div>
+              <Label htmlFor="time">Select Time</Label>
+              <Select 
+                value={formData.time} 
+                onValueChange={(value) => setFormData({ ...formData, time: value })}
+              >
+                <SelectTrigger className="w-full mt-1">
+                  <SelectValue placeholder="Select time" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTimeSlots.map(time => (
+                    <SelectItem key={time} value={time}>{time}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+        
+        <div>
+          <Label htmlFor="notes" className="text-base">Additional Notes (Optional)</Label>
+          <Textarea
+            id="notes"
+            placeholder="Special requests or comments"
+            value={formData.notes}
+            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            className="mt-1"
+          />
+        </div>
+      </div>
+      
+      <div className="flex justify-end">
+        <Button type="submit" className="bg-glamour-700 hover:bg-glamour-800 text-white">
+          Continue to Services
+        </Button>
+      </div>
+    </form>
   );
 };
 

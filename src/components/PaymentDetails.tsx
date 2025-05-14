@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -33,7 +32,7 @@ import {
 import { API } from "@/lib/api";
 
 const PaymentDetails = () => {
-  const { orderState, setPaymentMethod, goToStep, completeOrder } = useOrder();
+  const { orderState, setPaymentMethod, goToStep, completeOrder, updateOrder } = useOrder();
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethodState] = useState(
     orderState.paymentMethod || "cash"
@@ -172,25 +171,29 @@ const PaymentDetails = () => {
       setPaymentMethod(paymentMethod);
       
       // Generate order ID (this would be done by the backend in production)
-      const orderId = config.usesMockData
-        ? `ORD-${Math.floor(Math.random() * 10000)}`
-        : null;
+      const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
       
-      // Simulate API call for order creation
-      if (config.usesMockData) {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        completeOrder(orderId as string);
-        
-        toast({
-          title: "Order Completed",
-          description: "Your booking has been successfully created!"
-        });
-      } else {
-        // Real API call would happen here
-        // const response = await createOrder({...orderState, paymentMethod});
-        // completeOrder(response.orderId);
-      }
+      // Prepare order data
+      const orderData = {
+        ...orderState,
+        orderId,
+        paymentMethod: paymentMethod,
+        status: 'pending',
+        amountPaid: paymentMethod === 'card' ? parseFloat(totalAmount) : 0,
+        totalAmount: parseFloat(totalAmount)
+      };
+      
+      // Update order state with payment info and move to confirmation step
+      updateOrder({
+        ...orderData,
+        step: 4
+      });
+      
+      // Show success message
+      toast({
+        title: "Booking successful!",
+        description: "Your appointment has been booked successfully."
+      });
       
       // Move to next step (confirmation)
       goToStep(4);

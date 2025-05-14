@@ -1,91 +1,100 @@
 
 import React from 'react';
 import { useOrder } from '@/context/OrderContext';
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import CustomerInfo from './CustomerInfo';
 import ServiceSelection from './ServiceSelection';
 import PaymentDetails from './PaymentDetails';
 import BookingConfirmation from './BookingConfirmation';
 
-export type BookingMode = 'customer' | 'staff';
+type CheckoutFlowProps = {
+  bookingMode?: 'client' | 'staff';
+};
 
-interface CheckoutFlowProps {
-  bookingMode?: BookingMode;
-}
-
-const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode = 'customer' }) => {
-  const { orderState } = useOrder();
-  const { currentStep } = orderState;
+const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode = 'client' }) => {
+  const { orderState, updateOrder } = useOrder();
+  
+  // Render different steps based on current step
+  const renderStep = () => {
+    if (!orderState.step) {
+      // Initialize step if not set
+      updateOrder({ step: 1 });
+      return <CustomerInfo />;
+    }
+    
+    switch (orderState.step) {
+      case 1:
+        return <CustomerInfo />;
+      case 2:
+        return <ServiceSelection bookingMode={bookingMode} />;
+      case 3:
+        return <PaymentDetails />;
+      case 4:
+        return <BookingConfirmation />;
+      default:
+        return <CustomerInfo />;
+    }
+  };
 
   return (
-    <div>
-      <div className="mb-8">
-        <div className="flex justify-between items-center">
-          <div className={`step ${currentStep >= 1 ? 'active' : ''}`}>
-            <div className="step-number">1</div>
-            <div className="step-label">Customer Info</div>
-          </div>
-          <div className="step-connector"></div>
-          <div className={`step ${currentStep >= 2 ? 'active' : ''}`}>
-            <div className="step-number">2</div>
-            <div className="step-label">Services & Products</div>
-          </div>
-          <div className="step-connector"></div>
-          <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
-            <div className="step-number">3</div>
-            <div className="step-label">Payment</div>
-          </div>
-          <div className="step-connector"></div>
-          <div className={`step ${currentStep >= 4 ? 'active' : ''}`}>
-            <div className="step-number">4</div>
-            <div className="step-label">Confirmation</div>
-          </div>
-        </div>
-      </div>
-      
-      {currentStep === 1 && <CustomerInfo bookingMode={bookingMode} />}
-      {currentStep === 2 && <ServiceSelection />}
-      {currentStep === 3 && <PaymentDetails />}
-      {currentStep === 4 && <BookingConfirmation />}
-
-      <style jsx>{`
-        .step {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          flex: 1;
-        }
-        .step-number {
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background-color: #e5e7eb;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-bottom: 8px;
-          font-weight: bold;
-        }
-        .step-label {
-          font-size: 14px;
-          color: #6b7280;
-        }
-        .step.active .step-number {
-          background-color: #9f7aea;
-          color: white;
-        }
-        .step.active .step-label {
-          color: #4b5563;
-          font-weight: 600;
-        }
-        .step-connector {
-          flex-grow: 1;
-          height: 2px;
-          background-color: #e5e7eb;
-          margin: 0 8px;
-          margin-bottom: 25px;
-        }
-      `}</style>
-    </div>
+    <>
+      <style>
+        {`
+          .step-indicator {
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+          }
+          .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            height: 2px;
+            width: 100%;
+            background-color: #e5e7eb;
+            z-index: 0;
+          }
+        `}
+      </style>
+      <Card className="p-6">
+        {orderState.step !== 4 && (
+          <>
+            <div className="step-indicator mb-6">
+              {[1, 2, 3].map((step) => (
+                <div
+                  key={step}
+                  className={`relative z-10 flex items-center justify-center w-8 h-8 rounded-full ${
+                    step <= (orderState.step || 1)
+                      ? 'bg-glamour-700 text-white'
+                      : 'bg-gray-100 text-gray-400'
+                  } font-medium text-sm`}
+                >
+                  {step}
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-3 mb-6 text-sm font-medium">
+              <div className={`text-center ${(orderState.step || 1) >= 1 ? 'text-glamour-700' : 'text-gray-400'}`}>
+                Customer Information
+              </div>
+              <div className={`text-center ${(orderState.step || 1) >= 2 ? 'text-glamour-700' : 'text-gray-400'}`}>
+                Select Services
+              </div>
+              <div className={`text-center ${(orderState.step || 1) >= 3 ? 'text-glamour-700' : 'text-gray-400'}`}>
+                Payment
+              </div>
+            </div>
+            <Separator className="mb-6" />
+          </>
+        )}
+        
+        {renderStep()}
+      </Card>
+    </>
   );
 };
 
