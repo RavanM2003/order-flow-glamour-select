@@ -16,7 +16,7 @@ export interface ServiceProvider {
   name: string;
 }
 
-interface OrderState {
+export interface OrderState {
   currentStep: number;
   customerInfo: CustomerInfo | null;
   selectedServices: number[];
@@ -24,8 +24,9 @@ interface OrderState {
   paymentMethod: string;
   total: number;
   orderId: string | null;
-  status?: string;
-  serviceProviders?: ServiceProvider[];
+  status: string;
+  serviceProviders: ServiceProvider[];
+  appliedProducts?: Record<number, number[]>;
 }
 
 interface OrderContextType {
@@ -41,6 +42,7 @@ interface OrderContextType {
   completeOrder: (orderId: string) => void;
   updateStatus: (status: string) => void;
   updateServiceProviders: (providers: ServiceProvider[]) => void;
+  updateAppliedProducts: (appliedProducts: Record<number, number[]>) => void;
   resetOrder: () => void;
 }
 
@@ -82,7 +84,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     total: 0,
     orderId: null,
     status: 'pending',
-    serviceProviders: []
+    serviceProviders: [],
+    appliedProducts: {}
   });
 
   const goToStep = (step: number) => {
@@ -103,7 +106,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
   const unselectService = (serviceId: number) => {
     setOrderState(prev => ({ 
       ...prev, 
-      selectedServices: prev.selectedServices.filter(id => id !== serviceId) 
+      selectedServices: prev.selectedServices.filter(id => id !== serviceId),
+      // Also remove any service providers associated with this service
+      serviceProviders: prev.serviceProviders.filter(sp => sp.serviceId !== serviceId)
     }));
   };
 
@@ -130,7 +135,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
   };
 
   const completeOrder = (orderId: string) => {
-    setOrderState(prev => ({ ...prev, orderId }));
+    setOrderState(prev => ({ ...prev, orderId, status: 'confirmed' }));
   };
 
   const updateStatus = (status: string) => {
@@ -139,6 +144,10 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
 
   const updateServiceProviders = (providers: ServiceProvider[]) => {
     setOrderState(prev => ({ ...prev, serviceProviders: providers }));
+  };
+
+  const updateAppliedProducts = (appliedProducts: Record<number, number[]>) => {
+    setOrderState(prev => ({ ...prev, appliedProducts }));
   };
 
   const resetOrder = () => {
@@ -151,7 +160,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
       total: 0,
       orderId: null,
       status: 'pending',
-      serviceProviders: []
+      serviceProviders: [],
+      appliedProducts: {}
     });
   };
 
@@ -169,6 +179,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
       completeOrder,
       updateStatus,
       updateServiceProviders,
+      updateAppliedProducts,
       resetOrder
     }}>
       {children}

@@ -4,8 +4,7 @@ import { useOrder } from '@/context/OrderContext';
 import CustomerInfo from './CustomerInfo';
 import ServiceSelection from './ServiceSelection';
 import PaymentDetails from './PaymentDetails';
-import { Card } from "@/components/ui/card";
-import { Check, CalendarDays, CreditCard } from "lucide-react";
+import BookingConfirmation from './BookingConfirmation';
 
 export type BookingMode = 'customer' | 'staff';
 
@@ -13,74 +12,79 @@ interface CheckoutFlowProps {
   bookingMode?: BookingMode;
 }
 
-const CheckoutSteps = [
-  { number: 1, title: 'Customer Info', icon: <CalendarDays size={18} /> },
-  { number: 2, title: 'Select Services', icon: <Check size={18} /> },
-  { number: 3, title: 'Payment', icon: <CreditCard size={18} /> },
-];
-
-const CheckoutStepper = () => {
-  const { orderState, goToStep } = useOrder();
-  const currentStep = orderState.currentStep;
-
-  return (
-    <div className="py-6">
-      <div className="flex justify-center">
-        <div className="flex items-center">
-          {CheckoutSteps.map((step, index) => (
-            <React.Fragment key={step.number}>
-              <div 
-                className={`flex flex-col items-center cursor-pointer ${index < currentStep - 1 ? 'opacity-70' : ''}`}
-                onClick={() => {
-                  // Allow going back to previous steps
-                  if (step.number < currentStep) {
-                    goToStep(step.number);
-                  }
-                }}
-              >
-                <div 
-                  className={`
-                    w-10 h-10 rounded-full flex items-center justify-center 
-                    ${step.number < currentStep ? 'bg-glamour-700 text-white' : step.number === currentStep ? 'bg-glamour-600 text-white' : 'bg-gray-200'}
-                  `}
-                >
-                  {step.number < currentStep ? <Check size={18} /> : step.icon}
-                </div>
-                <div className="mt-2 text-sm font-medium">
-                  <span className="hidden md:inline">{step.title}</span>
-                </div>
-              </div>
-              {index < CheckoutSteps.length - 1 && (
-                <div className={`w-16 h-[2px] mx-1 ${step.number < currentStep ? 'bg-glamour-700' : 'bg-gray-200'}`}></div>
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const CheckoutContent: React.FC<CheckoutFlowProps> = ({ bookingMode = 'customer' }) => {
-  const { orderState } = useOrder();
-  const currentStep = orderState.currentStep;
-
-  return (
-    <>
-      <CheckoutStepper />
-      <div className="mt-6">
-        {currentStep === 1 && <CustomerInfo bookingMode={bookingMode} />}
-        {currentStep === 2 && <ServiceSelection />}
-        {currentStep === 3 && <PaymentDetails />}
-      </div>
-    </>
-  );
-};
-
 const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode = 'customer' }) => {
+  const { orderState } = useOrder();
+  const { currentStep } = orderState;
+
   return (
     <div>
-      <CheckoutContent bookingMode={bookingMode} />
+      <div className="mb-8">
+        <div className="flex justify-between items-center">
+          <div className={`step ${currentStep >= 1 ? 'active' : ''}`}>
+            <div className="step-number">1</div>
+            <div className="step-label">Customer Info</div>
+          </div>
+          <div className="step-connector"></div>
+          <div className={`step ${currentStep >= 2 ? 'active' : ''}`}>
+            <div className="step-number">2</div>
+            <div className="step-label">Services & Products</div>
+          </div>
+          <div className="step-connector"></div>
+          <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
+            <div className="step-number">3</div>
+            <div className="step-label">Payment</div>
+          </div>
+          <div className="step-connector"></div>
+          <div className={`step ${currentStep >= 4 ? 'active' : ''}`}>
+            <div className="step-number">4</div>
+            <div className="step-label">Confirmation</div>
+          </div>
+        </div>
+      </div>
+      
+      {currentStep === 1 && <CustomerInfo bookingMode={bookingMode} />}
+      {currentStep === 2 && <ServiceSelection />}
+      {currentStep === 3 && <PaymentDetails />}
+      {currentStep === 4 && <BookingConfirmation />}
+
+      <style jsx>{`
+        .step {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          flex: 1;
+        }
+        .step-number {
+          width: 30px;
+          height: 30px;
+          border-radius: 50%;
+          background-color: #e5e7eb;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 8px;
+          font-weight: bold;
+        }
+        .step-label {
+          font-size: 14px;
+          color: #6b7280;
+        }
+        .step.active .step-number {
+          background-color: #9f7aea;
+          color: white;
+        }
+        .step.active .step-label {
+          color: #4b5563;
+          font-weight: 600;
+        }
+        .step-connector {
+          flex-grow: 1;
+          height: 2px;
+          background-color: #e5e7eb;
+          margin: 0 8px;
+          margin-bottom: 25px;
+        }
+      `}</style>
     </div>
   );
 };

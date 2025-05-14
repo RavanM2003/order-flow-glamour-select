@@ -8,11 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
-import { Search, Scissors, Package, Sparkles, UserCircle } from "lucide-react";
+import { Search, Package, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { API } from '@/lib/api';
-import MultiSelect from '@/components/common/MultiSelect';
-import { ServiceProvider } from '@/context/OrderContext';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from '@/components/ui/use-toast';
 
 interface Service {
   id: number;
@@ -37,6 +43,11 @@ interface Staff {
   specializations: string[];
 }
 
+export interface ServiceProvider {
+  serviceId: number;
+  name: string;
+}
+
 const ServiceSelection = () => {
   const { orderState, selectService, unselectService, selectProduct, unselectProduct, goToStep, updateTotal, updateServiceProviders } = useOrder();
   const [services, setServices] = useState<Service[]>([]);
@@ -44,7 +55,7 @@ const ServiceSelection = () => {
   const [staff, setStaff] = useState<Staff[]>([]);
   const [selectedServices, setSelectedServices] = useState<number[]>(orderState.selectedServices || []);
   const [selectedProducts, setSelectedProducts] = useState<number[]>(orderState.selectedProducts || []);
-  const [selectedStaff, setSelectedStaff] = useState<Record<number, string[]>>({});
+  const [selectedStaff, setSelectedStaff] = useState<Record<number, string>>({});
   const [serviceSearchTerm, setServiceSearchTerm] = useState("");
   const [productSearchTerm, setProductSearchTerm] = useState("");
   const [view, setView] = useState<'services' | 'products'>('services');
@@ -64,15 +75,28 @@ const ServiceSelection = () => {
         setServices(servicesRes.data || []);
         setProducts(productsRes.data || []);
         setStaff(staffRes.data || []);
+        
+        // Initialize staff selection for any already-selected services
+        const initialStaffSelections: Record<number, string> = {};
+        orderState.serviceProviders.forEach(provider => {
+          initialStaffSelections[provider.serviceId] = provider.name;
+        });
+        setSelectedStaff(initialStaffSelections);
+        
       } catch (error) {
         console.error("Failed to load services, products, and staff:", error);
+        toast({
+          title: "Error loading data",
+          description: "Could not load services, products, or staff information",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
     };
     
     fetchData();
-  }, []);
+  }, [orderState.serviceProviders]);
 
   useEffect(() => {
     // Find all unique related products based on selected services
@@ -96,7 +120,7 @@ const ServiceSelection = () => {
     
     // Initialize staff selection for this service if it's newly selected
     if (!selectedServices.includes(serviceId) && !selectedStaff[serviceId]) {
-      setSelectedStaff(prev => ({ ...prev, [serviceId]: [] }));
+      setSelectedStaff(prev => ({ ...prev, [serviceId]: "" }));
     }
   };
 
@@ -108,8 +132,8 @@ const ServiceSelection = () => {
     setSelectedProducts(updatedProducts);
   };
 
-  const handleStaffSelect = (serviceId: number, staffIds: string[]) => {
-    setSelectedStaff(prev => ({ ...prev, [serviceId]: staffIds }));
+  const handleStaffSelect = (serviceId: number, staffName: string) => {
+    setSelectedStaff(prev => ({ ...prev, [serviceId]: staffName }));
   };
 
   const calculateTotal = () => {
@@ -125,8 +149,25 @@ const ServiceSelection = () => {
   };
 
   const handleContinue = () => {
+    // Validate that all selected services have a staff member assigned
+    const missingStaff = selectedServices.some(serviceId => !selectedStaff[serviceId]);
+    
+    if (missingStaff) {
+      toast({
+        title: "Missing staff selection",
+        description: "Please assign a staff member to each service",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (selectedServices.length === 0) {
-      return; // Don't proceed if no services selected
+      toast({
+        title: "No services selected",
+        description: "Please select at least one service to continue",
+        variant: "destructive"
+      });
+      return;
     }
 
     // Clear existing selections
@@ -142,17 +183,12 @@ const ServiceSelection = () => {
     
     // Prepare service providers information
     const serviceProviders: ServiceProvider[] = [];
-    Object.entries(selectedStaff).forEach(([serviceId, staffIds]) => {
+    Object.entries(selectedStaff).forEach(([serviceId, staffName]) => {
       const serviceIdNum = parseInt(serviceId, 10);
-      if (selectedServices.includes(serviceIdNum)) {
-        staffIds.forEach(staffId => {
-          const staffMember = staff.find(s => s.id === parseInt(staffId, 10));
-          if (staffMember) {
-            serviceProviders.push({
-              serviceId: serviceIdNum,
-              name: staffMember.name
-            });
-          }
+      if (selectedServices.includes(serviceIdNum) && staffName) {
+        serviceProviders.push({
+          serviceId: serviceIdNum,
+          name: staffName
         });
       }
     });
@@ -175,14 +211,6 @@ const ServiceSelection = () => {
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(productSearchTerm.toLowerCase())
   );
-
-  // Format staff options for MultiSelect
-  const getStaffOptions = () => {
-    return staff.map(member => ({
-      value: member.id.toString(),
-      label: `${member.name} (${member.position})`
-    }));
-  };
 
   return (
     <div className="mt-6">
@@ -272,14 +300,23 @@ const ServiceSelection = () => {
                               <Label htmlFor={`staff-${service.id}`} className="block text-sm font-medium mb-1">
                                 Select Staff for this Service:
                               </Label>
-                              <MultiSelect 
-                                options={getStaffOptions()}
-                                value={selectedStaff[service.id] || []}
-                                onChange={staffIds => handleStaffSelect(service.id, staffIds)}
-                                placeholder="Select staff..."
-                              />
+                              <Select 
+                                value={selectedStaff[service.id] || ""}
+                                onValueChange={(value) => handleStaffSelect(service.id, value)}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Choose a staff member" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {staff.map((member) => (
+                                    <SelectItem key={member.id} value={member.name}>
+                                      {member.name} ({member.position})
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                               <p className="text-xs text-muted-foreground mt-1">
-                                You can select multiple staff for this service
+                                Only one staff member can be assigned to each service
                               </p>
                             </div>
                           )}

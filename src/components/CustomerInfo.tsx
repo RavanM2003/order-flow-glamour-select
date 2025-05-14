@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CalendarIcon, Clock, UserCircle, UserPlus, UserMinus } from "lucide-react";
+import { CalendarIcon, Clock, UserCircle } from "lucide-react";
 import { BookingMode } from './CheckoutFlow';
 
 interface CustomerInfoProps {
@@ -106,24 +106,23 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode = 'customer' })
                   value={formData.gender} 
                   onValueChange={handleGenderChange}
                   className="grid grid-cols-3 gap-4"
-                  disabled={isExistingCustomerInStaffMode}
                 >
                   <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
-                    <RadioGroupItem value="female" id="gender-female" />
+                    <RadioGroupItem value="female" id="gender-female" disabled={isExistingCustomerInStaffMode} />
                     <Label htmlFor="gender-female" className="flex items-center cursor-pointer flex-1">
-                      <UserPlus className="h-5 w-5 mr-2 text-pink-500" />
+                      <UserCircle className="h-5 w-5 mr-2 text-pink-500" />
                       <span className="hidden md:inline">Female</span>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
-                    <RadioGroupItem value="male" id="gender-male" />
+                    <RadioGroupItem value="male" id="gender-male" disabled={isExistingCustomerInStaffMode} />
                     <Label htmlFor="gender-male" className="flex items-center cursor-pointer flex-1">
-                      <UserMinus className="h-5 w-5 mr-2 text-blue-500" />
+                      <UserCircle className="h-5 w-5 mr-2 text-blue-500" />
                       <span className="hidden md:inline">Male</span>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
-                    <RadioGroupItem value="other" id="gender-other" />
+                    <RadioGroupItem value="other" id="gender-other" disabled={isExistingCustomerInStaffMode} />
                     <Label htmlFor="gender-other" className="flex items-center cursor-pointer flex-1">
                       <UserCircle className="h-5 w-5 mr-2 text-gray-500" />
                       <span className="hidden md:inline">Other</span>
@@ -144,6 +143,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode = 'customer' })
                     placeholder="your.email@example.com"
                     disabled={isExistingCustomerInStaffMode}
                     className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
+                    required={!isExistingCustomerInStaffMode}
                   />
                 </div>
                 

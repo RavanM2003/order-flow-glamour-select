@@ -6,9 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Pencil, Eye, Clock, UserCircle, Calendar, Package, DollarSign, CalendarClock } from 'lucide-react';
+import { Pencil, Eye, Clock, UserCircle, Calendar, Package, DollarSign } from 'lucide-react';
 import { API } from '@/lib/api';
 import { toast } from '@/components/ui/use-toast';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 // Add prop type
 type CustomerDetailPageProps = {
@@ -194,68 +200,73 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customer: custo
           ) : (
             <div className="space-y-6">
               {appointments.map(app => (
-                <div key={app.id} className="border rounded-md p-4 space-y-4">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                    <div className="flex flex-col">
-                      <h4 className="text-lg font-semibold flex items-center">
-                        {app.service}
-                        <Badge className={`ml-2 ${getStatusBadgeColor(app.status)}`}>
-                          {app.status}
-                        </Badge>
-                      </h4>
+                <Accordion key={app.id} type="single" collapsible className="border rounded-md">
+                  <AccordionItem value="details" className="border-none">
+                    <div className="flex items-center justify-between p-4">
+                      <div className="flex flex-col flex-1">
+                        <div className="flex items-center">
+                          <h4 className="text-lg font-semibold">{app.service}</h4>
+                          <Badge className={`ml-2 ${getStatusBadgeColor(app.status)}`}>
+                            {app.status}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center text-gray-600 mt-1">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          <span className="mr-3">{app.date}</span>
+                          <Clock className="h-4 w-4 mr-1" />
+                          <span>{app.startTime} - {app.endTime}</span>
+                        </div>
+                      </div>
                       
-                      <div className="flex items-center text-gray-600 mt-1">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        <span>{app.date}</span>
-                        <Clock className="h-4 w-4 ml-3 mr-1" />
-                        <span>{app.startTime} - {app.endTime}</span>
-                      </div>
+                      <AccordionTrigger className="py-0 flex-shrink-0">
+                        <span className="sr-only">Toggle details</span>
+                      </AccordionTrigger>
                     </div>
                     
-                    <a href={`/booking-details/${app.id}`} target="_blank" rel="noopener noreferrer">
-                      <Button variant="outline" size="sm">
-                        <Eye className="w-4 h-4 mr-1" /> View Details
-                      </Button>
-                    </a>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <h5 className="text-sm font-semibold mb-1 flex items-center">
-                        <UserCircle className="h-4 w-4 mr-1" /> Staff
-                      </h5>
-                      <div>{app.staff?.join(', ') || '-'}</div>
-                    </div>
-                    
-                    <div>
-                      <h5 className="text-sm font-semibold mb-1 flex items-center">
-                        <Package className="h-4 w-4 mr-1" /> Products Used
-                      </h5>
-                      <div>{app.products?.join(', ') || 'No products'}</div>
-                    </div>
-                    
-                    <div>
-                      <h5 className="text-sm font-semibold mb-1 flex items-center">
-                        <DollarSign className="h-4 w-4 mr-1" /> Payment
-                      </h5>
-                      <div className="space-y-1">
-                        <div className="text-sm">
-                          <span className="font-medium">Total:</span> ${app.totalAmount || 0}
-                        </div>
-                        <div className="text-sm">
-                          <span className="font-medium">Paid:</span> ${app.amountPaid || 0}
-                        </div>
-                        {(app.remainingBalance > 0) && (
-                          <div className="text-sm text-red-600">
-                            <span className="font-medium">Balance:</span> ${app.remainingBalance}
+                    <AccordionContent className="px-4 pb-4 pt-0 border-t">
+                      <div className="space-y-4 mt-2">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <h5 className="text-sm font-semibold mb-1 flex items-center">
+                              <UserCircle className="h-4 w-4 mr-1" /> Staff
+                            </h5>
+                            <div className="text-sm">{app.staff?.join(', ') || '-'}</div>
                           </div>
-                        )}
+                          
+                          <div>
+                            <h5 className="text-sm font-semibold mb-1 flex items-center">
+                              <Package className="h-4 w-4 mr-1" /> Products Used
+                            </h5>
+                            <div className="text-sm">{app.products?.join(', ') || 'No products'}</div>
+                          </div>
+                          
+                          <div>
+                            <h5 className="text-sm font-semibold mb-1 flex items-center">
+                              <DollarSign className="h-4 w-4 mr-1" /> Payment
+                            </h5>
+                            <div className="space-y-1 text-sm">
+                              <div>
+                                <span className="font-medium">Total:</span> ${app.totalAmount || 0}
+                              </div>
+                              <div>
+                                <span className="font-medium">Paid:</span> ${app.amountPaid || 0}
+                              </div>
+                              {(app.remainingBalance > 0) && (
+                                <div className="text-red-600">
+                                  <span className="font-medium">Balance:</span> ${app.remainingBalance}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="text-xs text-gray-500 mt-2">
+                          <span className="font-medium">Reference ID:</span> {app.id}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               ))}
             </div>
           )}
