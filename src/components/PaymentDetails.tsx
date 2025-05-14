@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import {
   CreditCard,
-  Cash,
+  DollarSign,
   Building,
   Check,
   ChevronDown,
@@ -219,7 +219,7 @@ const PaymentDetails = () => {
   
   // Find staff assigned to each service
   const getServiceProvider = (serviceId: number) => {
-    return orderState.serviceProviders.find(sp => sp.serviceId === serviceId)?.name;
+    return orderState.serviceProviders?.find(sp => sp.serviceId === serviceId)?.name;
   };
   
   // Calculate the order subtotal
@@ -357,7 +357,7 @@ const PaymentDetails = () => {
                     htmlFor="payment-cash"
                     className="flex items-center cursor-pointer flex-1"
                   >
-                    <Cash className="h-5 w-5 mr-3 text-gray-600" />
+                    <DollarSign className="h-5 w-5 mr-3 text-gray-600" />
                     <div>
                       <div className="font-medium">Cash on Arrival</div>
                       <div className="text-sm text-muted-foreground">
