@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,54 +11,62 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Search, Eye, Edit, ChevronLeft, ChevronRight, CalendarPlus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Search, Eye, ChevronLeft, ChevronRight, CalendarPlus, UserCircle } from 'lucide-react';
 import DetailDrawer from '@/components/common/DetailDrawer';
 import CustomerDetailPage from '@/pages/CustomerDetailPage';
 import CheckoutFlow from '@/components/CheckoutFlow';
 import { OrderProvider } from '@/context/OrderContext';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { API } from '@/lib/api';
+import { useToast } from '@/components/ui/use-toast';
 
 const CustomersTab = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewCustomer, setViewCustomer] = useState(null);
-  const [editMode, setEditMode] = useState(false);
+  const [viewCustomer, setViewCustomer] = useState<any>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [addCustomerOpen, setAddCustomerOpen] = useState(false);
   const [addAppointmentOpen, setAddAppointmentOpen] = useState(false);
-  const [selectedCustomerForAppointment, setSelectedCustomerForAppointment] = useState(null);
+  const [selectedCustomerForAppointment, setSelectedCustomerForAppointment] = useState<any>(null);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const pageSize = 10;
   
-  // Mock customers data
-  const mockCustomers = Array.from({ length: 50 }, (_, i) => ({
-    id: i + 1,
-    name: `Customer ${i + 1}`,
-    email: `customer${i + 1}@example.com`,
-    phone: `+994 50 ${Math.floor(100 + Math.random() * 900)} ${Math.floor(10 + Math.random() * 90)} ${Math.floor(10 + Math.random() * 90)}`,
-    lastVisit: new Date(Date.now() - Math.random() * 10000000000).toLocaleDateString(),
-    totalSpent: Math.floor(50 + Math.random() * 950)
-  }));
+  // New customer form state
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    gender: 'female'
+  });
 
-  // Mock appointments, products, staff for a customer
-  const mockDetails = {
-    appointments: [
-      { id: 1, date: '2024-06-10', service: 'Facial Treatment', staff: 'Aysel Məmmədova' },
-      { id: 2, date: '2024-06-15', service: 'Hair Styling', staff: 'Elvin Əliyev' },
-    ],
-    products: [
-      { id: 1, name: 'Moisturizer Cream' },
-      { id: 2, name: 'Anti-Aging Serum' },
-    ],
-    staff: [
-      { id: 1, name: 'Aysel Məmmədova' },
-      { id: 2, name: 'Elvin Əliyev' },
-    ]
-  };
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setLoading(true);
+        const { data } = await API.customers.list();
+        setCustomers(data || []);
+      } catch (error) {
+        console.error('Failed to load customers:', error);
+        toast({
+          title: "Error loading customers",
+          description: "Please try again later",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomers();
+  }, [toast]);
 
   // Filter customers based on search term
-  const filteredCustomers = mockCustomers.filter(customer => 
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    customer.phone.includes(searchTerm)
+  const filteredCustomers = customers.filter(customer => 
+    customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    customer.phone?.includes(searchTerm)
   );
   
   // Paginate customers
@@ -67,43 +76,49 @@ const CustomersTab = () => {
     currentPage * pageSize
   );
 
-  // Edit form state
-  const [editForm, setEditForm] = useState({ name: '', email: '', phone: '' });
-  const handleEditChange = (e) => {
-    setEditForm({ ...editForm, [e.target.name]: e.target.value });
-  };
-  const handleEditSave = () => {
-    // Save logic here (mock)
-    setViewCustomer({ ...viewCustomer, ...editForm });
-    setEditMode(false);
-  };
-
-  const handleViewCustomer = (customer) => {
+  const handleViewCustomer = (customer: any) => {
     setViewCustomer(customer);
     setDrawerOpen(true);
   };
-
-  // Add Customer logic
-  const [newCustomer, setNewCustomer] = useState({ name: '', email: '', phone: '' });
-  const [addCustomerError, setAddCustomerError] = useState('');
-  const handleAddCustomer = (e) => {
+  
+  const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCustomer.name || !newCustomer.email || !newCustomer.phone) {
-      setAddCustomerError('All fields are required');
+    
+    if (!newCustomer.name || !newCustomer.phone) {
+      toast({
+        title: "Missing Information",
+        description: "Name and phone are required",
+        variant: "destructive"
+      });
       return;
     }
-    setViewCustomer({ ...newCustomer, id: mockCustomers.length + 1, lastVisit: new Date().toLocaleDateString(), totalSpent: 0 });
-    setAddCustomerOpen(false);
-    setAddCustomerError('');
+    
+    try {
+      const { data } = await API.customers.create(newCustomer);
+      if (data) {
+        setCustomers([data, ...customers]);
+        setAddCustomerOpen(false);
+        setNewCustomer({ name: '', email: '', phone: '', gender: 'female' });
+        
+        toast({
+          title: "Customer added",
+          description: `${data.name} has been added successfully`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to add customer:', error);
+      toast({
+        title: "Error adding customer",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    }
   };
 
-  // Reset form when drawer opens/closes
-  React.useEffect(() => {
-    if (!addCustomerOpen) {
-      setNewCustomer({ name: '', email: '', phone: '' });
-      setAddCustomerError('');
-    }
-  }, [addCustomerOpen]);
+  const handleAddAppointment = (customer: any) => {
+    setSelectedCustomerForAppointment(customer);
+    setAddAppointmentOpen(true);
+  };
 
   return (
     <>
@@ -111,8 +126,8 @@ const CustomersTab = () => {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-glamour-800">Customers</h2>
-            <Button className="bg-glamour-700 hover:bg-glamour-800 text-white" onClick={() => { setSelectedCustomerForAppointment(null); setAddAppointmentOpen(true); }}>
-              <CalendarPlus className="w-4 h-4 mr-2" /> Add Customer
+            <Button className="bg-glamour-700 hover:bg-glamour-800 text-white" onClick={() => setAddCustomerOpen(true)}>
+              <UserCircle className="w-4 h-4 mr-2" /> Add Customer
             </Button>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-between mb-6">
@@ -126,103 +141,219 @@ const CustomersTab = () => {
               />
             </div>
           </div>
-          <div className="border rounded-md overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Last Visit</TableHead>
-                  <TableHead className="text-right">Total Spent</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currentCustomers.map((customer) => (
-                  <TableRow key={customer.id}>
-                    <TableCell>{customer.id}</TableCell>
-                    <TableCell>{customer.name}</TableCell>
-                    <TableCell>{customer.email}</TableCell>
-                    <TableCell>{customer.phone}</TableCell>
-                    <TableCell>{customer.lastVisit}</TableCell>
-                    <TableCell className="text-right">${customer.totalSpent}</TableCell>
-                    <TableCell>
-                      <div className="flex justify-center gap-2">
-                        <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => handleViewCustomer(customer)}>
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => { setSelectedCustomerForAppointment(customer); setAddAppointmentOpen(true); }}>
-                          <CalendarPlus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          
+          {loading ? (
+            <div className="text-center py-8">Loading customers...</div>
+          ) : (
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[50px]">ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="hidden md:table-cell">Email</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead className="hidden md:table-cell">Last Visit</TableHead>
+                    <TableHead className="text-right hidden md:table-cell">Total Spent</TableHead>
+                    <TableHead className="text-center">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {currentCustomers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                        No customers found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    currentCustomers.map((customer) => (
+                      <TableRow key={customer.id}>
+                        <TableCell>{customer.id}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center">
+                            {customer.gender === 'female' && <UserCircle className="h-4 w-4 mr-2 text-pink-500" />}
+                            {customer.gender === 'male' && <UserCircle className="h-4 w-4 mr-2 text-blue-500" />}
+                            {customer.name}
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">{customer.email || '-'}</TableCell>
+                        <TableCell>{customer.phone}</TableCell>
+                        <TableCell className="hidden md:table-cell">{customer.lastVisit || '-'}</TableCell>
+                        <TableCell className="text-right hidden md:table-cell">${customer.totalSpent || 0}</TableCell>
+                        <TableCell>
+                          <div className="flex justify-center gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 w-8 p-0" 
+                              onClick={() => handleViewCustomer(customer)}
+                              title="View customer details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 w-8 p-0" 
+                              onClick={() => handleAddAppointment(customer)}
+                              title="Add appointment for this customer"
+                            >
+                              <CalendarPlus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+          
           {/* Pagination */}
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-sm text-muted-foreground">
-              Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, filteredCustomers.length)} of {filteredCustomers.length} entries
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center mt-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {filteredCustomers.length === 0 ? 0 : (currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, filteredCustomers.length)} of {filteredCustomers.length} entries
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm"
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+          )}
         </Card>
+        
+        {/* Customer Details Drawer */}
         <DetailDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title="Customer Details">
           {viewCustomer && <CustomerDetailPage customer={viewCustomer} />}
         </DetailDrawer>
-        {/* Add Customer Drawer */}
-        <DetailDrawer open={addCustomerOpen} onOpenChange={setAddCustomerOpen} title="Add Customer">
-          <form onSubmit={handleAddCustomer} className="space-y-4 p-4">
-            <Input
-              placeholder="Full Name"
-              value={newCustomer.name}
-              onChange={e => setNewCustomer({ ...newCustomer, name: e.target.value })}
-              required
-            />
-            <Input
-              placeholder="Email"
-              type="email"
-              value={newCustomer.email}
-              onChange={e => setNewCustomer({ ...newCustomer, email: e.target.value })}
-              required
-            />
-            <Input
-              placeholder="Phone"
-              value={newCustomer.phone}
-              onChange={e => setNewCustomer({ ...newCustomer, phone: e.target.value })}
-              required
-            />
-            {addCustomerError && <div className="text-red-600 text-sm">{addCustomerError}</div>}
-            <Button type="submit" className="bg-glamour-700 hover:bg-glamour-800 text-white w-full">Add Customer</Button>
+        
+        {/* Add Customer Drawer - Improved UI */}
+        <DetailDrawer open={addCustomerOpen} onOpenChange={setAddCustomerOpen} title="Add New Customer">
+          <form onSubmit={handleAddCustomer} className="space-y-6 p-6">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <Label htmlFor="name" className="text-base font-medium">Full Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="Enter customer name"
+                    value={newCustomer.name}
+                    onChange={e => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="phone" className="text-base font-medium">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel" 
+                    placeholder="+994 XX XXX XX XX"
+                    value={newCustomer.phone}
+                    onChange={e => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                    className="mt-1"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="email" className="text-base font-medium">Email Address</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="customer@example.com"
+                    value={newCustomer.email}
+                    onChange={e => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Optional for communications</p>
+                </div>
+              </div>
+              
+              <div>
+                <Label className="text-base font-medium mb-2 block">Gender</Label>
+                <RadioGroup 
+                  value={newCustomer.gender} 
+                  onValueChange={value => setNewCustomer({ ...newCustomer, gender: value })}
+                  className="grid grid-cols-3 gap-4 mt-1"
+                >
+                  <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-glamour-50 transition-colors">
+                    <RadioGroupItem value="female" id="gender-female" />
+                    <Label htmlFor="gender-female" className="flex items-center cursor-pointer flex-1">
+                      <UserCircle className="h-5 w-5 mr-2 text-pink-500" />
+                      <span>Female</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-glamour-50 transition-colors">
+                    <RadioGroupItem value="male" id="gender-male" />
+                    <Label htmlFor="gender-male" className="flex items-center cursor-pointer flex-1">
+                      <UserCircle className="h-5 w-5 mr-2 text-blue-500" />
+                      <span>Male</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-glamour-50 transition-colors">
+                    <RadioGroupItem value="other" id="gender-other" />
+                    <Label htmlFor="gender-other" className="flex items-center cursor-pointer flex-1">
+                      <UserCircle className="h-5 w-5 mr-2 text-gray-500" />
+                      <span>Other</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </div>
+            
+            <div className="flex gap-2 justify-end pt-4">
+              <Button type="button" variant="outline" onClick={() => setAddCustomerOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-glamour-700 hover:bg-glamour-800 text-white">
+                Save Customer
+              </Button>
+            </div>
           </form>
         </DetailDrawer>
-        {/* Add Appointment Drawer */}
-        <DetailDrawer open={addAppointmentOpen} onOpenChange={(open) => {
-          setAddAppointmentOpen(open);
-        }} title="Book now">
-          <OrderProvider>
-            <CheckoutFlow />
+        
+        {/* Add Appointment Drawer with pre-populated customer info */}
+        <DetailDrawer 
+          open={addAppointmentOpen} 
+          onOpenChange={open => {
+            setAddAppointmentOpen(open);
+            if (!open) setSelectedCustomerForAppointment(null);
+          }} 
+          title="Book Appointment"
+        >
+          {selectedCustomerForAppointment && (
+            <div className="p-4 mb-4 bg-gray-50 rounded-md border">
+              <h3 className="font-medium mb-2">Customer Information</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="font-medium">Name:</span> {selectedCustomerForAppointment.name}
+                </div>
+                <div>
+                  <span className="font-medium">Phone:</span> {selectedCustomerForAppointment.phone}
+                </div>
+              </div>
+            </div>
+          )}
+          <OrderProvider initialCustomer={selectedCustomerForAppointment}>
+            <CheckoutFlow bookingMode="staff" />
           </OrderProvider>
         </DetailDrawer>
       </div>

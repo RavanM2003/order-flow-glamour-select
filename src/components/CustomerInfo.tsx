@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useOrder } from '@/context/OrderContext';
 import { Button } from "@/components/ui/button";
@@ -6,9 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { CalendarIcon, Clock, User, UserCircle, UserPlus, UserMinus } from "lucide-react";
+import { CalendarIcon, Clock, UserCircle } from "lucide-react";
 
-const CustomerInfo = () => {
+export type BookingMode = 'customer' | 'staff';
+
+interface CustomerInfoProps {
+  bookingMode?: BookingMode;
+}
+
+const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode = 'customer' }) => {
   const { orderState, updateCustomerInfo, goToStep } = useOrder();
   const [formData, setFormData] = useState({
     name: orderState.customerInfo?.name || '',
@@ -19,6 +26,21 @@ const CustomerInfo = () => {
     notes: orderState.customerInfo?.notes || '',
     gender: orderState.customerInfo?.gender || 'female'
   });
+
+  useEffect(() => {
+    // Update form data if customerInfo changes (e.g. from context)
+    if (orderState.customerInfo) {
+      setFormData({
+        name: orderState.customerInfo.name || '',
+        email: orderState.customerInfo.email || '',
+        phone: orderState.customerInfo.phone || '',
+        date: orderState.customerInfo.date || '',
+        time: orderState.customerInfo.time || '',
+        notes: orderState.customerInfo.notes || '',
+        gender: orderState.customerInfo.gender || 'female'
+      });
+    }
+  }, [orderState.customerInfo]);
 
   // Work hours
   const workHours = {
@@ -50,6 +72,12 @@ const CustomerInfo = () => {
   maxDate.setDate(today.getDate() + 7);
   const maxDateString = maxDate.toISOString().split('T')[0];
 
+  // For staff mode with existing customer
+  const isExistingCustomerInStaffMode = 
+    bookingMode === 'staff' && 
+    orderState.customerInfo && 
+    (orderState.customerInfo.name || orderState.customerInfo.phone);
+
   return (
     <div className="mt-6">
       <Card>
@@ -65,8 +93,10 @@ const CustomerInfo = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Enter your full name"
+                  placeholder="Enter full name"
                   required
+                  disabled={isExistingCustomerInStaffMode}
+                  className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
                 />
               </div>
 
@@ -77,26 +107,27 @@ const CustomerInfo = () => {
                   value={formData.gender} 
                   onValueChange={handleGenderChange}
                   className="grid grid-cols-3 gap-4"
+                  disabled={isExistingCustomerInStaffMode}
                 >
                   <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
                     <RadioGroupItem value="female" id="gender-female" />
                     <Label htmlFor="gender-female" className="flex items-center cursor-pointer flex-1">
-                      <UserPlus className="h-5 w-5 mr-2 text-pink-500" />
-                      <span className="hidden md:inline">Female</span>
+                      <UserCircle className="h-5 w-5 mr-2 text-pink-500" />
+                      <span>Female</span>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
                     <RadioGroupItem value="male" id="gender-male" />
                     <Label htmlFor="gender-male" className="flex items-center cursor-pointer flex-1">
-                      <UserMinus className="h-5 w-5 mr-2 text-blue-500" />
-                      <span className="hidden md:inline">Male</span>
+                      <UserCircle className="h-5 w-5 mr-2 text-blue-500" />
+                      <span>Male</span>
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
                     <RadioGroupItem value="other" id="gender-other" />
                     <Label htmlFor="gender-other" className="flex items-center cursor-pointer flex-1">
                       <UserCircle className="h-5 w-5 mr-2 text-gray-500" />
-                      <span className="hidden md:inline">Other</span>
+                      <span>Other</span>
                     </Label>
                   </div>
                 </RadioGroup>
@@ -112,7 +143,8 @@ const CustomerInfo = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="your.email@example.com"
-                    required
+                    disabled={isExistingCustomerInStaffMode}
+                    className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
                   />
                 </div>
                 
@@ -124,6 +156,8 @@ const CustomerInfo = () => {
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="+994 XX XXX XX XX"
+                    disabled={isExistingCustomerInStaffMode}
+                    className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
                     required
                   />
                 </div>
@@ -133,7 +167,7 @@ const CustomerInfo = () => {
                 <div>
                   <Label htmlFor="date" className="flex items-center">
                     <CalendarIcon className="h-4 w-4 mr-2" />
-                    Preferred Date
+                    Appointment Date
                   </Label>
                   <Input
                     id="date"
@@ -151,7 +185,7 @@ const CustomerInfo = () => {
                 <div>
                   <Label htmlFor="time" className="flex items-center">
                     <Clock className="h-4 w-4 mr-2" />
-                    Preferred Time
+                    Appointment Time
                   </Label>
                   <Input
                     id="time"
