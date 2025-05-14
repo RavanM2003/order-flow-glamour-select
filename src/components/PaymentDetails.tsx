@@ -9,7 +9,6 @@ import {
   CreditCard,
   DollarSign,
   Building,
-  Check,
   ChevronDown,
   ChevronUp,
   Wallet,

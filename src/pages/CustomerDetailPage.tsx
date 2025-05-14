@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Pencil, Eye, Clock, UserCircle, Calendar, Package, DollarSign } from 'lucide-react';
+import { Pencil, Clock, UserCircle, Calendar, Package, DollarSign, ChevronDown } from 'lucide-react';
 import { API } from '@/lib/api';
 import { toast } from '@/components/ui/use-toast';
 import {
