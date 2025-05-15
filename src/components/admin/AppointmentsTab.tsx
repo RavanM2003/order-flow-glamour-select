@@ -1,8 +1,7 @@
-
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Calendar } from '@/components/ui/calendar';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Table,
   TableBody,
@@ -10,11 +9,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Check, 
-  X, 
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+  Check,
+  X,
   Calendar as CalendarIcon,
   Clock,
   User,
@@ -22,19 +21,35 @@ import {
   Info,
   RefreshCcw,
   Edit,
-  CheckCircle
-} from 'lucide-react';
-import DetailDrawer from '@/components/common/DetailDrawer';
-import { OrderProvider } from '@/context/OrderContext';
-import CheckoutFlow from '@/components/CheckoutFlow';
-import { Input } from '@/components/ui/input';
+  CheckCircle,
+} from "lucide-react";
+import DetailDrawer from "@/components/common/DetailDrawer";
+import { OrderProvider } from "@/context/OrderContext";
+import CheckoutFlow from "@/components/CheckoutFlow";
+import { Input } from "@/components/ui/input";
+
+interface Appointment {
+  id: number;
+  customerName: string;
+  customerPhone: string;
+  services: string[];
+  products: string[];
+  date: string;
+  time: string;
+  duration: string;
+  totalAmount: number;
+  status: string;
+  executors: Record<string, number>;
+  rejectReason: string;
+  paymentMethod?: string;
+}
 
 const AppointmentsTab = () => {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
   const [addAppointmentOpen, setAddAppointmentOpen] = React.useState(false);
-  
+
   // Mock appointments data
-  const [appointments, setAppointments] = React.useState([
+  const [appointments, setAppointments] = React.useState<Appointment[]>([
     {
       id: 1,
       customerName: "Anna Johnson",
@@ -47,7 +62,7 @@ const AppointmentsTab = () => {
       totalAmount: 195,
       status: "confirmed",
       executors: {},
-      rejectReason: ""
+      rejectReason: "",
     },
     {
       id: 2,
@@ -61,7 +76,7 @@ const AppointmentsTab = () => {
       totalAmount: 130,
       status: "pending",
       executors: {},
-      rejectReason: ""
+      rejectReason: "",
     },
     {
       id: 3,
@@ -75,7 +90,7 @@ const AppointmentsTab = () => {
       totalAmount: 162,
       status: "confirmed",
       executors: {},
-      rejectReason: ""
+      rejectReason: "",
     },
     {
       id: 4,
@@ -89,7 +104,7 @@ const AppointmentsTab = () => {
       totalAmount: 175,
       status: "rejected",
       executors: {},
-      rejectReason: "Gecikmə səbəbi ilə qəbul edilmədi."
+      rejectReason: "Gecikmə səbəbi ilə qəbul edilmədi.",
     },
     {
       id: 5,
@@ -103,7 +118,7 @@ const AppointmentsTab = () => {
       totalAmount: 205,
       status: "pending",
       executors: {},
-      rejectReason: ""
+      rejectReason: "",
     },
     {
       id: 6,
@@ -117,48 +132,51 @@ const AppointmentsTab = () => {
       totalAmount: 150,
       status: "completed",
       executors: { "Facial Treatment": 1 },
-      rejectReason: ""
-    }
+      rejectReason: "",
+    },
   ]);
-  
+
   // Filter appointments for selected date
-  const selectedDate = date ? date.toISOString().split('T')[0] : '';
-  const filteredAppointments = appointments.filter(appointment => appointment.date === selectedDate);
-  
+  const selectedDate = date ? date.toISOString().split("T")[0] : "";
+  const filteredAppointments = appointments.filter(
+    (appointment) => appointment.date === selectedDate
+  );
+
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'confirmed':
+      case "confirmed":
         return <Badge className="bg-green-500">Confirmed</Badge>;
-      case 'pending':
+      case "pending":
         return <Badge className="bg-yellow-500">Pending</Badge>;
-      case 'rejected':
+      case "rejected":
         return <Badge className="bg-red-500">Rejected</Badge>;
-      case 'completed':
+      case "completed":
         return <Badge className="bg-blue-500">Completed</Badge>;
       default:
         return <Badge>Unknown</Badge>;
     }
   };
-  
+
   const staffList = [
-    { id: 1, name: 'Sarah Johnson' },
-    { id: 2, name: 'David Chen' },
-    { id: 3, name: 'Amina Khalid' },
-    { id: 4, name: 'Michael Rodriguez' },
-    { id: 5, name: 'Leyla Mammadova' },
-    { id: 6, name: 'John Smith' },
+    { id: 1, name: "Sarah Johnson" },
+    { id: 2, name: "David Chen" },
+    { id: 3, name: "Amina Khalid" },
+    { id: 4, name: "Michael Rodriguez" },
+    { id: 5, name: "Leyla Mammadova" },
+    { id: 6, name: "John Smith" },
   ];
   const productStock = {
-    'Moisturizer Cream': 5,
-    'Massage Oil': 0,
-    'Luxury Makeup Palette': 2,
-    'Hair Care Kit': 1,
+    "Moisturizer Cream": 5,
+    "Massage Oil": 0,
+    "Luxury Makeup Palette": 2,
+    "Hair Care Kit": 1,
   };
 
   const [acceptDrawerOpen, setAcceptDrawerOpen] = React.useState(false);
   const [rejectDrawerOpen, setRejectDrawerOpen] = React.useState(false);
   const [viewDrawerOpen, setViewDrawerOpen] = React.useState(false);
-  const [selectedAppointment, setSelectedAppointment] = React.useState(null);
+  const [selectedAppointment, setSelectedAppointment] =
+    React.useState<Appointment | null>(null);
   const [serviceStaff, setServiceStaff] = React.useState({});
   const [rejectReason, setRejectReason] = React.useState("");
   const [editMode, setEditMode] = React.useState(false);
@@ -176,7 +194,7 @@ const AppointmentsTab = () => {
     date: "",
     time: "",
     paymentMethod: "",
-    executors: {}
+    executors: {},
   });
 
   // Mock all services and products with id, name, price
@@ -185,12 +203,12 @@ const AppointmentsTab = () => {
     { id: 2, name: "Massage Therapy", price: 120 },
     { id: 3, name: "Manicure", price: 50 },
     { id: 4, name: "Hair Styling", price: 80 },
-    { id: 5, name: "Makeup Application", price: 90 }
+    { id: 5, name: "Makeup Application", price: 90 },
   ];
   const allProducts = [
     { id: 1, name: "Moisturizer Cream", price: 45 },
     { id: 2, name: "Anti-Aging Serum", price: 75 },
-    { id: 3, name: "Hair Care Kit", price: 60 }
+    { id: 3, name: "Hair Care Kit", price: 60 },
   ];
 
   // Add search state for services/products
@@ -198,14 +216,28 @@ const AppointmentsTab = () => {
   const [productSearch, setProductSearch] = React.useState("");
 
   // Filtered lists for search
-  const filteredServices = allServices.filter(s => s.name.toLowerCase().includes(serviceSearch.toLowerCase()));
-  const filteredProducts = allProducts.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()));
+  const filteredServices = allServices.filter((s) =>
+    s.name.toLowerCase().includes(serviceSearch.toLowerCase())
+  );
+  const filteredProducts = allProducts.filter((p) =>
+    p.name.toLowerCase().includes(productSearch.toLowerCase())
+  );
 
   // Payment calculation for edit form
-  const selectedServiceObjs = allServices.filter(s => editForm.services.includes(s.id));
-  const selectedProductObjs = allProducts.filter(p => editForm.products.includes(p.id));
-  const servicesTotal = selectedServiceObjs.reduce((sum, s) => sum + s.price, 0);
-  const productsTotal = selectedProductObjs.reduce((sum, p) => sum + p.price, 0);
+  const selectedServiceObjs = allServices.filter((s) =>
+    editForm.services.includes(s.id)
+  );
+  const selectedProductObjs = allProducts.filter((p) =>
+    editForm.products.includes(p.id)
+  );
+  const servicesTotal = selectedServiceObjs.reduce(
+    (sum, s) => sum + s.price,
+    0
+  );
+  const productsTotal = selectedProductObjs.reduce(
+    (sum, p) => sum + p.price,
+    0
+  );
   const total = servicesTotal + productsTotal;
 
   // For online payment, mock previous paid amount
@@ -219,89 +251,113 @@ const AppointmentsTab = () => {
       setEditForm({
         customerName: selectedAppointment.customerName,
         customerPhone: selectedAppointment.customerPhone,
-        services: Array.isArray(selectedAppointment.services) ? [...selectedAppointment.services] : [],
-        products: Array.isArray(selectedAppointment.products) ? [...selectedAppointment.products] : [],
+        services: Array.isArray(selectedAppointment.services)
+          ? [...selectedAppointment.services]
+          : [],
+        products: Array.isArray(selectedAppointment.products)
+          ? [...selectedAppointment.products]
+          : [],
         date: selectedAppointment.date,
         time: selectedAppointment.time,
-        paymentMethod: selectedAppointment.paymentMethod || '',
-        executors: selectedAppointment.executors ? { ...selectedAppointment.executors } : {}
+        paymentMethod: selectedAppointment.paymentMethod || "",
+        executors: selectedAppointment.executors
+          ? { ...selectedAppointment.executors }
+          : {},
       });
     }
   }, [editMode, selectedAppointment]);
 
   // Save handler for each section
   const handleSaveCustomer = () => {
-    setAppointments(prev => prev.map(app =>
-      app.id === selectedAppointment.id
-        ? { ...app, customerName: editForm.customerName, customerPhone: editForm.customerPhone }
-        : app
-    ));
+    setAppointments((prev) =>
+      prev.map((app) =>
+        app.id === selectedAppointment?.id
+          ? {
+              ...app,
+              customerName: editForm.customerName,
+              customerPhone: editForm.customerPhone,
+            }
+          : app
+      )
+    );
     setIsEditingCustomer(false);
   };
   const handleSaveServices = () => {
-    setAppointments(prev => prev.map(app =>
-      app.id === selectedAppointment.id
-        ? { ...app, services: [...editForm.services], executors: { ...editForm.executors } }
-        : app
-    ));
+    setAppointments((prev) =>
+      prev.map((app) =>
+        app.id === selectedAppointment?.id
+          ? {
+              ...app,
+              services: [...editForm.services],
+              executors: { ...editForm.executors },
+            }
+          : app
+      )
+    );
     setIsEditingServices(false);
   };
   const handleSaveProducts = () => {
-    setAppointments(prev => prev.map(app =>
-      app.id === selectedAppointment.id
-        ? { ...app, products: [...editForm.products] }
-        : app
-    ));
+    setAppointments((prev) =>
+      prev.map((app) =>
+        app.id === selectedAppointment?.id
+          ? { ...app, products: [...editForm.products] }
+          : app
+      )
+    );
     setIsEditingProducts(false);
   };
   const handleSaveDateTime = () => {
-    setAppointments(prev => prev.map(app =>
-      app.id === selectedAppointment.id
-        ? { ...app, date: editForm.date, time: editForm.time }
-        : app
-    ));
+    setAppointments((prev) =>
+      prev.map((app) =>
+        app.id === selectedAppointment?.id
+          ? { ...app, date: editForm.date, time: editForm.time }
+          : app
+      )
+    );
     setIsEditingDateTime(false);
   };
   const handleSavePayment = () => {
-    setAppointments(prev => prev.map(app =>
-      app.id === selectedAppointment.id
-        ? { ...app, paymentMethod: editForm.paymentMethod }
-        : app
-    ));
+    setAppointments((prev) =>
+      prev.map((app) =>
+        app.id === selectedAppointment?.id
+          ? { ...app, paymentMethod: editForm.paymentMethod }
+          : app
+      )
+    );
     setIsEditingPayment(false);
   };
 
   // Mark as completed handler
-  const handleMarkCompleted = () => {
-    setAppointments(prev => prev.map(app =>
-      app.id === selectedAppointment.id
-        ? { ...app, status: 'completed' }
-        : app
-    ));
+  const handleMarkCompleted = (appointment: Appointment) => {
+    setAppointments((prev) =>
+      prev.map((app) =>
+        app.id === appointment.id ? { ...app, status: "completed" } : app
+      )
+    );
     setViewDrawerOpen(false);
     setSelectedAppointment(null);
   };
 
   // Accept handler
-  const handleAccept = (appointment) => {
+  const handleAccept = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setServiceStaff({});
     setAcceptDrawerOpen(true);
   };
   // Reject handler
-  const handleReject = (appointment) => {
+  const handleReject = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setRejectReason("");
     setRejectDrawerOpen(true);
   };
   // View handler
-  const handleView = (appointment) => {
+  const handleView = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setEditMode(false);
     setViewDrawerOpen(true);
   };
   // Edit handler
-  const handleEdit = (appointment) => {
+  const handleEdit = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setEditMode(true);
     setEditDrawerOpen(true);
@@ -310,11 +366,13 @@ const AppointmentsTab = () => {
   // Accept Confirm handler
   const handleAcceptConfirm = () => {
     if (!selectedAppointment) return;
-    setAppointments(prev => prev.map(app =>
-      app.id === selectedAppointment.id
-        ? { ...app, status: 'confirmed', executors: { ...serviceStaff } }
-        : app
-    ));
+    setAppointments((prev) =>
+      prev.map((app) =>
+        app.id === selectedAppointment.id
+          ? { ...app, status: "confirmed", executors: { ...serviceStaff } }
+          : app
+      )
+    );
     setAcceptDrawerOpen(false);
     setSelectedAppointment(null);
     setServiceStaff({});
@@ -323,32 +381,34 @@ const AppointmentsTab = () => {
   // Reject Confirm handler
   const handleRejectConfirm = () => {
     if (!selectedAppointment) return;
-    setAppointments(prev => prev.map(app =>
-      app.id === selectedAppointment.id
-        ? { ...app, status: 'rejected', rejectReason }
-        : app
-    ));
+    setAppointments((prev) =>
+      prev.map((app) =>
+        app.id === selectedAppointment.id
+          ? { ...app, status: "rejected", rejectReason }
+          : app
+      )
+    );
     setRejectDrawerOpen(false);
     setSelectedAppointment(null);
     setRejectReason("");
   };
 
   // Repeat handler
-  const handleRepeat = (appointment) => {
-    setAppointments(prev => [
+  const handleRepeat = (appointment: Appointment) => {
+    setAppointments((prev) => [
       {
         ...appointment,
         id: prev.length + 1,
-        status: 'pending',
+        status: "pending",
         services: [...appointment.services],
         products: [...appointment.products],
         date: appointment.date,
         time: appointment.time,
         paymentMethod: appointment.paymentMethod,
         executors: {},
-        rejectReason: ""
+        rejectReason: "",
       },
-      ...prev
+      ...prev,
     ]);
   };
 
@@ -368,15 +428,20 @@ const AppointmentsTab = () => {
               className="rounded-md border"
             />
           </Card>
-          
+
           <Card className="lg:col-span-2 p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium mb-4">Appointments for {date?.toLocaleDateString()}</h3>
-              <Button className="bg-glamour-700 hover:bg-glamour-800 text-white" onClick={() => setAddAppointmentOpen(true)}>
+              <h3 className="text-lg font-medium mb-4">
+                Appointments for {date?.toLocaleDateString()}
+              </h3>
+              <Button
+                className="bg-glamour-700 hover:bg-glamour-800 text-white"
+                onClick={() => setAddAppointmentOpen(true)}
+              >
                 <CalendarPlus className="w-4 h-4 mr-2" /> Add Appointment
               </Button>
             </div>
-            
+
             {filteredAppointments.length > 0 ? (
               <div className="border rounded-md overflow-hidden">
                 <Table>
@@ -399,7 +464,9 @@ const AppointmentsTab = () => {
                               <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
                               {appointment.time}
                             </div>
-                            <span className="text-xs text-muted-foreground">{appointment.duration}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {appointment.duration}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -408,55 +475,99 @@ const AppointmentsTab = () => {
                               <User className="h-4 w-4 mr-1 text-muted-foreground" />
                               {appointment.customerName}
                             </div>
-                            <span className="text-xs text-muted-foreground">{appointment.customerPhone}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {appointment.customerPhone}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {appointment.services.map((service, index) => (
-                              <span key={index} className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
+                              <span
+                                key={index}
+                                className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full"
+                              >
                                 {service}
                               </span>
                             ))}
-                            {appointment.products.length > 0 && appointment.products.map((product, index) => (
-                              <span key={`p-${index}`} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                                {product}
-                              </span>
-                            ))}
+                            {appointment.products.length > 0 &&
+                              appointment.products.map((product, index) => (
+                                <span
+                                  key={`p-${index}`}
+                                  className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full"
+                                >
+                                  {product}
+                                </span>
+                              ))}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-medium">${appointment.totalAmount}</TableCell>
-                        <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+                        <TableCell className="text-right font-medium">
+                          ${appointment.totalAmount}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(appointment.status)}
+                        </TableCell>
                         <TableCell>
                           <div className="flex justify-center gap-2">
-                            {appointment.status === 'pending' && (
+                            {appointment.status === "pending" && (
                               <>
-                                <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700" onClick={() => handleAccept(appointment)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
+                                  onClick={() => handleAccept(appointment)}
+                                >
                                   <Check className="h-4 w-4" />
                                 </Button>
-                                <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700" onClick={() => handleReject(appointment)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
+                                  onClick={() => handleReject(appointment)}
+                                >
                                   <X className="h-4 w-4" />
                                 </Button>
                               </>
                             )}
-                            {appointment.status === 'confirmed' && (
+                            {appointment.status === "confirmed" && (
                               <div className="flex gap-2">
-                                <Button variant="outline" size="sm" className="p-1 text-blue-600 hover:text-blue-700" onClick={() => handleEdit(appointment)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="p-1 text-blue-600 hover:text-blue-700"
+                                  onClick={() => handleEdit(appointment)}
+                                >
                                   <Edit className="h-4 w-4 mr-1" />
-                                  <span>Edit</span>
                                 </Button>
-                                <Button variant="outline" size="sm" className="p-1 text-green-600 hover:text-green-700" onClick={() => handleMarkCompleted(appointment)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="p-1 text-green-600 hover:text-green-700"
+                                  onClick={() =>
+                                    handleMarkCompleted(appointment)
+                                  }
+                                >
                                   <CheckCircle className="h-4 w-4 mr-1" />
-                                  <span>Complete</span>
                                 </Button>
                               </div>
                             )}
-                            {(appointment.status === 'completed' || appointment.status === 'rejected') && (
+                            {(appointment.status === "completed" ||
+                              appointment.status === "rejected") && (
                               <div className="flex gap-1">
-                                <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700" onClick={() => handleView(appointment)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700"
+                                  onClick={() => handleView(appointment)}
+                                >
                                   <Info className="h-4 w-4" />
                                 </Button>
-                                <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700" onClick={() => handleRepeat(appointment)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
+                                  onClick={() => handleRepeat(appointment)}
+                                >
                                   <RefreshCcw className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -477,28 +588,43 @@ const AppointmentsTab = () => {
         </div>
       </div>
       {/* Add Appointment Drawer */}
-      <DetailDrawer open={addAppointmentOpen} onOpenChange={setAddAppointmentOpen} title="Book now">
+      <DetailDrawer
+        open={addAppointmentOpen}
+        onOpenChange={setAddAppointmentOpen}
+        title="Book now"
+      >
         <OrderProvider>
           <CheckoutFlow />
         </OrderProvider>
       </DetailDrawer>
       {/* Accept Drawer */}
-      <DetailDrawer open={acceptDrawerOpen} onOpenChange={setAcceptDrawerOpen} title="Appointment Acceptance">
+      <DetailDrawer
+        open={acceptDrawerOpen}
+        onOpenChange={setAcceptDrawerOpen}
+        title="Appointment Acceptance"
+      >
         {selectedAppointment && (
           <div className="space-y-4 p-4">
             <div>
               <h4 className="font-semibold mb-2">Servislər və Staff seçimi</h4>
-              {selectedAppointment.services.map(service => (
+              {selectedAppointment.services.map((service) => (
                 <div key={service} className="mb-2 flex items-center gap-2">
                   <span>{service}</span>
                   <select
                     className="border rounded px-2 py-1"
                     value={serviceStaff[service] || ""}
-                    onChange={e => setServiceStaff({ ...serviceStaff, [service]: e.target.value })}
+                    onChange={(e) =>
+                      setServiceStaff({
+                        ...serviceStaff,
+                        [service]: e.target.value,
+                      })
+                    }
                   >
                     <option value="">Staff seçin</option>
-                    {staffList.map(staff => (
-                      <option key={staff.id} value={staff.id}>{staff.name}</option>
+                    {staffList.map((staff) => (
+                      <option key={staff.id} value={staff.id}>
+                        {staff.name}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -507,23 +633,36 @@ const AppointmentsTab = () => {
             <div>
               <h4 className="font-semibold mb-2">İstifadə olunan məhsullar</h4>
               {selectedAppointment.products.length === 0 && <div>Yoxdur</div>}
-              {selectedAppointment.products.map(product => (
+              {selectedAppointment.products.map((product) => (
                 <div key={product} className="flex items-center gap-2">
                   <span>{product}</span>
                   {productStock[product] > 0 ? (
-                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">Stokda var</span>
+                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                      Stokda var
+                    </span>
                   ) : (
-                    <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">Stokda yoxdur</span>
+                    <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs">
+                      Stokda yoxdur
+                    </span>
                   )}
                 </div>
               ))}
             </div>
-            <Button className="bg-glamour-700 hover:bg-glamour-800 text-white w-full" onClick={handleAcceptConfirm}>Təsdiqlə</Button>
+            <Button
+              className="bg-glamour-700 hover:bg-glamour-800 text-white w-full"
+              onClick={handleAcceptConfirm}
+            >
+              Təsdiqlə
+            </Button>
           </div>
         )}
       </DetailDrawer>
       {/* Reject Drawer */}
-      <DetailDrawer open={rejectDrawerOpen} onOpenChange={setRejectDrawerOpen} title="Appointment Rejection">
+      <DetailDrawer
+        open={rejectDrawerOpen}
+        onOpenChange={setRejectDrawerOpen}
+        title="Appointment Rejection"
+      >
         {selectedAppointment && (
           <div className="space-y-4 p-4">
             <div>
@@ -532,58 +671,84 @@ const AppointmentsTab = () => {
                 className="w-full min-h-[100px] p-2 border rounded-md"
                 placeholder="Reject səbəbini daxil edin..."
                 value={rejectReason}
-                onChange={e => setRejectReason(e.target.value)}
+                onChange={(e) => setRejectReason(e.target.value)}
               />
             </div>
-            <Button className="bg-red-600 hover:bg-red-700 text-white w-full" onClick={handleRejectConfirm}>Təsdiqlə</Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white w-full"
+              onClick={handleRejectConfirm}
+            >
+              Təsdiqlə
+            </Button>
           </div>
         )}
       </DetailDrawer>
       {/* View Details Drawer - Updated to show read-only info */}
-      <DetailDrawer open={viewDrawerOpen} onOpenChange={setViewDrawerOpen} title="Appointment Details">
+      <DetailDrawer
+        open={viewDrawerOpen}
+        onOpenChange={setViewDrawerOpen}
+        title="Appointment Details"
+      >
         {selectedAppointment && (
           <div className="space-y-4 p-4">
             {/* Customer Info */}
             <div>
               <div className="font-semibold">Müştəri:</div>
-              <div>{selectedAppointment.customerName} ({selectedAppointment.customerPhone})</div>
+              <div>
+                {selectedAppointment.customerName} (
+                {selectedAppointment.customerPhone})
+              </div>
             </div>
-            
+
             {/* Services */}
             <div>
               <div className="font-semibold">Servislər:</div>
               <ul className="flex flex-wrap gap-2 ml-0">
-                {selectedAppointment.services.map(service => (
-                  <li key={service} className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
-                    {service} — <span className="text-glamour-700 font-medium">
+                {selectedAppointment.services.map((service) => (
+                  <li
+                    key={service}
+                    className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full"
+                  >
+                    {service} —{" "}
+                    <span className="text-glamour-700 font-medium">
                       {selectedAppointment.executors?.[service]
-                        ? staffList.find(s => s.id === Number(selectedAppointment.executors[service]))?.name || "Seçilməyib"
+                        ? staffList.find(
+                            (s) =>
+                              s.id ===
+                              Number(selectedAppointment.executors[service])
+                          )?.name || "Seçilməyib"
                         : "Seçilməyib"}
                     </span>
                   </li>
                 ))}
               </ul>
             </div>
-            
+
             {/* Products */}
             <div>
               <div className="font-semibold">Məhsullar:</div>
               <ul className="flex flex-wrap gap-2 ml-0">
                 {selectedAppointment.products.length === 0 && <div>Yoxdur</div>}
-                {selectedAppointment.products.map(product => (
-                  <li key={product} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                {selectedAppointment.products.map((product) => (
+                  <li
+                    key={product}
+                    className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full"
+                  >
                     {product}
                   </li>
                 ))}
               </ul>
             </div>
-            
+
             {/* Date/Time */}
             <div>
               <div className="font-semibold">Tarix və saat:</div>
-              <div>{selectedAppointment.date} {selectedAppointment.time} ({selectedAppointment.duration})</div>
+              <div>
+                {selectedAppointment.date} {selectedAppointment.time} (
+                {selectedAppointment.duration})
+              </div>
             </div>
-            
+
             {/* Payment */}
             <div>
               <div className="font-semibold">Ödəniş:</div>
@@ -592,25 +757,28 @@ const AppointmentsTab = () => {
                 <div>Ödəniş üsulu: {selectedAppointment.paymentMethod}</div>
               )}
             </div>
-            
+
             {/* Status */}
             <div>
               <div className="font-semibold">Status:</div>
               <div>{selectedAppointment.status}</div>
             </div>
-            
+
             {/* Rejection reason if applicable */}
-            {selectedAppointment.status === 'rejected' && selectedAppointment.rejectReason && (
-              <div>
-                <div className="font-semibold">Reject səbəbi:</div>
-                <div className="text-red-700">{selectedAppointment.rejectReason}</div>
-              </div>
-            )}
-            
+            {selectedAppointment.status === "rejected" &&
+              selectedAppointment.rejectReason && (
+                <div>
+                  <div className="font-semibold">Reject səbəbi:</div>
+                  <div className="text-red-700">
+                    {selectedAppointment.rejectReason}
+                  </div>
+                </div>
+              )}
+
             {/* Action button for repeat */}
-            <Button 
-              variant="outline" 
-              className="w-full" 
+            <Button
+              variant="outline"
+              className="w-full"
               onClick={() => {
                 handleRepeat(selectedAppointment);
                 setViewDrawerOpen(false);
@@ -623,13 +791,22 @@ const AppointmentsTab = () => {
         )}
       </DetailDrawer>
       {/* Edit Drawer for Book now form */}
-      <DetailDrawer open={editDrawerOpen} onOpenChange={setEditDrawerOpen} title="Edit Appointment">
+      <DetailDrawer
+        open={editDrawerOpen}
+        onOpenChange={setEditDrawerOpen}
+        title="Edit Appointment"
+      >
         {selectedAppointment && (
           <div className="p-4 space-y-6">
             <div className="border rounded-md p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold">Customer Information</h3>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsEditingCustomer(!isEditingCustomer)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setIsEditingCustomer(!isEditingCustomer)}
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
               </div>
@@ -637,63 +814,87 @@ const AppointmentsTab = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs mb-1">Name</label>
-                    <Input 
+                    <Input
                       value={editForm.customerName}
-                      onChange={e => setEditForm({...editForm, customerName: e.target.value})}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          customerName: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div>
                     <label className="block text-xs mb-1">Phone</label>
-                    <Input 
+                    <Input
                       value={editForm.customerPhone}
-                      onChange={e => setEditForm({...editForm, customerPhone: e.target.value})}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          customerPhone: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="flex justify-end">
-                    <Button size="sm" onClick={handleSaveCustomer}>Save</Button>
+                    <Button size="sm" onClick={handleSaveCustomer}>
+                      Save
+                    </Button>
                   </div>
                 </div>
               ) : (
                 <div>
                   <div>{editForm.customerName}</div>
-                  <div className="text-sm text-muted-foreground">{editForm.customerPhone}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {editForm.customerPhone}
+                  </div>
                 </div>
               )}
             </div>
-            
+
             <div className="border rounded-md p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold">Services</h3>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsEditingServices(!isEditingServices)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setIsEditingServices(!isEditingServices)}
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
               </div>
               {isEditingServices ? (
                 <div className="space-y-4">
                   {/* Service editing interface */}
-                  <Input 
-                    placeholder="Search services..." 
+                  <Input
+                    placeholder="Search services..."
                     value={serviceSearch}
-                    onChange={e => setServiceSearch(e.target.value)}
+                    onChange={(e) => setServiceSearch(e.target.value)}
                     className="mb-2"
                   />
                   <div className="max-h-40 overflow-y-auto">
-                    {filteredServices.map(service => (
-                      <div key={service.id} className="flex items-center justify-between py-1">
+                    {filteredServices.map((service) => (
+                      <div
+                        key={service.id}
+                        className="flex items-center justify-between py-1"
+                      >
                         <label className="flex items-center gap-2">
-                          <input 
+                          <input
                             type="checkbox"
                             checked={editForm.services.includes(service.id)}
-                            onChange={e => {
+                            onChange={(e) => {
                               if (e.target.checked) {
                                 setEditForm({
-                                  ...editForm, 
-                                  services: [...editForm.services, service.id]
+                                  ...editForm,
+                                  services: [...editForm.services, service.id],
                                 });
                               } else {
                                 setEditForm({
-                                  ...editForm, 
-                                  services: editForm.services.filter(id => id !== service.id)
+                                  ...editForm,
+                                  services: editForm.services.filter(
+                                    (id) => id !== service.id
+                                  ),
                                 });
                               }
                             }}
@@ -705,16 +906,20 @@ const AppointmentsTab = () => {
                     ))}
                   </div>
                   <div className="flex justify-end">
-                    <Button size="sm" onClick={handleSaveServices}>Save</Button>
+                    <Button size="sm" onClick={handleSaveServices}>
+                      Save
+                    </Button>
                   </div>
                 </div>
               ) : (
                 <div>
                   {selectedServiceObjs.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">No services selected</div>
+                    <div className="text-sm text-muted-foreground">
+                      No services selected
+                    </div>
                   ) : (
                     <div className="space-y-1">
-                      {selectedServiceObjs.map(service => (
+                      {selectedServiceObjs.map((service) => (
                         <div key={service.id} className="flex justify-between">
                           <span>{service.name}</span>
                           <span>${service.price}</span>
@@ -725,40 +930,50 @@ const AppointmentsTab = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="border rounded-md p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold">Products</h3>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsEditingProducts(!isEditingProducts)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setIsEditingProducts(!isEditingProducts)}
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
               </div>
               {isEditingProducts ? (
                 <div className="space-y-4">
                   {/* Product editing interface */}
-                  <Input 
-                    placeholder="Search products..." 
+                  <Input
+                    placeholder="Search products..."
                     value={productSearch}
-                    onChange={e => setProductSearch(e.target.value)}
+                    onChange={(e) => setProductSearch(e.target.value)}
                     className="mb-2"
                   />
                   <div className="max-h-40 overflow-y-auto">
-                    {filteredProducts.map(product => (
-                      <div key={product.id} className="flex items-center justify-between py-1">
+                    {filteredProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="flex items-center justify-between py-1"
+                      >
                         <label className="flex items-center gap-2">
-                          <input 
+                          <input
                             type="checkbox"
                             checked={editForm.products.includes(product.id)}
-                            onChange={e => {
+                            onChange={(e) => {
                               if (e.target.checked) {
                                 setEditForm({
-                                  ...editForm, 
-                                  products: [...editForm.products, product.id]
+                                  ...editForm,
+                                  products: [...editForm.products, product.id],
                                 });
                               } else {
                                 setEditForm({
-                                  ...editForm, 
-                                  products: editForm.products.filter(id => id !== product.id)
+                                  ...editForm,
+                                  products: editForm.products.filter(
+                                    (id) => id !== product.id
+                                  ),
                                 });
                               }
                             }}
@@ -770,16 +985,20 @@ const AppointmentsTab = () => {
                     ))}
                   </div>
                   <div className="flex justify-end">
-                    <Button size="sm" onClick={handleSaveProducts}>Save</Button>
+                    <Button size="sm" onClick={handleSaveProducts}>
+                      Save
+                    </Button>
                   </div>
                 </div>
               ) : (
                 <div>
                   {selectedProductObjs.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">No products selected</div>
+                    <div className="text-sm text-muted-foreground">
+                      No products selected
+                    </div>
                   ) : (
                     <div className="space-y-1">
-                      {selectedProductObjs.map(product => (
+                      {selectedProductObjs.map((product) => (
                         <div key={product.id} className="flex justify-between">
                           <span>{product.name}</span>
                           <span>${product.price}</span>
@@ -790,11 +1009,16 @@ const AppointmentsTab = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="border rounded-md p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold">Date & Time</h3>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsEditingDateTime(!isEditingDateTime)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setIsEditingDateTime(!isEditingDateTime)}
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
               </div>
@@ -802,22 +1026,28 @@ const AppointmentsTab = () => {
                 <div className="space-y-4">
                   <div>
                     <label className="block text-xs mb-1">Date</label>
-                    <Input 
+                    <Input
                       type="date"
                       value={editForm.date}
-                      onChange={e => setEditForm({...editForm, date: e.target.value})}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, date: e.target.value })
+                      }
                     />
                   </div>
                   <div>
                     <label className="block text-xs mb-1">Time</label>
-                    <Input 
+                    <Input
                       type="time"
                       value={editForm.time}
-                      onChange={e => setEditForm({...editForm, time: e.target.value})}
+                      onChange={(e) =>
+                        setEditForm({ ...editForm, time: e.target.value })
+                      }
                     />
                   </div>
                   <div className="flex justify-end">
-                    <Button size="sm" onClick={handleSaveDateTime}>Save</Button>
+                    <Button size="sm" onClick={handleSaveDateTime}>
+                      Save
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -826,11 +1056,16 @@ const AppointmentsTab = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="border rounded-md p-4">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-semibold">Payment</h3>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsEditingPayment(!isEditingPayment)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setIsEditingPayment(!isEditingPayment)}
+                >
                   <Edit className="h-4 w-4" />
                 </Button>
               </div>
@@ -839,10 +1074,15 @@ const AppointmentsTab = () => {
                 <div className="space-y-4 mt-2">
                   <div>
                     <label className="block text-xs mb-1">Payment Method</label>
-                    <select 
+                    <select
                       className="w-full border rounded px-3 py-2"
                       value={editForm.paymentMethod}
-                      onChange={e => setEditForm({...editForm, paymentMethod: e.target.value})}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          paymentMethod: e.target.value,
+                        })
+                      }
                     >
                       <option value="">Select payment method</option>
                       <option value="cash">Cash</option>
@@ -851,7 +1091,9 @@ const AppointmentsTab = () => {
                     </select>
                   </div>
                   <div className="flex justify-end">
-                    <Button size="sm" onClick={handleSavePayment}>Save</Button>
+                    <Button size="sm" onClick={handleSavePayment}>
+                      Save
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -859,12 +1101,14 @@ const AppointmentsTab = () => {
                   {editForm.paymentMethod ? (
                     <div>Method: {editForm.paymentMethod}</div>
                   ) : (
-                    <div className="text-sm text-muted-foreground">No payment method selected</div>
+                    <div className="text-sm text-muted-foreground">
+                      No payment method selected
+                    </div>
                   )}
                 </div>
               )}
             </div>
-            
+
             <div className="flex justify-end pt-4">
               <Button onClick={() => setEditDrawerOpen(false)}>Close</Button>
             </div>
