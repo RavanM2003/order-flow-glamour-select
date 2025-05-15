@@ -1,18 +1,19 @@
+import React from "react";
+import { useOrder } from "@/context/OrderContext";
+import CustomerInfo from "./CustomerInfo";
+import ServiceSelection from "./ServiceSelection";
+import PaymentDetails from "./PaymentDetails";
+import BookingConfirmation from "./BookingConfirmation";
 
-import React from 'react';
-import { useOrder } from '@/context/OrderContext';
-import CustomerInfo from './CustomerInfo';
-import ServiceSelection from './ServiceSelection';
-import PaymentDetails from './PaymentDetails';
-import BookingConfirmation from './BookingConfirmation';
-
-export type BookingMode = 'customer' | 'staff';
+export type BookingMode = "customer" | "staff";
 
 interface CheckoutFlowProps {
   bookingMode?: BookingMode;
 }
 
-const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode = 'customer' }) => {
+const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
+  bookingMode = "customer",
+}) => {
   const { orderState } = useOrder();
   const { currentStep } = orderState;
 
@@ -20,34 +21,34 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode = 'customer' })
     <div>
       <div className="mb-8">
         <div className="flex justify-between items-center">
-          <div className={`step ${currentStep >= 1 ? 'active' : ''}`}>
+          <div className={`step ${currentStep >= 1 ? "active" : ""}`}>
             <div className="step-number">1</div>
             <div className="step-label">Customer Info</div>
           </div>
           <div className="step-connector"></div>
-          <div className={`step ${currentStep >= 2 ? 'active' : ''}`}>
+          <div className={`step ${currentStep >= 2 ? "active" : ""}`}>
             <div className="step-number">2</div>
             <div className="step-label">Services & Products</div>
           </div>
           <div className="step-connector"></div>
-          <div className={`step ${currentStep >= 3 ? 'active' : ''}`}>
+          <div className={`step ${currentStep >= 3 ? "active" : ""}`}>
             <div className="step-number">3</div>
             <div className="step-label">Payment</div>
           </div>
           <div className="step-connector"></div>
-          <div className={`step ${currentStep >= 4 ? 'active' : ''}`}>
+          <div className={`step ${currentStep >= 4 ? "active" : ""}`}>
             <div className="step-number">4</div>
             <div className="step-label">Confirmation</div>
           </div>
         </div>
       </div>
-      
+
       {currentStep === 1 && <CustomerInfo bookingMode={bookingMode} />}
       {currentStep === 2 && <ServiceSelection />}
       {currentStep === 3 && <PaymentDetails />}
       {currentStep === 4 && <BookingConfirmation />}
 
-      <style jsx>{`
+      <style>{`
         .step {
           display: flex;
           flex-direction: column;
