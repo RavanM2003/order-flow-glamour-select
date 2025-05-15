@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +14,7 @@ import {
   Package,
   DollarSign,
   ChevronDown,
+  Search,
 } from "lucide-react";
 import { API } from "@/lib/api";
 import { toast } from "@/components/ui/use-toast";
@@ -94,6 +96,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
   });
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     // If we have a customer prop, use it, otherwise fetch from API
@@ -223,6 +226,12 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
     return <Badge className={className}>{status}</Badge>;
   };
 
+  // Filter appointments based on search term (order reference)
+  const filteredAppointments = appointments.filter(app => 
+    app.orderReference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (`ORD-${app.id}`).toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading) {
     return <div className="p-4 text-center">Loading customer details...</div>;
   }
@@ -347,17 +356,30 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
             <h3 className="text-xl font-bold text-glamour-800">Appointments</h3>
           </div>
 
-          <div className="mb-4 text-sm text-gray-600">
-            Total Appointments: {appointments.length}
+          {/* Search by Order Reference */}
+          <div className="mb-4">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input 
+                placeholder="Search by order reference..." 
+                className="pl-10" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
 
-          {appointments.length === 0 ? (
+          <div className="mb-4 text-sm text-gray-600">
+            Total Appointments: {filteredAppointments.length}
+          </div>
+
+          {filteredAppointments.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              No appointments found for this customer
+              {searchTerm ? "No appointments found matching your search" : "No appointments found for this customer"}
             </div>
           ) : (
             <div className="space-y-6">
-              {appointments.map((app) => (
+              {filteredAppointments.map((app) => (
                 <Accordion
                   key={app.id}
                   type="single"
@@ -366,31 +388,26 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
                 >
                   <AccordionItem value="details" className="border-none">
                     <div className="flex items-center justify-between p-4">
-                      <div className="flex flex-col flex-1">
-                        <div className="flex items-center">
-                          <h4 className="text-lg font-semibold">
-                            {app.service}
-                          </h4>
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Badge
-                            className={`ml-2 ${getStatusBadgeColor(
-                              app.status
-                            )}`}
+                            variant="outline"
+                            className="font-mono bg-glamour-50 border-glamour-200"
+                          >
+                            {app.orderReference || `ORD-${app.id}`}
+                          </Badge>
+                          <Badge
+                            className={getStatusBadgeColor(app.status)}
                           >
                             {app.status}
                           </Badge>
+                          {getPaymentStatusBadge(app)}
                         </div>
-                        <div className="flex flex-wrap gap-2 items-center text-gray-600 mt-1">
-                          <div className="flex items-center">
-                            <Badge
-                              variant="outline"
-                              className="font-mono bg-glamour-50 border-glamour-200"
-                            >
-                              {app.orderReference || `ORD-${app.id}`}
-                            </Badge>
-                          </div>
+                        
+                        <div className="flex flex-wrap gap-2 items-center text-gray-600 mt-2">
                           <div className="flex items-center">
                             <Calendar className="h-4 w-4 mr-1" />
-                            <span className="mr-3">{app.date}</span>
+                            <span>{app.date}</span>
                           </div>
                           <div className="flex items-center">
                             <Clock className="h-4 w-4 mr-1" />
@@ -398,6 +415,24 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
                               {app.startTime || app.time} - {app.endTime}
                             </span>
                           </div>
+                          <div className="flex items-center">
+                            <span className="font-medium">Duration:</span> {app.duration || "60"} min
+                          </div>
+                        </div>
+                        
+                        <div className="mt-1 flex gap-4">
+                          <div className="flex items-center">
+                            <DollarSign className="h-4 w-4 mr-1" />
+                            <span className="font-medium">${app.totalAmount || 0}</span>
+                          </div>
+                          {(app.remainingBalance > 0 ||
+                            app.totalAmount > (app.amountPaid || 0)) && (
+                            <div className="text-red-600">
+                              <span className="font-medium">Balance:</span> $
+                              {app.remainingBalance ||
+                                app.totalAmount - (app.amountPaid || 0)}
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -408,146 +443,51 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
 
                     <AccordionContent className="px-4 pb-4 pt-0 border-t">
                       <div className="space-y-4 mt-2">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          <div className="bg-gray-50 p-3 rounded-md">
-                            <h5 className="text-sm font-semibold mb-2">
-                              Appointment Details
-                            </h5>
-                            <div className="space-y-1 text-sm">
-                              <div>
-                                <span className="font-medium">Date:</span>{" "}
-                                {app.date}
-                              </div>
-                              <div>
-                                <span className="font-medium">Time:</span>{" "}
-                                {app.startTime || app.time}
-                              </div>
-                              <div>
-                                <span className="font-medium">Duration:</span>{" "}
-                                {app.duration || "60"} min
-                              </div>
-                              <div>
-                                <span className="font-medium">Status:</span>{" "}
-                                {app.status}
-                              </div>
-                              <div>
-                                <span className="font-medium">Order Ref:</span>{" "}
-                                {app.orderReference || `ORD-${app.id}`}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="bg-gray-50 p-3 rounded-md">
-                            <h5 className="text-sm font-semibold mb-2 flex items-center">
-                              <DollarSign className="h-4 w-4 mr-1" /> Payment
-                              Information
-                            </h5>
-                            <div className="space-y-1 text-sm">
-                              <div>
-                                <span className="font-medium">
-                                  Payment Method:
-                                </span>{" "}
-                                {app.paymentMethod || "Cash"}
-                              </div>
-                              <div>
-                                <span className="font-medium">
-                                  Total Amount:
-                                </span>{" "}
-                                ${app.totalAmount || 0}
-                              </div>
-                              <div>
-                                <span className="font-medium">
-                                  Amount Paid:
-                                </span>{" "}
-                                ${app.amountPaid || 0}
-                              </div>
-                              {(app.remainingBalance > 0 ||
-                                app.totalAmount > (app.amountPaid || 0)) && (
-                                <div className="text-red-600">
-                                  <span className="font-medium">Balance:</span>{" "}
-                                  $
-                                  {app.remainingBalance ||
-                                    app.totalAmount - (app.amountPaid || 0)}
-                                </div>
-                              )}
-                              <div className="pt-1">
-                                {getPaymentStatusBadge(app)}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="bg-gray-50 p-3 rounded-md">
-                            <h5 className="text-sm font-semibold mb-2 flex items-center">
-                              <UserCircle className="h-4 w-4 mr-1" /> Staff
-                              Assigned
-                            </h5>
-                            <div className="space-y-1 text-sm">
-                              {app.serviceProviders &&
-                              app.serviceProviders.length > 0 ? (
-                                app.serviceProviders.map(
-                                  (provider: ServiceProvider, idx: number) => (
-                                    <div key={idx}>
-                                      <span className="font-medium">
-                                        {provider.name}
-                                      </span>
-                                      {provider.serviceId && (
-                                        <span className="text-xs text-gray-500 block">
-                                          {app.services?.find(
-                                            (s: Service) =>
-                                              s.id === provider.serviceId
-                                          )?.name || "Service"}
-                                        </span>
-                                      )}
-                                    </div>
-                                  )
-                                )
-                              ) : app.staff && app.staff.length > 0 ? (
-                                app.staff.map((staff: string, idx: number) => (
-                                  <div key={idx}>{staff}</div>
-                                ))
-                              ) : (
-                                <div>No staff assigned</div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <Separator className="my-3" />
-
+                        {/* Services section */}
                         <div>
                           <h5 className="text-sm font-semibold mb-2">
                             Services
                           </h5>
-                          <div className="space-y-2">
+                          <div className="space-y-2 bg-gray-50 p-3 rounded-md">
                             {app.services && app.services.length > 0 ? (
-                              app.services.map(
-                                (service: Service, idx: number) => (
-                                  <div
-                                    key={idx}
-                                    className="flex justify-between items-center"
-                                  >
-                                    <div>
-                                      <div className="font-medium">
-                                        {service.name}
-                                      </div>
-                                      <div className="text-xs text-gray-500">
-                                        {service.duration || "60"} min
-                                      </div>
-                                    </div>
+                              app.services.map((service: Service, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="flex justify-between items-center border-b last:border-b-0 pb-2 last:pb-0"
+                                >
+                                  <div>
                                     <div className="font-medium">
-                                      ${service.price}
+                                      {service.name}
+                                    </div>
+                                    <div className="text-xs text-gray-500 flex items-center">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      {service.duration || "60"} min
+                                    </div>
+                                    <div className="text-xs text-gray-500 flex items-center mt-1">
+                                      <UserCircle className="h-3 w-3 mr-1" />
+                                      {app.serviceProviders?.find(
+                                        (provider) => provider.serviceId === service.id
+                                      )?.name || "No provider assigned"}
                                     </div>
                                   </div>
-                                )
-                              )
+                                  <div className="font-medium">
+                                    ${service.price}
+                                  </div>
+                                </div>
+                              ))
                             ) : (
                               <div className="flex justify-between items-center">
                                 <div>
                                   <div className="font-medium">
                                     {app.service}
                                   </div>
-                                  <div className="text-xs text-gray-500">
+                                  <div className="text-xs text-gray-500 flex items-center">
+                                    <Clock className="h-3 w-3 mr-1" />
                                     {app.duration || "60"} min
+                                  </div>
+                                  <div className="text-xs text-gray-500 flex items-center mt-1">
+                                    <UserCircle className="h-3 w-3 mr-1" />
+                                    {app.staff?.[0] || "No provider assigned"}
                                   </div>
                                 </div>
                                 <div className="font-medium">
@@ -558,31 +498,23 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
                           </div>
                         </div>
 
+                        {/* Products section */}
                         {(app.products && app.products.length > 0) ||
-                        (app.selectedProducts &&
-                          app.selectedProducts.length > 0) ? (
-                          <>
-                            <Separator className="my-3" />
-                            <div>
-                              <h5 className="text-sm font-semibold mb-2 flex items-center">
-                                <Package className="h-4 w-4 mr-1" /> Products
-                                Used
-                              </h5>
-                              <div className="space-y-2">
-                                {(
-                                  app.products ||
-                                  app.selectedProducts ||
-                                  []
-                                ).map((product: Product, idx: number) => (
+                        (app.selectedProducts && app.selectedProducts.length > 0) ? (
+                          <div>
+                            <h5 className="text-sm font-semibold mb-2 flex items-center">
+                              <Package className="h-4 w-4 mr-1" /> Products
+                            </h5>
+                            <div className="space-y-2 bg-gray-50 p-3 rounded-md">
+                              {(app.products || app.selectedProducts || []).map(
+                                (product: Product, idx: number) => (
                                   <div
                                     key={idx}
-                                    className="flex justify-between items-center"
+                                    className="flex justify-between items-center border-b last:border-b-0 pb-2 last:pb-0"
                                   >
                                     <div>
                                       {typeof product === "string" ? (
-                                        <div className="font-medium">
-                                          {product}
-                                        </div>
+                                        <div className="font-medium">{product}</div>
                                       ) : (
                                         <>
                                           <div className="font-medium">
@@ -596,18 +528,52 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
                                         </>
                                       )}
                                     </div>
-                                    {typeof product !== "string" &&
-                                      product.price && (
-                                        <div className="font-medium">
-                                          ${product.price}
-                                        </div>
-                                      )}
+                                    {typeof product !== "string" && product.price && (
+                                      <div className="font-medium">${product.price}</div>
+                                    )}
                                   </div>
-                                ))}
-                              </div>
+                                )
+                              )}
                             </div>
-                          </>
+                          </div>
                         ) : null}
+
+                        {/* Payment info */}
+                        <div>
+                          <h5 className="text-sm font-semibold mb-2 flex items-center">
+                            <DollarSign className="h-4 w-4 mr-1" /> Payment
+                            Information
+                          </h5>
+                          <div className="space-y-1 text-sm bg-gray-50 p-3 rounded-md">
+                            <div>
+                              <span className="font-medium">
+                                Payment Method:
+                              </span>{" "}
+                              {app.paymentMethod || "Cash"}
+                            </div>
+                            <div>
+                              <span className="font-medium">
+                                Total Amount:
+                              </span>{" "}
+                              ${app.totalAmount || 0}
+                            </div>
+                            <div>
+                              <span className="font-medium">
+                                Amount Paid:
+                              </span>{" "}
+                              ${app.amountPaid || 0}
+                            </div>
+                            {(app.remainingBalance > 0 ||
+                              app.totalAmount > (app.amountPaid || 0)) && (
+                              <div className="text-red-600">
+                                <span className="font-medium">Balance:</span>{" "}
+                                $
+                                {app.remainingBalance ||
+                                  app.totalAmount - (app.amountPaid || 0)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
 
                         <div className="text-xs text-gray-500 mt-2">
                           <span className="font-medium">Order created:</span>{" "}
