@@ -22,6 +22,12 @@ import {
 } from "lucide-react";
 import DetailDrawer from "@/components/common/DetailDrawer";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const allProducts = [
   "Moisturizer Cream",
@@ -174,6 +180,8 @@ const ServicesTab = () => {
   });
   const [editServiceError, setEditServiceError] = useState("");
   const { toast, dismiss } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [serviceToDelete, setServiceToDelete] = useState<number | null>(null);
 
   // Filter services based on search term
   const filteredServices = services.filter((service) =>
@@ -221,28 +229,24 @@ const ServicesTab = () => {
   };
 
   // Delete Service logic
-  const handleDeleteService = (id) => {
-    toast({
-      title: "Silmək istədiyinizə əminsiniz?",
-      action: (
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            className="bg-red-600 text-white"
-            onClick={() => {
-              setServices((services) => services.filter((s) => s.id !== id));
-              dismiss();
-            }}
-          >
-            Bəli, sil
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => dismiss()}>
-            Ləğv et
-          </Button>
-        </div>
-      ),
-      duration: 10000,
-    });
+  const handleDeleteService = (id: number) => {
+    setServiceToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteService = () => {
+    if (serviceToDelete) {
+      setServices((services) =>
+        services.filter((s) => s.id !== serviceToDelete)
+      );
+      setDeleteDialogOpen(false);
+      setServiceToDelete(null);
+    }
+  };
+
+  const cancelDeleteService = () => {
+    setDeleteDialogOpen(false);
+    setServiceToDelete(null);
   };
 
   // Multi-select handler
@@ -660,6 +664,26 @@ const ServicesTab = () => {
           </Button>
         </form>
       </DetailDrawer>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>Xidməti silmək istədiyinizə əminsiniz?</DialogHeader>
+          <div className="py-4 text-sm text-muted-foreground">
+            Bu əməliyyat geri qaytarıla bilməz. Xidmət silinəcək.
+          </div>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="outline" onClick={cancelDeleteService}>
+              Ləğv et
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={confirmDeleteService}
+            >
+              Sil
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

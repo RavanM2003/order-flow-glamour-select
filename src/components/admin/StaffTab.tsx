@@ -25,6 +25,12 @@ import { Badge } from "@/components/ui/badge";
 import DetailDrawer from "@/components/common/DetailDrawer";
 import MultiSelect from "@/components/common/MultiSelect";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 // Define Staff type
 type Staff = {
@@ -96,6 +102,8 @@ const StaffTab = () => {
   const [editMode, setEditMode] = useState(false);
   const [formError, setFormError] = useState("");
   const { toast, dismiss } = useToast();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [staffToDelete, setStaffToDelete] = useState<number | null>(null);
 
   // Form state
   const [staffForm, setStaffForm] = useState<Omit<Staff, "id">>({
@@ -171,27 +179,21 @@ const StaffTab = () => {
   };
 
   const handleDeleteStaff = (id: number) => {
-    toast({
-      title: "Silmək istədiyinizə əminsiniz?",
-      action: (
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            className="bg-red-600 text-white"
-            onClick={() => {
-              setStaff((staff) => staff.filter((s) => s.id !== id));
-              dismiss();
-            }}
-          >
-            Bəli, sil
-          </Button>
-          <Button size="sm" variant="outline" onClick={() => dismiss()}>
-            Ləğv et
-          </Button>
-        </div>
-      ),
-      duration: 10000,
-    });
+    setStaffToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteStaff = () => {
+    if (staffToDelete) {
+      setStaff((staff) => staff.filter((s) => s.id !== staffToDelete));
+      setDeleteDialogOpen(false);
+      setStaffToDelete(null);
+    }
+  };
+
+  const cancelDeleteStaff = () => {
+    setDeleteDialogOpen(false);
+    setStaffToDelete(null);
   };
 
   return (
@@ -459,6 +461,26 @@ const StaffTab = () => {
           </Button>
         </form>
       </DetailDrawer>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>İşçini silmək istədiyinizə əminsiniz?</DialogHeader>
+          <div className="py-4 text-sm text-muted-foreground">
+            Bu əməliyyat geri qaytarıla bilməz. İşçi silinəcək.
+          </div>
+          <DialogFooter className="flex justify-end gap-2">
+            <Button variant="outline" onClick={cancelDeleteStaff}>
+              Ləğv et
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={confirmDeleteStaff}
+            >
+              Sil
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
