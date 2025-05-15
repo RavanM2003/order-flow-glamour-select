@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -20,7 +21,8 @@ import {
   CalendarPlus,
   Info,
   RefreshCcw,
-  Edit
+  Edit,
+  CheckCircle
 } from 'lucide-react';
 import DetailDrawer from '@/components/common/DetailDrawer';
 import { OrderProvider } from '@/context/OrderContext';
@@ -301,6 +303,7 @@ const AppointmentsTab = () => {
   // Edit handler
   const handleEdit = (appointment) => {
     setSelectedAppointment(appointment);
+    setEditMode(true);
     setEditDrawerOpen(true);
   };
 
@@ -437,10 +440,16 @@ const AppointmentsTab = () => {
                               </>
                             )}
                             {appointment.status === 'confirmed' && (
-                              <Button variant="outline" size="sm" className="p-1 text-blue-600 hover:text-blue-700" onClick={() => handleEdit(appointment)}>
-                                <Edit className="h-4 w-4 mr-1" />
-                                <span>Edit</span>
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm" className="p-1 text-blue-600 hover:text-blue-700" onClick={() => handleEdit(appointment)}>
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  <span>Edit</span>
+                                </Button>
+                                <Button variant="outline" size="sm" className="p-1 text-green-600 hover:text-green-700" onClick={() => handleMarkCompleted(appointment)}>
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  <span>Complete</span>
+                                </Button>
+                              </div>
                             )}
                             {(appointment.status === 'completed' || appointment.status === 'rejected') && (
                               <div className="flex gap-1">
@@ -614,11 +623,252 @@ const AppointmentsTab = () => {
         )}
       </DetailDrawer>
       {/* Edit Drawer for Book now form */}
-      <DetailDrawer open={editDrawerOpen} onOpenChange={setEditDrawerOpen} title="Book now">
+      <DetailDrawer open={editDrawerOpen} onOpenChange={setEditDrawerOpen} title="Edit Appointment">
         {selectedAppointment && (
-          <OrderProvider>
-            <CheckoutFlow />
-          </OrderProvider>
+          <div className="p-4 space-y-6">
+            <div className="border rounded-md p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold">Customer Information</h3>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsEditingCustomer(!isEditingCustomer)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </div>
+              {isEditingCustomer ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs mb-1">Name</label>
+                    <Input 
+                      value={editForm.customerName}
+                      onChange={e => setEditForm({...editForm, customerName: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">Phone</label>
+                    <Input 
+                      value={editForm.customerPhone}
+                      onChange={e => setEditForm({...editForm, customerPhone: e.target.value})}
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button size="sm" onClick={handleSaveCustomer}>Save</Button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <div>{editForm.customerName}</div>
+                  <div className="text-sm text-muted-foreground">{editForm.customerPhone}</div>
+                </div>
+              )}
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold">Services</h3>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsEditingServices(!isEditingServices)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </div>
+              {isEditingServices ? (
+                <div className="space-y-4">
+                  {/* Service editing interface */}
+                  <Input 
+                    placeholder="Search services..." 
+                    value={serviceSearch}
+                    onChange={e => setServiceSearch(e.target.value)}
+                    className="mb-2"
+                  />
+                  <div className="max-h-40 overflow-y-auto">
+                    {filteredServices.map(service => (
+                      <div key={service.id} className="flex items-center justify-between py-1">
+                        <label className="flex items-center gap-2">
+                          <input 
+                            type="checkbox"
+                            checked={editForm.services.includes(service.id)}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setEditForm({
+                                  ...editForm, 
+                                  services: [...editForm.services, service.id]
+                                });
+                              } else {
+                                setEditForm({
+                                  ...editForm, 
+                                  services: editForm.services.filter(id => id !== service.id)
+                                });
+                              }
+                            }}
+                          />
+                          {service.name}
+                        </label>
+                        <span>${service.price}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end">
+                    <Button size="sm" onClick={handleSaveServices}>Save</Button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {selectedServiceObjs.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">No services selected</div>
+                  ) : (
+                    <div className="space-y-1">
+                      {selectedServiceObjs.map(service => (
+                        <div key={service.id} className="flex justify-between">
+                          <span>{service.name}</span>
+                          <span>${service.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold">Products</h3>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsEditingProducts(!isEditingProducts)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </div>
+              {isEditingProducts ? (
+                <div className="space-y-4">
+                  {/* Product editing interface */}
+                  <Input 
+                    placeholder="Search products..." 
+                    value={productSearch}
+                    onChange={e => setProductSearch(e.target.value)}
+                    className="mb-2"
+                  />
+                  <div className="max-h-40 overflow-y-auto">
+                    {filteredProducts.map(product => (
+                      <div key={product.id} className="flex items-center justify-between py-1">
+                        <label className="flex items-center gap-2">
+                          <input 
+                            type="checkbox"
+                            checked={editForm.products.includes(product.id)}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setEditForm({
+                                  ...editForm, 
+                                  products: [...editForm.products, product.id]
+                                });
+                              } else {
+                                setEditForm({
+                                  ...editForm, 
+                                  products: editForm.products.filter(id => id !== product.id)
+                                });
+                              }
+                            }}
+                          />
+                          {product.name}
+                        </label>
+                        <span>${product.price}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-end">
+                    <Button size="sm" onClick={handleSaveProducts}>Save</Button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {selectedProductObjs.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">No products selected</div>
+                  ) : (
+                    <div className="space-y-1">
+                      {selectedProductObjs.map(product => (
+                        <div key={product.id} className="flex justify-between">
+                          <span>{product.name}</span>
+                          <span>${product.price}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold">Date & Time</h3>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsEditingDateTime(!isEditingDateTime)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </div>
+              {isEditingDateTime ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-xs mb-1">Date</label>
+                    <Input 
+                      type="date"
+                      value={editForm.date}
+                      onChange={e => setEditForm({...editForm, date: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs mb-1">Time</label>
+                    <Input 
+                      type="time"
+                      value={editForm.time}
+                      onChange={e => setEditForm({...editForm, time: e.target.value})}
+                    />
+                  </div>
+                  <div className="flex justify-end">
+                    <Button size="sm" onClick={handleSaveDateTime}>Save</Button>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {editForm.date} at {editForm.time}
+                </div>
+              )}
+            </div>
+            
+            <div className="border rounded-md p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold">Payment</h3>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setIsEditingPayment(!isEditingPayment)}>
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="text-xl font-bold">Total: ${total}</div>
+              {isEditingPayment ? (
+                <div className="space-y-4 mt-2">
+                  <div>
+                    <label className="block text-xs mb-1">Payment Method</label>
+                    <select 
+                      className="w-full border rounded px-3 py-2"
+                      value={editForm.paymentMethod}
+                      onChange={e => setEditForm({...editForm, paymentMethod: e.target.value})}
+                    >
+                      <option value="">Select payment method</option>
+                      <option value="cash">Cash</option>
+                      <option value="card">Card</option>
+                      <option value="transfer">Bank Transfer</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button size="sm" onClick={handleSavePayment}>Save</Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-1">
+                  {editForm.paymentMethod ? (
+                    <div>Method: {editForm.paymentMethod}</div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No payment method selected</div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            <div className="flex justify-end pt-4">
+              <Button onClick={() => setEditDrawerOpen(false)}>Close</Button>
+            </div>
+          </div>
         )}
       </DetailDrawer>
     </>
