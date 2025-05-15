@@ -443,14 +443,14 @@ const AppointmentsTab = () => {
             </div>
 
             {filteredAppointments.length > 0 ? (
-              <div className="border rounded-md overflow-hidden">
+              <div className="border rounded-md overflow-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Time</TableHead>
                       <TableHead>Customer</TableHead>
-                      <TableHead>Services and Products</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead className="hidden md:table-cell">Services and Products</TableHead>
+                      <TableHead className="text-right hidden md:table-cell">Total</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-center">Actions</TableHead>
                     </TableRow>
@@ -480,7 +480,7 @@ const AppointmentsTab = () => {
                             </span>
                           </div>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           <div className="flex flex-wrap gap-1">
                             {appointment.services.map((service, index) => (
                               <span
@@ -501,7 +501,7 @@ const AppointmentsTab = () => {
                               ))}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-medium">
+                        <TableCell className="text-right hidden md:table-cell font-medium">
                           ${appointment.totalAmount}
                         </TableCell>
                         <TableCell>

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import AdminVerticalNav from '@/components/admin/AdminVerticalNav';
 import AdminHeader from '@/components/admin/AdminHeader';
 import DashboardTab from '@/components/admin/DashboardTab';
@@ -14,6 +15,8 @@ import AdminProfile from '@/components/admin/AdminProfile';
 import CustomerDetailPage from './CustomerDetailPage';
 import { useLocation, useParams } from 'react-router-dom';
 import CashTab from '@/components/admin/CashTab';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface AdminProps {
   initialTab?: string;
@@ -37,30 +40,73 @@ const Admin: React.FC<AdminProps> = ({ initialTab }) => {
   const isCustomerDetail = location.pathname.startsWith('/admin/customers/') && customerId;
   const [activeTab, setActiveTab] = useState(tabFromPath(location.pathname));
   const [notifications] = useState(90); // Example notifications count
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   useEffect(() => {
     setActiveTab(tabFromPath(location.pathname));
   }, [location.pathname]);
   
+  // Close sidebar when changing tabs on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  }, [activeTab, isMobile]);
   
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Vertical Sidebar */}
-      <AdminVerticalNav 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        notifications={notifications} 
-      />
+    <div className="min-h-screen bg-background flex relative">
+      {/* Mobile overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-10"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div 
+        className={cn(
+          "z-20 transition-all duration-300",
+          isMobile ? "fixed left-0 top-0 bottom-0" : "relative",
+          isMobile && !sidebarOpen && "-translate-x-full"
+        )}
+      >
+        <AdminVerticalNav 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          notifications={notifications} 
+        />
+      </div>
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen">
         <AdminHeader />
-        <main className="flex-1 overflow-y-auto p-6">
+        
+        {/* Mobile Menu Button */}
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-3 left-3 z-30"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </Button>
+        )}
+        
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <div className="mb-3 flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-glamour-800">
+            <h1 className="text-lg md:text-2xl font-bold text-glamour-800">
               {isCustomerDetail
                 ? "Customer Details"
                 : activeTab === "dashboard" ? "Dashboard"
+                : activeTab === "customers" ? "Customers"
+                : activeTab === "services" ? "Services"
+                : activeTab === "products" ? "Products"  
+                : activeTab === "appointments" ? "Appointments"
+                : activeTab === "cash" ? "Cash Management"
+                : activeTab === "staff" ? "Staff"
                 : activeTab === "settings" ? "Settings"
                 : activeTab === "profile" ? "Profile"
                 : ""

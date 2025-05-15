@@ -12,9 +12,11 @@ import {
   TrendingDown,
   TrendingUp
 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const DashboardTab = () => {
   const [reportPeriod, setReportPeriod] = useState('daily');
+  const isMobile = useIsMobile();
   
   // Mock data
   const reportData = {
@@ -64,9 +66,9 @@ const DashboardTab = () => {
   
   return (
     <div className="space-y-6">
-      <div>
+      <div className="overflow-x-auto sm-touch-scroll pb-2">
         <Tabs value={reportPeriod} onValueChange={setReportPeriod} className="space-y-4">
-          <TabsList>
+          <TabsList className="inline-flex w-full sm:w-auto">
             <TabsTrigger value="daily">Daily</TabsTrigger>
             <TabsTrigger value="biweekly">15 Days</TabsTrigger>
             <TabsTrigger value="monthly">Monthly</TabsTrigger>
@@ -75,14 +77,14 @@ const DashboardTab = () => {
         </Tabs>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Customers</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{currentData.customersCount}</div>
+            <div className="text-xl md:text-2xl font-bold">{currentData.customersCount}</div>
             <p className="text-xs text-muted-foreground">
               +{Math.round(currentData.customersCount * 0.12)} from previous period
             </p>
@@ -95,10 +97,10 @@ const DashboardTab = () => {
             <Scissors className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${currentData.servicesSales}</div>
+            <div className="text-xl md:text-2xl font-bold">${currentData.servicesSales}</div>
             <p className="text-xs text-muted-foreground flex items-center">
               <TrendingUp className="mr-1 h-4 w-4 text-green-500" />
-              +8% from previous period
+              <span className="whitespace-nowrap">+8% from previous</span>
             </p>
           </CardContent>
         </Card>
@@ -109,10 +111,10 @@ const DashboardTab = () => {
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${currentData.productsSales}</div>
+            <div className="text-xl md:text-2xl font-bold">${currentData.productsSales}</div>
             <p className="text-xs text-muted-foreground flex items-center">
               <TrendingUp className="mr-1 h-4 w-4 text-green-500" />
-              +12% from previous period
+              <span className="whitespace-nowrap">+12% from previous</span>
             </p>
           </CardContent>
         </Card>
@@ -123,10 +125,10 @@ const DashboardTab = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${currentData.expenses}</div>
+            <div className="text-xl md:text-2xl font-bold">${currentData.expenses}</div>
             <p className="text-xs text-muted-foreground flex items-center">
               <TrendingDown className="mr-1 h-4 w-4 text-red-500" />
-              -2% from previous period
+              <span className="whitespace-nowrap">-2% from previous</span>
             </p>
           </CardContent>
         </Card>
@@ -134,7 +136,7 @@ const DashboardTab = () => {
       
       <Card>
         <CardHeader>
-          <CardTitle>Appointments Summary</CardTitle>
+          <CardTitle className="text-balance">Appointments Summary</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -176,9 +178,11 @@ const DashboardTab = () => {
         <CardHeader>
           <CardTitle>Performance Chart</CardTitle>
         </CardHeader>
-        <CardContent className="h-80 flex justify-center items-center">
-          <div className="text-lg text-muted-foreground">
-            Chart visualization will go here
+        <CardContent className={isMobile ? "h-60" : "h-80"}>
+          <div className="w-full h-full flex justify-center items-center">
+            <div className="text-md md:text-lg text-muted-foreground">
+              Chart visualization will go here
+            </div>
           </div>
         </CardContent>
       </Card>

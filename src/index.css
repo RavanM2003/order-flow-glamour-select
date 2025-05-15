@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -91,6 +92,46 @@
 
   body {
     @apply bg-background text-foreground;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Improve scrolling on touch devices */
+  @media (hover: none) {
+    ::-webkit-scrollbar {
+      width: 0px;
+      background: transparent;
+    }
+  }
+}
+
+/* Responsive utilities */
+@layer utilities {
+  .touch-action-none {
+    touch-action: none;
+  }
+  
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  
+  @media (max-width: 640px) {
+    .sm-touch-scroll {
+      -webkit-overflow-scrolling: touch;
+      overflow-x: auto;
+    }
   }
 }
 
@@ -118,3 +159,44 @@
   display: none !important;
 }
 
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .checkout-step {
+    animation-duration: 0.3s;
+  }
+  
+  .service-card:hover {
+    transform: none;
+  }
+}
+
+/* Animation keyframes */
+@keyframes slide-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Media query for larger screens */
+@media (min-width: 1024px) {
+  .lg-grid-cols-responsive {
+    grid-template-columns: 25% 75%;
+  }
+}
+
+/* Card hover effects - disable on touch devices */
+@media (hover: hover) {
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.15);
+  }
+}
