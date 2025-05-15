@@ -1,7 +1,9 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import DetailDrawer from '@/components/common/DetailDrawer';
-import { CreditCard, Wallet, Banknote, Terminal, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { CreditCard, Wallet, Banknote, Terminal, CheckCircle2, Clock, XCircle, Plus, Edit, Check, X, Pencil } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Define a type for payments
 type Payment =
@@ -57,7 +59,7 @@ const CashTab = () => {
   const [payments, setPayments] = useState<Payment[]>(initialPayments);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selected, setSelected] = useState(null);
-  const [addType, setAddType] = useState(null); // 'income' or 'expense'
+  const [activeTab, setActiveTab] = useState('income'); // Default to income tab
   const [editMode, setEditMode] = useState(false);
 
   // Form state
@@ -110,7 +112,7 @@ const CashTab = () => {
       ]);
     }
     setDrawerOpen(false);
-    setAddType(null);
+    setActiveTab('income');
     setIncomeForm({
       amount: '',
       customer: '',
@@ -122,6 +124,7 @@ const CashTab = () => {
     });
     setFormError('');
   };
+  
   const handleExpenseSubmit = (e) => {
     e.preventDefault();
     if (!expenseForm.amount || !expenseForm.description) {
@@ -138,7 +141,7 @@ const CashTab = () => {
       ...payments,
     ]);
     setDrawerOpen(false);
-    setAddType(null);
+    setActiveTab('income');
     setExpenseForm({
       amount: '',
       category: 'Telekommunikasiya',
@@ -157,6 +160,7 @@ const CashTab = () => {
     setDrawerOpen(false);
     setSelected(null);
   };
+  
   const handleReject = () => {
     if (!selected) return;
     setPayments(payments => payments.map(p =>
@@ -169,26 +173,43 @@ const CashTab = () => {
   const handleEdit = () => {
     if (!selected) return;
     setEditMode(true);
-    setIncomeForm({
-      amount: selected.amount.toString(),
-      customer: selected.customer,
-      source: selected.source,
-      method: selected.method,
-      status: selected.status,
-      date: selected.date,
-      details: selected.details || '',
-    });
-    setAddType('income');
+    if (selected.type === 'income') {
+      setIncomeForm({
+        amount: selected.amount.toString(),
+        customer: selected.customer,
+        source: selected.source,
+        method: selected.method,
+        status: selected.status,
+        date: selected.date,
+        details: selected.details || '',
+      });
+      setActiveTab('income');
+    } else {
+      setExpenseForm({
+        amount: selected.amount.toString(),
+        category: selected.category,
+        description: selected.description,
+        date: selected.date,
+        details: selected.details || '',
+      });
+      setActiveTab('expense');
+    }
+  };
+
+  const openCreateDrawer = () => {
+    setEditMode(false);
+    setSelected(null);
+    setDrawerOpen(true);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-glamour-800">Cash</h2>
-        <div className="flex gap-2">
-          <Button className="bg-glamour-700 text-white" onClick={() => { setAddType('income'); setDrawerOpen(true); }}>Ödəniş Yarat</Button>
-          <Button variant="outline" onClick={() => { setAddType('expense'); setDrawerOpen(true); }}>Xərc Yarat</Button>
-        </div>
+        <Button className="bg-glamour-700 text-white" onClick={openCreateDrawer}>
+          <Plus className="w-4 h-4 mr-2" />
+          Ödəniş Yarat
+        </Button>
       </div>
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="bg-green-50 p-4 rounded-lg">
@@ -214,7 +235,7 @@ const CashTab = () => {
           </thead>
           <tbody>
             {payments.map((p) => (
-              <tr key={p.id} className="hover:bg-blue-50 cursor-pointer" onClick={() => { setSelected(p); setDrawerOpen(true); setAddType(null); }}>
+              <tr key={p.id} className="hover:bg-blue-50 cursor-pointer" onClick={() => { setSelected(p); setDrawerOpen(true); setActiveTab(null); }}>
                 <td className="p-2">{p.type === 'income' ? 'Gəlir' : 'Xərc'}</td>
                 <td className="p-2">{p.type === 'income' ? p.source : p.category}</td>
                 <td className="p-2">{p.type === 'income' ? p.customer : p.description}</td>
@@ -239,113 +260,127 @@ const CashTab = () => {
         </table>
       </div>
       {/* Drawer for details or add */}
-      <DetailDrawer open={drawerOpen} onOpenChange={setDrawerOpen} title={addType ? (addType === 'income' ? 'Ödəniş Yarat' : 'Xərc Yarat') : 'Detallar'}>
-        {/* Ödəniş Yarat formu */}
-        {addType === 'income' && (
-          <form className="space-y-4 p-2" onSubmit={handleIncomeSubmit}>
-            <div>
-              <label className="block mb-1 font-medium">Məbləğ <span className="text-red-500">*</span></label>
-              <input type="number" min="1" className="w-full border rounded px-3 py-2" value={incomeForm.amount} onChange={e => setIncomeForm(f => ({ ...f, amount: e.target.value }))} required />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Müştəri adı <span className="text-red-500">*</span></label>
-              <input className="w-full border rounded px-3 py-2" value={incomeForm.customer} onChange={e => setIncomeForm(f => ({ ...f, customer: e.target.value }))} required />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Mənbə</label>
-              <select className="w-full border rounded px-3 py-2" value={incomeForm.source} onChange={e => setIncomeForm(f => ({ ...f, source: e.target.value }))}>
-                {paymentSources.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Ödəniş növü</label>
-              <div className="flex gap-3 flex-wrap">
-                {paymentMethods.map(opt => (
-                  <label key={opt.value} className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${incomeForm.method === opt.value ? 'border-glamour-700 bg-glamour-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
-                    <input
-                      type="radio"
-                      name="method"
-                      value={opt.value}
-                      checked={incomeForm.method === opt.value}
-                      onChange={() => setIncomeForm(f => ({ ...f, method: opt.value }))}
-                      className="accent-glamour-700"
-                    />
-                    <opt.icon className="w-5 h-5" />
-                    <span>{opt.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Status</label>
-              <div className="flex gap-3 flex-wrap">
-                {paymentStatuses.map(opt => (
-                  <label
-                    key={opt.value}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all
-                      ${incomeForm.status === opt.value
-                        ? `${opt.color} border-glamour-700 ring-2 ring-glamour-300`
-                        : `${opt.color} border-gray-200 opacity-70 hover:opacity-100`}
-                    `}
-                  >
-                    <input
-                      type="radio"
-                      name="status"
-                      value={opt.value}
-                      checked={incomeForm.status === opt.value}
-                      onChange={() => setIncomeForm(f => ({ ...f, status: opt.value }))}
-                      className="accent-glamour-700 hidden"
-                    />
-                    <opt.icon className="w-5 h-5" />
-                    <span className="font-medium">{opt.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Tarix</label>
-              <input type="date" className="w-full border rounded px-3 py-2" value={incomeForm.date} onChange={e => setIncomeForm(f => ({ ...f, date: e.target.value }))} />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Əlavə qeydlər</label>
-              <textarea className="w-full border rounded px-3 py-2" value={incomeForm.details} onChange={e => setIncomeForm(f => ({ ...f, details: e.target.value }))} />
-            </div>
-            {formError && <div className="text-red-600 text-sm">{formError}</div>}
-            <Button type="submit" className="bg-glamour-700 text-white w-full">Yarat</Button>
-          </form>
-        )}
-        {/* Xərc Yarat formu */}
-        {addType === 'expense' && (
-          <form className="space-y-4 p-2" onSubmit={handleExpenseSubmit}>
-            <div>
-              <label className="block mb-1 font-medium">Məbləğ <span className="text-red-500">*</span></label>
-              <input type="number" min="1" className="w-full border rounded px-3 py-2" value={expenseForm.amount} onChange={e => setExpenseForm(f => ({ ...f, amount: e.target.value }))} required />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Kateqoriya</label>
-              <select className="w-full border rounded px-3 py-2" value={expenseForm.category} onChange={e => setExpenseForm(f => ({ ...f, category: e.target.value }))}>
-                {expenseCategories.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Açıklama <span className="text-red-500">*</span></label>
-              <input className="w-full border rounded px-3 py-2" value={expenseForm.description} onChange={e => setExpenseForm(f => ({ ...f, description: e.target.value }))} required />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Tarix</label>
-              <input type="date" className="w-full border rounded px-3 py-2" value={expenseForm.date} onChange={e => setExpenseForm(f => ({ ...f, date: e.target.value }))} />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Əlavə qeydlər</label>
-              <textarea className="w-full border rounded px-3 py-2" value={expenseForm.details} onChange={e => setExpenseForm(f => ({ ...f, details: e.target.value }))} />
-            </div>
-            {formError && <div className="text-red-600 text-sm">{formError}</div>}
-            <Button type="submit" className="bg-glamour-700 text-white w-full">Yarat</Button>
-          </form>
-        )}
-        {/* Detallar */}
-        {!addType && selected && (
-          <div className="space-y-4 p-2">
+      <DetailDrawer 
+        open={drawerOpen} 
+        onOpenChange={setDrawerOpen} 
+        title={selected && !editMode ? 'Detallar' : 'Ödəniş Yarat'}
+      >
+        {/* Create/Edit Form with Tabs */}
+        {!selected || editMode ? (
+          <Tabs defaultValue={activeTab} className="p-4" onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="income">Gəlir</TabsTrigger>
+              <TabsTrigger value="expense">Xərc</TabsTrigger>
+            </TabsList>
+            
+            {/* Income Tab Content */}
+            <TabsContent value="income">
+              <form className="space-y-4" onSubmit={handleIncomeSubmit}>
+                <div>
+                  <label className="block mb-1 font-medium">Məbləğ <span className="text-red-500">*</span></label>
+                  <input type="number" min="1" className="w-full border rounded px-3 py-2" value={incomeForm.amount} onChange={e => setIncomeForm(f => ({ ...f, amount: e.target.value }))} required />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Müştəri adı <span className="text-red-500">*</span></label>
+                  <input className="w-full border rounded px-3 py-2" value={incomeForm.customer} onChange={e => setIncomeForm(f => ({ ...f, customer: e.target.value }))} required />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Mənbə</label>
+                  <select className="w-full border rounded px-3 py-2" value={incomeForm.source} onChange={e => setIncomeForm(f => ({ ...f, source: e.target.value }))}>
+                    {paymentSources.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Ödəniş növü</label>
+                  <div className="flex gap-3 flex-wrap">
+                    {paymentMethods.map(opt => (
+                      <label key={opt.value} className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all ${incomeForm.method === opt.value ? 'border-glamour-700 bg-glamour-50' : 'border-gray-200 bg-white hover:bg-gray-50'}`}>
+                        <input
+                          type="radio"
+                          name="method"
+                          value={opt.value}
+                          checked={incomeForm.method === opt.value}
+                          onChange={() => setIncomeForm(f => ({ ...f, method: opt.value }))}
+                          className="accent-glamour-700"
+                        />
+                        <opt.icon className="w-5 h-5" />
+                        <span>{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Status</label>
+                  <div className="flex gap-3 flex-wrap">
+                    {paymentStatuses.map(opt => (
+                      <label
+                        key={opt.value}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-all
+                          ${incomeForm.status === opt.value
+                            ? `${opt.color} border-glamour-700 ring-2 ring-glamour-300`
+                            : `${opt.color} border-gray-200 opacity-70 hover:opacity-100`}
+                        `}
+                      >
+                        <input
+                          type="radio"
+                          name="status"
+                          value={opt.value}
+                          checked={incomeForm.status === opt.value}
+                          onChange={() => setIncomeForm(f => ({ ...f, status: opt.value }))}
+                          className="accent-glamour-700 hidden"
+                        />
+                        <opt.icon className="w-5 h-5" />
+                        <span className="font-medium">{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Tarix</label>
+                  <input type="date" className="w-full border rounded px-3 py-2" value={incomeForm.date} onChange={e => setIncomeForm(f => ({ ...f, date: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Əlavə qeydlər</label>
+                  <textarea className="w-full border rounded px-3 py-2" value={incomeForm.details} onChange={e => setIncomeForm(f => ({ ...f, details: e.target.value }))} />
+                </div>
+                {formError && <div className="text-red-600 text-sm">{formError}</div>}
+                <Button type="submit" className="bg-glamour-700 text-white w-full">Yarat</Button>
+              </form>
+            </TabsContent>
+            
+            {/* Expense Tab Content */}
+            <TabsContent value="expense">
+              <form className="space-y-4" onSubmit={handleExpenseSubmit}>
+                <div>
+                  <label className="block mb-1 font-medium">Məbləğ <span className="text-red-500">*</span></label>
+                  <input type="number" min="1" className="w-full border rounded px-3 py-2" value={expenseForm.amount} onChange={e => setExpenseForm(f => ({ ...f, amount: e.target.value }))} required />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Kateqoriya</label>
+                  <select className="w-full border rounded px-3 py-2" value={expenseForm.category} onChange={e => setExpenseForm(f => ({ ...f, category: e.target.value }))}>
+                    {expenseCategories.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Açıklama <span className="text-red-500">*</span></label>
+                  <input className="w-full border rounded px-3 py-2" value={expenseForm.description} onChange={e => setExpenseForm(f => ({ ...f, description: e.target.value }))} required />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Tarix</label>
+                  <input type="date" className="w-full border rounded px-3 py-2" value={expenseForm.date} onChange={e => setExpenseForm(f => ({ ...f, date: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="block mb-1 font-medium">Əlavə qeydlər</label>
+                  <textarea className="w-full border rounded px-3 py-2" value={expenseForm.details} onChange={e => setExpenseForm(f => ({ ...f, details: e.target.value }))} />
+                </div>
+                {formError && <div className="text-red-600 text-sm">{formError}</div>}
+                <Button type="submit" className="bg-glamour-700 text-white w-full">Yarat</Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          /* Details view */
+          <div className="space-y-4 p-4">
             <div className="mb-2 font-bold text-lg">{selected.type === 'income' ? 'Gəlir Detalları' : 'Xərc Detalları'}</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-gray-50 rounded-lg p-4 flex flex-col gap-2">
@@ -396,11 +431,20 @@ const CashTab = () => {
               )}
             </div>
             {selected.details && <div className="bg-gray-50 rounded-lg p-4"><div className="text-xs text-gray-500 mb-1">Əlavə qeydlər</div><div>{selected.details}</div></div>}
-            {selected.type === 'income' && selected.source === 'Appointment' && selected.status === 'waiting' && (
+            {selected.type === 'income' && selected.status === 'waiting' && (
               <div className="flex gap-3 mt-6">
-                <Button className="bg-green-600 hover:bg-green-700 text-white flex-1" onClick={handleConfirm}>Təsdiqlə</Button>
-                <Button className="bg-yellow-500 hover:bg-yellow-600 text-white flex-1" variant="outline" onClick={handleEdit}>Düzəliş et</Button>
-                <Button className="bg-red-600 hover:bg-red-700 text-white flex-1" onClick={handleReject}>İmtina et</Button>
+                <Button className="bg-green-600 hover:bg-green-700 text-white flex-1" onClick={handleConfirm}>
+                  <Check className="h-4 w-4 mr-1" />
+                  Təsdiqlə
+                </Button>
+                <Button className="bg-yellow-500 hover:bg-yellow-600 text-white flex-1" variant="outline" onClick={handleEdit}>
+                  <Pencil className="h-4 w-4 mr-1" />
+                  Düzəliş et
+                </Button>
+                <Button className="bg-red-600 hover:bg-red-700 text-white flex-1" onClick={handleReject}>
+                  <X className="h-4 w-4 mr-1" />
+                  İmtina et
+                </Button>
               </div>
             )}
           </div>
@@ -410,4 +454,4 @@ const CashTab = () => {
   );
 };
 
-export default CashTab; 
+export default CashTab;
