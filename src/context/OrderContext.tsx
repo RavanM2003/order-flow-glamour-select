@@ -24,13 +24,9 @@ export interface OrderState {
   paymentMethod: string;
   total: number;
   orderId: string | null;
-  orderReference: string | null;
   status: string;
   serviceProviders: ServiceProvider[];
   appliedProducts?: Record<number, number[]>;
-  amountPaid?: number;
-  remainingBalance?: number;
-  createdAt?: string;
 }
 
 interface OrderContextType {
@@ -48,7 +44,6 @@ interface OrderContextType {
   updateServiceProviders: (providers: ServiceProvider[]) => void;
   updateAppliedProducts: (appliedProducts: Record<number, number[]>) => void;
   resetOrder: () => void;
-  updatePaymentDetails: (amountPaid: number) => void;
 }
 
 const defaultCustomer: CustomerInfo = {
@@ -88,13 +83,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     paymentMethod: 'cash',
     total: 0,
     orderId: null,
-    orderReference: null,
     status: 'pending',
     serviceProviders: [],
-    appliedProducts: {},
-    amountPaid: 0,
-    remainingBalance: 0,
-    createdAt: new Date().toISOString()
+    appliedProducts: {}
   });
 
   const goToStep = (step: number) => {
@@ -140,24 +131,11 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
   };
 
   const updateTotal = (total: number) => {
-    setOrderState(prev => ({ 
-      ...prev, 
-      total, 
-      remainingBalance: total - (prev.amountPaid || 0)
-    }));
+    setOrderState(prev => ({ ...prev, total }));
   };
 
   const completeOrder = (orderId: string) => {
-    // Generate an order reference number
-    const orderReference = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
-    
-    setOrderState(prev => ({ 
-      ...prev, 
-      orderId, 
-      orderReference,
-      status: 'confirmed',
-      createdAt: new Date().toISOString()
-    }));
+    setOrderState(prev => ({ ...prev, orderId, status: 'confirmed' }));
   };
 
   const updateStatus = (status: string) => {
@@ -172,14 +150,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     setOrderState(prev => ({ ...prev, appliedProducts }));
   };
 
-  const updatePaymentDetails = (amountPaid: number) => {
-    setOrderState(prev => ({ 
-      ...prev, 
-      amountPaid,
-      remainingBalance: prev.total - amountPaid
-    }));
-  };
-
   const resetOrder = () => {
     setOrderState({
       currentStep: 1,
@@ -189,13 +159,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
       paymentMethod: 'cash',
       total: 0,
       orderId: null,
-      orderReference: null,
       status: 'pending',
       serviceProviders: [],
-      appliedProducts: {},
-      amountPaid: 0,
-      remainingBalance: 0,
-      createdAt: new Date().toISOString()
+      appliedProducts: {}
     });
   };
 
@@ -214,7 +180,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
       updateStatus,
       updateServiceProviders,
       updateAppliedProducts,
-      updatePaymentDetails,
       resetOrder
     }}>
       {children}

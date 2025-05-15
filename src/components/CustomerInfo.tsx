@@ -1,65 +1,59 @@
 
 import React, { useState, useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useOrder } from '@/context/OrderContext';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { UserCircle, CalendarIcon, Clock } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { CalendarIcon, Clock, UserCircle } from "lucide-react";
+import { BookingMode } from './CheckoutFlow';
 
-const BusinessHours = [
-  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', 
-  '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', 
-  '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'
-];
+interface CustomerInfoProps {
+  bookingMode?: BookingMode;
+}
 
-const CustomerInfo = () => {
+const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode = 'customer' }) => {
   const { orderState, updateCustomerInfo, goToStep } = useOrder();
-  
-  // Initialize form state from orderState if available
   const [formData, setFormData] = useState({
     name: orderState.customerInfo?.name || '',
     email: orderState.customerInfo?.email || '',
     phone: orderState.customerInfo?.phone || '',
-    gender: orderState.customerInfo?.gender || 'female',
     date: orderState.customerInfo?.date || '',
     time: orderState.customerInfo?.time || '',
     notes: orderState.customerInfo?.notes || '',
+    gender: orderState.customerInfo?.gender || 'female'
   });
-  
-  // For calendar
-  const [date, setDate] = useState<Date | undefined>(
-    formData.date ? new Date(formData.date) : undefined
-  );
-  
-  // Update date in form when calendar date changes
+
   useEffect(() => {
-    if (date) {
-      setFormData(prev => ({
-        ...prev,
-        date: format(date, 'yyyy-MM-dd')
-      }));
+    // If we have customer info in context, use it
+    if (orderState.customerInfo) {
+      setFormData({
+        name: orderState.customerInfo.name || '',
+        email: orderState.customerInfo.email || '',
+        phone: orderState.customerInfo.phone || '',
+        date: orderState.customerInfo.date || '',
+        time: orderState.customerInfo.time || '',
+        notes: orderState.customerInfo.notes || '',
+        gender: orderState.customerInfo.gender || 'female'
+      });
     }
-  }, [date]);
+  }, [orderState.customerInfo]);
+
+  // Work hours
+  const workHours = {
+    start: "09:00",
+    end: "19:00"
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
-  
-  const handleTimeSelect = (time: string) => {
-    setFormData(prev => ({
-      ...prev,
-      time
-    }));
+
+  const handleGenderChange = (value: string) => {
+    setFormData(prev => ({ ...prev, gender: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,177 +62,169 @@ const CustomerInfo = () => {
     goToStep(2);
   };
 
-  const isWeekend = (date: Date) => {
-    const day = date.getDay();
-    return day === 0; // Sunday is disabled, Saturday (6) is enabled
-  };
+  // Calculate min and max date (today + 7 days) for date picker
+  const today = new Date();
+  const minDate = today.toISOString().split('T')[0];
+  
+  // Calculate max date (today + 7 days)
+  const maxDate = new Date();
+  maxDate.setDate(today.getDate() + 7);
+  const maxDateString = maxDate.toISOString().split('T')[0];
+
+  // For staff mode with existing customer
+  const isExistingCustomerInStaffMode = 
+    bookingMode === 'staff' && 
+    orderState.customerInfo && 
+    (orderState.customerInfo.name || orderState.customerInfo.phone);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <h2 className="text-2xl font-bold text-glamour-800">Customer Information</h2>
-      
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="name">Full Name</Label>
-          <Input
-            required
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            placeholder="Enter your full name"
-          />
-        </div>
-        
-        <div>
-          <Label>Gender</Label>
-          <RadioGroup 
-            value={formData.gender} 
-            onValueChange={(value) => setFormData({...formData, gender: value})}
-            className="grid grid-cols-3 gap-4 mt-1"
-          >
-            <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-glamour-50 transition-colors">
-              <RadioGroupItem value="female" id="female" />
-              <Label htmlFor="female" className="flex items-center cursor-pointer flex-1">
-                <UserCircle className="h-5 w-5 mr-2 text-pink-500" />
-                <span>Female</span>
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-glamour-50 transition-colors">
-              <RadioGroupItem value="male" id="male" />
-              <Label htmlFor="male" className="flex items-center cursor-pointer flex-1">
-                <UserCircle className="h-5 w-5 mr-2 text-blue-500" />
-                <span>Male</span>
-              </Label>
-            </div>
-            <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-glamour-50 transition-colors">
-              <RadioGroupItem value="other" id="other" />
-              <Label htmlFor="other" className="flex items-center cursor-pointer flex-1">
-                <UserCircle className="h-5 w-5 mr-2 text-gray-500" />
-                <span>Other</span>
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="your@email.com"
-            />
-          </div>
+    <div className="mt-6">
+      <Card>
+        <CardContent className="pt-6">
+          <h2 className="text-2xl font-bold mb-6 text-glamour-800">Customer Information</h2>
           
-          <div>
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              required
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="+1 (555) 000-0000"
-            />
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>Appointment Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Select a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  disabled={(date) => 
-                    date < new Date(new Date().setHours(0, 0, 0, 0)) || 
-                    isWeekend(date)
-                  }
-                  initialFocus
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Enter full name"
+                  required
+                  disabled={isExistingCustomerInStaffMode}
+                  className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
                 />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          <div>
-            <Label>Appointment Time</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !formData.time && "text-muted-foreground"
-                  )}
-                  disabled={!date}
-                >
-                  <Clock className="mr-2 h-4 w-4" />
-                  {formData.time || <span>Select a time</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 p-0">
-                <div className="p-2 grid grid-cols-3 gap-2 max-h-[300px] overflow-y-auto">
-                  {BusinessHours.map((time) => (
-                    <Button
-                      key={time}
-                      variant={formData.time === time ? "default" : "outline"}
-                      className={cn(
-                        formData.time === time && "bg-glamour-700 text-white",
-                        "h-8"
-                      )}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleTimeSelect(time);
-                      }}
-                    >
-                      {time}
-                    </Button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-        
-        <div>
-          <Label htmlFor="notes">Additional Notes</Label>
-          <Textarea
-            id="notes"
-            name="notes"
-            value={formData.notes}
-            onChange={handleChange}
-            placeholder="Any special requirements or information we should know?"
-            className="h-24"
-          />
-        </div>
-      </div>
+              </div>
 
-      <Button 
-        type="submit" 
-        className="w-full bg-glamour-700 hover:bg-glamour-800 text-white"
-        disabled={!formData.name || !formData.phone || !formData.date || !formData.time}
-      >
-        Continue to Services
-      </Button>
-    </form>
+              {/* Gender Selection */}
+              <div>
+                <Label className="mb-2 block">Gender</Label>
+                <RadioGroup 
+                  value={formData.gender} 
+                  onValueChange={handleGenderChange}
+                  className="grid grid-cols-3 gap-4"
+                >
+                  <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
+                    <RadioGroupItem value="female" id="gender-female" disabled={isExistingCustomerInStaffMode} />
+                    <Label htmlFor="gender-female" className="flex items-center cursor-pointer flex-1">
+                      <UserCircle className="h-5 w-5 mr-2 text-pink-500" />
+                      <span className="hidden md:inline">Female</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
+                    <RadioGroupItem value="male" id="gender-male" disabled={isExistingCustomerInStaffMode} />
+                    <Label htmlFor="gender-male" className="flex items-center cursor-pointer flex-1">
+                      <UserCircle className="h-5 w-5 mr-2 text-blue-500" />
+                      <span className="hidden md:inline">Male</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2 border rounded-md p-4 cursor-pointer hover:bg-glamour-50 transition-colors">
+                    <RadioGroupItem value="other" id="gender-other" disabled={isExistingCustomerInStaffMode} />
+                    <Label htmlFor="gender-other" className="flex items-center cursor-pointer flex-1">
+                      <UserCircle className="h-5 w-5 mr-2 text-gray-500" />
+                      <span className="hidden md:inline">Other</span>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="your.email@example.com"
+                    disabled={isExistingCustomerInStaffMode}
+                    className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
+                    required={!isExistingCustomerInStaffMode}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    placeholder="+994 XX XXX XX XX"
+                    disabled={isExistingCustomerInStaffMode}
+                    className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label htmlFor="date" className="flex items-center">
+                    <CalendarIcon className="h-4 w-4 mr-2" />
+                    Preferred Date
+                  </Label>
+                  <Input
+                    id="date"
+                    name="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={handleChange}
+                    min={minDate}
+                    max={maxDateString}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">You can only book up to 7 days in advance</p>
+                </div>
+                
+                <div>
+                  <Label htmlFor="time" className="flex items-center">
+                    <Clock className="h-4 w-4 mr-2" />
+                    Preferred Time
+                  </Label>
+                  <Input
+                    id="time"
+                    name="time"
+                    type="time"
+                    value={formData.time}
+                    onChange={handleChange}
+                    min={workHours.start}
+                    max={workHours.end}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Business hours: {workHours.start} - {workHours.end}</p>
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="notes">Special Requests or Notes (Optional)</Label>
+                <Textarea
+                  id="notes"
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  placeholder="Any specific requests or information we should know about"
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex justify-end">
+                <Button 
+                  type="submit"
+                  className="bg-glamour-700 hover:bg-glamour-800"
+                >
+                  Continue to Services
+                </Button>
+              </div>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
