@@ -17,7 +17,10 @@ import {
   Calendar as CalendarIcon,
   Clock,
   User,
-  CalendarPlus
+  CalendarPlus,
+  Info,
+  RefreshCcw,
+  Edit
 } from 'lucide-react';
 import DetailDrawer from '@/components/common/DetailDrawer';
 import { OrderProvider } from '@/context/OrderContext';
@@ -364,12 +367,12 @@ const AppointmentsTab = () => {
           </Card>
           
           <Card className="lg:col-span-2 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-medium mb-4">Appointments for {date?.toLocaleDateString()}</h3>
-            <Button className="bg-glamour-700 hover:bg-glamour-800 text-white" onClick={() => setAddAppointmentOpen(true)}>
-              <CalendarPlus className="w-4 h-4 mr-2" /> Add Appointment
-            </Button>
-          </div>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-medium mb-4">Appointments for {date?.toLocaleDateString()}</h3>
+              <Button className="bg-glamour-700 hover:bg-glamour-800 text-white" onClick={() => setAddAppointmentOpen(true)}>
+                <CalendarPlus className="w-4 h-4 mr-2" /> Add Appointment
+              </Button>
+            </div>
             
             {filteredAppointments.length > 0 ? (
               <div className="border rounded-md overflow-hidden">
@@ -433,10 +436,21 @@ const AppointmentsTab = () => {
                                 </Button>
                               </>
                             )}
-                            {appointment.status !== 'pending' && (
-                              <Button variant="outline" size="sm" onClick={() => handleView(appointment)}>
-                                View Details
+                            {appointment.status === 'confirmed' && (
+                              <Button variant="outline" size="sm" className="p-1 text-blue-600 hover:text-blue-700" onClick={() => handleEdit(appointment)}>
+                                <Edit className="h-4 w-4 mr-1" />
+                                <span>Edit</span>
                               </Button>
+                            )}
+                            {(appointment.status === 'completed' || appointment.status === 'rejected') && (
+                              <div className="flex gap-1">
+                                <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700" onClick={() => handleView(appointment)}>
+                                  <Info className="h-4 w-4" />
+                                </Button>
+                                <Button variant="outline" size="sm" className="h-8 w-8 p-0 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700" onClick={() => handleRepeat(appointment)}>
+                                  <RefreshCcw className="h-4 w-4" />
+                                </Button>
+                              </div>
                             )}
                           </div>
                         </TableCell>
@@ -516,161 +530,86 @@ const AppointmentsTab = () => {
           </div>
         )}
       </DetailDrawer>
-      {/* View Details Drawer */}
+      {/* View Details Drawer - Updated to show read-only info */}
       <DetailDrawer open={viewDrawerOpen} onOpenChange={setViewDrawerOpen} title="Appointment Details">
         {selectedAppointment && (
           <div className="space-y-4 p-4">
-            {/* Customer Info (readonly always) */}
+            {/* Customer Info */}
             <div>
               <div className="font-semibold">Müştəri:</div>
               <div>{selectedAppointment.customerName} ({selectedAppointment.customerPhone})</div>
             </div>
-            {/* Services - multi-select with search and tags */}
+            
+            {/* Services */}
             <div>
-              <div className="font-semibold flex items-center gap-2">Servislər:
-                {editMode && !isEditingServices && (
-                  <Button size="sm" variant="outline" onClick={() => setIsEditingServices(true)}>Düzəliş et</Button>
-                )}
-                {editMode && isEditingServices && (
-                  <Button size="sm" className="bg-glamour-700 text-white" onClick={handleSaveServices}>Yadda saxla</Button>
-                )}
-              </div>
-              {editMode && isEditingServices ? (
-                <>
-                  <Input
-                    placeholder="Servis axtar..."
-                    value={serviceSearch}
-                    onChange={e => setServiceSearch(e.target.value)}
-                    className="mb-2"
-                  />
-                  <div className="flex flex-col gap-2 mb-2">
-                    {filteredServices.map(service => (
-                      <span
-                        key={service.id}
-                        className={`px-3 py-1 rounded-full border text-xs cursor-pointer ${editForm.services.includes(service.id) ? 'bg-glamour-700 text-white border-glamour-700' : 'bg-white text-glamour-800 border-gray-300'}`}
-                        onClick={() => {
-                          setEditForm(f => f.services.includes(service.id)
-                            ? { ...f, services: f.services.filter(id => id !== service.id) }
-                            : { ...f, services: [...f.services, service.id], executors: { ...f.executors, [service.id]: f.executors[service.id] || '' } });
-                        }}
-                      >
-                        {service.name} (${service.price})
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {editForm.services.map(id => {
-                      const s = allServices.find(s => s.id === id);
-                      return s ? (
-                        <div key={id} className="flex items-center gap-2">
-                          <span className="bg-glamour-700 text-white px-2 py-1 rounded-full text-xs">
-                            {s.name} (${s.price})
-                          </span>
-                          <select
-                            value={editForm.executors[id] || ""}
-                            onChange={e => setEditForm(f => ({
-                              ...f,
-                              executors: { ...f.executors, [id]: e.target.value }
-                            }))}
-                            className="border rounded px-2 py-1 text-xs"
-                          >
-                            <option value="">Əməkdaş seçin</option>
-                            {staffList.map(staff => (
-                              <option key={staff.id} value={staff.id}>{staff.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                      ) : null;
-                    })}
-                  </div>
-                </>
-              ) : (
-                <ul className="flex flex-wrap gap-2 ml-0">
-                  {selectedAppointment.services.map(service => (
-                    <li key={service} className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
-                      {service} — <span className="text-glamour-700 font-medium">
-                        {selectedAppointment.executors?.[service]
-                          ? staffList.find(s => s.id === Number(selectedAppointment.executors[service]))?.name || "Seçilməyib"
-                          : "Seçilməyib"}
-                      </span>
-                    </li>
-                  ))}
-                  {selectedAppointment.products.map(product => (
-                    <li key={product} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                      {product}
-                    </li>
-                  ))}
-                </ul>
-              )}
+              <div className="font-semibold">Servislər:</div>
+              <ul className="flex flex-wrap gap-2 ml-0">
+                {selectedAppointment.services.map(service => (
+                  <li key={service} className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">
+                    {service} — <span className="text-glamour-700 font-medium">
+                      {selectedAppointment.executors?.[service]
+                        ? staffList.find(s => s.id === Number(selectedAppointment.executors[service]))?.name || "Seçilməyib"
+                        : "Seçilməyib"}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
+            
+            {/* Products */}
+            <div>
+              <div className="font-semibold">Məhsullar:</div>
+              <ul className="flex flex-wrap gap-2 ml-0">
+                {selectedAppointment.products.length === 0 && <div>Yoxdur</div>}
+                {selectedAppointment.products.map(product => (
+                  <li key={product} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                    {product}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
             {/* Date/Time */}
             <div>
-              <div className="font-semibold flex items-center gap-2">Tarix və saat:
-                {editMode && !isEditingDateTime && (
-                  <Button size="sm" variant="outline" onClick={() => setIsEditingDateTime(true)}>Düzəliş et</Button>
-                )}
-                {editMode && isEditingDateTime && (
-                  <Button size="sm" className="bg-glamour-700 text-white" onClick={handleSaveDateTime}>Yadda saxla</Button>
-                )}
-              </div>
-              {editMode && isEditingDateTime ? (
-                <>
-                  <input className="border rounded px-2 py-1 mt-1 mb-1" value={editForm.date} onChange={e => setEditForm(f => ({ ...f, date: e.target.value }))} />
-                  <input className="border rounded px-2 py-1 mt-1 mb-1" value={editForm.time} onChange={e => setEditForm(f => ({ ...f, time: e.target.value }))} />
-                </>
-              ) : (
-                <div>{selectedAppointment.date} {selectedAppointment.time} ({selectedAppointment.duration})</div>
-              )}
+              <div className="font-semibold">Tarix və saat:</div>
+              <div>{selectedAppointment.date} {selectedAppointment.time} ({selectedAppointment.duration})</div>
             </div>
-            {/* Payment - dynamic calculation */}
+            
+            {/* Payment */}
             <div>
-              <div className="font-semibold flex items-center gap-2">Ödəniş:
-                {editMode && !isEditingPayment && (
-                  <Button size="sm" variant="outline" onClick={() => setIsEditingPayment(true)}>Düzəliş et</Button>
-                )}
-                {editMode && isEditingPayment && (
-                  <Button size="sm" className="bg-glamour-700 text-white" onClick={handleSavePayment}>Yadda saxla</Button>
-                )}
-              </div>
-              <div>
-                <div>Xidmətlər cəmi: ${servicesTotal}</div>
-                <div>Məhsullar cəmi: ${productsTotal}</div>
-                <div>Ümumi: ${total}</div>
-                {selectedAppointment.paymentMethod === 'online' && (
-                  <>
-                    <div>Balans: ${balance}</div>
-                    {missing > 0 && <div>Çatışmayan məbləğ: ${missing}</div>}
-                    {balance > 0 && <div>Artıq ödəniş: ${balance}</div>}
-                    {missing === 0 && balance === 0 && <div>Ödəniş tamdır</div>}
-                  </>
-                )}
-              </div>
-              {editMode && isEditingPayment ? (
-                <input className="border rounded px-2 py-1 mt-1 mb-1" value={editForm.paymentMethod} onChange={e => setEditForm(f => ({ ...f, paymentMethod: e.target.value }))} />
-              ) : (
-                <div>{selectedAppointment.paymentMethod || "-"}</div>
+              <div className="font-semibold">Ödəniş:</div>
+              <div>Ümumi: ${selectedAppointment.totalAmount}</div>
+              {selectedAppointment.paymentMethod && (
+                <div>Ödəniş üsulu: {selectedAppointment.paymentMethod}</div>
               )}
             </div>
+            
+            {/* Status */}
             <div>
               <div className="font-semibold">Status:</div>
               <div>{selectedAppointment.status}</div>
             </div>
+            
+            {/* Rejection reason if applicable */}
             {selectedAppointment.status === 'rejected' && selectedAppointment.rejectReason && (
               <div>
                 <div className="font-semibold">Reject səbəbi:</div>
                 <div className="text-red-700">{selectedAppointment.rejectReason}</div>
               </div>
             )}
-            <div className="flex gap-2 mt-4">
-              {editMode
-                ? <Button className="bg-glamour-700 hover:bg-glamour-800 text-white w-full" onClick={() => setEditMode(false)}>Yadda saxla</Button>
-                : (selectedAppointment.status !== 'completed' && <Button className="bg-glamour-700 hover:bg-glamour-800 text-white w-full" onClick={() => setEditMode(true)}>Düzəliş et</Button>)
-              }
-              <Button variant="outline" className="w-full" onClick={handleMarkCompleted}>İcra edildi</Button>
-              {(selectedAppointment.status === 'completed' || selectedAppointment.status === 'rejected') && (
-                <Button variant="outline" className="w-full" onClick={() => handleRepeat(selectedAppointment)}>Təkrar et</Button>
-              )}
-            </div>
+            
+            {/* Action button for repeat */}
+            <Button 
+              variant="outline" 
+              className="w-full" 
+              onClick={() => {
+                handleRepeat(selectedAppointment);
+                setViewDrawerOpen(false);
+              }}
+            >
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Təkrar et
+            </Button>
           </div>
         )}
       </DetailDrawer>

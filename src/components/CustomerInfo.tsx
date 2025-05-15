@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -99,7 +100,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
                   onChange={handleChange}
                   placeholder="Enter full name"
                   required
-                  disabled={!!isExistingCustomerInStaffMode}
+                  disabled={isExistingCustomerInStaffMode}
                   className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
                 />
               </div>
@@ -116,7 +117,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
                     <RadioGroupItem
                       value="female"
                       id="gender-female"
-                      disabled={!!isExistingCustomerInStaffMode}
+                      disabled={isExistingCustomerInStaffMode}
                     />
                     <Label
                       htmlFor="gender-female"
@@ -130,7 +131,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
                     <RadioGroupItem
                       value="male"
                       id="gender-male"
-                      disabled={!!isExistingCustomerInStaffMode}
+                      disabled={isExistingCustomerInStaffMode}
                     />
                     <Label
                       htmlFor="gender-male"
@@ -144,7 +145,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
                     <RadioGroupItem
                       value="other"
                       id="gender-other"
-                      disabled={!!isExistingCustomerInStaffMode}
+                      disabled={isExistingCustomerInStaffMode}
                     />
                     <Label
                       htmlFor="gender-other"
@@ -167,7 +168,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="your.email@example.com"
-                    disabled={!!isExistingCustomerInStaffMode}
+                    disabled={isExistingCustomerInStaffMode}
                     className={
                       isExistingCustomerInStaffMode ? "bg-gray-100" : ""
                     }
@@ -183,7 +184,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="+994 XX XXX XX XX"
-                    disabled={!!isExistingCustomerInStaffMode}
+                    disabled={isExistingCustomerInStaffMode}
                     className={
                       isExistingCustomerInStaffMode ? "bg-gray-100" : ""
                     }

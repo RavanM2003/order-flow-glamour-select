@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useOrder } from "@/context/OrderContext";
 import CustomerInfo from "./CustomerInfo";
@@ -48,7 +49,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       {currentStep === 3 && <PaymentDetails />}
       {currentStep === 4 && <BookingConfirmation />}
 
-      <style>{`
+      <style>
+        {`
         .step {
           display: flex;
           flex-direction: column;
@@ -85,7 +87,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
           margin: 0 8px;
           margin-bottom: 25px;
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
