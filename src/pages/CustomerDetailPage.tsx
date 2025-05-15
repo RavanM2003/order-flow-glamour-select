@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -107,8 +108,41 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customer: custo
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'confirmed': return 'bg-blue-100 text-blue-800';
       case 'rejected': return 'bg-red-100 text-red-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      case 'paid': return 'bg-green-100 text-green-800';
+      case 'partial_payment': return 'bg-yellow-100 text-yellow-800';
+      case 'unpaid': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const getPaymentStatusText = (app: any) => {
+    if (!app.totalAmount) return 'N/A';
+    
+    if (app.amountPaid >= app.totalAmount) return 'Fully Paid';
+    if (app.amountPaid > 0) return 'Partially Paid';
+    return 'Unpaid';
+  };
+
+  const getPaymentStatusBadge = (app: any) => {
+    const status = getPaymentStatusText(app);
+    let className = '';
+    
+    switch (status) {
+      case 'Fully Paid':
+        className = getStatusBadgeColor('paid');
+        break;
+      case 'Partially Paid':
+        className = getStatusBadgeColor('partial_payment');
+        break;
+      case 'Unpaid':
+        className = getStatusBadgeColor('unpaid');
+        break;
+      default:
+        className = getStatusBadgeColor('');
+    }
+    
+    return <Badge className={className}>{status}</Badge>;
   };
 
   if (loading) {
@@ -209,11 +243,20 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customer: custo
                             {app.status}
                           </Badge>
                         </div>
-                        <div className="flex items-center text-gray-600 mt-1">
-                          <Calendar className="h-4 w-4 mr-1" />
-                          <span className="mr-3">{app.date}</span>
-                          <Clock className="h-4 w-4 mr-1" />
-                          <span>{app.startTime} - {app.endTime}</span>
+                        <div className="flex flex-wrap gap-2 items-center text-gray-600 mt-1">
+                          <div className="flex items-center">
+                            <Badge variant="outline" className="font-mono bg-glamour-50 border-glamour-200">
+                              {app.orderReference || `ORD-${app.id}`}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center">
+                            <Calendar className="h-4 w-4 mr-1" />
+                            <span className="mr-3">{app.date}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Clock className="h-4 w-4 mr-1" />
+                            <span>{app.startTime || app.time} - {app.endTime}</span>
+                          </div>
                         </div>
                       </div>
                       
@@ -224,43 +267,122 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({ customer: custo
                     
                     <AccordionContent className="px-4 pb-4 pt-0 border-t">
                       <div className="space-y-4 mt-2">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <h5 className="text-sm font-semibold mb-1 flex items-center">
-                              <UserCircle className="h-4 w-4 mr-1" /> Staff
-                            </h5>
-                            <div className="text-sm">{app.staff?.join(', ') || '-'}</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="bg-gray-50 p-3 rounded-md">
+                            <h5 className="text-sm font-semibold mb-2">Appointment Details</h5>
+                            <div className="space-y-1 text-sm">
+                              <div><span className="font-medium">Date:</span> {app.date}</div>
+                              <div><span className="font-medium">Time:</span> {app.startTime || app.time}</div>
+                              <div><span className="font-medium">Duration:</span> {app.duration || '60'} min</div>
+                              <div><span className="font-medium">Status:</span> {app.status}</div>
+                              <div><span className="font-medium">Order Ref:</span> {app.orderReference || `ORD-${app.id}`}</div>
+                            </div>
                           </div>
-                          
-                          <div>
-                            <h5 className="text-sm font-semibold mb-1 flex items-center">
-                              <Package className="h-4 w-4 mr-1" /> Products Used
-                            </h5>
-                            <div className="text-sm">{app.products?.join(', ') || 'No products'}</div>
-                          </div>
-                          
-                          <div>
-                            <h5 className="text-sm font-semibold mb-1 flex items-center">
-                              <DollarSign className="h-4 w-4 mr-1" /> Payment
+
+                          <div className="bg-gray-50 p-3 rounded-md">
+                            <h5 className="text-sm font-semibold mb-2 flex items-center">
+                              <DollarSign className="h-4 w-4 mr-1" /> Payment Information
                             </h5>
                             <div className="space-y-1 text-sm">
-                              <div>
-                                <span className="font-medium">Total:</span> ${app.totalAmount || 0}
-                              </div>
-                              <div>
-                                <span className="font-medium">Paid:</span> ${app.amountPaid || 0}
-                              </div>
-                              {(app.remainingBalance > 0) && (
+                              <div><span className="font-medium">Payment Method:</span> {app.paymentMethod || 'Cash'}</div>
+                              <div><span className="font-medium">Total Amount:</span> ${app.totalAmount || 0}</div>
+                              <div><span className="font-medium">Amount Paid:</span> ${app.amountPaid || 0}</div>
+                              {(app.remainingBalance > 0 || app.totalAmount > (app.amountPaid || 0)) && (
                                 <div className="text-red-600">
-                                  <span className="font-medium">Balance:</span> ${app.remainingBalance}
+                                  <span className="font-medium">Balance:</span> $
+                                  {app.remainingBalance || (app.totalAmount - (app.amountPaid || 0))}
                                 </div>
+                              )}
+                              <div className="pt-1">{getPaymentStatusBadge(app)}</div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-gray-50 p-3 rounded-md">
+                            <h5 className="text-sm font-semibold mb-2 flex items-center">
+                              <UserCircle className="h-4 w-4 mr-1" /> Staff Assigned
+                            </h5>
+                            <div className="space-y-1 text-sm">
+                              {app.serviceProviders && app.serviceProviders.length > 0 ? (
+                                app.serviceProviders.map((provider: any, idx: number) => (
+                                  <div key={idx}>
+                                    <span className="font-medium">{provider.name}</span>
+                                    {provider.serviceId && (
+                                      <span className="text-xs text-gray-500 block">
+                                        {app.services?.find((s: any) => s.id === provider.serviceId)?.name || 'Service'}
+                                      </span>
+                                    )}
+                                  </div>
+                                ))
+                              ) : app.staff && app.staff.length > 0 ? (
+                                app.staff.map((staff: string, idx: number) => (
+                                  <div key={idx}>{staff}</div>
+                                ))
+                              ) : (
+                                <div>No staff assigned</div>
                               )}
                             </div>
                           </div>
                         </div>
+
+                        <Separator className="my-3" />
+                        
+                        <div>
+                          <h5 className="text-sm font-semibold mb-2">Services</h5>
+                          <div className="space-y-2">
+                            {app.services && app.services.length > 0 ? (
+                              app.services.map((service: any, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center">
+                                  <div>
+                                    <div className="font-medium">{service.name}</div>
+                                    <div className="text-xs text-gray-500">{service.duration || '60'} min</div>
+                                  </div>
+                                  <div className="font-medium">${service.price}</div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="flex justify-between items-center">
+                                <div>
+                                  <div className="font-medium">{app.service}</div>
+                                  <div className="text-xs text-gray-500">{app.duration || '60'} min</div>
+                                </div>
+                                <div className="font-medium">${app.servicePrice || app.price || 0}</div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {(app.products && app.products.length > 0) || (app.selectedProducts && app.selectedProducts.length > 0) ? (
+                          <>
+                            <Separator className="my-3" />
+                            <div>
+                              <h5 className="text-sm font-semibold mb-2 flex items-center">
+                                <Package className="h-4 w-4 mr-1" /> Products Used
+                              </h5>
+                              <div className="space-y-2">
+                                {(app.products || app.selectedProducts || []).map((product: any, idx: number) => (
+                                  <div key={idx} className="flex justify-between items-center">
+                                    <div>
+                                      {typeof product === 'string' ? (
+                                        <div className="font-medium">{product}</div>
+                                      ) : (
+                                        <>
+                                          <div className="font-medium">{product.name}</div>
+                                          {product.quantity && <div className="text-xs text-gray-500">Qty: {product.quantity}</div>}
+                                        </>
+                                      )}
+                                    </div>
+                                    {typeof product !== 'string' && product.price && (
+                                      <div className="font-medium">${product.price}</div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </>
+                        ) : null}
                         
                         <div className="text-xs text-gray-500 mt-2">
-                          <span className="font-medium">Reference ID:</span> {app.id}
+                          <span className="font-medium">Order created:</span> {app.createdAt || 'N/A'}
                         </div>
                       </div>
                     </AccordionContent>
