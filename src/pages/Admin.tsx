@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -17,6 +16,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import CashTab from '@/components/admin/CashTab';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { config } from '@/config/env';
 
 interface AdminProps {
   initialTab?: string;
@@ -53,6 +53,13 @@ const Admin: React.FC<AdminProps> = ({ initialTab }) => {
       setSidebarOpen(false);
     }
   }, [activeTab, isMobile]);
+  
+  // Log environment info when admin loads (helpful for debugging)
+  useEffect(() => {
+    if (config.featureFlags.showDebugInfo) {
+      console.log('Admin loaded in', config.usesMockData ? 'mock mode' : 'API mode');
+    }
+  }, []);
   
   return (
     <div className="min-h-screen bg-background flex relative">
