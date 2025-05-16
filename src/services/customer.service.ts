@@ -10,7 +10,7 @@ export class CustomerService extends ApiService {
   async getAll(): Promise<ApiResponse<Customer[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));
-      return { data: [...mockCustomers] };
+      return { data: mockCustomers as Customer[] };
     }
     
     return this.get<Customer[]>('/customers');
@@ -21,7 +21,10 @@ export class CustomerService extends ApiService {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 200));
       const customer = mockCustomers.find(c => c.id === Number(id));
-      return { data: customer ? {...customer} : undefined, error: customer ? undefined : 'Customer not found' };
+      return { 
+        data: customer ? customer as Customer : undefined, 
+        error: customer ? undefined : 'Customer not found' 
+      };
     }
     
     return this.get<Customer>(`/customers/${id}`);
@@ -36,9 +39,10 @@ export class CustomerService extends ApiService {
         id: Math.max(0, ...mockCustomers.map(c => c.id)) + 1,
         lastVisit: new Date().toISOString().split('T')[0],
         totalSpent: 0 
-      };
-      mockCustomers.unshift(newCustomer as Customer);
-      return { data: {...newCustomer} as Customer };
+      } as Customer;
+      
+      mockCustomers.unshift(newCustomer);
+      return { data: newCustomer };
     }
     
     return this.post<Customer>('/customers', customer);
@@ -50,8 +54,8 @@ export class CustomerService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 300));
       const index = mockCustomers.findIndex(c => c.id === Number(id));
       if (index >= 0) {
-        mockCustomers[index] = { ...mockCustomers[index], ...customer };
-        return { data: {...mockCustomers[index]} };
+        mockCustomers[index] = { ...mockCustomers[index], ...customer } as any;
+        return { data: mockCustomers[index] as Customer };
       }
       return { error: 'Customer not found' };
     }
@@ -59,8 +63,8 @@ export class CustomerService extends ApiService {
     return this.put<Customer>(`/customers/${id}`, customer);
   }
   
-  // Delete a customer
-  async delete(id: number | string): Promise<ApiResponse<boolean>> {
+  // Delete a customer - overriding the parent method with a specific implementation
+  async deleteCustomer(id: number | string): Promise<ApiResponse<boolean>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));
       const index = mockCustomers.findIndex(c => c.id === Number(id));
@@ -71,7 +75,7 @@ export class CustomerService extends ApiService {
       return { error: 'Customer not found' };
     }
     
-    return this.delete<boolean>(`/customers/${id}`);
+    return this.delete(`/customers/${id}`);
   }
 }
 

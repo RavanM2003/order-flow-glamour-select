@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,16 +28,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { API } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
-
-interface Customer {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  gender?: string;
-  lastVisit?: string;
-  totalSpent?: number;
-}
+import { Customer } from "@/models/customer.model";
 
 const CustomersTab = () => {
   const { toast } = useToast();
@@ -57,7 +49,7 @@ const CustomersTab = () => {
     name: "",
     email: "",
     phone: "",
-    gender: "female",
+    gender: "female" as "female" | "male" | "other",
   });
 
   useEffect(() => {
@@ -115,7 +107,7 @@ const CustomersTab = () => {
     try {
       const { data } = await API.customers.create(newCustomer);
       if (data) {
-        setCustomers([data, ...customers]);
+        setCustomers([data as Customer, ...customers]);
         setAddCustomerOpen(false);
         setNewCustomer({ name: "", email: "", phone: "", gender: "female" });
 
@@ -125,7 +117,7 @@ const CustomersTab = () => {
         });
 
         // Automatically open appointment drawer for the new customer
-        setSelectedCustomerForAppointment(data);
+        setSelectedCustomerForAppointment(data as Customer);
         setAddAppointmentOpen(true);
       }
     } catch (error) {
@@ -327,7 +319,7 @@ const CustomersTab = () => {
                 <Label className="text-base font-medium">Gender</Label>
                 <RadioGroup
                   value={newCustomer.gender}
-                  onValueChange={(value) =>
+                  onValueChange={(value: "female" | "male" | "other") =>
                     setNewCustomer({ ...newCustomer, gender: value })
                   }
                   className="grid grid-cols-3 gap-4 mt-1"

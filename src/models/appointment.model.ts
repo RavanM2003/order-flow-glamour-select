@@ -4,7 +4,7 @@ import { Customer } from './customer.model';
 import { Service } from './service.model';
 import { Product } from './product.model';
 
-export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'rejected' | 'cancelled';
+export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'rejected' | 'cancelled' | string;
 
 export interface ServiceProvider {
   id: number;
@@ -35,6 +35,7 @@ export interface Appointment {
   price?: number;
   selectedProducts?: Product[];
   createdAt?: string;
+  rejectionReason?: string;
 }
 
 export interface AppointmentFormData {

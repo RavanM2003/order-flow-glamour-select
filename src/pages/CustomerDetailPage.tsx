@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +25,8 @@ import {
 } from "@/components/ui/accordion";
 import { Customer, CustomerFormData } from "@/models/customer.model";
 import { Appointment } from "@/models/appointment.model";
+import { Service } from "@/models/service.model";
+import { Product } from "@/models/product.model";
 import { customerService, appointmentService } from "@/services";
 
 // Add prop type
@@ -107,7 +110,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
       if (customer?.id) {
         const response = await customerService.update(customer.id, editForm);
         if (response.data) {
-          setCustomer({ ...customer, ...editForm });
+          setCustomer({ ...customer, ...response.data });
           toast({
             title: "Customer updated",
             description: "Customer information has been updated successfully",
@@ -458,7 +461,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
                             </h5>
                             <div className="space-y-2 bg-gray-50 p-3 rounded-md">
                               {(app.products || app.selectedProducts || []).map(
-                                (product: Product, idx: number) => (
+                                (product: Product | string, idx: number) => (
                                   <div
                                     key={idx}
                                     className="flex justify-between items-center border-b last:border-b-0 pb-2 last:pb-0"

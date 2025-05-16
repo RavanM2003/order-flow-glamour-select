@@ -1,16 +1,18 @@
 
 import { ApiService } from './api.service';
-import { Appointment, AppointmentFormData } from '@/models/appointment.model';
+import { Appointment, AppointmentFormData, AppointmentStatus } from '@/models/appointment.model';
 import { ApiResponse } from '@/models/types';
 import { config } from '@/config/env';
 import { mockAppointments } from '@/lib/mock-data';
+import { Product } from '@/models/product.model';
 
 export class AppointmentService extends ApiService {
   // Get all appointments
   async getAll(): Promise<ApiResponse<Appointment[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 400));
-      return { data: [...mockAppointments] };
+      // Type assertion to ensure mockAppointments conform to Appointment[]
+      return { data: [...mockAppointments] as Appointment[] };
     }
     
     return this.get<Appointment[]>('/appointments');
@@ -23,7 +25,8 @@ export class AppointmentService extends ApiService {
       const appointments = mockAppointments.filter(a => 
         a.customerId === Number(customerId)
       );
-      return { data: [...appointments] };
+      // Type assertion to ensure appointments conform to Appointment[]
+      return { data: [...appointments] as Appointment[] };
     }
     
     return this.get<Appointment[]>(`/customers/${customerId}/appointments`);
@@ -37,10 +40,11 @@ export class AppointmentService extends ApiService {
         ...appointment, 
         id: Math.max(0, ...mockAppointments.map(a => a.id)) + 1,
         date: appointment.date || new Date().toISOString().split('T')[0],
-        status: 'pending'
+        status: 'pending' as AppointmentStatus,
+        rejectionReason: ''
       } as Appointment;
       
-      mockAppointments.push(newAppointment);
+      mockAppointments.push(newAppointment as any);
       return { data: {...newAppointment} };
     }
     
@@ -53,8 +57,8 @@ export class AppointmentService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockAppointments.findIndex(a => a.id === Number(id));
       if (index >= 0) {
-        mockAppointments[index] = { ...mockAppointments[index], ...appointment };
-        return { data: {...mockAppointments[index]} };
+        mockAppointments[index] = { ...mockAppointments[index], ...appointment, rejectionReason: mockAppointments[index].rejectionReason || '' };
+        return { data: {...mockAppointments[index]} as Appointment };
       }
       return { error: 'Appointment not found' };
     }

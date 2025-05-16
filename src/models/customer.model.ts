@@ -5,7 +5,7 @@ export interface Customer {
   name: string;
   email: string;
   phone: string;
-  gender?: 'female' | 'male' | 'other';
+  gender?: 'female' | 'male' | 'other' | string;
   lastVisit?: string;
   totalSpent?: number;
 }
