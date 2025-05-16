@@ -4,10 +4,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { config } from "@/config/env";
 
 const AdminHeader = () => {
   const isMobile = useIsMobile();
   const [searchVisible, setSearchVisible] = useState(false);
+  
+  // Determine environment indicator
+  const getEnvIndicator = () => {
+    if (!config.featureFlags.showDebugInfo) return null;
+    
+    return (
+      <div className="px-2 py-1 rounded text-xs font-semibold hidden md:block">
+        {config.usesMockData ? (
+          <span className="text-amber-600">LOCAL MODE</span>
+        ) : (
+          <span className="text-green-600">API MODE</span>
+        )}
+      </div>
+    );
+  };
 
   return (
     <header className="bg-white border-b px-4 md:px-6 py-3 flex items-center justify-between">
@@ -55,6 +71,9 @@ const AdminHeader = () => {
           </div>
         </>
       )}
+      
+      {/* Add environment indicator */}
+      {getEnvIndicator()}
     </header>
   );
 };

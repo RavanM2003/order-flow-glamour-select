@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +15,6 @@ import {
   ChevronDown,
   Search,
 } from "lucide-react";
-import { API } from "@/lib/api";
 import { toast } from "@/components/ui/use-toast";
 import {
   Accordion,
@@ -24,60 +22,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-
-interface ServiceProvider {
-  id: number;
-  name: string;
-  serviceId?: number;
-}
-
-interface Service {
-  id: number;
-  name: string;
-  duration?: string;
-  price: number;
-}
-
-interface Product {
-  id?: number;
-  name: string;
-  quantity?: number;
-  price?: number;
-}
-
-interface Appointment {
-  id: number;
-  service: string;
-  status: string;
-  orderReference?: string;
-  date: string;
-  startTime?: string;
-  time?: string;
-  endTime: string;
-  duration?: string;
-  totalAmount?: number;
-  amountPaid?: number;
-  remainingBalance?: number;
-  paymentMethod?: string;
-  serviceProviders?: ServiceProvider[];
-  staff?: string[];
-  services?: Service[];
-  servicePrice?: number;
-  price?: number;
-  products?: Product[];
-  selectedProducts?: Product[];
-  createdAt?: string;
-}
+import { Customer, CustomerFormData } from "@/models/customer.model";
+import { Appointment } from "@/models/appointment.model";
+import { customerService, appointmentService } from "@/services";
 
 // Add prop type
 type CustomerDetailPageProps = {
-  customer?: {
-    id: number;
-    name: string;
-    email: string;
-    phone: string;
-    gender?: string;
-  };
+  customer?: Customer;
 };
 
 const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
@@ -85,10 +36,10 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
 }) => {
   const { customerId } = useParams();
   const [editMode, setEditMode] = useState(false);
-  const [customer, setCustomer] = useState(
-    customerProp || { id: 0, name: "", email: "", phone: "", gender: "" }
+  const [customer, setCustomer] = useState<Customer | null>(
+    customerProp || null
   );
-  const [editForm, setEditForm] = useState({
+  const [editForm, setEditForm] = useState<CustomerFormData>({
     name: "",
     email: "",
     phone: "",
@@ -112,30 +63,30 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
 
         // Fetch appointments for this customer
         try {
-          const { data } = await API.appointments.getByCustomer(
-            customerProp.id
-          );
-          setAppointments(data || []);
+          const response = await appointmentService.getByCustomerId(customerProp.id);
+          if (response.data) {
+            setAppointments(response.data);
+          }
         } catch (error) {
           console.error("Failed to load appointments:", error);
         }
       } else if (customerId) {
         try {
-          const { data } = await API.customers.get(customerId);
-          if (data) {
-            setCustomer(data);
+          const response = await customerService.getById(customerId);
+          if (response.data) {
+            setCustomer(response.data);
             setEditForm({
-              name: data.name,
-              email: data.email,
-              phone: data.phone,
-              gender: data.gender || "",
+              name: response.data.name,
+              email: response.data.email,
+              phone: response.data.phone,
+              gender: response.data.gender || "",
             });
 
             // Fetch appointments for this customer
-            const appointmentsResponse = await API.appointments.getByCustomer(
-              customerId
-            );
-            setAppointments(appointmentsResponse.data || []);
+            const appointmentsResponse = await appointmentService.getByCustomerId(customerId);
+            if (appointmentsResponse.data) {
+              setAppointments(appointmentsResponse.data);
+            }
           }
         } catch (error) {
           console.error("Failed to load customer:", error);
@@ -153,9 +104,9 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
 
   const handleEditSave = async () => {
     try {
-      if (customer.id) {
-        const { data } = await API.customers.update(customer.id, editForm);
-        if (data) {
+      if (customer?.id) {
+        const response = await customerService.update(customer.id, editForm);
+        if (response.data) {
           setCustomer({ ...customer, ...editForm });
           toast({
             title: "Customer updated",
@@ -246,31 +197,31 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="font-medium w-24">Name:</span>
                   <span className="flex-1 text-right">
-                    {customer.name || "-"}
+                    {customer?.name || "-"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-medium w-24">Email:</span>
                   <span className="flex-1 text-right">
-                    {customer.email || "-"}
+                    {customer?.email || "-"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-medium w-24">Phone:</span>
                   <span className="flex-1 text-right">
-                    {customer.phone || "-"}
+                    {customer?.phone || "-"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-medium w-24">Gender:</span>
                   <span className="flex items-center justify-end flex-1">
-                    {customer.gender === "female" && (
+                    {customer?.gender === "female" && (
                       <UserCircle className="h-4 w-4 mr-1 text-pink-500" />
                     )}
-                    {customer.gender === "male" && (
+                    {customer?.gender === "male" && (
                       <UserCircle className="h-4 w-4 mr-1 text-blue-500" />
                     )}
-                    {customer.gender || "-"}
+                    {customer?.gender || "-"}
                   </span>
                 </div>
                 <div className="sm:col-span-2 flex justify-end mt-4">

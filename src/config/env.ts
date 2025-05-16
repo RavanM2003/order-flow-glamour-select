@@ -19,14 +19,21 @@ export const currentEnv = determineEnv();
 // Environment-specific configuration
 export const config = {
   usesMockData: currentEnv === 'local',
-  apiBaseUrl: currentEnv === 'production' 
-    ? 'https://api.glamourstudio.com' 
-    : currentEnv === 'test'
-      ? 'https://test-api.glamourstudio.com'
-      : '/api', // Local mock API path
+  apiBaseUrl: (() => {
+    // Use environment-specific API URLs
+    if (currentEnv === 'production') {
+      return import.meta.env.VITE_API_URL || 'https://api.glamourstudio.com';
+    } else if (currentEnv === 'test') {
+      return import.meta.env.VITE_API_URL || 'https://test-api.glamourstudio.com';
+    } else {
+      // For local development, we'll use mock data or a local API
+      return import.meta.env.VITE_API_URL || '/api';
+    }
+  })(),
+  apiKey: import.meta.env.VITE_API_KEY || '',
   featureFlags: {
-    showDebugInfo: currentEnv === 'local',
-    enableAnalytics: currentEnv !== 'local',
+    showDebugInfo: currentEnv === 'local' || import.meta.env.VITE_DEBUG_MODE === 'true',
+    enableAnalytics: currentEnv !== 'local' || import.meta.env.VITE_ENABLE_ANALYTICS === 'true',
   }
 };
 
