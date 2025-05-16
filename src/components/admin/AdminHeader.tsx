@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Bell, Search, LogOut, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,16 +13,8 @@ const AdminHeader = () => {
     <header className="bg-white border-b px-4 md:px-6 py-3 flex items-center justify-between">
       {isMobile && searchVisible ? (
         <div className="flex-1 flex items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input 
-              placeholder="Search..." 
-              className="pl-10 w-full" 
-              autoFocus
-            />
-          </div>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             className="ml-2"
             onClick={() => setSearchVisible(false)}
@@ -35,18 +26,13 @@ const AdminHeader = () => {
         <>
           <div className={cn("relative", isMobile ? "w-auto" : "w-64")}>
             {isMobile ? (
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={() => setSearchVisible(true)}
-              >
-                <Search className="h-5 w-5" />
-              </Button>
+              ></Button>
             ) : (
-              <>
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input placeholder="Search..." className="pl-10" />
-              </>
+              <></>
             )}
           </div>
 
