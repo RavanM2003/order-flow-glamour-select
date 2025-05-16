@@ -1,3 +1,4 @@
+
 // Customer model and related types
 export interface Customer {
   id: number;
@@ -13,7 +14,7 @@ export interface CustomerFormData {
   name: string;
   email: string;
   phone: string;
-  gender?: string;
+  gender: string;
 }
 
 // Customer filters

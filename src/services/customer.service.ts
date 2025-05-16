@@ -10,6 +10,7 @@ export class CustomerService extends ApiService {
   async getAll(): Promise<ApiResponse<Customer[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));
+      // Ensure the mock data conforms to our Customer type
       return { data: mockCustomers as Customer[] };
     }
     

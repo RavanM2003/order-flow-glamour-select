@@ -6,3 +6,4 @@ export * from './appointment.service';
 export * from './service.service';
 export * from './product.service';
 export * from './staff.service';
+export * from './auth.service';

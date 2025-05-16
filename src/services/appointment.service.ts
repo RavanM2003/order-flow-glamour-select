@@ -11,7 +11,7 @@ export class AppointmentService extends ApiService {
   async getAll(): Promise<ApiResponse<Appointment[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 400));
-      // Type assertion to ensure mockAppointments conform to Appointment[]
+      // Ensure mockAppointments conform to Appointment[] type
       return { data: [...mockAppointments] as Appointment[] };
     }
     
@@ -25,7 +25,7 @@ export class AppointmentService extends ApiService {
       const appointments = mockAppointments.filter(a => 
         a.customerId === Number(customerId)
       );
-      // Type assertion to ensure appointments conform to Appointment[]
+      // Ensure appointments conform to Appointment[] type
       return { data: [...appointments] as Appointment[] };
     }
     
@@ -40,12 +40,12 @@ export class AppointmentService extends ApiService {
         ...appointment, 
         id: Math.max(0, ...mockAppointments.map(a => a.id)) + 1,
         date: appointment.date || new Date().toISOString().split('T')[0],
-        status: 'pending' as AppointmentStatus,
+        status: (appointment.status || 'pending') as AppointmentStatus,
         rejectionReason: ''
       } as Appointment;
       
       mockAppointments.push(newAppointment as any);
-      return { data: {...newAppointment} };
+      return { data: newAppointment };
     }
     
     return this.post<Appointment>('/appointments', appointment);
@@ -57,8 +57,12 @@ export class AppointmentService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockAppointments.findIndex(a => a.id === Number(id));
       if (index >= 0) {
-        mockAppointments[index] = { ...mockAppointments[index], ...appointment, rejectionReason: mockAppointments[index].rejectionReason || '' };
-        return { data: {...mockAppointments[index]} as Appointment };
+        mockAppointments[index] = { 
+          ...mockAppointments[index], 
+          ...appointment, 
+          rejectionReason: mockAppointments[index].rejectionReason || '' 
+        } as any;
+        return { data: mockAppointments[index] as Appointment };
       }
       return { error: 'Appointment not found' };
     }

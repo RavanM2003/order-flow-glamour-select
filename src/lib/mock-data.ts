@@ -1,5 +1,13 @@
 
 // Mock data for local development
+import { AppointmentStatus } from '@/models/appointment.model';
+
+// Helper function to create date strings for mock appointments 
+const getDateString = (daysFromNow: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + daysFromNow);
+  return date.toISOString().split('T')[0];
+};
 
 // Mock customers
 export const mockCustomers = [
@@ -115,77 +123,109 @@ export const mockProducts = [
   { id: 8, name: "Makeup Brushes Set", price: 55, description: "Professional quality makeup brushes" }
 ];
 
-// Mock appointments with detailed information
-export const mockAppointments = [
-  {
-    id: 1,
-    customerId: 1,
-    date: '2024-06-10',
-    startTime: '10:00',
-    endTime: '11:00',
-    status: 'completed',
-    service: 'Facial Treatment',
-    staff: ['Aynur Hüseynova'],
-    products: ['Moisturizer Cream', 'Anti-Aging Serum'],
-    totalAmount: 270,
-    amountPaid: 270,
-    remainingBalance: 0
-  },
-  {
-    id: 2,
-    customerId: 2,
-    date: '2024-06-15',
-    startTime: '14:00',
-    endTime: '15:30',
-    status: 'pending',
-    service: 'Hair Styling',
-    staff: ['Samir Quliyev'],
-    products: ['Hair Care Kit'],
-    totalAmount: 140,
-    amountPaid: 70,
-    remainingBalance: 70
-  },
-  {
-    id: 3,
-    customerId: 1,
-    date: '2024-06-18',
-    startTime: '16:00',
-    endTime: '16:30',
-    status: 'confirmed',
-    service: 'Manicure',
-    staff: ['Günay Əlizadə'],
-    products: [],
-    totalAmount: 50,
-    amountPaid: 0,
-    remainingBalance: 50
-  },
-  {
-    id: 4,
-    customerId: 3,
-    date: '2024-06-20',
-    startTime: '11:00',
-    endTime: '12:00',
-    status: 'pending',
-    service: 'Makeup Application',
-    staff: ['Aynur Hüseynova'],
-    products: ['Foundation', 'Makeup Brushes Set'],
-    totalAmount: 185,
-    amountPaid: 100,
-    remainingBalance: 85
-  },
-  {
-    id: 5,
-    customerId: 2,
-    date: '2024-05-30',
-    startTime: '13:00',
-    endTime: '14:00',
-    status: 'rejected',
-    service: 'Massage Therapy',
-    staff: [],
-    products: [],
-    totalAmount: 120,
-    amountPaid: 0,
-    remainingBalance: 0,
-    rejectionReason: 'Customer canceled appointment'
+// Generate appointments for the next 10 days
+const generateMockAppointments = () => {
+  const appointments = [];
+  const statuses: AppointmentStatus[] = ['pending', 'confirmed', 'completed', 'rejected', 'cancelled'];
+  let id = 1;
+  
+  // Generate 2-3 appointments per day for the next 10 days
+  for (let day = 0; day < 10; day++) {
+    const appointmentsPerDay = 2 + Math.floor(Math.random() * 2); // 2-3 appointments
+    
+    for (let i = 0; i < appointmentsPerDay; i++) {
+      // Ensure a good mix of statuses, but more confirmed/pending for recent days
+      let status: AppointmentStatus;
+      if (day < 3) {
+        // For more recent days, mostly pending and confirmed
+        status = statuses[Math.floor(Math.random() * 2)];
+      } else if (day < 7) {
+        // Mid-range days, mix of all statuses
+        status = statuses[Math.floor(Math.random() * statuses.length)];
+      } else {
+        // Past days, mostly completed with some rejected
+        status = Math.random() > 0.2 ? 'completed' : 'rejected';
+      }
+      
+      // Random customer
+      const customerId = Math.floor(Math.random() * mockCustomers.length) + 1;
+      
+      // Random service
+      const serviceIndex = Math.floor(Math.random() * mockServices.length);
+      const service = mockServices[serviceIndex];
+      
+      // Random staff members (1-2)
+      const staffCount = 1 + Math.floor(Math.random() * 2);
+      const staffMembers = [];
+      for (let s = 0; s < staffCount; s++) {
+        const staffIndex = Math.floor(Math.random() * mockStaff.length);
+        staffMembers.push(mockStaff[staffIndex].name);
+      }
+      
+      // Random products (0-2)
+      const productCount = Math.floor(Math.random() * 3);
+      const products = [];
+      let productTotal = 0;
+      for (let p = 0; p < productCount; p++) {
+        const productIndex = Math.floor(Math.random() * mockProducts.length);
+        const product = mockProducts[productIndex];
+        products.push(product.name);
+        productTotal += product.price;
+      }
+      
+      // Calculate times
+      const hour = 9 + Math.floor(Math.random() * 8); // 9 AM - 5 PM
+      const minute = Math.random() > 0.5 ? 0 : 30;
+      const startTime = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+      
+      // Duration based on service
+      const durationMinutes = parseInt(service.duration.split(' ')[0]);
+      const endHour = hour + Math.floor((minute + durationMinutes) / 60);
+      const endMinute = (minute + durationMinutes) % 60;
+      const endTime = `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+      
+      // Calculate total
+      const servicePrice = service.price;
+      const totalAmount = servicePrice + productTotal;
+      
+      // Calculate payment based on status
+      let amountPaid = 0;
+      let remainingBalance = totalAmount;
+      
+      if (status === 'completed') {
+        amountPaid = totalAmount;
+        remainingBalance = 0;
+      } else if (status === 'confirmed') {
+        // Some have partial payments
+        if (Math.random() > 0.5) {
+          amountPaid = Math.round(totalAmount * 0.5);
+          remainingBalance = totalAmount - amountPaid;
+        }
+      }
+      
+      // Create appointment
+      const appointment = {
+        id: id++,
+        customerId,
+        date: getDateString(day),
+        startTime,
+        endTime,
+        status,
+        service: service.name,
+        staff: staffMembers,
+        products,
+        totalAmount,
+        amountPaid,
+        remainingBalance,
+        rejectionReason: status === 'rejected' ? 'Customer canceled appointment' : ''
+      };
+      
+      appointments.push(appointment);
+    }
   }
-];
+  
+  return appointments;
+};
+
+// Mock appointments with detailed information
+export const mockAppointments = generateMockAppointments();
