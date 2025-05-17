@@ -63,6 +63,22 @@ export function useServices() {
     return result;
   }, [api, fetchServices]);
   
+  const deleteService = useCallback(async (id: number | string) => {
+    const result = await api.execute(
+      () => serviceService.delete(id),
+      {
+        showSuccessToast: true,
+        successMessage: 'Service deleted successfully',
+        errorPrefix: 'Failed to delete service',
+        onSuccess: () => {
+          fetchServices();
+        }
+      }
+    );
+    
+    return result;
+  }, [api, fetchServices]);
+  
   return {
     services,
     isLoading: api.isLoading,
@@ -70,6 +86,7 @@ export function useServices() {
     fetchServices,
     getService,
     createService,
-    updateService
+    updateService,
+    deleteService
   };
 }

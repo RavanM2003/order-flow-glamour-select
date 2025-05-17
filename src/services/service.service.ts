@@ -57,6 +57,21 @@ export class ServiceService extends ApiService {
     
     return this.put<Service>(`/services/${id}`, data);
   }
+  
+  // Delete a service
+  async delete(id: number | string): Promise<ApiResponse<boolean>> {
+    if (config.usesMockData) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const index = mockServices.findIndex(s => s.id === Number(id));
+      if (index >= 0) {
+        mockServices.splice(index, 1);
+        return { data: true };
+      }
+      return { error: 'Service not found' };
+    }
+    
+    return this.delete<boolean>(`/services/${id}`);
+  }
 }
 
 // Create a singleton instance

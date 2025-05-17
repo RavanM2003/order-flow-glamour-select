@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useApi } from './use-api';
 import { productService } from '@/services';
-import { Product } from '@/models/product.model';
+import { Product, ProductFormData } from '@/models/product.model';
 
 export function useProducts() {
   const api = useApi<Product[]>();
@@ -30,8 +30,13 @@ export function useProducts() {
     const response = await productService.getById(id);
     return response.data;
   }, []);
+  
+  const getProductsByService = useCallback(async (serviceId: number | string) => {
+    const response = await productService.getByServiceId(serviceId);
+    return response.data || [];
+  }, []);
 
-  const createProduct = useCallback(async (data: Partial<Product>) => {
+  const createProduct = useCallback(async (data: ProductFormData) => {
     const result = await api.execute(
       () => productService.create(data),
       {
@@ -47,7 +52,7 @@ export function useProducts() {
     return result;
   }, [api, fetchProducts]);
   
-  const updateProduct = useCallback(async (id: number | string, data: Partial<Product>) => {
+  const updateProduct = useCallback(async (id: number | string, data: Partial<ProductFormData>) => {
     const result = await api.execute(
       () => productService.update(id, data),
       {
@@ -63,13 +68,31 @@ export function useProducts() {
     return result;
   }, [api, fetchProducts]);
   
+  const deleteProduct = useCallback(async (id: number | string) => {
+    const result = await api.execute(
+      () => productService.delete(id),
+      {
+        showSuccessToast: true,
+        successMessage: 'Product deleted successfully',
+        errorPrefix: 'Failed to delete product',
+        onSuccess: () => {
+          fetchProducts();
+        }
+      }
+    );
+    
+    return result;
+  }, [api, fetchProducts]);
+  
   return {
     products,
     isLoading: api.isLoading,
     error: api.error,
     fetchProducts,
     getProduct,
+    getProductsByService,
     createProduct,
-    updateProduct
+    updateProduct,
+    deleteProduct
   };
 }

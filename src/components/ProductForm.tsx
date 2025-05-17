@@ -1,13 +1,14 @@
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ProductFormData } from "@/models/product.model";
-import { Upload, Check } from "lucide-react";
+import { Upload, Check, X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ProductFormProps {
   initialData?: Partial<ProductFormData>;
@@ -20,6 +21,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   onSubmit,
   isSubmitting = false,
 }) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState<ProductFormData>({
     name: initialData?.name || "",
     price: initialData?.price || 0,
@@ -34,6 +36,25 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(
     initialData?.imageUrl || null
   );
+  const [hasServiceRelation, setHasServiceRelation] = useState<boolean>(
+    initialData?.isServiceRelated || false
+  );
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        price: initialData.price || 0,
+        description: initialData.description || "",
+        stock: initialData.stock || 0,
+        category: initialData.category || "",
+        imageUrl: initialData.imageUrl || "",
+        isServiceRelated: initialData.isServiceRelated || false,
+      });
+      setHasServiceRelation(initialData.isServiceRelated || false);
+      setImagePreview(initialData.imageUrl || null);
+    }
+  }, [initialData]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -54,6 +75,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Image size should be less than 5MB",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       // In a real app, you would upload this file to your server/storage
       // and get back a URL. For now, we'll just use a local preview.
       const reader = new FileReader();
@@ -73,10 +103,22 @@ const ProductForm: React.FC<ProductFormProps> = ({
   };
 
   const toggleServiceRelated = (checked: boolean) => {
+    setHasServiceRelation(checked);
     setFormData((prev) => ({
       ...prev,
       isServiceRelated: checked,
     }));
+  };
+  
+  const removeImage = () => {
+    setImagePreview(null);
+    setFormData((prev) => ({
+      ...prev,
+      imageUrl: "",
+    }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -105,33 +147,46 @@ const ProductForm: React.FC<ProductFormProps> = ({
             {/* Image Upload */}
             <div>
               <Label>Product Image</Label>
-              <div 
-                className="mt-2 flex justify-center border-2 border-dashed border-gray-300 px-6 py-10 rounded-md cursor-pointer"
-                onClick={triggerFileInput}
-              >
-                {imagePreview ? (
-                  <div className="text-center">
-                    <img 
-                      src={imagePreview} 
-                      alt="Product preview" 
-                      className="mx-auto mb-4 max-h-40 object-cover rounded"
-                    />
-                    <p className="text-sm text-muted-foreground">Click to change image</p>
-                  </div>
-                ) : (
-                  <div className="text-center">
-                    <Upload className="mx-auto h-12 w-12 text-green-400" />
-                    <p className="mt-2 text-sm font-semibold text-green-600">Click to upload an image</p>
-                    <p className="mt-1 text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</p>
-                  </div>
+              <div className="relative">
+                <div 
+                  className="mt-2 flex justify-center border-2 border-dashed border-gray-300 px-6 py-10 rounded-md cursor-pointer"
+                  onClick={triggerFileInput}
+                >
+                  {imagePreview ? (
+                    <div className="text-center">
+                      <img 
+                        src={imagePreview} 
+                        alt="Product preview" 
+                        className="mx-auto mb-4 max-h-40 object-cover rounded"
+                      />
+                      <p className="text-sm text-muted-foreground">Click to change image</p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <Upload className="mx-auto h-12 w-12 text-green-400" />
+                      <p className="mt-2 text-sm font-semibold text-green-600">Click to upload an image</p>
+                      <p className="mt-1 text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</p>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                </div>
+                {imagePreview && (
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    size="icon" 
+                    className="absolute top-2 right-2 h-8 w-8"
+                    onClick={removeImage}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                 )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                />
               </div>
             </div>
             
@@ -201,7 +256,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
               </div>
               <Switch
                 id="service-related"
-                checked={formData.isServiceRelated}
+                checked={hasServiceRelation}
                 onCheckedChange={toggleServiceRelated}
               />
             </div>

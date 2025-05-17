@@ -69,6 +69,79 @@ export class AppointmentService extends ApiService {
     
     return this.put<Appointment>(`/appointments/${id}`, appointment);
   }
+  
+  // Confirm an appointment
+  async confirmAppointment(id: number | string): Promise<ApiResponse<Appointment>> {
+    if (config.usesMockData) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const index = mockAppointments.findIndex(a => a.id === Number(id));
+      if (index >= 0) {
+        mockAppointments[index] = { 
+          ...mockAppointments[index], 
+          status: 'confirmed' 
+        } as any;
+        return { data: mockAppointments[index] as Appointment };
+      }
+      return { error: 'Appointment not found' };
+    }
+    
+    return this.put<Appointment>(`/appointments/${id}/confirm`, {});
+  }
+  
+  // Reject an appointment
+  async rejectAppointment(id: number | string, reason: string): Promise<ApiResponse<Appointment>> {
+    if (config.usesMockData) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const index = mockAppointments.findIndex(a => a.id === Number(id));
+      if (index >= 0) {
+        mockAppointments[index] = { 
+          ...mockAppointments[index], 
+          status: 'rejected',
+          rejectionReason: reason || 'No reason provided'
+        } as any;
+        return { data: mockAppointments[index] as Appointment };
+      }
+      return { error: 'Appointment not found' };
+    }
+    
+    return this.put<Appointment>(`/appointments/${id}/reject`, { reason });
+  }
+  
+  // Complete an appointment
+  async completeAppointment(id: number | string): Promise<ApiResponse<Appointment>> {
+    if (config.usesMockData) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const index = mockAppointments.findIndex(a => a.id === Number(id));
+      if (index >= 0) {
+        mockAppointments[index] = { 
+          ...mockAppointments[index], 
+          status: 'completed' 
+        } as any;
+        return { data: mockAppointments[index] as Appointment };
+      }
+      return { error: 'Appointment not found' };
+    }
+    
+    return this.put<Appointment>(`/appointments/${id}/complete`, {});
+  }
+  
+  // Mark appointment as paid
+  async markAsPaid(id: number | string): Promise<ApiResponse<Appointment>> {
+    if (config.usesMockData) {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const index = mockAppointments.findIndex(a => a.id === Number(id));
+      if (index >= 0) {
+        mockAppointments[index] = { 
+          ...mockAppointments[index], 
+          status: 'paid' 
+        } as any;
+        return { data: mockAppointments[index] as Appointment };
+      }
+      return { error: 'Appointment not found' };
+    }
+    
+    return this.put<Appointment>(`/appointments/${id}/paid`, {});
+  }
 }
 
 // Create a singleton instance

@@ -2,7 +2,8 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useApi } from './use-api';
 import { appointmentService } from '@/services';
-import { Appointment, AppointmentFormData } from '@/models/appointment.model';
+import { Appointment, AppointmentFormData, AppointmentStatus } from '@/models/appointment.model';
+import { toast } from '@/components/ui/use-toast';
 
 export function useAppointments() {
   const api = useApi<Appointment[]>();
@@ -63,6 +64,75 @@ export function useAppointments() {
     return result;
   }, [api, fetchAppointments]);
   
+  const confirmAppointment = useCallback(async (id: number | string) => {
+    const result = await api.execute(
+      () => appointmentService.confirmAppointment(id),
+      {
+        showSuccessToast: true,
+        successMessage: 'Appointment confirmed successfully',
+        errorPrefix: 'Failed to confirm appointment',
+        onSuccess: () => {
+          fetchAppointments();
+          // Create a cash entry for this appointment - this would typically be done by the backend
+          toast({
+            title: "Payment Pending",
+            description: "A pending payment was created for this appointment",
+          });
+        }
+      }
+    );
+    
+    return result;
+  }, [api, fetchAppointments]);
+  
+  const rejectAppointment = useCallback(async (id: number | string, reason: string) => {
+    const result = await api.execute(
+      () => appointmentService.rejectAppointment(id, reason),
+      {
+        showSuccessToast: true,
+        successMessage: 'Appointment rejected',
+        errorPrefix: 'Failed to reject appointment',
+        onSuccess: () => {
+          fetchAppointments();
+        }
+      }
+    );
+    
+    return result;
+  }, [api, fetchAppointments]);
+  
+  const completeAppointment = useCallback(async (id: number | string) => {
+    const result = await api.execute(
+      () => appointmentService.completeAppointment(id),
+      {
+        showSuccessToast: true,
+        successMessage: 'Appointment marked as completed',
+        errorPrefix: 'Failed to complete appointment',
+        onSuccess: () => {
+          fetchAppointments();
+        }
+      }
+    );
+    
+    return result;
+  }, [api, fetchAppointments]);
+  
+  const markAsPaid = useCallback(async (id: number | string) => {
+    const result = await api.execute(
+      () => appointmentService.markAsPaid(id),
+      {
+        showSuccessToast: true,
+        successMessage: 'Appointment marked as paid',
+        errorPrefix: 'Failed to mark appointment as paid',
+        onSuccess: () => {
+          fetchAppointments();
+        }
+      }
+    );
+    
+    return result;
+  }, [api, fetchAppointments]);
+  
   return {
     appointments,
     isLoading: api.isLoading,
@@ -70,6 +140,10 @@ export function useAppointments() {
     fetchAppointments,
     getAppointmentsByCustomer,
     createAppointment,
-    updateAppointment
+    updateAppointment,
+    confirmAppointment,
+    rejectAppointment,
+    completeAppointment,
+    markAsPaid
   };
 }
