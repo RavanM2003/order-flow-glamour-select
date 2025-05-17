@@ -6,6 +6,9 @@ export interface Product {
   price?: number;
   quantity?: number;
   description?: string;
+  imageUrl?: string;
+  categoryId?: number;
+  isServiceRelated?: boolean;
 }
 
 export interface ProductFormData {
@@ -14,4 +17,6 @@ export interface ProductFormData {
   description?: string;
   stock?: number;
   category?: string;
+  imageUrl?: string;
+  isServiceRelated?: boolean;
 }

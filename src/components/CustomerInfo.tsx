@@ -9,6 +9,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CalendarIcon, Clock, UserCircle } from "lucide-react";
 import { BookingMode } from "./CheckoutFlow";
+import { useAppointments } from "@/hooks/use-appointments";
+import { useCustomers } from "@/hooks/use-customers";
+import { toast } from "@/components/ui/use-toast";
 
 interface CustomerInfoProps {
   bookingMode?: BookingMode;
@@ -18,6 +21,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
   bookingMode = "customer",
 }) => {
   const { orderState, updateCustomerInfo, goToStep } = useOrder();
+  const { createCustomer } = useCustomers();
   const [formData, setFormData] = useState({
     name: orderState.customerInfo?.name || "",
     email: orderState.customerInfo?.email || "",
@@ -60,10 +64,42 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
     setFormData((prev) => ({ ...prev, gender: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateCustomerInfo(formData);
-    goToStep(2);
+    
+    try {
+      // First save customer data to database if needed
+      if (bookingMode === "customer") {
+        // Check if customer already exists by phone number
+        const customerData = {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          gender: formData.gender
+        };
+        
+        // Create or update customer record
+        await createCustomer(customerData);
+        
+        toast({
+          title: "Customer information saved",
+          description: "Your information has been saved successfully.",
+        });
+      }
+      
+      // Update order context
+      updateCustomerInfo(formData);
+      
+      // Go to next step
+      goToStep(2);
+    } catch (error) {
+      console.error("Error saving customer information:", error);
+      toast({
+        title: "Error",
+        description: "There was a problem saving your information. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Calculate min and max date (today + 7 days) for date picker
