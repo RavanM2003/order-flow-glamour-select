@@ -1,6 +1,6 @@
 
 import { ApiService } from './api.service';
-import { Service } from '@/models/service.model';
+import { Service, ServiceFormData } from '@/models/service.model';
 import { ApiResponse } from '@/models/types';
 import { config } from '@/config/env';
 import { mockServices } from '@/lib/mock-data';
@@ -25,6 +25,37 @@ export class ServiceService extends ApiService {
     }
     
     return this.get<Service>(`/services/${id}`);
+  }
+
+  // Create a new service
+  async create(data: ServiceFormData): Promise<ApiResponse<Service>> {
+    if (config.usesMockData) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const newId = Math.max(...mockServices.map(s => s.id), 0) + 1;
+      const newService = { 
+        ...data, 
+        id: newId 
+      };
+      mockServices.push(newService as Service);
+      return { data: newService as Service };
+    }
+    
+    return this.post<Service>('/services', data);
+  }
+  
+  // Update an existing service
+  async update(id: number | string, data: Partial<ServiceFormData>): Promise<ApiResponse<Service>> {
+    if (config.usesMockData) {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      const index = mockServices.findIndex(s => s.id === Number(id));
+      if (index >= 0) {
+        mockServices[index] = { ...mockServices[index], ...data };
+        return { data: mockServices[index] };
+      }
+      return { error: 'Service not found' };
+    }
+    
+    return this.put<Service>(`/services/${id}`, data);
   }
 }
 

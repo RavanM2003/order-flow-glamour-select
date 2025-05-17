@@ -198,8 +198,8 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                   </div>
                 ) : (
                   <div className="text-center">
-                    <Upload className="mx-auto h-12 w-12 text-glamour-400" />
-                    <p className="mt-2 text-sm font-semibold text-glamour-600">Click to upload an image</p>
+                    <Upload className="mx-auto h-12 w-12 text-green-400" />
+                    <p className="mt-2 text-sm font-semibold text-green-600">Click to upload an image</p>
                     <p className="mt-1 text-xs text-muted-foreground">PNG, JPG, GIF up to 5MB</p>
                   </div>
                 )}
@@ -291,7 +291,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-glamour-700 hover:bg-glamour-800"
+                className="bg-green-700 hover:bg-green-800"
               >
                 {isSubmitting ? "Saving..." : "Save Service"}
               </Button>
