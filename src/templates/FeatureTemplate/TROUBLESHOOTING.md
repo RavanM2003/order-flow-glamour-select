@@ -1,97 +1,101 @@
+# Troubleshooting Guide
 
-# Feature Module Troubleshooting
-
-This document contains common issues and solutions you might encounter when implementing new features using this template.
+This guide addresses common issues you might encounter when using the feature template.
 
 ## Common Issues
 
-### 1. Type Errors
+### 1. Routes Not Showing Up
 
-**Issue**: TypeScript errors when using the feature types
+**Problem**: Your new feature's routes don't appear in the application.
 
-**Solution**: 
-- Make sure to update the types in `types.ts` to match your data model
-- Check for any required fields that you might have missed
-- Look for any imports that might need updating
+**Solutions**:
+- Make sure you've imported the routes in your main App.tsx or routes file:
+  ```tsx
+  import { yourFeatureRoutes } from './features/YourFeature/routes';
+  
+  // Then include in your Routes component
+  <Routes>
+    {yourFeatureRoutes}
+    {/* Other routes */}
+  </Routes>
+  ```
+- Check that the paths in your feature's routes.tsx don't conflict with existing routes
+- Verify that your route components are properly exported
 
-### 2. Route Conflicts
+### 2. API Calls Returning Errors
 
-**Issue**: Routes not working or conflicting with existing routes
+**Problem**: API calls from your feature's service are failing.
 
-**Solution**:
-- Ensure route paths in `routes.tsx` are unique
-- Check if you have imported the routes correctly in your main routes file
-- Verify that any path parameters (like `:id`) match what you're using in your components
+**Solutions**:
+- Check if your API endpoint URLs are correct
+- Verify authentication headers are properly set
+- Ensure the API expects the data format you're sending
+- Check for CORS issues if calling external APIs
+- Make sure your mock data format matches what the components expect
 
-### 3. API Integration
+### 3. Type Errors
 
-**Issue**: API calls not working as expected
+**Problem**: TypeScript errors related to your feature's types.
 
-**Solution**:
-- Update the endpoint in `feature.service.ts` to match your backend API
-- Check the response structure and update the type mapping if needed
-- Add proper error handling for any specific API errors
+**Solutions**:
+- Make sure your component props match the interfaces defined in types.ts
+- Check that your API response handling correctly maps to your defined types
+- Ensure you're using the proper exported types from your feature
 
-### 4. Form Validation
+### 4. Feature Not Self-Contained
 
-**Issue**: Form validation not working correctly
+**Problem**: Your feature has unexpected dependencies on other parts of the application.
 
-**Solution**:
-- Update the Zod schema in `FeatureForm.tsx` to match your data requirements
-- Make sure all required fields are properly validated
-- Check if default values are set correctly for edit mode
+**Solutions**:
+- Move shared utilities to a common utils folder
+- Use dependency injection for services when needed
+- Create adapters for integrating with global state or services
 
-### 5. Components Not Rendering
+### 5. Naming Conflicts
 
-**Issue**: Components not showing up as expected
+**Problem**: Name collisions with existing components or functions.
 
-**Solution**:
-- Check if you're properly exporting all components in `index.ts`
-- Verify that you're importing the components correctly
-- Make sure the components are getting the props they need
+**Solutions**:
+- Use more specific prefixes for your feature's exports
+- Consider namespacing your exports in index.ts
+- Check for duplicate export names across features
+
+## Integration Issues
+
+### Using with Global State (Redux, Context, etc.)
+
+If your feature needs to interact with global state:
+
+1. Create custom hooks within your feature that use the global state
+2. Keep the feature's internal state separate from global state
+3. Use adapters to connect your feature's actions to global state actions
+
+### Authentication and Authorization
+
+For features that require authentication:
+
+1. Create a higher-order component or custom hook in your feature to handle auth checks
+2. Use your app's authentication context or service
+3. Add route guards in your feature's routes.tsx
 
 ## Advanced Customization
 
-### Adding Custom Functionality
+### Extending the Template
 
-To add functionality beyond the basics provided in this template:
+To add additional functionality to the template:
 
-1. Create new component files in the `components` directory
-2. Add new methods to the service class in `feature.service.ts`
-3. Create additional hooks in the `hooks` directory
-4. Export everything through `index.ts`
+1. Add new component files in the components directory
+2. Create additional hooks for specialized logic
+3. Export all new files through index.ts
+4. Update the create-feature.js script if needed
 
-### Integration with State Management
+### Testing
 
-If you're using a global state manager (Redux, Zustand, Jotai, etc.):
+To add tests for your feature:
 
-1. Create a store file in a `store` subdirectory
-2. Set up your state slice, actions, and selectors
-3. Connect your components to the state
-4. Export the store through `index.ts`
-
-Example for Redux:
-
-```tsx
-// store/featureSlice.ts
-import { createSlice } from '@reduxjs/toolkit';
-
-const featureSlice = createSlice({
-  name: 'features',
-  initialState: {
-    items: [],
-    isLoading: false,
-    error: null
-  },
-  reducers: {
-    // Your reducers here
-  }
-});
-
-// Export actions and reducer
-export const { actions } = featureSlice;
-export default featureSlice.reducer;
-```
+1. Create a `__tests__` directory in your feature folder
+2. Add test files that match your component names with .test.tsx extension
+3. Consider adding test utilities specific to your feature
 
 ## Performance Optimizations
 

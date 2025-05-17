@@ -1,78 +1,82 @@
 # Feature Module Template
 
-This is a template for creating new feature modules in the application.
+This is a plug-and-play feature module template designed to be copied and customized for new features. It follows a modular, feature-based architecture that encapsulates all related components, hooks, services, and routes in one place.
 
-## Usage Guide
-
-1. Copy the entire `FeatureTemplate` directory to create a new feature
-2. Rename the directory to match your feature name (e.g., `Products`, `Orders`, etc.)
-3. Search and replace all instances of "Feature" or "feature" with your feature name
-4. Update the types, components, and services to match your specific requirements
-5. Import and use the feature in your application
-
-## Directory Structure
+## Structure
 
 ```
 FeatureTemplate/
-├── components/            # UI components for the feature
-│   ├── FeatureList.tsx    # List/table view of features
-│   ├── FeatureForm.tsx    # Create/update form
-│   └── FeatureDetail.tsx  # Detailed view of a single feature
-├── hooks/                 # Custom React hooks
-│   ├── useFeatureData.ts  # Data fetching and state management
-│   └── useFeatureActions.ts # Actions like create, update, delete
-├── services/              # API and data services
-│   └── feature.service.ts # Service for API calls
-├── types.ts               # TypeScript types and interfaces
-├── routes.tsx             # Feature-specific routes
-└── index.ts               # Main exports file
+├── components/           # UI components specific to this feature
+│   ├── FeatureDetail.tsx # Detail view component 
+│   ├── FeatureForm.tsx   # Create/edit form component
+│   └── FeatureList.tsx   # List view component
+├── hooks/                # Custom hooks for feature logic
+│   ├── useFeatureActions.ts # CRUD operations
+│   └── useFeatureData.ts    # Data fetching and state
+├── services/             # API integration
+│   └── feature.service.ts   # REST API calls
+├── types.ts              # TypeScript interfaces and types
+├── routes.tsx            # Feature-specific routes
+└── index.ts              # Main exports file
+
 ```
 
-## Integration Guide
+## Using this Template
 
-### 1. Adding Routes
+### Option 1: Manual Copy
 
-Import your feature's routes in the main routing file:
+1. Copy the entire `FeatureTemplate` directory
+2. Rename it to your feature name (e.g., `Products`, `Customers`)
+3. Replace all instances of "Feature" with your feature name
+4. Customize the components, hooks, and services as needed
 
-```tsx
-// In src/app/routes.tsx or App.tsx
-import { featureRoutes } from '../features/YourFeature/routes';
+### Option 2: Using the Script
 
-// Then include in your Routes component
-<Routes>
-  {featureRoutes}
-  {/* Other routes */}
-</Routes>
+The repository includes a script to automate the creation process:
+
+```bash
+# Navigate to the src/templates directory
+cd src/templates
+
+# Run the creation script (requires Node.js and fs-extra)
+node create-feature.js YourFeatureName
 ```
 
-### 2. Adding to Navigation
+The script will:
+1. Create a new feature folder with your specified name
+2. Rename all files and replace all occurrences of "Feature" with your feature name
+3. Generate proper exports and imports
 
-Add your feature to the navigation menu:
+### Integrating with Your App
 
-```tsx
-// In your navigation component
-<NavItem to="/your-features">Your Features</NavItem>
-```
+After creating your feature module:
 
-### 3. Accessing in Other Components
+1. Import the routes in your main App.tsx or routes file:
+   ```tsx
+   import { yourFeatureRoutes } from './features/YourFeature/routes';
+   
+   // Then include it in your Routes
+   <Routes>
+     {yourFeatureRoutes}
+     {/* Other routes */}
+   </Routes>
+   ```
 
-Import and use components and hooks from your feature:
-
-```tsx
-import { YourFeatureList, useYourFeatureData } from '../features/YourFeature';
-
-const SomeComponent = () => {
-  const { features } = useYourFeatureData();
-  
-  return (
-    <div>
-      <h2>Features</h2>
-      <YourFeatureList />
-    </div>
-  );
-};
-```
+2. Use the components and hooks in your app:
+   ```tsx
+   import { YourFeatureList, useYourFeatureData } from './features/YourFeature';
+   ```
 
 ## Customization
 
-Each file contains detailed comments on how to customize it for your specific feature. Look for the "USAGE" comments at the top of each file for specific instructions.
+- **Data Model**: Update `types.ts` to match your feature's data model
+- **API Integration**: Modify `services/yourFeature.service.ts` to connect to your API endpoints
+- **Components**: Customize the UI components in the `components` folder
+- **Routes**: Adjust the routes in `routes.tsx` to match your app's routing structure
+
+## Best Practices
+
+- Keep components focused on a single responsibility
+- Use the hooks for logic and data fetching, keeping components presentational
+- Export everything through the `index.ts` file for clean imports
+- Maintain consistency in naming and folder structure across features
