@@ -2,7 +2,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useApi } from './use-api';
 import { staffService } from '@/services';
-import { Staff, StaffPayment, StaffServiceRecord, StaffFormData } from '@/models/staff.model';
+import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours } from '@/models/staff.model';
 
 export function useStaff() {
   const api = useApi<Staff[]>();
@@ -10,6 +10,7 @@ export function useStaff() {
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [staffPayments, setStaffPayments] = useState<StaffPayment[]>([]);
   const [serviceRecords, setServiceRecords] = useState<StaffServiceRecord[]>([]);
+  const [workingHours, setWorkingHours] = useState<StaffWorkingHours[]>([]);
   const [earnings, setEarnings] = useState<{
     salary: number;
     commission: number;
@@ -47,6 +48,7 @@ export function useStaff() {
     setSelectedStaff(null);
     setStaffPayments([]);
     setServiceRecords([]);
+    setWorkingHours([]);
     setEarnings(null);
   }, []);
   
@@ -132,11 +134,49 @@ export function useStaff() {
     return response.data;
   }, []);
   
+  // New functions for working hours
+  const fetchWorkingHours = useCallback(async (staffId: number | string) => {
+    const response = await staffService.getWorkingHours(staffId);
+    if (response.data) {
+      setWorkingHours(response.data);
+    }
+    return response.data;
+  }, []);
+  
+  const updateWorkingHours = useCallback(async (
+    staffId: number | string, 
+    dayOfWeek: number, 
+    hours: Partial<StaffWorkingHours>
+  ) => {
+    const result = await api.execute(
+      () => staffService.updateWorkingHours(staffId, dayOfWeek, hours),
+      {
+        showSuccessToast: true,
+        successMessage: 'Working hours updated successfully',
+        errorPrefix: 'Failed to update working hours',
+        onSuccess: () => {
+          fetchWorkingHours(staffId);
+        }
+      }
+    );
+    
+    return result;
+  }, [api, fetchWorkingHours]);
+  
+  const checkAvailability = useCallback(async (
+    staffId: number | string, 
+    date: Date
+  ) => {
+    const response = await staffService.checkAvailability(staffId, date);
+    return response.data;
+  }, []);
+  
   return {
     staff,
     selectedStaff,
     staffPayments,
     serviceRecords,
+    workingHours,
     earnings,
     isLoading: api.isLoading,
     error: api.error,
@@ -148,6 +188,10 @@ export function useStaff() {
     deleteStaffMember,
     fetchStaffPayments,
     fetchServiceRecords,
-    calculateEarnings
+    calculateEarnings,
+    // New functions
+    fetchWorkingHours,
+    updateWorkingHours,
+    checkAvailability
   };
 }

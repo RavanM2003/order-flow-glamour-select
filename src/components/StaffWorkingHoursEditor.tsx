@@ -1,0 +1,169 @@
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Clock, Save } from 'lucide-react';
+import { StaffWorkingHours } from '@/models/staff.model';
+import { useStaff } from '@/hooks/use-staff';
+import { useToast } from '@/hooks/use-toast';
+
+interface StaffWorkingHoursEditorProps {
+  staffId: number | string;
+}
+
+const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staffId }) => {
+  const { workingHours, fetchWorkingHours, updateWorkingHours, isLoading } = useStaff();
+  const { toast } = useToast();
+  const [localHours, setLocalHours] = useState<StaffWorkingHours[]>([]);
+  const [hasChanges, setHasChanges] = useState<boolean>(false);
+  
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  
+  useEffect(() => {
+    if (staffId) {
+      fetchWorkingHours(staffId);
+    }
+  }, [staffId, fetchWorkingHours]);
+  
+  useEffect(() => {
+    if (workingHours.length > 0) {
+      setLocalHours([...workingHours]);
+    } else if (staffId) {
+      // Create default hours if none exists
+      const defaultHours = dayNames.map((_, index) => ({
+        staffId: Number(staffId),
+        dayOfWeek: index,
+        startTime: "09:00",
+        endTime: "17:00",
+        isWorkingDay: index !== 0 // Sunday off by default
+      }));
+      setLocalHours(defaultHours);
+    }
+  }, [workingHours, staffId, dayNames]);
+  
+  const handleTimeChange = (
+    dayOfWeek: number, 
+    field: 'startTime' | 'endTime', 
+    value: string
+  ) => {
+    setLocalHours(prev => 
+      prev.map(day => 
+        day.dayOfWeek === dayOfWeek 
+          ? { ...day, [field]: value } 
+          : day
+      )
+    );
+    setHasChanges(true);
+  };
+  
+  const handleWorkingDayToggle = (dayOfWeek: number, isWorkingDay: boolean) => {
+    setLocalHours(prev => 
+      prev.map(day => 
+        day.dayOfWeek === dayOfWeek 
+          ? { ...day, isWorkingDay } 
+          : day
+      )
+    );
+    setHasChanges(true);
+  };
+  
+  const saveAllChanges = async () => {
+    try {
+      for (const hours of localHours) {
+        await updateWorkingHours(staffId, hours.dayOfWeek, hours);
+      }
+      
+      setHasChanges(false);
+      toast({
+        title: "Success",
+        description: "All working hours have been updated",
+        variant: "default"
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save working hours",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  return (
+    <Card className="mb-6">
+      <CardHeader className="pb-2">
+        <CardTitle className="flex items-center">
+          <Clock className="mr-2 h-5 w-5" /> Working Hours
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {isLoading ? (
+          <div className="flex justify-center py-4">Loading...</div>
+        ) : (
+          <>
+            <div className="grid grid-cols-7 text-center text-sm font-medium text-gray-500 mb-2">
+              <div>Day</div>
+              <div className="col-span-2">Working Day</div>
+              <div className="col-span-2">Start Time</div>
+              <div className="col-span-2">End Time</div>
+            </div>
+            
+            {localHours.map(day => (
+              <div key={day.dayOfWeek} className="grid grid-cols-7 items-center py-2 border-b">
+                <div className="font-medium">
+                  {dayNames[day.dayOfWeek]}
+                </div>
+                
+                <div className="col-span-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      checked={day.isWorkingDay} 
+                      onCheckedChange={(checked) => handleWorkingDayToggle(day.dayOfWeek, checked)}
+                    />
+                    <Label>
+                      {day.isWorkingDay ? "Working" : "Off"}
+                    </Label>
+                  </div>
+                </div>
+                
+                <div className="col-span-2">
+                  <input 
+                    type="time"
+                    className="w-full border rounded px-2 py-1"
+                    value={day.startTime}
+                    onChange={(e) => handleTimeChange(day.dayOfWeek, 'startTime', e.target.value)}
+                    disabled={!day.isWorkingDay}
+                  />
+                </div>
+                
+                <div className="col-span-2">
+                  <input 
+                    type="time"
+                    className="w-full border rounded px-2 py-1"
+                    value={day.endTime}
+                    onChange={(e) => handleTimeChange(day.dayOfWeek, 'endTime', e.target.value)}
+                    disabled={!day.isWorkingDay}
+                  />
+                </div>
+              </div>
+            ))}
+            
+            <div className="flex justify-end mt-4">
+              <Button
+                onClick={saveAllChanges}
+                disabled={!hasChanges || isLoading}
+                className="flex items-center"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default StaffWorkingHoursEditor;
