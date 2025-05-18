@@ -1,4 +1,3 @@
-
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -120,15 +119,24 @@ export class StaffService extends ApiService {
   }
   
   // Update an existing staff member
-  async update(id: number | string, data: Partial<Staff>): Promise<ApiResponse<Staff>> {
+  async update(id: number | string, data: Partial<StaffFormData>): Promise<ApiResponse<Staff>> {
     if (config.usesMockData) {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockStaff.findIndex(s => s.id === Number(id));
       if (index >= 0) {
-        mockStaff[index] = { ...mockStaff[index], ...data };
+        mockStaff[index] = { 
+          ...mockStaff[index], 
+          ...data,
+          // Ensure name is kept if it's not provided in the update
+          name: data.name || mockStaff[index].name
+        } as Staff;
         return { data: mockStaff[index] };
       }
       return { error: 'Staff not found' };
+    }
+    
+    if (config.useSupabase) {
+      return await supabaseService.updateStaff(Number(id), data);
     }
     
     return this.put<Staff>(`/staff/${id}`, data);

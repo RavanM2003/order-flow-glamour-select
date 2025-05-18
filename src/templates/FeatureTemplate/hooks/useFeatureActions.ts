@@ -9,6 +9,7 @@ export function useFeatureActions(onSuccess?: () => void) {
   const api = useApi<Feature>();
   const [isCreating, setIsCreating] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const createFeature = useCallback(async (data: FeatureFormData) => {
     setIsCreating(true);
@@ -55,6 +56,7 @@ export function useFeatureActions(onSuccess?: () => void) {
   }, [api, onSuccess]);
   
   const deleteFeature = useCallback(async (id: number | string) => {
+    setIsDeleting(true);
     try {
       const response = await featureService.delete(id);
       
@@ -64,6 +66,7 @@ export function useFeatureActions(onSuccess?: () => void) {
           description: "Feature deleted successfully"
         });
         onSuccess?.();
+        setIsDeleting(false);
         return true;
       } 
       
@@ -75,6 +78,7 @@ export function useFeatureActions(onSuccess?: () => void) {
         });
       }
       
+      setIsDeleting(false);
       return false;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
@@ -83,6 +87,7 @@ export function useFeatureActions(onSuccess?: () => void) {
         description: `Failed to delete feature: ${errorMessage}`,
         variant: "destructive" 
       });
+      setIsDeleting(false);
       return false;
     }
   }, [onSuccess]);
@@ -94,6 +99,7 @@ export function useFeatureActions(onSuccess?: () => void) {
     isLoading: api.isLoading,
     isCreating,
     isUpdating,
+    isDeleting,
     error: api.error
   };
 }

@@ -1,11 +1,6 @@
 
 /**
  * Hook to fetch and manage feature data
- * 
- * USAGE:
- * 1. Rename all instances of "feature" to your feature name
- * 2. Update imports for your specific feature types
- * 3. Adjust query keys as needed
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +11,9 @@ import { featureService } from '../services/feature.service';
 export function useFeatureData(initialFilters?: FeatureFilters) {
   // State for managing filters
   const [filters, setFilters] = useState<FeatureFilters>(initialFilters || {});
+  
+  // State for current feature when viewing details
+  const [feature, setFeature] = useState<Feature | null>(null);
   
   // Fetch all features with current filters
   const {
@@ -41,8 +39,12 @@ export function useFeatureData(initialFilters?: FeatureFilters) {
       console.error(response.error);
       return null;
     }
+    setFeature(response.data || null);
     return response.data;
   };
+  
+  // Alias for fetchFeatureById to match the component expectations
+  const fetchFeature = fetchFeatureById;
 
   // Update filters and trigger refetch
   const updateFilters = (newFilters: Partial<FeatureFilters>) => {
@@ -54,11 +56,13 @@ export function useFeatureData(initialFilters?: FeatureFilters) {
 
   return {
     features,
+    feature,
     isLoading,
     error,
     refetch,
     filters,
     updateFilters,
-    fetchFeatureById
+    fetchFeatureById,
+    fetchFeature
   };
 }

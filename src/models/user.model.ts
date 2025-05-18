@@ -40,3 +40,9 @@ export interface UserSession {
   isAuthenticated: boolean;
   expiresAt: number | null;
 }
+
+// User credentials for login
+export interface UserCredentials {
+  email: string;
+  password: string;
+}

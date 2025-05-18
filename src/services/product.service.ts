@@ -31,7 +31,8 @@ export class ProductService extends ApiService {
     if (!config.useSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 250));
       // Filter products that are marked as service-related
-      const products = (mockProducts as MockProduct[]).filter(p => p.isServiceRelated === true);
+      // Use type assertion to avoid type errors with isServiceRelated
+      const products = mockProducts.filter((p: MockProduct) => p.isServiceRelated === true);
       return { data: [...products] };
     }
     
@@ -67,7 +68,7 @@ export class ProductService extends ApiService {
         id: newId,
         stock_quantity: data.stock_quantity || 0
       };
-      mockProducts.push(newProduct);
+      mockProducts.push(newProduct as any);
       return { data: newProduct };
     }
     
@@ -87,9 +88,9 @@ export class ProductService extends ApiService {
         mockProducts[index] = { 
           ...mockProducts[index], 
           ...data,
-          stock_quantity: data.stock_quantity !== undefined ? data.stock_quantity : mockProducts[index].stock_quantity
-        };
-        return { data: mockProducts[index] };
+          stock_quantity: data.stock_quantity !== undefined ? data.stock_quantity : (mockProducts[index] as any).stock_quantity
+        } as any;
+        return { data: mockProducts[index] as Product };
       }
       return { error: 'Product not found' };
     }
@@ -101,7 +102,7 @@ export class ProductService extends ApiService {
     return this.put<Product>(`/products/${id}`, data);
   }
   
-  // Delete a product
+  // Override delete method with specific implementation
   async delete(id: number | string): Promise<ApiResponse<boolean>> {
     if (!config.useSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));

@@ -1,5 +1,3 @@
-
-// Fix the User type assignment in loginWithEmailPassword method
 import { User, UserCredentials, UserRole } from '@/models/user.model';
 import { ApiService } from './api.service';
 import { ApiResponse } from '@/models/types';
@@ -63,7 +61,12 @@ export class AuthService extends ApiService {
     return !!this.user && (this.tokenExpiryTime === null || this.tokenExpiryTime > Date.now());
   }
   
-  // Login with email and password
+  // Login with email and password - renamed to match useAuth hook
+  async login(credentials: UserCredentials): Promise<ApiResponse<User>> {
+    return this.loginWithEmailPassword(credentials);
+  }
+  
+  // Keep the original method for backwards compatibility
   async loginWithEmailPassword(credentials: UserCredentials): Promise<ApiResponse<User>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -81,29 +84,17 @@ export class AuthService extends ApiService {
         // Set expiry for 24 hours
         this.tokenExpiryTime = Date.now() + 24 * 60 * 60 * 1000;
         
-        // Create user object
-        if (userData.staffId) {
-          this.user = {
-            id: userData.id,
-            email: userData.email,
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            role: userData.role,
-            isActive: userData.isActive,
-            lastLogin: userData.lastLogin,
-            staffId: userData.staffId
-          };
-        } else {
-          this.user = {
-            id: userData.id,
-            email: userData.email,
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            role: userData.role,
-            isActive: userData.isActive,
-            lastLogin: userData.lastLogin
-          };
-        }
+        // Create user object with conditional staffId
+        this.user = {
+          id: userData.id,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          role: userData.role,
+          isActive: userData.isActive,
+          lastLogin: userData.lastLogin,
+          ...(userData.staffId !== undefined && { staffId: userData.staffId })
+        };
         
         // Save to localStorage
         this.saveUserToStorage();
@@ -117,7 +108,6 @@ export class AuthService extends ApiService {
     return this.post<User>('/auth/login', credentials);
   }
   
-  // Register a new user
   async register(userData: Partial<User> & { password: string }): Promise<ApiResponse<User>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -128,7 +118,15 @@ export class AuthService extends ApiService {
       }
       
       // In a real system, we'd create the user in the database here
-      return { data: { id: '999', ...userData, role: 'user', isActive: true } as User };
+      // Convert 'user' string to UserRole enum
+      const user = {
+        id: '999',
+        ...userData,
+        role: userData.role || 'user' as UserRole,
+        isActive: true
+      } as unknown as User;
+      
+      return { data: user };
     }
     
     return this.post<User>('/auth/register', userData);

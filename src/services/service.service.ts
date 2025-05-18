@@ -83,7 +83,7 @@ export class ServiceService extends ApiService {
     return this.put<Service>(`/services/${id}`, data);
   }
   
-  // Delete a service
+  // Override delete method with specific implementation
   async delete(id: number | string): Promise<ApiResponse<boolean>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));

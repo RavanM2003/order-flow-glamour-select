@@ -1,110 +1,114 @@
 
 import { ApiService } from '@/services/api.service';
-import { Feature, FeatureFormData } from '../types';
 import { ApiResponse } from '@/models/types';
-import { config } from '@/config/env';
+import { Feature, FeatureFilters, FeatureFormData } from '../types';
 
-// Mock data for features
+// Mock data for development
 const mockFeatures: Feature[] = [
   {
     id: 1,
-    name: 'Sample Feature',
-    description: 'This is a sample feature',
+    name: "Premium Package",
+    description: "Our top-tier feature offering",
+    category: "premium",
     isActive: true,
-    category: 'Core',
-    created_at: '2023-01-01T00:00:00Z',
-    updated_at: '2023-01-15T00:00:00Z'
+    created_at: "2025-01-15T08:30:00Z",
+    updated_at: "2025-01-15T08:30:00Z"
   },
   {
     id: 2,
-    name: 'Another Feature',
-    description: 'This is another feature',
-    isActive: false,
-    category: 'Extension',
-    created_at: '2023-02-01T00:00:00Z',
-    updated_at: '2023-02-15T00:00:00Z'
+    name: "Basic Access",
+    description: "Standard feature for all users",
+    category: "basic",
+    isActive: true,
+    created_at: "2025-01-15T08:30:00Z",
+    updated_at: "2025-01-15T08:30:00Z"
   }
 ];
 
 export class FeatureService extends ApiService {
-  // Get all features
-  async getAll(): Promise<ApiResponse<Feature[]>> {
-    if (config.usesMockData) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { data: [...mockFeatures] };
+  // Get all features with optional filters
+  async getAll(filters?: FeatureFilters): Promise<ApiResponse<Feature[]>> {
+    // Mock implementation
+    let filteredFeatures = [...mockFeatures];
+    
+    if (filters) {
+      // Apply filters if provided
+      if (filters.category) {
+        filteredFeatures = filteredFeatures.filter(f => f.category === filters.category);
+      }
+      
+      if (filters.isActive !== undefined) {
+        filteredFeatures = filteredFeatures.filter(f => f.isActive === filters.isActive);
+      }
+      
+      // Add more filter implementations as needed
     }
     
-    return this.get<Feature[]>('/features');
+    return { data: filteredFeatures };
   }
   
   // Get a feature by ID
   async getById(id: number | string): Promise<ApiResponse<Feature>> {
-    if (config.usesMockData) {
-      await new Promise(resolve => setTimeout(resolve, 300));
-      const feature = mockFeatures.find(f => f.id === Number(id));
-      return { 
-        data: feature ? {...feature} : undefined, 
-        error: feature ? undefined : 'Feature not found' 
-      };
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    const feature = mockFeatures.find(f => f.id === numericId);
+    
+    if (!feature) {
+      return { error: 'Feature not found' };
     }
     
-    return this.get<Feature>(`/features/${id}`);
+    return { data: feature };
   }
   
   // Create a new feature
   async create(data: FeatureFormData): Promise<ApiResponse<Feature>> {
-    if (config.usesMockData) {
-      await new Promise(resolve => setTimeout(resolve, 700));
-      const newId = Math.max(...mockFeatures.map(f => f.id || 0), 0) + 1;
-      const now = new Date().toISOString();
-      const newFeature: Feature = {
-        ...data,
-        id: newId,
-        isActive: data.isActive ?? true,
-        created_at: now,
-        updated_at: now
-      };
-      mockFeatures.push(newFeature);
-      return { data: newFeature };
-    }
+    const newId = Math.max(...mockFeatures.map(f => f.id || 0), 0) + 1;
     
-    return this.post<Feature>('/features', data);
+    const newFeature: Feature = {
+      id: newId,
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      isActive: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    mockFeatures.push(newFeature);
+    
+    return { data: newFeature };
   }
   
   // Update a feature
   async update(id: number | string, data: Partial<FeatureFormData>): Promise<ApiResponse<Feature>> {
-    if (config.usesMockData) {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const index = mockFeatures.findIndex(f => f.id === Number(id));
-      if (index >= 0) {
-        mockFeatures[index] = {
-          ...mockFeatures[index],
-          ...data,
-          updated_at: new Date().toISOString()
-        };
-        return { data: mockFeatures[index] };
-      }
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    const index = mockFeatures.findIndex(f => f.id === numericId);
+    
+    if (index < 0) {
       return { error: 'Feature not found' };
     }
     
-    return this.put<Feature>(`/features/${id}`, data);
+    mockFeatures[index] = {
+      ...mockFeatures[index],
+      ...data,
+      updated_at: new Date().toISOString()
+    };
+    
+    return { data: mockFeatures[index] };
   }
   
   // Delete a feature
   async delete(id: number | string): Promise<ApiResponse<boolean>> {
-    if (config.usesMockData) {
-      await new Promise(resolve => setTimeout(resolve, 400));
-      const index = mockFeatures.findIndex(f => f.id === Number(id));
-      if (index >= 0) {
-        mockFeatures.splice(index, 1);
-        return { data: true };
-      }
+    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+    const index = mockFeatures.findIndex(f => f.id === numericId);
+    
+    if (index < 0) {
       return { error: 'Feature not found' };
     }
     
-    return super.delete(`/features/${id}`);
+    mockFeatures.splice(index, 1);
+    
+    return { data: true };
   }
 }
 
-// Create a singleton instance
 export const featureService = new FeatureService();
