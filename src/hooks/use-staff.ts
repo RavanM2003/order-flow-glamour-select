@@ -1,8 +1,7 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useApi } from './use-api';
 import { staffService } from '@/services';
-import { Staff, StaffPayment, StaffServiceRecord } from '@/models/staff.model';
+import { Staff, StaffPayment, StaffServiceRecord, StaffFormData } from '@/models/staff.model';
 
 export function useStaff() {
   const api = useApi<Staff[]>();
@@ -50,7 +49,7 @@ export function useStaff() {
     setEarnings(null);
   }, []);
   
-  const createStaffMember = useCallback(async (data: Partial<Staff>) => {
+  const createStaffMember = useCallback(async (data: StaffFormData) => {
     const result = await api.execute(
       () => staffService.create(data),
       {

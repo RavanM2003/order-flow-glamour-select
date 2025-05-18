@@ -54,7 +54,7 @@ export class ServiceService extends ApiService {
         id: newId,
         name: data.name,
         description: data.description || "",
-        duration: typeof data.duration === 'string' ? parseInt(data.duration, 10) : data.duration,
+        duration: data.duration, // Ensure this is a number
         price: data.price,
         image_urls: data.image_urls || [],
         benefits: data.benefits || [],

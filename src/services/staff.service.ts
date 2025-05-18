@@ -133,6 +133,7 @@ export class StaffService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockStaff.findIndex(s => s.id === Number(id));
       if (index >= 0) {
+        // Fix: Update with correct properties
         mockStaff[index] = { 
           ...mockStaff[index], 
           ...data,
