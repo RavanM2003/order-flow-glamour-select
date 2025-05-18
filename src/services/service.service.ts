@@ -18,7 +18,7 @@ export class ServiceService extends ApiService {
       return { data: services };
     }
     
-    return this.get<Service[]>('/services');
+    return this.get('/services');
   }
   
   // Get a single service by id
@@ -40,7 +40,7 @@ export class ServiceService extends ApiService {
       };
     }
     
-    return this.get<Service>(`/services/${id}`);
+    return this.get(`/services/${id}`);
   }
 
   // Create a new service
@@ -58,6 +58,7 @@ export class ServiceService extends ApiService {
         price: data.price,
         image_urls: data.image_urls || [],
         benefits: data.benefits || [],
+        relatedProducts: data.relatedProducts || [],
         is_active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -67,7 +68,7 @@ export class ServiceService extends ApiService {
       return { data: newService };
     }
     
-    return this.post<Service>('/services', data);
+    return this.post('/services', data);
   }
   
   // Update an existing service
@@ -91,7 +92,7 @@ export class ServiceService extends ApiService {
       return { error: 'Service not found' };
     }
     
-    return this.put<Service>(`/services/${id}`, data);
+    return this.put(`/services/${id}`, data);
   }
   
   // Override delete method with specific implementation
@@ -106,7 +107,7 @@ export class ServiceService extends ApiService {
       return { error: 'Service not found' };
     }
     
-    return super.delete<boolean>(`/services/${id}`);
+    return super.delete(`/services/${id}`);
   }
 }
 

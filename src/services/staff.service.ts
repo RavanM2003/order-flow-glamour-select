@@ -1,3 +1,4 @@
+
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -84,7 +85,7 @@ export class StaffService extends ApiService {
       return { data: [...mockStaff] };
     }
     
-    return this.get<Staff[]>('/staff');
+    return this.get('/staff');
   }
   
   // Get a single staff member by id
@@ -95,27 +96,35 @@ export class StaffService extends ApiService {
       return { data: staff ? {...staff} : undefined, error: staff ? undefined : 'Staff not found' };
     }
     
-    return this.get<Staff>(`/staff/${id}`);
+    return this.get(`/staff/${id}`);
   }
   
   // Create a new staff member
-  async create(data: Partial<StaffFormData>): Promise<ApiResponse<Staff>> {
+  async create(data: StaffFormData): Promise<ApiResponse<Staff>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 400));
       const newId = Math.max(...mockStaff.map(s => s.id || 0), 0) + 1;
+      
       // Ensure required fields
       const newStaff: Staff = { 
-        ...data, 
         id: newId,
-        name: data.name || '',
+        name: data.name,
         position: data.position || '',
-        specializations: data.specializations || []
+        specializations: data.specializations || [],
+        email: data.email,
+        phone: data.phone,
+        salary: data.salary,
+        commissionRate: data.commissionRate,
+        paymentType: data.paymentType,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
+      
       mockStaff.push(newStaff);
       return { data: newStaff };
     }
     
-    return this.post<Staff>('/staff', data);
+    return this.post('/staff', data);
   }
   
   // Update an existing staff member
@@ -128,14 +137,15 @@ export class StaffService extends ApiService {
           ...mockStaff[index], 
           ...data,
           // Ensure name is kept if it's not provided in the update
-          name: data.name || mockStaff[index].name
+          name: data.name || mockStaff[index].name,
+          updated_at: new Date().toISOString()
         };
         return { data: mockStaff[index] };
       }
       return { error: 'Staff not found' };
     }
     
-    return this.put<Staff>(`/staff/${id}`, data);
+    return this.put(`/staff/${id}`, data);
   }
   
   // Delete a staff member
@@ -150,7 +160,7 @@ export class StaffService extends ApiService {
       return { error: 'Staff not found' };
     }
     
-    return super.delete<boolean>(`/staff/${id}`);
+    return super.delete(`/staff/${id}`);
   }
   
   // Get payments for a staff member
@@ -161,7 +171,7 @@ export class StaffService extends ApiService {
       return { data: [...payments] };
     }
     
-    return this.get<StaffPayment[]>(`/staff/${id}/payments`);
+    return this.get(`/staff/${id}/payments`);
   }
   
   // Get service records for a staff member
@@ -172,7 +182,7 @@ export class StaffService extends ApiService {
       return { data: [...records] };
     }
     
-    return this.get<StaffServiceRecord[]>(`/staff/${id}/service-records`);
+    return this.get(`/staff/${id}/service-records`);
   }
   
   // Calculate earnings for a staff member
@@ -225,12 +235,7 @@ export class StaffService extends ApiService {
       };
     }
     
-    return this.get<{
-      salary: number;
-      commission: number;
-      expenses: number;
-      total: number;
-    }>(`/staff/${id}/earnings?month=${month}&year=${year}`);
+    return this.get(`/staff/${id}/earnings?month=${month}&year=${year}`);
   }
 }
 
