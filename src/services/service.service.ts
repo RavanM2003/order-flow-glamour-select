@@ -5,12 +5,27 @@ import { ApiResponse } from '@/models/types';
 import { config } from '@/config/env';
 import { mockServices } from '@/lib/mock-data';
 
+// Define what the mock data structure looks like
+interface MockService {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  duration: number | string; // Support both number and string to handle existing mock data
+  image_urls?: string[];
+  benefits?: string[];
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  relatedProducts?: number[];
+}
+
 export class ServiceService extends ApiService {
   // Get all services
   async getAll(): Promise<ApiResponse<Service[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 250));
-      // Fix: Ensure duration is converted to number
+      // Ensure duration is converted to number for all services
       const services = mockServices.map(s => ({
         ...s,
         duration: typeof s.duration === 'string' ? parseInt(s.duration, 10) : s.duration
@@ -31,7 +46,7 @@ export class ServiceService extends ApiService {
         return { error: 'Service not found' };
       }
       
-      // Fix: Ensure duration is converted to number
+      // Ensure duration is converted to number
       return {
         data: {
           ...service,
@@ -49,8 +64,8 @@ export class ServiceService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 500));
       const newId = Math.max(...mockServices.map(s => s.id || 0), 0) + 1;
       
-      // Fix: Create a proper Service object with duration as a number
-      const newService: Service = { 
+      // Create a proper Service object with duration as a number
+      const newService: MockService = { 
         id: newId,
         name: data.name,
         description: data.description || "",
@@ -64,8 +79,12 @@ export class ServiceService extends ApiService {
         updated_at: new Date().toISOString()
       };
       
-      mockServices.push(newService);
-      return { data: newService };
+      mockServices.push(newService as any);
+      // Convert to Service type with correct number type for duration
+      return { data: {
+        ...newService,
+        duration: Number(newService.duration)
+      } as Service };
     }
     
     return this.post('/services', data);
@@ -77,15 +96,26 @@ export class ServiceService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockServices.findIndex(s => s.id === Number(id));
       if (index >= 0) {
-        // Fix: Update properly handling all type conversions
-        mockServices[index] = { 
+        // Update properly handling all type conversions
+        const updatedService: MockService = { 
           ...mockServices[index], 
           ...data,
           // Ensure duration is a number
-          duration: data.duration !== undefined ? Number(data.duration) : mockServices[index].duration,
+          duration: data.duration !== undefined ? Number(data.duration) : 
+            (typeof mockServices[index].duration === 'string' ? 
+              parseInt(mockServices[index].duration as string, 10) : 
+              mockServices[index].duration),
           updated_at: new Date().toISOString()
-        } as Service;
-        return { data: mockServices[index] as Service };
+        };
+        
+        mockServices[index] = updatedService as any;
+        // Return properly typed Service
+        return { 
+          data: {
+            ...updatedService,
+            duration: Number(updatedService.duration)
+          } as Service 
+        };
       }
       return { error: 'Service not found' };
     }
