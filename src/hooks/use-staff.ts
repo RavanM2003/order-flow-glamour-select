@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useApi } from './use-api';
 import { staffService } from '@/services';
@@ -176,7 +175,6 @@ export function useStaff() {
     selectedStaff,
     staffPayments,
     serviceRecords,
-    workingHours,
     earnings,
     isLoading: api.isLoading,
     error: api.error,
@@ -240,6 +238,7 @@ export function useStaff() {
     fetchServiceRecords,
     calculateEarnings,
     // Working hours functions
+    workingHours,
     fetchWorkingHours,
     updateWorkingHours,
     checkAvailability

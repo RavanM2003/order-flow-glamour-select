@@ -18,7 +18,7 @@ export interface Staff {
 export interface StaffFormData {
   name: string;
   position: string;  // Changed from optional to required
-  specializations?: string[];
+  specializations: string[];
   email?: string;
   phone?: string;
   salary?: number;
