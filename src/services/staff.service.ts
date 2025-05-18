@@ -197,12 +197,9 @@ export class StaffService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockStaff.findIndex(s => s.id === Number(id));
       if (index >= 0) {
-        // Fix: Update with correct properties
         mockStaff[index] = { 
           ...mockStaff[index], 
           ...data,
-          // Ensure name is kept if it's not provided in the update
-          name: data.name || mockStaff[index].name,
           updated_at: new Date().toISOString()
         };
         return { data: mockStaff[index] };

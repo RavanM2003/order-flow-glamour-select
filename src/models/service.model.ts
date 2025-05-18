@@ -10,7 +10,7 @@ export interface Service {
   is_active?: boolean;
   created_at?: string;
   updated_at?: string;
-  relatedProducts?: number[]; // Making this required to match expected usage
+  relatedProducts?: number[];
 }
 
 export interface ServiceFormData {

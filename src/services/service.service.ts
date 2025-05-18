@@ -54,7 +54,7 @@ export class ServiceService extends ApiService {
         id: newId,
         name: data.name,
         description: data.description || "",
-        duration: typeof data.duration === 'string' ? parseInt(data.duration, 10) : data.duration, // Ensure this is a number
+        duration: typeof data.duration === 'string' ? parseInt(data.duration.toString(), 10) : data.duration,
         price: data.price,
         image_urls: data.image_urls || [],
         benefits: data.benefits || [],
@@ -83,7 +83,7 @@ export class ServiceService extends ApiService {
           ...data,
           // Ensure duration is a number
           duration: data.duration !== undefined ? 
-            (typeof data.duration === 'string' ? parseInt(data.duration, 10) : data.duration) : 
+            (typeof data.duration === 'string' ? parseInt(data.duration.toString(), 10) : data.duration) : 
             mockServices[index].duration,
           updated_at: new Date().toISOString()
         };
