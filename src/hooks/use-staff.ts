@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useApi } from './use-api';
 import { staffService } from '@/services';
@@ -65,7 +66,7 @@ export function useStaff() {
     return result;
   }, [api, fetchStaff]);
   
-  const updateStaffMember = useCallback(async (id: number | string, data: Partial<Staff>) => {
+  const updateStaffMember = useCallback(async (id: number | string, data: Partial<StaffFormData>) => {
     const result = await api.execute(
       () => staffService.update(id, data),
       {
