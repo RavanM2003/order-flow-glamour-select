@@ -1,7 +1,7 @@
 
 // Staff member model
 export interface Staff {
-  id?: number;
+  id: number;  // Changed from optional to required for consistency
   name: string;
   position?: string;
   specializations?: string[];

@@ -134,7 +134,7 @@ export function useStaff() {
     return response.data;
   }, []);
   
-  // New functions for working hours
+  // Working hours functions
   const fetchWorkingHours = useCallback(async (staffId: number | string) => {
     const response = await staffService.getWorkingHours(staffId);
     if (response.data) {
@@ -183,13 +183,63 @@ export function useStaff() {
     fetchStaff,
     getStaffMember,
     clearSelectedStaff,
-    createStaffMember,
-    updateStaffMember,
-    deleteStaffMember,
+    createStaffMember: useCallback(async (data: StaffFormData) => {
+      const result = await api.execute(
+        () => staffService.create(data),
+        {
+          showSuccessToast: true,
+          successMessage: 'Staff member created successfully',
+          errorPrefix: 'Failed to create staff member',
+          onSuccess: () => {
+            fetchStaff();
+          }
+        }
+      );
+      
+      return result;
+    }, [api, fetchStaff]),
+    
+    updateStaffMember: useCallback(async (id: number | string, data: Partial<StaffFormData>) => {
+      const result = await api.execute(
+        () => staffService.update(id, data),
+        {
+          showSuccessToast: true,
+          successMessage: 'Staff member updated successfully',
+          errorPrefix: 'Failed to update staff member',
+          onSuccess: () => {
+            fetchStaff();
+            if (selectedStaff && selectedStaff.id === Number(id)) {
+              getStaffMember(id);
+            }
+          }
+        }
+      );
+      
+      return result;
+    }, [api, fetchStaff, selectedStaff, getStaffMember]),
+    
+    deleteStaffMember: useCallback(async (id: number | string) => {
+      const result = await api.execute(
+        () => staffService.delete(id),
+        {
+          showSuccessToast: true,
+          successMessage: 'Staff member deleted successfully',
+          errorPrefix: 'Failed to delete staff member',
+          onSuccess: () => {
+            fetchStaff();
+            if (selectedStaff && selectedStaff.id === Number(id)) {
+              clearSelectedStaff();
+            }
+          }
+        }
+      );
+      
+      return result;
+    }, [api, fetchStaff, selectedStaff, clearSelectedStaff]),
     fetchStaffPayments,
     fetchServiceRecords,
     calculateEarnings,
-    // New functions
+    // Working hours functions
     fetchWorkingHours,
     updateWorkingHours,
     checkAvailability

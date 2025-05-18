@@ -142,7 +142,7 @@ export class StaffService extends ApiService {
   async getAll(): Promise<ApiResponse<Staff[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 250));
-      return { data: [...mockStaff] };
+      return { data: [...mockStaff] as Staff[] };
     }
     
     return this.get('/staff');
@@ -152,7 +152,7 @@ export class StaffService extends ApiService {
   async getById(id: number | string): Promise<ApiResponse<Staff>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 200));
-      const staff = mockStaff.find(s => s.id === Number(id));
+      const staff = mockStaff.find(s => s.id === Number(id)) as Staff | undefined;
       return { data: staff ? {...staff} : undefined, error: staff ? undefined : 'Staff not found' };
     }
     
@@ -201,8 +201,8 @@ export class StaffService extends ApiService {
           ...mockStaff[index], 
           ...data,
           updated_at: new Date().toISOString()
-        };
-        return { data: mockStaff[index] };
+        } as Staff;
+        return { data: mockStaff[index] as Staff };
       }
       return { error: 'Staff not found' };
     }
