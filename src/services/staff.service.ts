@@ -1,4 +1,3 @@
-
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -186,7 +185,7 @@ export class StaffService extends ApiService {
         id: newId,
         name: data.name,
         position: data.position || 'Staff Member', // Ensure position is never empty
-        specializations: data.specializations || [], // Ensure specializations is defined
+        specializations: data.specializations || [], // Ensure specializations is always an array
         email: data.email,
         phone: data.phone,
         salary: data.salary,

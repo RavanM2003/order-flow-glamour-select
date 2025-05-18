@@ -4,7 +4,7 @@ export interface Staff {
   id: number;  // Changed from optional to required for consistency
   name: string;
   position: string;  // Changed from optional to required to match usage in services
-  specializations?: string[];
+  specializations: string[];  // Changed from optional to required to match usage in services
   email?: string;
   phone?: string;
   salary?: number;
