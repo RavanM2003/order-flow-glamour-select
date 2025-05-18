@@ -1,3 +1,4 @@
+
 // User model and related types
 export type UserRole = "admin" | "staff" | "cashier" | "guest";
 

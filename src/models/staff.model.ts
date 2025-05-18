@@ -45,5 +45,5 @@ export interface StaffServiceRecord {
   customerId?: number;
   customerName?: string;
   commission?: number;
-  amount: number;  // Added amount property
+  amount: number;
 }

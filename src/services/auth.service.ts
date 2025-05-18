@@ -1,4 +1,4 @@
-import { User, UserCredentials, UserRole } from '@/models/user.model';
+import { User, UserCredentials, UserRole, AuthResponse } from '@/models/user.model';
 import { ApiService } from './api.service';
 import { ApiResponse } from '@/models/types';
 import { config } from '@/config/env';
@@ -62,12 +62,12 @@ export class AuthService extends ApiService {
   }
   
   // Login with email and password - renamed to match useAuth hook
-  async login(credentials: UserCredentials): Promise<ApiResponse<User>> {
+  async login(credentials: UserCredentials): Promise<ApiResponse<AuthResponse>> {
     return this.loginWithEmailPassword(credentials);
   }
   
   // Keep the original method for backwards compatibility
-  async loginWithEmailPassword(credentials: UserCredentials): Promise<ApiResponse<User>> {
+  async loginWithEmailPassword(credentials: UserCredentials): Promise<ApiResponse<AuthResponse>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -82,10 +82,10 @@ export class AuthService extends ApiService {
         const { password, ...userData } = foundUser;
         
         // Set expiry for 24 hours
-        this.tokenExpiryTime = Date.now() + 24 * 60 * 60 * 1000;
+        const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
         
-        // Create user object with conditional staffId
-        this.user = {
+        // Create user object
+        const user: User = {
           id: userData.id,
           email: userData.email,
           firstName: userData.firstName,
@@ -96,16 +96,20 @@ export class AuthService extends ApiService {
           ...(userData.staffId !== undefined && { staffId: userData.staffId })
         };
         
-        // Save to localStorage
-        this.saveUserToStorage();
+        // Create auth response
+        const authResponse: AuthResponse = {
+          user,
+          token: "mock-jwt-token-" + Date.now(),
+          expiresAt
+        };
         
-        return { data: this.user };
+        return { data: authResponse };
       }
       
       return { error: 'Invalid email or password' };
     }
     
-    return this.post<User>('/auth/login', credentials);
+    return this.post<AuthResponse>('/auth/login', credentials);
   }
   
   async register(userData: Partial<User> & { password: string }): Promise<ApiResponse<User>> {
@@ -118,13 +122,17 @@ export class AuthService extends ApiService {
       }
       
       // In a real system, we'd create the user in the database here
-      // Convert 'user' string to UserRole enum
-      const user = {
+      const role = userData.role || 'user' as UserRole;
+      const user: User = {
         id: '999',
-        ...userData,
-        role: userData.role || 'user' as UserRole,
-        isActive: true
-      } as unknown as User;
+        email: userData.email || '',
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        role,
+        isActive: true,
+        lastLogin: new Date().toISOString(),
+        ...(userData.staffId && { staffId: userData.staffId })
+      };
       
       return { data: user };
     }

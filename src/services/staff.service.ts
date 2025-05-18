@@ -1,5 +1,5 @@
 import { ApiService } from './api.service';
-import { Staff, StaffPayment, StaffServiceRecord } from '@/models/staff.model';
+import { Staff, StaffPayment, StaffServiceRecord, StaffFormData } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
 import { config } from '@/config/env';
 import { mockStaff } from '@/lib/mock-data';
@@ -99,7 +99,7 @@ export class StaffService extends ApiService {
   }
   
   // Create a new staff member
-  async create(data: Partial<Staff>): Promise<ApiResponse<Staff>> {
+  async create(data: Partial<StaffFormData>): Promise<ApiResponse<Staff>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 400));
       const newId = Math.max(...mockStaff.map(s => s.id || 0), 0) + 1;
@@ -129,14 +129,10 @@ export class StaffService extends ApiService {
           ...data,
           // Ensure name is kept if it's not provided in the update
           name: data.name || mockStaff[index].name
-        } as Staff;
+        };
         return { data: mockStaff[index] };
       }
       return { error: 'Staff not found' };
-    }
-    
-    if (config.useSupabase) {
-      return await supabaseService.updateStaff(Number(id), data);
     }
     
     return this.put<Staff>(`/staff/${id}`, data);
@@ -154,7 +150,7 @@ export class StaffService extends ApiService {
       return { error: 'Staff not found' };
     }
     
-    return super.delete(`/staff/${id}`);
+    return super.delete<boolean>(`/staff/${id}`);
   }
   
   // Get payments for a staff member

@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { authService } from '@/services/auth.service';
-import { User, UserSession } from '@/models/user.model';
+import { User, UserSession, AuthResponse } from '@/models/user.model';
 import { useToast } from './use-toast';
 
 // Local storage keys
@@ -84,7 +84,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
       
-      const { user, token, expiresAt } = response.data;
+      // Fixed: accessing the correct AuthResponse properties
+      const { user, token, expiresAt } = response.data as AuthResponse;
       
       // Store session data
       localStorage.setItem(TOKEN_KEY, token);

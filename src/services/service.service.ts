@@ -48,12 +48,21 @@ export class ServiceService extends ApiService {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 500));
       const newId = Math.max(...mockServices.map(s => s.id || 0), 0) + 1;
-      // Fix: Ensure duration is a number
+      
+      // Fix: Create a proper Service object matching the required type
       const newService: Service = { 
-        ...data, 
         id: newId,
-        duration: typeof data.duration === 'string' ? parseInt(data.duration, 10) : data.duration
+        name: data.name,
+        description: data.description || "",
+        duration: typeof data.duration === 'string' ? parseInt(data.duration, 10) : data.duration,
+        price: data.price,
+        image_urls: data.image_urls || [],
+        benefits: data.benefits || [],
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       };
+      
       mockServices.push(newService);
       return { data: newService };
     }
@@ -67,13 +76,15 @@ export class ServiceService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockServices.findIndex(s => s.id === Number(id));
       if (index >= 0) {
-        // Fix: Ensure duration is a number
+        // Fix: Update properly handling all type conversions
         mockServices[index] = { 
           ...mockServices[index], 
           ...data,
+          // Ensure duration is a number
           duration: data.duration !== undefined ? 
             (typeof data.duration === 'string' ? parseInt(data.duration, 10) : data.duration) : 
-            mockServices[index].duration
+            mockServices[index].duration,
+          updated_at: new Date().toISOString()
         };
         return { data: mockServices[index] };
       }
@@ -95,7 +106,7 @@ export class ServiceService extends ApiService {
       return { error: 'Service not found' };
     }
     
-    return super.delete(`/services/${id}`);
+    return super.delete<boolean>(`/services/${id}`);
   }
 }
 
