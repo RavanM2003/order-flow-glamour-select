@@ -25,16 +25,17 @@ export interface StaffFormData {
   paymentType?: 'salary' | 'commission' | 'both';
 }
 
-// Add the missing StaffPayment and StaffServiceRecord types
+// Updated StaffPayment type
 export interface StaffPayment {
   id: number;
   staffId: number;
   amount: number;
   date: string;
-  type: 'salary' | 'commission' | 'bonus';
+  type: 'salary' | 'commission' | 'bonus' | 'expense';
   description?: string;
 }
 
+// Updated StaffServiceRecord to include amount property
 export interface StaffServiceRecord {
   id: number;
   staffId: number;
@@ -44,4 +45,5 @@ export interface StaffServiceRecord {
   customerId?: number;
   customerName?: string;
   commission?: number;
+  amount: number;  // Added amount property
 }

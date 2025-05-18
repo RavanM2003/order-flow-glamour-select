@@ -6,12 +6,17 @@ import { config } from '@/config/env';
 import { mockProducts } from '@/lib/mock-data';
 import { supabaseService } from './supabase.service';
 
+// Update the mock products to include isServiceRelated field
+export interface MockProduct extends Product {
+  isServiceRelated?: boolean;
+}
+
 export class ProductService extends ApiService {
   // Get all products
   async getAll(): Promise<ApiResponse<Product[]>> {
     if (!config.useSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 250));
-      return { data: [...mockProducts] };
+      return { data: [...mockProducts] as Product[] };
     }
     
     if (config.useSupabase) {
@@ -26,7 +31,7 @@ export class ProductService extends ApiService {
     if (!config.useSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 250));
       // Filter products that are marked as service-related
-      const products = mockProducts.filter(p => p.isServiceRelated === true);
+      const products = (mockProducts as MockProduct[]).filter(p => p.isServiceRelated === true);
       return { data: [...products] };
     }
     
@@ -96,7 +101,7 @@ export class ProductService extends ApiService {
     return this.put<Product>(`/products/${id}`, data);
   }
   
-  // Delete a product - fix the method to match the base class
+  // Delete a product
   async delete(id: number | string): Promise<ApiResponse<boolean>> {
     if (!config.useSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -112,8 +117,7 @@ export class ProductService extends ApiService {
       return await supabaseService.deleteProduct(Number(id));
     }
     
-    // Use the generic version without type argument
-    return this.delete(`/products/${id}`);
+    return super.delete(`/products/${id}`);
   }
 }
 

@@ -1,3 +1,4 @@
+
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -29,6 +30,14 @@ const mockStaffPayments: StaffPayment[] = [
     date: '2025-05-01',
     type: 'salary',
     description: 'Monthly salary for May 2025'
+  },
+  {
+    id: 4,
+    staffId: 1,
+    amount: 75,
+    date: '2025-05-15',
+    type: 'expense',
+    description: 'Equipment expense'
   }
 ];
 
@@ -36,7 +45,6 @@ const mockServiceRecords: StaffServiceRecord[] = [
   {
     id: 1,
     staffId: 1,
-    appointmentId: 101,
     customerId: 201,
     customerName: 'John Doe',
     serviceId: 301,
@@ -48,7 +56,6 @@ const mockServiceRecords: StaffServiceRecord[] = [
   {
     id: 2,
     staffId: 1,
-    appointmentId: 102,
     customerId: 202,
     customerName: 'Jane Smith',
     serviceId: 302,
@@ -60,7 +67,6 @@ const mockServiceRecords: StaffServiceRecord[] = [
   {
     id: 3,
     staffId: 2,
-    appointmentId: 103,
     customerId: 203,
     customerName: 'Alice Johnson',
     serviceId: 303,
@@ -97,11 +103,12 @@ export class StaffService extends ApiService {
   async create(data: Partial<Staff>): Promise<ApiResponse<Staff>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 400));
-      const newId = Math.max(...mockStaff.map(s => s.id), 0) + 1;
-      // Fix: Make sure position is properly handled
+      const newId = Math.max(...mockStaff.map(s => s.id || 0), 0) + 1;
+      // Ensure required fields
       const newStaff: Staff = { 
         ...data, 
         id: newId,
+        name: data.name || '',
         position: data.position || '',
         specializations: data.specializations || []
       };
@@ -127,7 +134,7 @@ export class StaffService extends ApiService {
     return this.put<Staff>(`/staff/${id}`, data);
   }
   
-  // Delete a staff member - Override the base method to match the expected signature
+  // Delete a staff member
   async delete(id: number | string): Promise<ApiResponse<boolean>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -139,7 +146,7 @@ export class StaffService extends ApiService {
       return { error: 'Staff not found' };
     }
     
-    return this.delete(`/staff/${id}`);
+    return super.delete(`/staff/${id}`);
   }
   
   // Get payments for a staff member

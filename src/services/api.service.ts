@@ -63,8 +63,8 @@ export abstract class ApiService {
     }
   }
 
-  // Generic DELETE request
-  protected async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
+  // Generic DELETE request - updated to remove type parameter
+  protected async delete(endpoint: string): Promise<ApiResponse<boolean>> {
     try {
       const response = await fetch(`${this.baseEndpoint}${endpoint}`, {
         method: 'DELETE',
@@ -75,15 +75,15 @@ export abstract class ApiService {
       
       // Some DELETE responses may return no content
       if (response.status === 204) {
-        return { data: true as unknown as T };
+        return { data: true };
       }
       
       try {
         const responseData = await response.json();
-        return { data: responseData };
+        return { data: responseData || true };
       } catch (e) {
         // If parsing fails, return true as success indicator
-        return { data: true as unknown as T };
+        return { data: true };
       }
     } catch (error) {
       console.error(`DELETE request failed for ${endpoint}:`, error);

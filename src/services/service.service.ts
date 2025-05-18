@@ -83,7 +83,7 @@ export class ServiceService extends ApiService {
     return this.put<Service>(`/services/${id}`, data);
   }
   
-  // Delete a service - Override the base method to match the expected signature
+  // Delete a service
   async delete(id: number | string): Promise<ApiResponse<boolean>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -95,8 +95,7 @@ export class ServiceService extends ApiService {
       return { error: 'Service not found' };
     }
     
-    // Use the generic version without type parameter
-    return this.delete(`/services/${id}`);
+    return super.delete(`/services/${id}`);
   }
 }
 

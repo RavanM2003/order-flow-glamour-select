@@ -1,170 +1,197 @@
 
+// Fix the User type assignment in loginWithEmailPassword method
+import { User, UserCredentials, UserRole } from '@/models/user.model';
 import { ApiService } from './api.service';
-import { AuthFormData, AuthResponse, User, UserFormData, UserRole } from '@/models/user.model';
 import { ApiResponse } from '@/models/types';
 import { config } from '@/config/env';
 
-// Mock users for development
-const mockUsers = [
+// Mock users for fake authentication
+const MOCK_USERS = [
   {
     id: '1',
-    email: 'admin@salon.com',
+    email: 'admin@example.com',
+    password: 'password123',
     firstName: 'Admin',
     lastName: 'User',
     role: 'admin' as UserRole,
     isActive: true,
-    lastLogin: new Date().toISOString()
+    lastLogin: '2025-05-15T12:00:00Z',
+    staffId: 1
   },
   {
     id: '2',
-    email: 'staff@salon.com',
+    email: 'staff@example.com',
+    password: 'password123',
     firstName: 'Staff',
-    lastName: 'User',
+    lastName: 'Member',
     role: 'staff' as UserRole,
-    staffId: 1,
     isActive: true,
-    lastLogin: new Date().toISOString()
+    lastLogin: '2025-05-14T10:30:00Z',
+    staffId: 2
   },
   {
     id: '3',
-    email: 'cashier@salon.com',
-    firstName: 'Cashier',
+    email: 'user@example.com',
+    password: 'password123',
+    firstName: 'Regular',
     lastName: 'User',
-    role: 'cashier' as UserRole,
+    role: 'user' as UserRole,
     isActive: true,
-    lastLogin: new Date().toISOString()
+    lastLogin: '2025-05-13T15:45:00Z'
   }
 ];
 
-// Mock passwords for development (in a real app, passwords would be hashed in the database)
-const mockPasswords: Record<string, string> = {
-  'admin@salon.com': 'admin123',
-  'staff@salon.com': 'staff123',
-  'cashier@salon.com': 'cashier123'
-};
-
 export class AuthService extends ApiService {
+  private readonly storageKey = 'auth_user';
   
-  // Login method
-  async login(credentials: AuthFormData): Promise<ApiResponse<AuthResponse>> {
-    if (config.usesMockData) {
-      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network delay
-      
-      const user = mockUsers.find(u => u.email === credentials.email);
-      
-      if (!user || mockPasswords[credentials.email] !== credentials.password) {
-        return { error: 'Invalid email or password' };
-      }
-      
-      // Generate a mock JWT token
-      const token = `mock-jwt-token-${Date.now()}`;
-      const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours from now
-      
-      // Update last login time
-      user.lastLogin = new Date().toISOString();
-      
-      return {
-        data: {
-          user,
-          token,
-          expiresAt
-        }
-      };
-    }
-    
-    return this.post<AuthResponse>('/auth/login', credentials);
+  constructor() {
+    super();
+    // Initialize user from localStorage if available
+    this.loadUserFromStorage();
   }
   
-  // Register new user (for admin to create new staff accounts)
-  async register(userData: UserFormData): Promise<ApiResponse<User>> {
+  private user: User | null = null;
+  private tokenExpiryTime: number | null = null;
+  
+  // Get the current authenticated user
+  getCurrentUser(): User | null {
+    return this.user;
+  }
+  
+  // Check if user is authenticated
+  isAuthenticated(): boolean {
+    return !!this.user && (this.tokenExpiryTime === null || this.tokenExpiryTime > Date.now());
+  }
+  
+  // Login with email and password
+  async loginWithEmailPassword(credentials: UserCredentials): Promise<ApiResponse<User>> {
     if (config.usesMockData) {
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Check if email already exists
-      if (mockUsers.some(u => u.email === userData.email)) {
-        return { error: 'Email already in use' };
+      // Find mock user with matching credentials
+      const foundUser = MOCK_USERS.find(user => 
+        user.email === credentials.email && 
+        user.password === credentials.password
+      );
+      
+      if (foundUser) {
+        // Create a copy without the password
+        const { password, ...userData } = foundUser;
+        
+        // Set expiry for 24 hours
+        this.tokenExpiryTime = Date.now() + 24 * 60 * 60 * 1000;
+        
+        // Create user object
+        if (userData.staffId) {
+          this.user = {
+            id: userData.id,
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            role: userData.role,
+            isActive: userData.isActive,
+            lastLogin: userData.lastLogin,
+            staffId: userData.staffId
+          };
+        } else {
+          this.user = {
+            id: userData.id,
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            role: userData.role,
+            isActive: userData.isActive,
+            lastLogin: userData.lastLogin
+          };
+        }
+        
+        // Save to localStorage
+        this.saveUserToStorage();
+        
+        return { data: this.user };
       }
       
-      // Fix: Make sure staffId is properly handled
-      const newUser = {
-        id: String(mockUsers.length + 1),
-        email: userData.email,
-        firstName: userData.firstName || '',
-        lastName: userData.lastName || '',
-        role: userData.role,
-        ...(userData.staffId !== undefined ? { staffId: userData.staffId } : {}),
-        isActive: userData.isActive !== false, // Default to active
-        lastLogin: null
-      } as User;
+      return { error: 'Invalid email or password' };
+    }
+    
+    return this.post<User>('/auth/login', credentials);
+  }
+  
+  // Register a new user
+  async register(userData: Partial<User> & { password: string }): Promise<ApiResponse<User>> {
+    if (config.usesMockData) {
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Add new user to mock database
-      mockUsers.push(newUser);
-      
-      // Add password to mock passwords store
-      if (userData.password) {
-        mockPasswords[userData.email] = userData.password;
+      // Check if email is already in use
+      if (MOCK_USERS.some(user => user.email === userData.email)) {
+        return { error: 'Email is already in use' };
       }
       
-      return { data: newUser };
+      // In a real system, we'd create the user in the database here
+      return { data: { id: '999', ...userData, role: 'user', isActive: true } as User };
     }
     
     return this.post<User>('/auth/register', userData);
   }
   
-  // Get current user by token
-  async getCurrentUser(token: string): Promise<ApiResponse<User>> {
-    if (config.usesMockData) {
-      await new Promise(resolve => setTimeout(resolve, 300)); // Simulate network delay
-      
-      // In a real app, would validate JWT token, but for mock just return first user
-      // This is simplified for demo purposes
-      return { data: mockUsers[0] };
-    }
-    
-    return this.get<User>('/auth/me');
+  // Logout the current user
+  logout(): void {
+    this.user = null;
+    this.tokenExpiryTime = null;
+    localStorage.removeItem(this.storageKey);
   }
   
-  // Update user
-  async updateUser(id: string, userData: Partial<UserFormData>): Promise<ApiResponse<User>> {
-    if (config.usesMockData) {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
-      
-      const userIndex = mockUsers.findIndex(u => u.id === id);
-      if (userIndex === -1) {
-        return { error: 'User not found' };
-      }
-      
-      // Update user data
-      mockUsers[userIndex] = {
-        ...mockUsers[userIndex],
-        ...userData,
-        email: userData.email || mockUsers[userIndex].email,
-        firstName: userData.firstName || mockUsers[userIndex].firstName,
-        lastName: userData.lastName || mockUsers[userIndex].lastName,
-        role: userData.role || mockUsers[userIndex].role,
-        staffId: userData.staffId !== undefined ? userData.staffId : mockUsers[userIndex].staffId,
-        isActive: userData.isActive !== undefined ? userData.isActive : mockUsers[userIndex].isActive
-      };
-      
-      // Update password if provided
-      if (userData.password) {
-        mockPasswords[mockUsers[userIndex].email] = userData.password;
-      }
-      
-      return { data: mockUsers[userIndex] };
+  // Save user to localStorage
+  private saveUserToStorage(): void {
+    if (this.user) {
+      localStorage.setItem(this.storageKey, JSON.stringify({
+        user: this.user,
+        expiry: this.tokenExpiryTime
+      }));
     }
-    
-    return this.put<User>(`/users/${id}`, userData);
   }
   
-  // Get all users (admin only)
-  async getAllUsers(): Promise<ApiResponse<User[]>> {
+  // Load user from localStorage
+  private loadUserFromStorage(): void {
+    const storedData = localStorage.getItem(this.storageKey);
+    
+    if (storedData) {
+      try {
+        const { user, expiry } = JSON.parse(storedData);
+        
+        // Check if token is expired
+        if (!expiry || expiry > Date.now()) {
+          this.user = user;
+          this.tokenExpiryTime = expiry;
+        } else {
+          // Clear expired data
+          localStorage.removeItem(this.storageKey);
+        }
+      } catch (e) {
+        console.error('Failed to parse stored auth data', e);
+        localStorage.removeItem(this.storageKey);
+      }
+    }
+  }
+  
+  // Request password reset
+  async requestPasswordReset(email: string): Promise<ApiResponse<boolean>> {
     if (config.usesMockData) {
-      await new Promise(resolve => setTimeout(resolve, 400)); // Simulate network delay
-      return { data: [...mockUsers] };
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return { data: true };
     }
     
-    return this.get<User[]>('/users');
+    return this.post<boolean>('/auth/request-reset', { email });
+  }
+  
+  // Reset password with token
+  async resetPassword(token: string, newPassword: string): Promise<ApiResponse<boolean>> {
+    if (config.usesMockData) {
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      return { data: true };
+    }
+    
+    return this.post<boolean>('/auth/reset-password', { token, newPassword });
   }
 }
 
