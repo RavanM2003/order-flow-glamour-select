@@ -142,7 +142,12 @@ export class StaffService extends ApiService {
   async getAll(): Promise<ApiResponse<Staff[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 250));
-      return { data: [...mockStaff] as Staff[] };
+      // Ensure position is set for all staff
+      const staffList = [...mockStaff].map(s => ({
+        ...s,
+        position: s.position || 'Staff Member' // Default position if not set
+      })) as Staff[];
+      return { data: staffList };
     }
     
     return this.get('/staff');
@@ -152,8 +157,17 @@ export class StaffService extends ApiService {
   async getById(id: number | string): Promise<ApiResponse<Staff>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 200));
-      const staff = mockStaff.find(s => s.id === Number(id)) as Staff | undefined;
-      return { data: staff ? {...staff} : undefined, error: staff ? undefined : 'Staff not found' };
+      const staff = mockStaff.find(s => s.id === Number(id));
+      if (!staff) {
+        return { error: 'Staff not found' };
+      }
+      // Ensure position is set
+      return { 
+        data: {
+          ...staff,
+          position: staff.position || 'Staff Member' // Default position if not set
+        } as Staff
+      };
     }
     
     return this.get(`/staff/${id}`);
@@ -169,7 +183,7 @@ export class StaffService extends ApiService {
       const newStaff: Staff = { 
         id: newId,
         name: data.name,
-        position: data.position || '',
+        position: data.position || 'Staff Member', // Ensure position is never empty
         specializations: data.specializations || [],
         email: data.email,
         phone: data.phone,
@@ -197,9 +211,11 @@ export class StaffService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockStaff.findIndex(s => s.id === Number(id));
       if (index >= 0) {
+        // Ensure position remains set when updating
         mockStaff[index] = { 
           ...mockStaff[index], 
           ...data,
+          position: data.position || mockStaff[index].position || 'Staff Member',
           updated_at: new Date().toISOString()
         } as Staff;
         return { data: mockStaff[index] as Staff };

@@ -3,7 +3,7 @@
 export interface Staff {
   id: number;  // Changed from optional to required for consistency
   name: string;
-  position?: string;
+  position: string;  // Changed from optional to required to match usage in services
   specializations?: string[];
   email?: string;
   phone?: string;
@@ -17,7 +17,7 @@ export interface Staff {
 
 export interface StaffFormData {
   name: string;
-  position?: string;
+  position: string;  // Changed from optional to required
   specializations?: string[];
   email?: string;
   phone?: string;

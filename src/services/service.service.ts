@@ -15,7 +15,7 @@ export class ServiceService extends ApiService {
         ...s,
         duration: typeof s.duration === 'string' ? parseInt(s.duration, 10) : s.duration
       }));
-      return { data: services };
+      return { data: services as Service[] };
     }
     
     return this.get('/services');
@@ -36,7 +36,7 @@ export class ServiceService extends ApiService {
         data: {
           ...service,
           duration: typeof service.duration === 'string' ? parseInt(service.duration, 10) : service.duration
-        }
+        } as Service
       };
     }
     
@@ -84,8 +84,8 @@ export class ServiceService extends ApiService {
           // Ensure duration is a number
           duration: data.duration !== undefined ? Number(data.duration) : mockServices[index].duration,
           updated_at: new Date().toISOString()
-        };
-        return { data: mockServices[index] };
+        } as Service;
+        return { data: mockServices[index] as Service };
       }
       return { error: 'Service not found' };
     }

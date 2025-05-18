@@ -1,9 +1,9 @@
 
 export interface Service {
-  id?: number;
+  id: number; // Changed from optional to required for consistency with usage in service
   name: string;
   description?: string;
-  duration: number; // Duration in minutes
+  duration: number; // Duration in minutes (must be number type)
   price: number;
   image_urls?: string[];
   benefits?: string[];
@@ -16,7 +16,7 @@ export interface Service {
 export interface ServiceFormData {
   name: string;
   description?: string;
-  duration: number;
+  duration: number; // Ensure this is a number
   price: number;
   image_urls?: string[];
   benefits?: string[];
