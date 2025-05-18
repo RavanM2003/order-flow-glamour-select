@@ -25,5 +25,5 @@ export type { Feature, FeatureFormData } from './types';
 // Export service
 export { featureService } from './services/feature.service';
 
-// Export routes - can be imported in your main routes file
+// Export routes
 export { default as featureRoutes } from './routes';

@@ -1,3 +1,4 @@
+
 /**
  * Feature Service
  * 
@@ -69,9 +70,9 @@ class FeatureService extends ApiService {
   }
 
   // Delete a feature
-  async deleteFeature(id: number | string): Promise<ApiResponse<boolean>> {
+  async delete(id: number | string): Promise<ApiResponse<boolean>> {
     try {
-      const response = await this.delete<boolean>(`${this.endpoint}/${id}`);
+      const response = await super.delete<boolean>(`${this.endpoint}/${id}`);
       return response;
     } catch (error) {
       console.error(`Error deleting feature ${id}:`, error);

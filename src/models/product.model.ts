@@ -3,21 +3,22 @@
 export interface Product {
   id?: number;
   name: string;
-  price?: number;
-  quantity?: number;
+  price: number;
   description?: string;
-  imageUrl?: string;
-  categoryId?: number;
-  isServiceRelated?: boolean;
-  stock?: number;
+  image_url?: string | null;
+  stock_quantity?: number;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+  isServiceRelated?: boolean; // Client-side flag to identify service-related products
 }
 
 export interface ProductFormData {
   name: string;
   price: number;
   description?: string;
-  stock?: number;
+  stock_quantity?: number;
   category?: string;
-  imageUrl?: string;
+  image_url?: string | null;
   isServiceRelated?: boolean;
 }

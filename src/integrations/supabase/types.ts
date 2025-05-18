@@ -9,6 +9,71 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      appointment_services: {
+        Row: {
+          appointment_id: number | null
+          created_at: string | null
+          duration: number
+          id: number
+          note: string | null
+          product_id: number | null
+          quantity: number | null
+          service_id: number | null
+          staff_id: number | null
+        }
+        Insert: {
+          appointment_id?: number | null
+          created_at?: string | null
+          duration: number
+          id?: number
+          note?: string | null
+          product_id?: number | null
+          quantity?: number | null
+          service_id?: number | null
+          staff_id?: number | null
+        }
+        Update: {
+          appointment_id?: number | null
+          created_at?: string | null
+          duration?: number
+          id?: number
+          note?: string | null
+          product_id?: number | null
+          quantity?: number | null
+          service_id?: number | null
+          staff_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_services_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_services_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_services_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_services_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           appointment_date: string
@@ -16,8 +81,6 @@ export type Database = {
           customer_id: number | null
           end_time: string
           id: number
-          service_id: number | null
-          staff_id: number | null
           start_time: string
           status: string | null
           updated_at: string | null
@@ -28,8 +91,6 @@ export type Database = {
           customer_id?: number | null
           end_time: string
           id?: number
-          service_id?: number | null
-          staff_id?: number | null
           start_time: string
           status?: string | null
           updated_at?: string | null
@@ -40,8 +101,6 @@ export type Database = {
           customer_id?: number | null
           end_time?: string
           id?: number
-          service_id?: number | null
-          staff_id?: number | null
           start_time?: string
           status?: string | null
           updated_at?: string | null
@@ -52,20 +111,6 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointments_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointments_staff_id_fkey"
-            columns: ["staff_id"]
-            isOneToOne: false
-            referencedRelation: "staff"
             referencedColumns: ["id"]
           },
         ]
@@ -143,7 +188,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: number
-          image_url: string | null
+          image_url: Json | null
           is_active: boolean | null
           name: string
           price: number
@@ -154,7 +199,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: number
-          image_url?: string | null
+          image_url?: Json | null
           is_active?: boolean | null
           name: string
           price: number
@@ -165,7 +210,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: number
-          image_url?: string | null
+          image_url?: Json | null
           is_active?: boolean | null
           name?: string
           price?: number
@@ -210,7 +255,7 @@ export type Database = {
           description: string | null
           duration: number
           id: number
-          image_url: string | null
+          image_urls: Json | null
           is_active: boolean | null
           name: string
           price: number
@@ -221,7 +266,7 @@ export type Database = {
           description?: string | null
           duration: number
           id?: number
-          image_url?: string | null
+          image_urls?: Json | null
           is_active?: boolean | null
           name: string
           price: number
@@ -232,7 +277,7 @@ export type Database = {
           description?: string | null
           duration?: number
           id?: number
-          image_url?: string | null
+          image_urls?: Json | null
           is_active?: boolean | null
           name?: string
           price?: number
@@ -246,7 +291,7 @@ export type Database = {
           id: number
           name: string
           position: string | null
-          specializations: string[] | null
+          specializations: Json | null
           updated_at: string | null
         }
         Insert: {
@@ -254,7 +299,7 @@ export type Database = {
           id?: number
           name: string
           position?: string | null
-          specializations?: string[] | null
+          specializations?: Json | null
           updated_at?: string | null
         }
         Update: {
@@ -262,7 +307,7 @@ export type Database = {
           id?: number
           name?: string
           position?: string | null
-          specializations?: string[] | null
+          specializations?: Json | null
           updated_at?: string | null
         }
         Relationships: []
