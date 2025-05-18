@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,12 +32,12 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     description: initialData?.description || "",
     relatedProducts: initialData?.relatedProducts || [],
     benefits: initialData?.benefits || [],
-    imageUrl: initialData?.imageUrl || "",
+    image_urls: initialData?.image_urls || [],
   });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.imageUrl || null
+    initialData?.image_urls?.[0] || null
   );
 
   const handleChange = (
@@ -62,10 +63,11 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
       // and get back a URL. For now, we'll just use a local preview.
       const reader = new FileReader();
       reader.onload = () => {
-        setImagePreview(reader.result as string);
+        const imageUrl = reader.result as string;
+        setImagePreview(imageUrl);
         setFormData((prev) => ({ 
           ...prev, 
-          imageUrl: reader.result as string 
+          image_urls: [imageUrl] 
         }));
       };
       reader.readAsDataURL(file);
@@ -76,10 +78,10 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     fileInputRef.current?.click();
   };
 
-  const handleProductsChange = (selectedProducts: number[]) => {
+  const handleProductsChange = (selectedProducts: string[]) => {
     setFormData((prev) => ({
       ...prev,
-      relatedProducts: selectedProducts,
+      relatedProducts: selectedProducts.map(id => Number(id)),
     }));
   };
 
@@ -128,6 +130,9 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     value: product.id?.toString() || "",
     label: product.name,
   }));
+
+  // Get selected product IDs as strings
+  const selectedProductIds = formData.relatedProducts?.map(id => id.toString()) || [];
 
   return (
     <Card>
@@ -230,8 +235,8 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
               <Label>Related Products</Label>
               <MultiSelect
                 options={productOptions}
-                selected={formData.relatedProducts?.map(id => id.toString()) || []}
-                onChange={(values) => handleProductsChange(values.map(v => Number(v)))}
+                value={selectedProductIds}
+                onChange={handleProductsChange}
                 placeholder="Select related products"
               />
               <p className="text-xs text-muted-foreground mt-1">

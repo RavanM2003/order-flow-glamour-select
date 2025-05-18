@@ -96,7 +96,7 @@ export class ProductService extends ApiService {
     return this.put<Product>(`/products/${id}`, data);
   }
   
-  // Delete a product
+  // Delete a product - fix the method to match the base class
   async delete(id: number | string): Promise<ApiResponse<boolean>> {
     if (!config.useSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -112,7 +112,8 @@ export class ProductService extends ApiService {
       return await supabaseService.deleteProduct(Number(id));
     }
     
-    return this.delete<boolean>(`/products/${id}`);
+    // Use the generic version without type argument
+    return this.delete(`/products/${id}`);
   }
 }
 

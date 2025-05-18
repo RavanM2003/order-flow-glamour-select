@@ -64,7 +64,7 @@ export abstract class ApiService {
   }
 
   // Generic DELETE request
-  protected async delete<T = boolean>(endpoint: string): Promise<ApiResponse<T>> {
+  protected async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseEndpoint}${endpoint}`, {
         method: 'DELETE',

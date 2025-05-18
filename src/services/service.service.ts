@@ -47,7 +47,7 @@ export class ServiceService extends ApiService {
   async create(data: ServiceFormData): Promise<ApiResponse<Service>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 500));
-      const newId = Math.max(...mockServices.map(s => s.id), 0) + 1;
+      const newId = Math.max(...mockServices.map(s => s.id || 0), 0) + 1;
       // Fix: Ensure duration is a number
       const newService: Service = { 
         ...data, 
@@ -95,6 +95,7 @@ export class ServiceService extends ApiService {
       return { error: 'Service not found' };
     }
     
+    // Use the generic version without type parameter
     return this.delete(`/services/${id}`);
   }
 }

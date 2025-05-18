@@ -24,3 +24,24 @@ export interface StaffFormData {
   commissionRate?: number;
   paymentType?: 'salary' | 'commission' | 'both';
 }
+
+// Add the missing StaffPayment and StaffServiceRecord types
+export interface StaffPayment {
+  id: number;
+  staffId: number;
+  amount: number;
+  date: string;
+  type: 'salary' | 'commission' | 'bonus';
+  description?: string;
+}
+
+export interface StaffServiceRecord {
+  id: number;
+  staffId: number;
+  serviceId: number;
+  serviceName: string;
+  date: string;
+  customerId?: number;
+  customerName?: string;
+  commission?: number;
+}

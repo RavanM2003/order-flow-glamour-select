@@ -19,6 +19,9 @@ export interface MultiSelectProps {
   defaultValue?: string[];
   className?: string;
   disabled?: boolean;
+  // Add support for both 'selected' and 'value' props
+  selected?: string[];
+  value?: string[];
 }
 
 const MultiSelect = ({
@@ -26,17 +29,24 @@ const MultiSelect = ({
   onChange,
   placeholder = "Select items...",
   defaultValue = [],
+  selected,
+  value,
   className,
   disabled = false
 }: MultiSelectProps) => {
   const [open, setOpen] = useState(false);
-  const [selectedValues, setSelectedValues] = useState<string[]>(defaultValue);
+  // Use selected or value prop if provided, falling back to defaultValue
+  const [selectedValues, setSelectedValues] = useState<string[]>(selected || value || defaultValue);
 
   useEffect(() => {
-    if (defaultValue) {
+    if (selected !== undefined) {
+      setSelectedValues(selected);
+    } else if (value !== undefined) {
+      setSelectedValues(value);
+    } else if (defaultValue) {
       setSelectedValues(defaultValue);
     }
-  }, [defaultValue]);
+  }, [defaultValue, selected, value]);
 
   const handleSelectItem = (value: string) => {
     const newSelectedValues = selectedValues.includes(value)
