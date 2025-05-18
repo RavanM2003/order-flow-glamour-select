@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,8 @@ import {
   DialogHeader,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useServices } from "@/hooks/use-services";
+import { Service } from "@/models/service.model";
 
 const allProducts = [
   "Moisturizer Cream",
@@ -55,113 +57,11 @@ const ServicesTab = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [addServiceOpen, setAddServiceOpen] = useState(false);
-  const [services, setServices] = useState([
-    {
-      id: 1,
-      name: "Facial Treatment",
-      price: 150,
-      duration: "60 min",
-      products: ["Moisturizer Cream", "Anti-Aging Serum"],
-      description:
-        "Our signature facial treatment begins with a detailed consultation to understand your skin concerns and goals. The procedure starts with a gentle cleansing to remove surface impurities, followed by a deeper cleanse to prepare your skin for treatment. Next, our esthetician will perform a careful exfoliation to remove dead skin cells, unclog pores, and reveal fresh skin underneath. Depending on your skin's needs, we may incorporate steam to soften the skin and facilitate extraction of clogged pores. A specialized mask will then be applied to address your specific concerns, whether it's hydration, purification, or anti-aging. During the mask application, you'll enjoy a relaxing hand and arm massage. The treatment concludes with the application of toner, serums, moisturizer, and SPF protection tailored to your skin type. Our specialists will also provide you with personalized skincare recommendations to maintain your results at home.",
-      benefits: [
-        "Deep cleansing and pore purification",
-        "Improved skin texture and tone",
-        "Reduced appearance of fine lines and wrinkles",
-        "Hydration boost for glowing skin",
-        "Customized treatment for your skin type",
-      ],
-    },
-    {
-      id: 2,
-      name: "Massage Therapy",
-      price: 120,
-      duration: "45 min",
-      products: ["Massage Oil"],
-      description:
-        "Experience ultimate relaxation with our therapeutic massage treatments. Our skilled massage therapists use various techniques to relieve muscle tension, reduce stress, and promote overall wellness. Each session begins with a consultation to understand your specific needs and preferences. We offer a range of massage styles, from gentle Swedish massage to deep tissue therapy, all performed in our serene, private treatment rooms. Our therapists use premium massage oils and lotions to enhance the experience and nourish your skin. The treatment includes a brief consultation, the main massage session, and time to relax afterward. We also provide personalized recommendations for maintaining the benefits between sessions.",
-      benefits: [
-        "Relieves muscle tension and pain",
-        "Reduces stress and anxiety",
-        "Improves circulation and flexibility",
-        "Promotes better sleep quality",
-        "Enhances overall well-being",
-      ],
-    },
-    {
-      id: 3,
-      name: "Manicure",
-      price: 50,
-      duration: "30 min",
-      products: ["Nail Polish", "Cuticle Oil"],
-    },
-    {
-      id: 4,
-      name: "Hair Styling",
-      price: 80,
-      duration: "45 min",
-      products: ["Hair Care Kit", "Styling Gel"],
-    },
-    {
-      id: 5,
-      name: "Makeup Application",
-      price: 90,
-      duration: "60 min",
-      products: ["Foundation", "Lipstick", "Mascara"],
-    },
-    {
-      id: 6,
-      name: "Body Treatment",
-      price: 140,
-      duration: "90 min",
-      products: ["Body Scrub", "Body Lotion"],
-    },
-    {
-      id: 7,
-      name: "Hair Coloring",
-      price: 110,
-      duration: "120 min",
-      products: ["Color Protection Shampoo"],
-    },
-    {
-      id: 8,
-      name: "Eyebrow Shaping",
-      price: 35,
-      duration: "20 min",
-      products: ["Eyebrow Gel"],
-    },
-    {
-      id: 9,
-      name: "Pedicure",
-      price: 60,
-      duration: "45 min",
-      products: ["Foot Cream", "Nail Polish"],
-    },
-    {
-      id: 10,
-      name: "Waxing",
-      price: 40,
-      duration: "30 min",
-      products: ["Soothing Gel"],
-    },
-    {
-      id: 11,
-      name: "Hair Treatment",
-      price: 95,
-      duration: "60 min",
-      products: ["Hair Mask", "Hair Serum"],
-    },
-    {
-      id: 12,
-      name: "Eyelash Extensions",
-      price: 120,
-      duration: "90 min",
-      products: ["Eyelash Cleanser"],
-    },
-  ]);
+  const { services: apiServices, fetchServices, createService, updateService, deleteService, isLoading } = useServices();
+  const [services, setServices] = useState<Service[]>([]);
   const [newService, setNewService] = useState({
     name: "",
-    duration: "",
+    duration: 30, // Changed to number
     price: "",
     products: [],
     description: "",
@@ -172,7 +72,7 @@ const ServicesTab = () => {
   const [editService, setEditService] = useState(null);
   const [editServiceForm, setEditServiceForm] = useState({
     name: "",
-    duration: "",
+    duration: 30, // Changed to number
     price: "",
     products: [],
     description: "",
@@ -182,6 +82,15 @@ const ServicesTab = () => {
   const { toast, dismiss } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [serviceToDelete, setServiceToDelete] = useState<number | null>(null);
+
+  // Effect to fetch services from API
+  useEffect(() => {
+    if (apiServices.length > 0) {
+      setServices(apiServices);
+    } else {
+      fetchServices();
+    }
+  }, [apiServices, fetchServices]);
 
   // Filter services based on search term
   const filteredServices = services.filter((service) =>
@@ -196,7 +105,7 @@ const ServicesTab = () => {
   );
 
   // Add Service logic
-  const handleAddService = (e) => {
+  const handleAddService = async (e) => {
     e.preventDefault();
     if (
       !newService.name ||
@@ -207,25 +116,31 @@ const ServicesTab = () => {
       setAddServiceError("Name, duration, price, and description are required");
       return;
     }
-    setServices([
-      {
-        ...newService,
-        id: services.length + 1,
-        price: Number(newService.price),
-        benefits: newService.benefits.filter((b) => b.trim() !== ""),
-      },
-      ...services,
-    ]);
-    setNewService({
-      name: "",
-      duration: "",
-      price: "",
-      products: [],
-      description: "",
-      benefits: [],
-    });
-    setAddServiceOpen(false);
-    setAddServiceError("");
+
+    // Create service via API
+    const serviceData = {
+      name: newService.name,
+      description: newService.description,
+      duration: Number(newService.duration), // Ensure duration is a number
+      price: Number(newService.price),
+      benefits: newService.benefits.filter((b) => b.trim() !== ""),
+      relatedProducts: [], // Add any related products if needed
+    };
+    
+    const result = await createService(serviceData);
+    
+    if (result) {
+      setNewService({
+        name: "",
+        duration: 30,
+        price: "",
+        products: [],
+        description: "",
+        benefits: [],
+      });
+      setAddServiceOpen(false);
+      setAddServiceError("");
+    }
   };
 
   // Delete Service logic
@@ -234,11 +149,9 @@ const ServicesTab = () => {
     setDeleteDialogOpen(true);
   };
 
-  const confirmDeleteService = () => {
+  const confirmDeleteService = async () => {
     if (serviceToDelete) {
-      setServices((services) =>
-        services.filter((s) => s.id !== serviceToDelete)
-      );
+      await deleteService(serviceToDelete);
       setDeleteDialogOpen(false);
       setServiceToDelete(null);
     }
@@ -266,13 +179,14 @@ const ServicesTab = () => {
       duration: service.duration,
       price: service.price,
       products: service.products || [],
-      description: service.description,
+      description: service.description || "",
       benefits: service.benefits || [],
     });
     setEditServiceOpen(true);
     setEditServiceError("");
   };
-  const handleEditServiceSubmit = (e) => {
+  
+  const handleEditServiceSubmit = async (e) => {
     e.preventDefault();
     if (
       !editServiceForm.name ||
@@ -282,23 +196,37 @@ const ServicesTab = () => {
       setEditServiceError("All fields are required");
       return;
     }
-    setServices(
-      services.map((s) =>
-        s.id === editService.id
-          ? { ...s, ...editServiceForm, price: Number(editServiceForm.price) }
-          : s
-      )
-    );
-    setEditServiceOpen(false);
-    setEditService(null);
-    setEditServiceError("");
+
+    // Update service via API
+    const serviceData = {
+      name: editServiceForm.name,
+      description: editServiceForm.description,
+      duration: Number(editServiceForm.duration), // Ensure duration is a number
+      price: Number(editServiceForm.price),
+      benefits: editServiceForm.benefits,
+      relatedProducts: [], // Add any related products if needed
+    };
+    
+    const result = await updateService(editService.id, serviceData);
+    
+    if (result) {
+      setEditServiceOpen(false);
+      setEditService(null);
+      setEditServiceError("");
+    }
   };
+  
   const handleEditProductSelect = (product) => {
     setEditServiceForm((prev) =>
       prev.products.includes(product)
         ? { ...prev, products: prev.products.filter((p) => p !== product) }
         : { ...prev, products: [...prev.products, product] }
     );
+  };
+
+  // Format duration for display (convert minutes to a readable format)
+  const formatDuration = (minutes: number) => {
+    return `${minutes} min`;
   };
 
   return (
@@ -344,7 +272,7 @@ const ServicesTab = () => {
                   <TableCell>
                     <span className="inline-flex items-center">
                       <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                      {service.duration}
+                      {formatDuration(service.duration)}
                     </span>
                   </TableCell>
                   <TableCell className="text-right font-medium">
@@ -355,12 +283,12 @@ const ServicesTab = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {service.products.map((product, index) => (
+                      {service.relatedProducts?.map((productId, index) => (
                         <span
                           key={index}
                           className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full"
                         >
-                          {product}
+                          {productId}
                         </span>
                       ))}
                     </div>
@@ -434,10 +362,11 @@ const ServicesTab = () => {
             required
           />
           <Input
-            placeholder="Duration (e.g. 60 min)"
+            placeholder="Duration (minutes)"
+            type="number"
             value={newService.duration}
             onChange={(e) =>
-              setNewService({ ...newService, duration: e.target.value })
+              setNewService({ ...newService, duration: Number(e.target.value) })
             }
             required
           />
@@ -551,12 +480,13 @@ const ServicesTab = () => {
             required
           />
           <Input
-            placeholder="Duration (e.g. 60 min)"
+            placeholder="Duration (minutes)"
+            type="number"
             value={editServiceForm.duration}
             onChange={(e) =>
               setEditServiceForm({
                 ...editServiceForm,
-                duration: e.target.value,
+                duration: Number(e.target.value),
               })
             }
             required

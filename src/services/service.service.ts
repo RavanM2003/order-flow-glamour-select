@@ -49,7 +49,7 @@ export class ServiceService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 500));
       const newId = Math.max(...mockServices.map(s => s.id || 0), 0) + 1;
       
-      // Fix: Create a proper Service object matching the required type
+      // Fix: Create a proper Service object with duration as a number
       const newService: Service = { 
         id: newId,
         name: data.name,
