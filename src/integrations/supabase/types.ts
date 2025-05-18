@@ -9,153 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      booking_products: {
+      appointments: {
         Row: {
-          booking_id: string
+          appointment_date: string
           created_at: string | null
-          id: string
-          price: number
-          product_id: string
-          quantity: number
-        }
-        Insert: {
-          booking_id: string
-          created_at?: string | null
-          id?: string
-          price: number
-          product_id: string
-          quantity: number
-        }
-        Update: {
-          booking_id?: string
-          created_at?: string | null
-          id?: string
-          price?: number
-          product_id?: string
-          quantity?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "booking_products_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "booking_products_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      booking_services: {
-        Row: {
-          booking_id: string
-          created_at: string | null
-          id: string
-          price: number
-          service_id: string
-        }
-        Insert: {
-          booking_id: string
-          created_at?: string | null
-          id?: string
-          price: number
-          service_id: string
-        }
-        Update: {
-          booking_id?: string
-          created_at?: string | null
-          id?: string
-          price?: number
-          service_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "booking_services_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "booking_services_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      bookings: {
-        Row: {
-          created_at: string | null
-          customer_id: string
-          date: string
-          id: string
-          notes: string | null
+          customer_id: number | null
+          end_time: string
+          id: number
+          service_id: number | null
+          staff_id: number | null
+          start_time: string
           status: string | null
-          time: string
+          updated_at: string | null
         }
         Insert: {
+          appointment_date: string
           created_at?: string | null
-          customer_id: string
-          date: string
-          id?: string
-          notes?: string | null
+          customer_id?: number | null
+          end_time: string
+          id?: number
+          service_id?: number | null
+          staff_id?: number | null
+          start_time: string
           status?: string | null
-          time: string
+          updated_at?: string | null
         }
         Update: {
+          appointment_date?: string
           created_at?: string | null
-          customer_id?: string
-          date?: string
-          id?: string
-          notes?: string | null
+          customer_id?: number | null
+          end_time?: string
+          id?: number
+          service_id?: number | null
+          staff_id?: number | null
+          start_time?: string
           status?: string | null
-          time?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "bookings_customer_id_fkey"
+            foreignKeyName: "appointments_customer_id_fkey"
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      cash: {
-        Row: {
-          amount: number
-          created_at: string | null
-          id: string
-          order_id: string | null
-          type: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string | null
-          id?: string
-          order_id?: string | null
-          type: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string | null
-          id?: string
-          order_id?: string | null
-          type?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "cash_order_id_fkey"
-            columns: ["order_id"]
+            foreignKeyName: "appointments_service_id_fkey"
+            columns: ["service_id"]
             isOneToOne: false
-            referencedRelation: "orders"
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
             referencedColumns: ["id"]
           },
         ]
@@ -165,164 +75,197 @@ export type Database = {
           created_at: string | null
           email: string | null
           gender: string | null
-          id: string
+          id: number
           name: string
           phone: string | null
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           email?: string | null
           gender?: string | null
-          id?: string
+          id?: number
           name: string
           phone?: string | null
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           email?: string | null
           gender?: string | null
-          id?: string
+          id?: number
           name?: string
           phone?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
-      orders: {
+      payments: {
         Row: {
-          customer_id: string | null
-          date: string | null
-          id: string
-          notes: string | null
+          amount: number
+          appointment_id: number | null
+          created_at: string | null
+          id: number
+          payment_date: string | null
           status: string | null
-          total: number | null
-          user_id: string | null
+          updated_at: string | null
         }
         Insert: {
-          customer_id?: string | null
-          date?: string | null
-          id?: string
-          notes?: string | null
+          amount: number
+          appointment_id?: number | null
+          created_at?: string | null
+          id?: number
+          payment_date?: string | null
           status?: string | null
-          total?: number | null
-          user_id?: string | null
+          updated_at?: string | null
         }
         Update: {
-          customer_id?: string | null
-          date?: string | null
-          id?: string
-          notes?: string | null
+          amount?: number
+          appointment_id?: number | null
+          created_at?: string | null
+          id?: number
+          payment_date?: string | null
           status?: string | null
-          total?: number | null
-          user_id?: string | null
+          updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payments_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
           created_at: string | null
           description: string | null
-          id: string
+          id: number
+          image_url: string | null
+          is_active: boolean | null
           name: string
           price: number
-          quantity: number
+          stock_quantity: number | null
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
-          id?: string
+          id?: number
+          image_url?: string | null
+          is_active?: boolean | null
           name: string
           price: number
-          quantity?: number
+          stock_quantity?: number | null
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
-          id?: string
+          id?: number
+          image_url?: string | null
+          is_active?: boolean | null
           name?: string
           price?: number
-          quantity?: number
+          stock_quantity?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
-      profiles: {
+      service_products: {
         Row: {
-          created_at: string | null
-          email: string
-          id: string
-          role: string
+          product_id: number
+          service_id: number
         }
         Insert: {
-          created_at?: string | null
-          email: string
-          id: string
-          role: string
+          product_id: number
+          service_id: number
         }
         Update: {
-          created_at?: string | null
-          email?: string
-          id?: string
-          role?: string
+          product_id?: number
+          service_id?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "service_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_products_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
           created_at: string | null
           description: string | null
           duration: number
-          id: string
+          id: number
+          image_url: string | null
+          is_active: boolean | null
           name: string
           price: number
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
           duration: number
-          id?: string
+          id?: number
+          image_url?: string | null
+          is_active?: boolean | null
           name: string
           price: number
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
           duration?: number
-          id?: string
+          id?: number
+          image_url?: string | null
+          is_active?: boolean | null
           name?: string
           price?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
       staff: {
         Row: {
           created_at: string | null
-          id: string
+          id: number
           name: string
           position: string | null
-          user_id: string | null
+          specializations: string[] | null
+          updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          id?: string
+          id?: number
           name: string
           position?: string | null
-          user_id?: string | null
+          specializations?: string[] | null
+          updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          id?: string
+          id?: number
           name?: string
           position?: string | null
-          user_id?: string | null
+          specializations?: string[] | null
+          updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "staff_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {

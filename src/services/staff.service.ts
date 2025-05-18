@@ -1,4 +1,3 @@
-
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -99,13 +98,15 @@ export class StaffService extends ApiService {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 400));
       const newId = Math.max(...mockStaff.map(s => s.id), 0) + 1;
-      const newStaff = { 
+      // Fix: Make sure position is properly handled
+      const newStaff: Staff = { 
         ...data, 
         id: newId,
+        position: data.position || '',
         specializations: data.specializations || []
       };
-      mockStaff.push(newStaff as Staff);
-      return { data: newStaff as Staff };
+      mockStaff.push(newStaff);
+      return { data: newStaff };
     }
     
     return this.post<Staff>('/staff', data);
@@ -126,7 +127,7 @@ export class StaffService extends ApiService {
     return this.put<Staff>(`/staff/${id}`, data);
   }
   
-  // Delete a staff member
+  // Delete a staff member - Override the base method to match the expected signature
   async delete(id: number | string): Promise<ApiResponse<boolean>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -138,7 +139,7 @@ export class StaffService extends ApiService {
       return { error: 'Staff not found' };
     }
     
-    return this.delete<boolean>(`/staff/${id}`);
+    return this.delete(`/staff/${id}`);
   }
   
   // Get payments for a staff member

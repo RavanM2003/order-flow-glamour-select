@@ -85,16 +85,17 @@ export class AuthService extends ApiService {
         return { error: 'Email already in use' };
       }
       
-      const newUser: User = {
+      // Fix: Make sure staffId is properly handled
+      const newUser = {
         id: String(mockUsers.length + 1),
         email: userData.email,
         firstName: userData.firstName || '',
         lastName: userData.lastName || '',
         role: userData.role,
-        staffId: userData.staffId,
+        ...(userData.staffId !== undefined ? { staffId: userData.staffId } : {}),
         isActive: userData.isActive !== false, // Default to active
         lastLogin: null
-      };
+      } as User;
       
       // Add new user to mock database
       mockUsers.push(newUser);

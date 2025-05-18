@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +8,7 @@ import { useProducts } from "@/hooks/use-products";
 import { ServiceFormData } from "@/models/service.model";
 import { Plus, Trash, Upload } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { MultiSelect } from "@/components/common/MultiSelect";
+import MultiSelect from "@/components/common/MultiSelect";
 
 interface ServiceFormProps {
   initialData?: Partial<ServiceFormData>;

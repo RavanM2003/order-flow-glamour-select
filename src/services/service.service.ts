@@ -10,7 +10,12 @@ export class ServiceService extends ApiService {
   async getAll(): Promise<ApiResponse<Service[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 250));
-      return { data: [...mockServices] };
+      // Fix: Ensure duration is converted to number
+      const services = mockServices.map(s => ({
+        ...s,
+        duration: typeof s.duration === 'string' ? parseInt(s.duration, 10) : s.duration
+      }));
+      return { data: services };
     }
     
     return this.get<Service[]>('/services');
@@ -21,7 +26,18 @@ export class ServiceService extends ApiService {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 200));
       const service = mockServices.find(s => s.id === Number(id));
-      return { data: service ? {...service} : undefined, error: service ? undefined : 'Service not found' };
+      
+      if (!service) {
+        return { error: 'Service not found' };
+      }
+      
+      // Fix: Ensure duration is converted to number
+      return {
+        data: {
+          ...service,
+          duration: typeof service.duration === 'string' ? parseInt(service.duration, 10) : service.duration
+        }
+      };
     }
     
     return this.get<Service>(`/services/${id}`);
@@ -32,12 +48,14 @@ export class ServiceService extends ApiService {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 500));
       const newId = Math.max(...mockServices.map(s => s.id), 0) + 1;
-      const newService = { 
+      // Fix: Ensure duration is a number
+      const newService: Service = { 
         ...data, 
-        id: newId 
+        id: newId,
+        duration: typeof data.duration === 'string' ? parseInt(data.duration, 10) : data.duration
       };
-      mockServices.push(newService as Service);
-      return { data: newService as Service };
+      mockServices.push(newService);
+      return { data: newService };
     }
     
     return this.post<Service>('/services', data);
@@ -49,7 +67,14 @@ export class ServiceService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockServices.findIndex(s => s.id === Number(id));
       if (index >= 0) {
-        mockServices[index] = { ...mockServices[index], ...data };
+        // Fix: Ensure duration is a number
+        mockServices[index] = { 
+          ...mockServices[index], 
+          ...data,
+          duration: data.duration !== undefined ? 
+            (typeof data.duration === 'string' ? parseInt(data.duration, 10) : data.duration) : 
+            mockServices[index].duration
+        };
         return { data: mockServices[index] };
       }
       return { error: 'Service not found' };
@@ -58,7 +83,7 @@ export class ServiceService extends ApiService {
     return this.put<Service>(`/services/${id}`, data);
   }
   
-  // Delete a service
+  // Delete a service - Override the base method to match the expected signature
   async delete(id: number | string): Promise<ApiResponse<boolean>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -70,7 +95,7 @@ export class ServiceService extends ApiService {
       return { error: 'Service not found' };
     }
     
-    return this.delete<boolean>(`/services/${id}`);
+    return this.delete(`/services/${id}`);
   }
 }
 

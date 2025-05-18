@@ -9,6 +9,7 @@ export interface Product {
   imageUrl?: string;
   categoryId?: number;
   isServiceRelated?: boolean;
+  stock?: number;
 }
 
 export interface ProductFormData {

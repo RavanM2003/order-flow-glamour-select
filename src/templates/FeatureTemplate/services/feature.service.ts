@@ -1,4 +1,3 @@
-
 /**
  * Feature Service
  * 
@@ -11,10 +10,10 @@
  */
 
 import { ApiResponse } from '@/models/types';
-import { apiService } from '@/services/api.service';
+import { ApiService } from '@/services/api.service';
 import { Feature, FeatureFormData, FeatureFilters } from '../types';
 
-class FeatureService {
+class FeatureService extends ApiService {
   private endpoint = '/features'; // Change to your API endpoint
 
   // Get all features with optional filtering
@@ -27,7 +26,7 @@ class FeatureService {
       if (filters?.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
       
       const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-      const response = await apiService.get<Feature[]>(`${this.endpoint}${queryString}`);
+      const response = await this.get<Feature[]>(`${this.endpoint}${queryString}`);
       
       return response;
     } catch (error) {
@@ -39,7 +38,7 @@ class FeatureService {
   // Get a single feature by ID
   async getById(id: number | string): Promise<ApiResponse<Feature>> {
     try {
-      const response = await apiService.get<Feature>(`${this.endpoint}/${id}`);
+      const response = await this.get<Feature>(`${this.endpoint}/${id}`);
       return response;
     } catch (error) {
       console.error(`Error fetching feature ${id}:`, error);
@@ -50,7 +49,7 @@ class FeatureService {
   // Create a new feature
   async create(data: FeatureFormData): Promise<ApiResponse<Feature>> {
     try {
-      const response = await apiService.post<Feature>(this.endpoint, data);
+      const response = await this.post<Feature>(this.endpoint, data);
       return response;
     } catch (error) {
       console.error('Error creating feature:', error);
@@ -61,7 +60,7 @@ class FeatureService {
   // Update an existing feature
   async update(id: number | string, data: Partial<FeatureFormData>): Promise<ApiResponse<Feature>> {
     try {
-      const response = await apiService.put<Feature>(`${this.endpoint}/${id}`, data);
+      const response = await this.put<Feature>(`${this.endpoint}/${id}`, data);
       return response;
     } catch (error) {
       console.error(`Error updating feature ${id}:`, error);
@@ -72,7 +71,7 @@ class FeatureService {
   // Delete a feature
   async deleteFeature(id: number | string): Promise<ApiResponse<boolean>> {
     try {
-      const response = await apiService.delete<boolean>(`${this.endpoint}/${id}`);
+      const response = await this.delete<boolean>(`${this.endpoint}/${id}`);
       return response;
     } catch (error) {
       console.error(`Error deleting feature ${id}:`, error);

@@ -20,8 +20,8 @@ export class ProductService extends ApiService {
   async getByServiceId(serviceId: number | string): Promise<ApiResponse<Product[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 250));
-      // Filter products that are marked as service-related
-      const products = mockProducts.filter(p => p.isServiceRelated);
+      // Fixed: Filter products that are marked as service-related
+      const products = mockProducts.filter(p => p.isServiceRelated === true);
       return { data: [...products] };
     }
     
@@ -44,13 +44,13 @@ export class ProductService extends ApiService {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 500));
       const newId = Math.max(...mockProducts.map(p => p.id || 0), 0) + 1;
-      const newProduct = { 
+      const newProduct: Product = { 
         ...data, 
         id: newId,
-        quantity: data.stock
+        quantity: data.stock || 0
       };
-      mockProducts.push(newProduct as Product);
-      return { data: newProduct as Product };
+      mockProducts.push(newProduct);
+      return { data: newProduct };
     }
     
     return this.post<Product>('/products', data);
@@ -75,7 +75,7 @@ export class ProductService extends ApiService {
     return this.put<Product>(`/products/${id}`, data);
   }
   
-  // Delete a product
+  // Delete a product - Override the base method to match the expected signature
   async delete(id: number | string): Promise<ApiResponse<boolean>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -87,7 +87,7 @@ export class ProductService extends ApiService {
       return { error: 'Product not found' };
     }
     
-    return this.delete<boolean>(`/products/${id}`);
+    return this.delete(`/products/${id}`);
   }
 }
 

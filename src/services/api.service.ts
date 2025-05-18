@@ -69,7 +69,8 @@ export class ApiService {
     }
   }
 
-  protected async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
+  // Fix the delete method to allow proper overriding in derived classes
+  protected async delete<T = boolean>(endpoint: string): Promise<ApiResponse<T>> {
     try {
       if (config.usesMockData && endpoint.startsWith('/')) {
         console.log(`[MOCK] DELETE ${endpoint}`);
