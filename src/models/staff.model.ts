@@ -1,15 +1,17 @@
 
-// Staff model and related types
+// Staff member model
 export interface Staff {
-  id: number;
+  id?: number;
   name: string;
   position?: string;
   specializations?: string[];
   email?: string;
   phone?: string;
   salary?: number;
-  commissionRate?: number; // Commission percentage (1-100)
+  commissionRate?: number;
   paymentType?: 'salary' | 'commission' | 'both';
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface StaffFormData {
@@ -21,26 +23,4 @@ export interface StaffFormData {
   salary?: number;
   commissionRate?: number;
   paymentType?: 'salary' | 'commission' | 'both';
-}
-
-export interface StaffPayment {
-  id: number;
-  staffId: number;
-  amount: number;
-  date: string;
-  type: 'salary' | 'commission' | 'expense';
-  description?: string;
-}
-
-export interface StaffServiceRecord {
-  id: number;
-  staffId: number;
-  appointmentId: number;
-  customerId: number;
-  customerName: string;
-  serviceId: number;
-  serviceName: string;
-  date: string;
-  amount: number;
-  commission?: number;
 }

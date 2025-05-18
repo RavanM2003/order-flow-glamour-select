@@ -11,6 +11,7 @@ export interface Product {
   created_at?: string;
   updated_at?: string;
   isServiceRelated?: boolean; // Client-side flag to identify service-related products
+  quantity?: number; // For use in cart/orders
 }
 
 export interface ProductFormData {

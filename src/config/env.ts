@@ -6,6 +6,11 @@ interface EnvConfig {
   usesMockData: boolean;
   useSupabase: boolean;
   appName: string;
+  featureFlags: {
+    showDebugInfo: boolean;
+    enableAdvancedFiltering: boolean;
+    enableBatchOperations: boolean;
+  };
 }
 
 // Current environment
@@ -18,19 +23,34 @@ const envConfigs: Record<Environment, EnvConfig> = {
     apiBaseUrl: import.meta.env.VITE_API_URL || '/api',
     usesMockData: true,
     useSupabase: true,
-    appName: 'Gözəllik Salonu (Dev)'
+    appName: 'Gözəllik Salonu (Dev)',
+    featureFlags: {
+      showDebugInfo: true,
+      enableAdvancedFiltering: true,
+      enableBatchOperations: false
+    }
   },
   staging: {
     apiBaseUrl: import.meta.env.VITE_API_URL || '/api',
     usesMockData: true,
     useSupabase: false,
-    appName: 'Gözəllik Salonu (Staging)'
+    appName: 'Gözəllik Salonu (Staging)',
+    featureFlags: {
+      showDebugInfo: true,
+      enableAdvancedFiltering: true,
+      enableBatchOperations: true
+    }
   },
   production: {
     apiBaseUrl: import.meta.env.VITE_API_URL || '/api',
     usesMockData: false,
     useSupabase: true,
-    appName: 'Gözəllik Salonu'
+    appName: 'Gözəllik Salonu',
+    featureFlags: {
+      showDebugInfo: false,
+      enableAdvancedFiltering: true,
+      enableBatchOperations: true
+    }
   }
 };
 

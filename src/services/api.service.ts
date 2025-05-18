@@ -1,89 +1,92 @@
 
-// Core API service with base functionality
-import { config } from '@/config/env';
+// Basic API service with common CRUD operations
 import { ApiResponse } from '@/models/types';
 
-// Generic API class with common methods
-export class ApiService {
-  protected baseUrl: string;
+export abstract class ApiService {
+  // Base endpoint for all requests
+  protected baseEndpoint: string = '/api';
 
-  constructor() {
-    this.baseUrl = config.apiBaseUrl;
-  }
-
+  // Generic GET request
   protected async get<T>(endpoint: string): Promise<ApiResponse<T>> {
     try {
-      // If using mock data, return a mock promise instead of actual fetch
-      if (config.usesMockData && endpoint.startsWith('/')) {
-        console.log(`[MOCK] GET ${endpoint}`);
-        // The actual mock data will be implemented in feature-specific services
-        return { error: 'Mock not implemented for this endpoint' };
+      const response = await fetch(`${this.baseEndpoint}${endpoint}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-
-      const response = await fetch(`${this.baseUrl}${endpoint}`);
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
-      return await response.json();
+      const data = await response.json();
+      return { data };
     } catch (error) {
-      console.error('API Error:', error);
+      console.error(`GET request failed for ${endpoint}:`, error);
       return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
+  // Generic POST request
   protected async post<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
     try {
-      if (config.usesMockData && endpoint.startsWith('/')) {
-        console.log(`[MOCK] POST ${endpoint}`, data);
-        return { error: 'Mock not implemented for this endpoint' };
-      }
-
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetch(`${this.baseEndpoint}${endpoint}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
-      return await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const responseData = await response.json();
+      return { data: responseData };
     } catch (error) {
-      console.error('API Error:', error);
+      console.error(`POST request failed for ${endpoint}:`, error);
       return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
+  // Generic PUT request
   protected async put<T>(endpoint: string, data: any): Promise<ApiResponse<T>> {
     try {
-      if (config.usesMockData && endpoint.startsWith('/')) {
-        console.log(`[MOCK] PUT ${endpoint}`, data);
-        return { error: 'Mock not implemented for this endpoint' };
-      }
-
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetch(`${this.baseEndpoint}${endpoint}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
-      return await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const responseData = await response.json();
+      return { data: responseData };
     } catch (error) {
-      console.error('API Error:', error);
+      console.error(`PUT request failed for ${endpoint}:`, error);
       return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }
 
-  // Fix the delete method to allow proper overriding in derived classes
+  // Generic DELETE request
   protected async delete<T = boolean>(endpoint: string): Promise<ApiResponse<T>> {
     try {
-      if (config.usesMockData && endpoint.startsWith('/')) {
-        console.log(`[MOCK] DELETE ${endpoint}`);
-        return { error: 'Mock not implemented for this endpoint' };
-      }
-
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetch(`${this.baseEndpoint}${endpoint}`, {
         method: 'DELETE',
       });
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
-      return await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // Some DELETE responses may return no content
+      if (response.status === 204) {
+        return { data: true as unknown as T };
+      }
+      
+      try {
+        const responseData = await response.json();
+        return { data: responseData };
+      } catch (e) {
+        // If parsing fails, return true as success indicator
+        return { data: true as unknown as T };
+      }
     } catch (error) {
-      console.error('API Error:', error);
+      console.error(`DELETE request failed for ${endpoint}:`, error);
       return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   }

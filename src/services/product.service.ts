@@ -112,7 +112,7 @@ export class ProductService extends ApiService {
       return await supabaseService.deleteProduct(Number(id));
     }
     
-    return super.delete<boolean>(`/products/${id}`);
+    return this.delete<boolean>(`/products/${id}`);
   }
 }
 

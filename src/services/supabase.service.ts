@@ -18,7 +18,7 @@ export class SupabaseService {
       
       if (error) throw error;
       
-      return { data: data as Product[] };
+      return { data: data as unknown as Product[] };
     } catch (error) {
       console.error('Error fetching products:', error);
       return { error: 'Failed to fetch products', data: null };
@@ -35,7 +35,7 @@ export class SupabaseService {
       
       if (error) throw error;
       
-      return { data: data as Product };
+      return { data: data as unknown as Product };
     } catch (error) {
       console.error(`Error fetching product ${id}:`, error);
       return { error: `Failed to fetch product ${id}`, data: null };
@@ -58,7 +58,7 @@ export class SupabaseService {
       
       if (error) throw error;
       
-      return { data: data as Product };
+      return { data: data as unknown as Product };
     } catch (error) {
       console.error('Error creating product:', error);
       return { error: 'Failed to create product', data: null };
@@ -82,7 +82,7 @@ export class SupabaseService {
       
       if (error) throw error;
       
-      return { data: data as Product };
+      return { data: data as unknown as Product };
     } catch (error) {
       console.error(`Error updating product ${id}:`, error);
       return { error: `Failed to update product ${id}`, data: null };
@@ -124,29 +124,13 @@ export class SupabaseService {
         
         if (productsError) throw productsError;
         
-        return { data: products as Product[] };
+        return { data: products as unknown as Product[] };
       }
       
       return { data: [] };
     } catch (error) {
       console.error(`Error fetching products for service ${serviceId}:`, error);
       return { error: `Failed to fetch products for service ${serviceId}`, data: null };
-    }
-  }
-
-  // Services
-  async getServices(): Promise<ApiResponse<Service[]>> {
-    try {
-      const { data, error } = await supabase
-        .from('services')
-        .select('*');
-      
-      if (error) throw error;
-      
-      return { data: data as Service[] };
-    } catch (error) {
-      console.error('Error fetching services:', error);
-      return { error: 'Failed to fetch services', data: null };
     }
   }
 
@@ -159,7 +143,14 @@ export class SupabaseService {
       
       if (error) throw error;
       
-      return { data: data as Customer[] };
+      // Add calculated fields for frontend
+      const customersWithExtras = data.map(customer => ({
+        ...customer,
+        lastVisit: new Date().toISOString().split('T')[0], // Default to today
+        totalSpent: 0 // Default to 0
+      }));
+      
+      return { data: customersWithExtras as Customer[] };
     } catch (error) {
       console.error('Error fetching customers:', error);
       return { error: 'Failed to fetch customers', data: null };
@@ -176,7 +167,14 @@ export class SupabaseService {
       
       if (error) throw error;
       
-      return { data: data as Customer };
+      // Add calculated fields for frontend
+      const customerWithExtras = {
+        ...data,
+        lastVisit: new Date().toISOString().split('T')[0], // Default to today
+        totalSpent: 0 // Default to 0
+      };
+      
+      return { data: customerWithExtras as Customer };
     } catch (error) {
       console.error(`Error fetching customer ${id}:`, error);
       return { error: `Failed to fetch customer ${id}`, data: null };
@@ -204,8 +202,8 @@ export class SupabaseService {
       // Transform the data to match our frontend model
       const appointments = data.map(appointment => {
         const services = appointment.appointment_services
-          .filter(as => as.service_id)
-          .map(as => ({
+          .filter((as: any) => as.service_id)
+          .map((as: any) => ({
             id: as.service_id,
             name: as.services?.name || '',
             price: as.services?.price || 0,
@@ -213,8 +211,8 @@ export class SupabaseService {
           }));
         
         const products = appointment.appointment_services
-          .filter(as => as.product_id)
-          .map(as => ({
+          .filter((as: any) => as.product_id)
+          .map((as: any) => ({
             id: as.product_id,
             name: as.products?.name || '',
             price: as.products?.price || 0,
@@ -222,8 +220,8 @@ export class SupabaseService {
           }));
         
         const serviceProviders = appointment.appointment_services
-          .filter(as => as.staff_id)
-          .map(as => ({
+          .filter((as: any) => as.staff_id)
+          .map((as: any) => ({
             id: as.staff_id,
             name: as.staff?.name || '',
             serviceId: as.service_id
@@ -264,10 +262,10 @@ export class SupabaseService {
       // Transform specializations from JSONB to string[]
       const staffWithParsedSpecializations = data.map(staff => ({
         ...staff,
-        specializations: staff.specializations ? JSON.parse(staff.specializations) : []
+        specializations: staff.specializations ? JSON.parse(staff.specializations as string) : []
       }));
       
-      return { data: staffWithParsedSpecializations as Staff[] };
+      return { data: staffWithParsedSpecializations as unknown as Staff[] };
     } catch (error) {
       console.error('Error fetching staff:', error);
       return { error: 'Failed to fetch staff', data: null };

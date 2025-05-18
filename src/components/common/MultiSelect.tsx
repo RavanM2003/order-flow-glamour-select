@@ -1,91 +1,139 @@
-import React, { useState, useRef, useEffect } from 'react';
 
-interface Option {
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Check } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
+
+export interface MultiSelectOption {
   value: string;
   label: string;
 }
 
-interface MultiSelectProps {
-  options: Option[];
-  value: string[];
-  onChange: (value: string[]) => void;
+export interface MultiSelectProps {
+  options: MultiSelectOption[];
+  onChange: (values: string[]) => void;
   placeholder?: string;
+  defaultValue?: string[];
+  className?: string;
+  disabled?: boolean;
 }
 
-const MultiSelect: React.FC<MultiSelectProps> = ({ options, value, onChange, placeholder }) => {
+const MultiSelect = ({
+  options,
+  onChange,
+  placeholder = "Select items...",
+  defaultValue = [],
+  className,
+  disabled = false
+}: MultiSelectProps) => {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [selectedValues, setSelectedValues] = useState<string[]>(defaultValue);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSelect = (option: Option) => {
-    if (value.includes(option.value)) {
-      onChange(value.filter(v => v !== option.value));
-    } else {
-      onChange([...value, option.value]);
+    if (defaultValue) {
+      setSelectedValues(defaultValue);
     }
+  }, [defaultValue]);
+
+  const handleSelectItem = (value: string) => {
+    const newSelectedValues = selectedValues.includes(value)
+      ? selectedValues.filter(item => item !== value)
+      : [...selectedValues, value];
+
+    setSelectedValues(newSelectedValues);
+    onChange(newSelectedValues);
   };
 
-  const handleRemove = (val: string) => {
-    onChange(value.filter(v => v !== val));
+  const handleRemoveItem = (value: string) => {
+    const newSelectedValues = selectedValues.filter(item => item !== value);
+    setSelectedValues(newSelectedValues);
+    onChange(newSelectedValues);
   };
+
+  const selectedLabels = selectedValues.map(value => {
+    const option = options.find(opt => opt.value === value);
+    return option ? option.label : value;
+  });
 
   return (
-    <div className="relative" ref={ref}>
-      <div
-        className="min-h-[42px] border rounded px-3 py-2 flex flex-wrap gap-1 items-center cursor-pointer bg-white"
-        onClick={() => setOpen(o => !o)}
-        tabIndex={0}
-      >
-        {value.length === 0 && (
-          <span className="text-gray-400 select-none">{placeholder || 'Seçin...'}</span>
-        )}
-        {value.map(val => {
-          const opt = options.find(o => o.value === val);
-          return opt ? (
-            <span key={val} className="flex items-center bg-glamour-100 text-glamour-800 rounded px-2 py-1 text-xs mr-1 mb-1">
-              {opt.label}
-              <button
-                type="button"
-                className="ml-1 text-gray-500 hover:text-red-500 focus:outline-none"
-                onClick={e => { e.stopPropagation(); handleRemove(val); }}
-                aria-label="Sil"
-              >
-                ×
-              </button>
-            </span>
-          ) : null;
-        })}
-      </div>
-      {open && (
-        <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
-          {options.map(opt => (
-            <div
-              key={opt.value}
-              className={`px-3 py-2 cursor-pointer flex items-center gap-2 hover:bg-glamour-50 ${value.includes(opt.value) ? 'bg-glamour-100 font-semibold' : ''}`}
-              onClick={() => handleSelect(opt)}
-            >
-              <input
-                type="checkbox"
-                checked={value.includes(opt.value)}
-                readOnly
-                className="accent-glamour-700"
-              />
-              <span>{opt.label}</span>
-            </div>
-          ))}
-        </div>
-      )}
+    <div className={cn("relative", className)}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className={cn(
+              "w-full justify-between text-left font-normal h-auto min-h-10",
+              !selectedValues.length && "text-muted-foreground",
+              disabled && "opacity-50 cursor-not-allowed"
+            )}
+            disabled={disabled}
+          >
+            {selectedValues.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {selectedLabels.map(label => (
+                  <Badge key={label} variant="secondary" className="mr-1 mb-1">
+                    {label}
+                    <button
+                      className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemoveItem(options.find(opt => opt.label === label)?.value || "");
+                        }
+                      }}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onClick={() => handleRemoveItem(options.find(opt => opt.label === label)?.value || "")}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            ) : (
+              placeholder
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0" align="start">
+          <Command>
+            <CommandInput placeholder="Search items..." />
+            <CommandEmpty>No item found.</CommandEmpty>
+            <CommandGroup className="max-h-64 overflow-auto">
+              {options.map((option) => {
+                const isSelected = selectedValues.includes(option.value);
+                return (
+                  <CommandItem
+                    key={option.value}
+                    onSelect={() => handleSelectItem(option.value)}
+                    className="flex items-center"
+                  >
+                    <div
+                      className={cn(
+                        "mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
+                        isSelected ? "bg-primary text-primary-foreground" : "opacity-50"
+                      )}
+                    >
+                      {isSelected && <Check className="h-3 w-3" />}
+                    </div>
+                    <span>{option.label}</span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
 
-export default MultiSelect; 
+export default MultiSelect;

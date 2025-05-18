@@ -26,15 +26,15 @@ const ProductForm: React.FC<ProductFormProps> = ({
     name: initialData?.name || "",
     price: initialData?.price || 0,
     description: initialData?.description || "",
-    stock: initialData?.stock || 0,
+    stock_quantity: initialData?.stock_quantity || 0,
     category: initialData?.category || "",
-    imageUrl: initialData?.imageUrl || "",
+    image_url: initialData?.image_url || "",
     isServiceRelated: initialData?.isServiceRelated || false,
   });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(
-    initialData?.imageUrl || null
+    initialData?.image_url || null
   );
   const [hasServiceRelation, setHasServiceRelation] = useState<boolean>(
     initialData?.isServiceRelated || false
@@ -46,13 +46,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
         name: initialData.name || "",
         price: initialData.price || 0,
         description: initialData.description || "",
-        stock: initialData.stock || 0,
+        stock_quantity: initialData.stock_quantity || 0,
         category: initialData.category || "",
-        imageUrl: initialData.imageUrl || "",
+        image_url: initialData.image_url || "",
         isServiceRelated: initialData.isServiceRelated || false,
       });
       setHasServiceRelation(initialData.isServiceRelated || false);
-      setImagePreview(initialData.imageUrl || null);
+      setImagePreview(initialData.image_url || null);
     }
   }, [initialData]);
 
@@ -91,7 +91,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         setImagePreview(reader.result as string);
         setFormData((prev) => ({ 
           ...prev, 
-          imageUrl: reader.result as string 
+          image_url: reader.result as string 
         }));
       };
       reader.readAsDataURL(file);
@@ -114,7 +114,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     setImagePreview(null);
     setFormData((prev) => ({
       ...prev,
-      imageUrl: "",
+      image_url: "",
     }));
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -207,14 +207,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="stock">Stock Quantity</Label>
+                <Label htmlFor="stock_quantity">Stock Quantity</Label>
                 <Input
-                  id="stock"
-                  name="stock"
+                  id="stock_quantity"
+                  name="stock_quantity"
                   type="number"
                   min="0"
                   step="1"
-                  value={formData.stock}
+                  value={formData.stock_quantity}
                   onChange={handleChange}
                   placeholder="0"
                 />

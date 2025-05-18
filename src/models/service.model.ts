@@ -1,26 +1,31 @@
 
-// Service model and related types
 export interface Service {
-  id: number;
+  id?: number;
   name: string;
-  price: number;
-  duration: number; // Duration in minutes (integer)
   description?: string;
-  relatedProducts?: number[];
+  price: number;
+  duration: number;
+  image_urls?: string[];
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
   benefits?: string[];
-  imageUrl?: string;
+  relatedProducts?: number[];
 }
 
 export interface ServiceFormData {
   name: string;
-  price: number;
-  duration: number; // Duration in minutes (integer)
   description?: string;
-  relatedProducts?: number[];
+  price: number;
+  duration: number;
+  image_urls?: string[];
   benefits?: string[];
-  imageUrl?: string;
+  relatedProducts?: number[];
 }
 
-export interface ServiceBenefit {
-  text: string;
+export interface ServiceProvider {
+  id: number;
+  name: string;
+  serviceId?: number;
+  specializations?: string[];
 }
