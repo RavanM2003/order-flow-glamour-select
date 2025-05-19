@@ -14,12 +14,12 @@ export interface MockProduct extends Product {
 export class ProductService extends ApiService {
   // Get all products
   async getAll(): Promise<ApiResponse<Product[]>> {
-    if (!config.useSupabase && config.usesMockData) {
+    if (!config.usesSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 250));
       return { data: [...mockProducts] as Product[] };
     }
     
-    if (config.useSupabase) {
+    if (config.usesSupabase) {
       return await supabaseService.getProducts();
     }
     
@@ -28,7 +28,7 @@ export class ProductService extends ApiService {
   
   // Get products related to a service
   async getByServiceId(serviceId: number | string): Promise<ApiResponse<Product[]>> {
-    if (!config.useSupabase && config.usesMockData) {
+    if (!config.usesSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 250));
       // Filter products that are marked as service-related
       // Use type assertion to avoid type errors with isServiceRelated
@@ -36,7 +36,7 @@ export class ProductService extends ApiService {
       return { data: [...products] };
     }
     
-    if (config.useSupabase) {
+    if (config.usesSupabase) {
       return await supabaseService.getServiceProducts(Number(serviceId));
     }
     
@@ -45,13 +45,13 @@ export class ProductService extends ApiService {
   
   // Get a single product by id
   async getById(id: number | string): Promise<ApiResponse<Product>> {
-    if (!config.useSupabase && config.usesMockData) {
+    if (!config.usesSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 200));
       const product = mockProducts.find(p => p.id === Number(id));
       return { data: product ? {...product} : undefined, error: product ? undefined : 'Product not found' };
     }
     
-    if (config.useSupabase) {
+    if (config.usesSupabase) {
       return await supabaseService.getProductById(Number(id));
     }
     
@@ -60,7 +60,7 @@ export class ProductService extends ApiService {
   
   // Create a new product
   async create(data: ProductFormData): Promise<ApiResponse<Product>> {
-    if (!config.useSupabase && config.usesMockData) {
+    if (!config.usesSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 500));
       const newId = Math.max(...mockProducts.map(p => p.id || 0), 0) + 1;
       const newProduct: Product = { 
@@ -72,7 +72,7 @@ export class ProductService extends ApiService {
       return { data: newProduct };
     }
     
-    if (config.useSupabase) {
+    if (config.usesSupabase) {
       return await supabaseService.createProduct(data);
     }
     
@@ -81,7 +81,7 @@ export class ProductService extends ApiService {
   
   // Update an existing product
   async update(id: number | string, data: Partial<ProductFormData>): Promise<ApiResponse<Product>> {
-    if (!config.useSupabase && config.usesMockData) {
+    if (!config.usesSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockProducts.findIndex(p => p.id === Number(id));
       if (index >= 0) {
@@ -95,7 +95,7 @@ export class ProductService extends ApiService {
       return { error: 'Product not found' };
     }
     
-    if (config.useSupabase) {
+    if (config.usesSupabase) {
       return await supabaseService.updateProduct(Number(id), data);
     }
     
@@ -104,7 +104,7 @@ export class ProductService extends ApiService {
   
   // Override delete method with specific implementation
   async delete(id: number | string): Promise<ApiResponse<boolean>> {
-    if (!config.useSupabase && config.usesMockData) {
+    if (!config.usesSupabase && config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 300));
       const index = mockProducts.findIndex(p => p.id === Number(id));
       if (index >= 0) {
@@ -114,7 +114,7 @@ export class ProductService extends ApiService {
       return { error: 'Product not found' };
     }
     
-    if (config.useSupabase) {
+    if (config.usesSupabase) {
       return await supabaseService.deleteProduct(Number(id));
     }
     

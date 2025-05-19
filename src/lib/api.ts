@@ -1,5 +1,4 @@
-
-import { config, currentEnv } from '@/config/env';
+import { config } from '@/config/env';
 import { mockCustomers, mockAppointments, mockServices, mockProducts, mockStaff } from './mock-data';
 
 // Define API endpoints with environment awareness
