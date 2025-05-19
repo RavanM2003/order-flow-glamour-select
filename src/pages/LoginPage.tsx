@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { Loader2, UserCheck } from "lucide-react";
+import { Loader2, UserCheck, AlertCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { config } from '@/config/env';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { supabase } from '@/integrations/supabase/client';
 
 const LoginPage = () => {
   const { session, login, isLoading } = useAuth();
@@ -22,6 +24,31 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [authDebug, setAuthDebug] = useState<string | null>(null);
+  
+  // Check for Supabase connection issues
+  useEffect(() => {
+    const checkSupabaseConnection = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('services')
+          .select('count()', { count: 'exact', head: true });
+        
+        if (error) {
+          console.error('Supabase connection test error:', error);
+          setAuthDebug(`Supabase bağlantı xətası: ${error.message}`);
+        } else {
+          console.log('Supabase connection successful');
+          setAuthDebug(null);
+        }
+      } catch (err) {
+        console.error('Unexpected error in Supabase connection test:', err);
+        setAuthDebug('Supabase ilə gözlənilməz bağlantı xətası');
+      }
+    };
+    
+    checkSupabaseConnection();
+  }, []);
   
   // Redirect if user is already logged in
   if (session.isAuthenticated) {
@@ -41,6 +68,7 @@ const LoginPage = () => {
         return;
       }
       
+      console.log('Attempting login with Supabase...');
       const success = await login(email, password);
       
       if (success) {
@@ -55,7 +83,8 @@ const LoginPage = () => {
         setError('Email və ya şifrə yanlışdır');
       }
     } catch (err) {
-      setError('Gözlənilməz bir xəta baş verdi');
+      const errorMessage = err instanceof Error ? err.message : 'Gözlənilməz bir xəta baş verdi';
+      setError(errorMessage);
       console.error('Login error:', err);
     } finally {
       setIsSubmitting(false);
@@ -70,6 +99,7 @@ const LoginPage = () => {
       setIsSubmitting(true);
       setError('');
       
+      console.log('Attempting login with Supabase test account...');
       const success = await login(userEmail, 'password123');
       
       if (success) {
@@ -84,7 +114,8 @@ const LoginPage = () => {
         setError('Test istifadəçi məlumatları ilə giriş alınmadı. Zəhmət olmasa administrator ilə əlaqə saxlayın.');
       }
     } catch (err) {
-      setError('Gözlənilməz bir xəta baş verdi');
+      const errorMessage = err instanceof Error ? err.message : 'Gözlənilməz bir xəta baş verdi';
+      setError(errorMessage);
       console.error('Login error:', err);
     } finally {
       setIsSubmitting(false);
@@ -178,6 +209,19 @@ const LoginPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {authDebug && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Supabase bağlantı xətası</AlertTitle>
+              <AlertDescription>
+                {authDebug}
+                <div className="mt-2 text-xs">
+                  Bu problemi həll etmək üçün şəbəkə bağlantınızı yoxlayın və ya administratorla əlaqə saxlayın.
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="p-3 rounded-md bg-red-50 text-red-600 text-sm">
@@ -293,7 +337,7 @@ const LoginPage = () => {
                   size="sm" 
                   onClick={() => loginAsUser('admin@example.com')}
                   className="text-xs"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !!authDebug}
                 >
                   <UserCheck className="h-3 w-3 mr-1" />
                   Super Admin
@@ -303,7 +347,7 @@ const LoginPage = () => {
                   size="sm" 
                   onClick={() => loginAsUser('staff@example.com')}
                   className="text-xs"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !!authDebug}
                 >
                   <UserCheck className="h-3 w-3 mr-1" />
                   Staff
@@ -313,7 +357,7 @@ const LoginPage = () => {
                   size="sm" 
                   onClick={() => loginAsUser('cash@example.com')}
                   className="text-xs"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !!authDebug}
                 >
                   <UserCheck className="h-3 w-3 mr-1" />
                   Cash Manager
@@ -323,7 +367,7 @@ const LoginPage = () => {
                   size="sm" 
                   onClick={() => loginAsUser('appointment@example.com')}
                   className="text-xs"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !!authDebug}
                 >
                   <UserCheck className="h-3 w-3 mr-1" />
                   Appointment
@@ -333,7 +377,7 @@ const LoginPage = () => {
                   size="sm" 
                   onClick={() => loginAsUser('service@example.com')}
                   className="text-xs"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !!authDebug}
                 >
                   <UserCheck className="h-3 w-3 mr-1" />
                   Service
@@ -343,7 +387,7 @@ const LoginPage = () => {
                   size="sm" 
                   onClick={() => loginAsUser('product@example.com')}
                   className="text-xs"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || !!authDebug}
                 >
                   <UserCheck className="h-3 w-3 mr-1" />
                   Product
@@ -358,6 +402,10 @@ const LoginPage = () => {
         <CardFooter>
           <p className="text-center text-sm text-gray-500 w-full">
             <span className="font-medium">Salon İdarəetmə Sistemi</span> - Təhlükəsiz giriş tələb olunur
+            <br />
+            <span className="text-xs mt-1 block">
+              {config.usesMockData ? 'Demo rejimində işləyir' : (config.usesSupabase ? 'Supabase ilə bağlantı var' : 'API ilə işləyir')}
+            </span>
           </p>
         </CardFooter>
       </Card>

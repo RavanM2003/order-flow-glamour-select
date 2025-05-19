@@ -69,20 +69,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Update session state based on auth state
   const updateSessionState = async (session: Session | null) => {
     if (session?.user) {
+      // First, update state with basic user data
+      setSession(prev => ({
+        ...prev,
+        user: session.user,
+        isAuthenticated: true
+      }));
+      
+      // Then fetch profile in background
       const profile = await fetchUserProfile(session.user.id);
       
-      setSession({
-        user: session.user,
-        isAuthenticated: true,
-        profile: profile ? {
-          firstName: profile.first_name,
-          lastName: profile.last_name,
-          role: profile.role as UserRole,
-          avatar: profile.avatar_url,
-          staffId: profile.staff_id,
-          roleId: profile.staff?.role_id
-        } : null
-      });
+      if (profile) {
+        setSession(prev => ({
+          ...prev,
+          profile: {
+            firstName: profile.first_name,
+            lastName: profile.last_name,
+            role: profile.role as UserRole,
+            avatar: profile.avatar_url,
+            staffId: profile.staff_id,
+            roleId: profile.staff?.role_id
+          }
+        }));
+      }
     } else {
       setSession({
         user: null,
@@ -94,25 +103,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   };
 
+  // Fix auth deadlock by avoiding direct calls within listener
+  const safeUpdateSessionState = (session: Session | null) => {
+    // Use setTimeout to avoid recursive deadlocks
+    setTimeout(() => {
+      updateSessionState(session);
+    }, 0);
+  };
+
   // Initialize auth state
   useEffect(() => {
+    console.log('Setting up auth state listener...');
+    
     // First, set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         console.log('Auth state changed:', event);
         setSupabaseSession(session);
-        
-        // Use setTimeout to prevent deadlocks
-        setTimeout(() => {
-          updateSessionState(session);
-        }, 0);
+        safeUpdateSessionState(session);
       }
     );
 
     // Then check for existing session
     const initAuth = async () => {
       try {
+        console.log('Checking for existing session...');
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Session data:', session ? 'Session exists' : 'No session');
         setSupabaseSession(session);
         await updateSessionState(session);
       } catch (error) {
@@ -133,15 +150,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
+      console.log('Attempting login for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
       if (error) {
+        console.error('Login error:', error.message);
         toast({
           variant: "destructive",
-          title: "Login failed",
+          title: "Giriş uğursuz oldu",
           description: error.message
         });
         setIsLoading(false);
@@ -149,20 +168,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.session) {
+        console.log('Login successful');
         toast({
-          title: "Login successful",
-          description: "Welcome back!"
+          title: "Giriş uğurlu",
+          description: "Xoş gəlmisiniz!"
         });
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login unexpected error:', error);
       toast({
         variant: "destructive",
-        title: "Login error",
-        description: "An unexpected error occurred"
+        title: "Giriş xətası",
+        description: "Gözlənilməz bir xəta baş verdi"
       });
       setIsLoading(false);
       return false;
@@ -173,15 +193,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
+      console.log('Attempting signup for:', email);
       const { data, error } = await supabase.auth.signUp({
         email,
         password
       });
 
       if (error) {
+        console.error('Signup error:', error.message);
         toast({
           variant: "destructive",
-          title: "Signup failed",
+          title: "Qeydiyyat uğursuz oldu",
           description: error.message
         });
         setIsLoading(false);
@@ -189,20 +211,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data.user) {
+        console.log('Signup successful');
         toast({
-          title: "Signup successful",
-          description: "Your account has been created. You can now log in."
+          title: "Qeydiyyat uğurlu",
+          description: "Hesabınız yaradıldı. İndi daxil ola bilərsiniz."
         });
         return true;
       }
 
       return false;
     } catch (error) {
-      console.error('Signup error:', error);
+      console.error('Signup unexpected error:', error);
       toast({
         variant: "destructive",
-        title: "Signup error",
-        description: "An unexpected error occurred"
+        title: "Qeydiyyat xətası",
+        description: "Gözlənilməz bir xəta baş verdi"
       });
       setIsLoading(false);
       return false;
@@ -211,19 +234,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Logout function
   const logout = async () => {
-    const { error } = await supabase.auth.signOut();
-    
-    if (error) {
-      console.error('Error signing out:', error);
+    try {
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error signing out:', error);
+        toast({
+          variant: "destructive",
+          title: "Çıxış xətası",
+          description: error.message
+        });
+      } else {
+        console.log('Logout successful');
+        toast({
+          title: "Çıxış edildi",
+          description: "Sistemdən uğurla çıxış etdiniz"
+        });
+      }
+    } catch (error) {
+      console.error('Logout unexpected error:', error);
       toast({
         variant: "destructive",
-        title: "Logout error",
-        description: error.message
-      });
-    } else {
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out"
+        title: "Çıxış xətası",
+        description: "Gözlənilməz bir xəta baş verdi"
       });
     }
   };
