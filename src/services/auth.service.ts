@@ -122,7 +122,7 @@ export class AuthService extends ApiService {
       },
       {
         id: '3',
-        email: 'cashier@example.com',
+        email: 'cash@example.com',
         password: 'password123',
         firstName: 'Cash',
         lastName: 'Manager',
@@ -131,6 +131,42 @@ export class AuthService extends ApiService {
         lastLogin: '2025-05-13T15:45:00Z',
         staffId: 3,
         roleId: 3
+      },
+      {
+        id: '4',
+        email: 'appointment@example.com',
+        password: 'password123',
+        firstName: 'Appointment',
+        lastName: 'Manager',
+        role: 'appointment' as UserRole,
+        isActive: true,
+        lastLogin: '2025-05-12T14:30:00Z',
+        staffId: 4,
+        roleId: 4
+      },
+      {
+        id: '5',
+        email: 'service@example.com',
+        password: 'password123',
+        firstName: 'Service',
+        lastName: 'Manager',
+        role: 'service' as UserRole,
+        isActive: true,
+        lastLogin: '2025-05-11T11:15:00Z',
+        staffId: 5,
+        roleId: 5
+      },
+      {
+        id: '6',
+        email: 'product@example.com',
+        password: 'password123',
+        firstName: 'Product',
+        lastName: 'Manager',
+        role: 'product' as UserRole,
+        isActive: true,
+        lastLogin: '2025-05-10T09:45:00Z',
+        staffId: 6,
+        roleId: 6
       }
     ];
       

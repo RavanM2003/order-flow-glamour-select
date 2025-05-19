@@ -47,9 +47,17 @@ const AdminHeader = () => {
                 variant="ghost"
                 size="icon"
                 onClick={() => setSearchVisible(true)}
-              ></Button>
+              >
+                <Search size={20} />
+              </Button>
             ) : (
-              <></>
+              <div className="relative w-full">
+                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Input
+                  placeholder="Search..."
+                  className="pl-8 pr-4"
+                />
+              </div>
             )}
           </div>
 

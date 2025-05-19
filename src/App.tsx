@@ -8,6 +8,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import { AuthProvider } from "./hooks/use-auth";
 import RequireAuth from "./components/auth/RequireAuth";
 import Index from "./pages/Index";
+import LoginPage from "./pages/LoginPage";
 import Login from "./pages/Login";
 import Booking from "./pages/Booking";
 import BookingDetails from "./pages/BookingDetails";
@@ -33,7 +34,8 @@ const App = () => (
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/old-login" element={<Login />} />
             <Route path="/booking" element={<Booking />} />
             <Route path="/booking-details/:orderId" element={<BookingDetails />} />
             
