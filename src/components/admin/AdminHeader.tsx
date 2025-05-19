@@ -1,29 +1,67 @@
 
-import React, { useState } from "react";
-import { Bell, Search, LogOut, Menu, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Bell, Search, LogOut, Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { config } from "@/config/env";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const AdminHeader = () => {
   const isMobile = useIsMobile();
   const [searchVisible, setSearchVisible] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [mockUser, setMockUser] = useState<any>(null);
+  
+  // Check for mock user
+  useEffect(() => {
+    const mockUserData = localStorage.getItem('MOCK_USER_DATA');
+    if (mockUserData) {
+      try {
+        const { user, expiry } = JSON.parse(mockUserData);
+        if (expiry && expiry > Date.now()) {
+          setMockUser(user);
+        } else {
+          localStorage.removeItem('MOCK_USER_DATA');
+        }
+      } catch (e) {
+        localStorage.removeItem('MOCK_USER_DATA');
+      }
+    }
+  }, []);
   
   // Determine environment indicator
   const getEnvIndicator = () => {
-    if (!config.featureFlags.showDebugInfo) return null;
+    if (!config.features.debugMode) return null;
     
     return (
       <div className="px-2 py-1 rounded text-xs font-semibold hidden md:block">
-        {config.usesMockData ? (
+        {mockUser ? (
+          <span className="text-purple-600">DEMO MODE</span>
+        ) : config.usesMockData ? (
           <span className="text-amber-600">LOCAL MODE</span>
         ) : (
           <span className="text-green-600">API MODE</span>
         )}
       </div>
     );
+  };
+
+  const handleLogout = () => {
+    // Check if this is a mock user
+    if (mockUser) {
+      localStorage.removeItem('MOCK_USER_DATA');
+      toast({
+        title: "Çıxış edildi",
+        description: "Demo rejimindən çıxış etdiniz"
+      });
+    }
+    
+    // Navigate to the home page
+    navigate('/');
   };
 
   return (
@@ -41,7 +79,13 @@ const AdminHeader = () => {
         </div>
       ) : (
         <>
-          <div className={cn("relative", isMobile ? "w-auto" : "w-64")}>
+          <div className={cn("flex items-center gap-2", isMobile ? "w-auto" : "w-64")}>
+            {mockUser && (
+              <div className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                Demo: {mockUser.role}
+              </div>
+            )}
+            
             {isMobile ? (
               <Button
                 variant="ghost"
@@ -62,6 +106,15 @@ const AdminHeader = () => {
           </div>
 
           <div className="flex items-center space-x-2 md:space-x-4">
+            {mockUser && (
+              <div className="hidden md:flex items-center mr-2">
+                <User size={16} className="text-gray-500 mr-2" />
+                <span className="text-sm">
+                  {mockUser.firstName} {mockUser.lastName}
+                </span>
+              </div>
+            )}
+            
             <Button variant="ghost" size="icon" className="relative">
               <Bell size={20} />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -70,9 +123,7 @@ const AdminHeader = () => {
             <Button
               variant="outline"
               className="flex items-center gap-1 md:gap-2"
-              onClick={() => {
-                window.location.href = "/";
-              }}
+              onClick={handleLogout}
             >
               <LogOut size={18} />
               {!isMobile && <span>Çıx</span>}

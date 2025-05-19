@@ -9,11 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Loader2, UserCheck } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { config } from '@/config/env';
+import { useToast } from '@/hooks/use-toast';
 
 const LoginPage = () => {
   const { session, login, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   
   // Login form state
   const [email, setEmail] = useState('');
@@ -43,8 +45,14 @@ const LoginPage = () => {
       
       if (success) {
         // Redirect to the page user was trying to access or to admin dashboard
+        toast({
+          title: "Uğurla giriş etdiniz",
+          description: "Admin panelinə yönləndirilirsiniz..."
+        });
         const redirect = location.state?.from?.pathname || '/admin';
         navigate(redirect, { replace: true });
+      } else {
+        setError('Email və ya şifrə yanlışdır');
       }
     } catch (err) {
       setError('Gözlənilməz bir xəta baş verdi');
@@ -66,14 +74,97 @@ const LoginPage = () => {
       
       if (success) {
         // Redirect to the page user was trying to access or to admin dashboard
+        toast({
+          title: "Uğurla giriş etdiniz",
+          description: "Admin panelinə yönləndirilirsiniz..."
+        });
         const redirect = location.state?.from?.pathname || '/admin';
         navigate(redirect, { replace: true });
+      } else {
+        setError('Test istifadəçi məlumatları ilə giriş alınmadı. Zəhmət olmasa administrator ilə əlaqə saxlayın.');
       }
     } catch (err) {
       setError('Gözlənilməz bir xəta baş verdi');
       console.error('Login error:', err);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Special direct login for demo purposes - no actual auth check
+  const bypassLogin = (role: string) => {
+    const mockUserMap: Record<string, any> = {
+      'admin': {
+        id: 'mock-admin-id',
+        email: 'admin@example.com',
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'super_admin',
+        isActive: true,
+        lastLogin: new Date().toISOString(),
+      },
+      'staff': {
+        id: 'mock-staff-id',
+        email: 'staff@example.com',
+        firstName: 'Staff',
+        lastName: 'Member',
+        role: 'staff',
+        isActive: true,
+        lastLogin: new Date().toISOString(),
+      },
+      'cash': {
+        id: 'mock-cash-id',
+        email: 'cash@example.com',
+        firstName: 'Cash',
+        lastName: 'Manager',
+        role: 'cash',
+        isActive: true,
+        lastLogin: new Date().toISOString(),
+      },
+      'appointment': {
+        id: 'mock-appointment-id',
+        email: 'appointment@example.com',
+        firstName: 'Appointment',
+        lastName: 'Manager',
+        role: 'appointment',
+        isActive: true,
+        lastLogin: new Date().toISOString(),
+      },
+      'service': {
+        id: 'mock-service-id',
+        email: 'service@example.com',
+        firstName: 'Service',
+        lastName: 'Manager',
+        role: 'service',
+        isActive: true,
+        lastLogin: new Date().toISOString(),
+      },
+      'product': {
+        id: 'mock-product-id',
+        email: 'product@example.com',
+        firstName: 'Product',
+        lastName: 'Manager',
+        role: 'product',
+        isActive: true,
+        lastLogin: new Date().toISOString(),
+      },
+    };
+    
+    if (role in mockUserMap) {
+      // Store mock user data in local storage
+      const mockUser = mockUserMap[role];
+      localStorage.setItem('MOCK_USER_DATA', JSON.stringify({
+        user: mockUser,
+        expiry: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+      }));
+      
+      toast({
+        title: "Demo giriş aktivləşdirildi",
+        description: `${mockUser.firstName} ${mockUser.lastName} kimi giriş etdiniz (${mockUser.role})`
+      });
+      
+      const redirect = location.state?.from?.pathname || '/admin';
+      navigate(redirect, { replace: true });
     }
   };
   
@@ -136,12 +227,69 @@ const LoginPage = () => {
             </Button>
           </form>
 
-          {config.usesMockData && (
-            <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Test istifadəçiləri ilə giriş</h3>
+          <div className="mt-8">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Demo giriş (Supabase qeydiyyatı olmadan)</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => bypassLogin('admin')}
+                className="text-xs"
+              >
+                <UserCheck className="h-3 w-3 mr-1" />
+                Super Admin
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => bypassLogin('staff')}
+                className="text-xs"
+              >
+                <UserCheck className="h-3 w-3 mr-1" />
+                Staff
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => bypassLogin('cash')}
+                className="text-xs"
+              >
+                <UserCheck className="h-3 w-3 mr-1" />
+                Cash Manager
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => bypassLogin('appointment')}
+                className="text-xs"
+              >
+                <UserCheck className="h-3 w-3 mr-1" />
+                Appointment
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => bypassLogin('service')}
+                className="text-xs"
+              >
+                <UserCheck className="h-3 w-3 mr-1" />
+                Service
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => bypassLogin('product')}
+                className="text-xs"
+              >
+                <UserCheck className="h-3 w-3 mr-1" />
+                Product
+              </Button>
+            </div>
+            <div className="mt-6 border-t pt-4">
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Supabase ilə giriş</h3>
               <div className="grid grid-cols-2 gap-2">
                 <Button 
-                  variant="outline" 
+                  variant="secondary" 
                   size="sm" 
                   onClick={() => loginAsUser('admin@example.com')}
                   className="text-xs"
@@ -151,7 +299,7 @@ const LoginPage = () => {
                   Super Admin
                 </Button>
                 <Button 
-                  variant="outline" 
+                  variant="secondary" 
                   size="sm" 
                   onClick={() => loginAsUser('staff@example.com')}
                   className="text-xs"
@@ -161,7 +309,7 @@ const LoginPage = () => {
                   Staff
                 </Button>
                 <Button 
-                  variant="outline" 
+                  variant="secondary" 
                   size="sm" 
                   onClick={() => loginAsUser('cash@example.com')}
                   className="text-xs"
@@ -171,7 +319,7 @@ const LoginPage = () => {
                   Cash Manager
                 </Button>
                 <Button 
-                  variant="outline" 
+                  variant="secondary" 
                   size="sm" 
                   onClick={() => loginAsUser('appointment@example.com')}
                   className="text-xs"
@@ -181,7 +329,7 @@ const LoginPage = () => {
                   Appointment
                 </Button>
                 <Button 
-                  variant="outline" 
+                  variant="secondary" 
                   size="sm" 
                   onClick={() => loginAsUser('service@example.com')}
                   className="text-xs"
@@ -191,7 +339,7 @@ const LoginPage = () => {
                   Service
                 </Button>
                 <Button 
-                  variant="outline" 
+                  variant="secondary" 
                   size="sm" 
                   onClick={() => loginAsUser('product@example.com')}
                   className="text-xs"
@@ -202,10 +350,10 @@ const LoginPage = () => {
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Bütün test istifadəçilərinin şifrəsi: <code className="bg-gray-100 px-1 py-0.5 rounded">password123</code>
+                Supabase test istifadəçiləri üçün şifrə: <code className="bg-gray-100 px-1 py-0.5 rounded">password123</code>
               </p>
             </div>
-          )}
+          </div>
         </CardContent>
         <CardFooter>
           <p className="text-center text-sm text-gray-500 w-full">

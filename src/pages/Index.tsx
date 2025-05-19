@@ -39,14 +39,18 @@ const Index = () => {
                   </Button>
                 </div>
                 
-                {/* Admin Login Button */}
-                <div className="mt-8">
-                  <Button asChild variant="secondary" size="sm">
+                {/* Admin Login Button - Made more prominent */}
+                <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg shadow-sm">
+                  <h3 className="font-medium text-amber-800 mb-2">Salon idarəetmə panelinə daxil ol</h3>
+                  <Button asChild variant="default" size="lg" className="w-full">
                     <Link to="/login">
-                      <Lock className="mr-2 h-4 w-4" />
+                      <Lock className="mr-2 h-5 w-5" />
                       Admin panelə daxil ol
                     </Link>
                   </Button>
+                  <p className="mt-2 text-xs text-amber-700">
+                    Demo rejimdə test istifadəçiləri ilə giriş edə bilərsiniz
+                  </p>
                 </div>
               </div>
               <div className="hidden lg:block">
@@ -104,10 +108,10 @@ const Index = () => {
             </div>
             
             {/* Environment Indicator (for development) */}
-            {config.featureFlags.showDebugInfo && (
+            {config.features.debugMode && (
               <div className="mt-12 p-4 bg-amber-50 border border-amber-200 rounded text-amber-800">
                 <p className="text-center text-sm">
-                  {config.mode === 'local' ? 'Local Development Mode' : 'API Mode'}: {config.usesMockData ? 'Using Mock Data' : 'Using Real API'}
+                  {config.usesMockData ? 'Local Development Mode' : 'API Mode'}: {config.usesMockData ? 'Using Mock Data' : 'Using Real API'}
                 </p>
               </div>
             )}
