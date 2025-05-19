@@ -38,7 +38,6 @@ export function useServiceData(initialFilters?: ServiceFilters) {
         if (supabaseData) {
           return supabaseData.map(item => ({
             ...item,
-            image_urls: item.image_urls || [],
             relatedProducts: []
           })) as Service[];
         }

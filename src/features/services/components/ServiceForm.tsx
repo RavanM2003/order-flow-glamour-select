@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
@@ -20,7 +21,7 @@ import { Service } from '../types';
 import { toast } from '@/components/ui/use-toast';
 import { Loader2 } from 'lucide-react';
 import { useProducts } from '@/hooks/use-products';
-import { MultiSelect } from '@/components/ui/multi-select';
+import MultiSelect from '@/components/common/MultiSelect';
 
 // Form schema
 const formSchema = z.object({
@@ -89,10 +90,20 @@ const ServiceForm: React.FC = () => {
   // Handle form submission
   const onSubmit = async (values: FormValues) => {
     try {
+      // Ensure all required fields are present
+      const serviceData = {
+        name: values.name,
+        description: values.description || '',
+        duration: values.duration,
+        price: values.price,
+        benefits: values.benefits || [],
+        relatedProducts: values.relatedProducts || []
+      };
+      
       if (isEditing && id) {
-        await updateService(parseInt(id, 10), values);
+        await updateService(parseInt(id, 10), serviceData);
       } else {
-        await createService(values);
+        await createService(serviceData);
       }
     } catch (error) {
       console.error('Error saving service:', error);
@@ -217,8 +228,8 @@ const ServiceForm: React.FC = () => {
                   <FormControl>
                     <MultiSelect
                       options={productOptions}
-                      selected={field.value || []}
-                      onChange={(selected) => field.onChange(selected)}
+                      selected={field.value?.map(v => v.toString()) || []}
+                      onChange={(selected) => field.onChange(selected.map(Number))}
                       placeholder="Select related products"
                     />
                   </FormControl>

@@ -50,7 +50,7 @@ export class SupabaseService {
           name: product.name,
           price: product.price,
           description: product.description,
-          stock_quantity: product.stock_quantity || 0,
+          stock: product.stock_quantity || 0,
           image_url: product.image_url ? product.image_url : null,
         })
         .select()
@@ -73,7 +73,7 @@ export class SupabaseService {
           name: product.name,
           price: product.price,
           description: product.description,
-          stock_quantity: product.stock_quantity,
+          stock: product.stock_quantity,
           image_url: product.image_url,
         })
         .eq('id', id)
@@ -146,18 +146,19 @@ export class SupabaseService {
       // Add calculated fields for frontend
       const customersWithExtras = data.map(customer => ({
         ...customer,
+        name: customer.full_name, // Map full_name to name for compatibility
         lastVisit: new Date().toISOString().split('T')[0], // Default to today
         totalSpent: 0 // Default to 0
       }));
       
-      return { data: customersWithExtras as Customer[] };
+      return { data: customersWithExtras as unknown as Customer[] };
     } catch (error) {
       console.error('Error fetching customers:', error);
       return { error: 'Failed to fetch customers', data: null };
     }
   }
   
-  async getCustomerById(id: number): Promise<ApiResponse<Customer>> {
+  async getCustomerById(id: string): Promise<ApiResponse<Customer>> {
     try {
       const { data, error } = await supabase
         .from('customers')
@@ -170,11 +171,12 @@ export class SupabaseService {
       // Add calculated fields for frontend
       const customerWithExtras = {
         ...data,
+        name: data.full_name, // Map full_name to name for compatibility
         lastVisit: new Date().toISOString().split('T')[0], // Default to today
         totalSpent: 0 // Default to 0
       };
       
-      return { data: customerWithExtras as Customer };
+      return { data: customerWithExtras as unknown as Customer };
     } catch (error) {
       console.error(`Error fetching customer ${id}:`, error);
       return { error: `Failed to fetch customer ${id}`, data: null };
@@ -188,12 +190,12 @@ export class SupabaseService {
         .from('appointments')
         .select(`
           *,
-          customers(name, phone),
+          customer_info:customers!inner(full_name, phone),
           appointment_services(
             *,
             services(name, price, duration),
             products(name, price),
-            staff(name, position)
+            staff_id
           )
         `);
       
@@ -223,19 +225,19 @@ export class SupabaseService {
           .filter((as: any) => as.staff_id)
           .map((as: any) => ({
             id: as.staff_id,
-            name: as.staff?.name || '',
+            name: '', // We'll need to fetch staff names separately
             serviceId: as.service_id
           }));
 
         return {
           id: appointment.id,
-          customerId: appointment.customer_id,
+          customerId: appointment.customer_user_id,
           date: appointment.appointment_date,
           startTime: appointment.start_time,
           endTime: appointment.end_time,
           status: appointment.status,
-          customerName: appointment.customers?.name || '',
-          customerPhone: appointment.customers?.phone || '',
+          customerName: appointment.customer_info?.full_name || '',
+          customerPhone: appointment.customer_info?.phone || '',
           services,
           products,
           serviceProviders,
@@ -254,18 +256,22 @@ export class SupabaseService {
   async getStaff(): Promise<ApiResponse<Staff[]>> {
     try {
       const { data, error } = await supabase
-        .from('staff')
-        .select('*');
+        .from('users')
+        .select('*')
+        .eq('role', 'staff');
       
       if (error) throw error;
       
-      // Transform specializations from JSONB to string[]
-      const staffWithParsedSpecializations = data.map(staff => ({
-        ...staff,
-        specializations: staff.specializations ? JSON.parse(staff.specializations as string) : []
+      // Transform to match Staff interface
+      const staff = data.map(user => ({
+        id: user.id,
+        name: user.email.split('@')[0], // Use email username as name
+        email: user.email,
+        position: 'Staff',
+        specializations: []
       }));
       
-      return { data: staffWithParsedSpecializations as unknown as Staff[] };
+      return { data: staff as unknown as Staff[] };
     } catch (error) {
       console.error('Error fetching staff:', error);
       return { error: 'Failed to fetch staff', data: null };

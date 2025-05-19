@@ -17,7 +17,6 @@ export class ServiceService extends ApiService {
       // Map the response to match our Service interface
       const services = data.map(item => ({
         ...item,
-        image_urls: item.image_urls || [], // Ensure this exists
         relatedProducts: [] // Initialize as empty array since we're not fetching them yet
       }));
       
@@ -51,7 +50,6 @@ export class ServiceService extends ApiService {
       const service = {
         ...data,
         relatedProducts,
-        image_urls: data.image_urls || [],
         // Remove properties that don't match our interface
         service_products: undefined
       };
@@ -98,8 +96,7 @@ export class ServiceService extends ApiService {
       return { 
         data: { 
           ...newService,
-          relatedProducts: data.relatedProducts || [],
-          image_urls: []
+          relatedProducts: data.relatedProducts || []
         } as Service 
       };
     } catch (error) {
@@ -110,6 +107,11 @@ export class ServiceService extends ApiService {
   
   async update(id: number, data: Partial<ServiceFormData>): Promise<ApiResponse<Service>> {
     try {
+      // Ensure name is present for update
+      if (data.name === undefined) {
+        return { error: 'Name is required for service update' };
+      }
+      
       // Update the service
       const { data: updatedService, error } = await supabase
         .from('services')
@@ -155,8 +157,7 @@ export class ServiceService extends ApiService {
       return { 
         data: { 
           ...updatedService,
-          relatedProducts: data.relatedProducts || [],
-          image_urls: updatedService.image_urls || []
+          relatedProducts: data.relatedProducts || []
         } as Service 
       };
     } catch (error) {

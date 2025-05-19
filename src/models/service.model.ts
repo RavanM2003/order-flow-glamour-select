@@ -11,7 +11,6 @@ export interface Service {
   created_at?: string;
   updated_at?: string;
   is_active?: boolean;
-  image_urls?: string[];
   relatedProducts?: number[];
 }
 
@@ -20,7 +19,6 @@ export interface ServiceFormData {
   description?: string;
   duration: number; // Ensure this is a number
   price: number;
-  image_urls?: string[];
   benefits?: string[];
   relatedProducts?: number[];
   category_id?: number;
