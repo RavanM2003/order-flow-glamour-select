@@ -12,6 +12,7 @@ export interface Service {
   updated_at?: string;
   is_active?: boolean;
   relatedProducts?: number[];
+  image_urls?: string[]; // Added this field
 }
 
 export interface ServiceFormData {
@@ -22,4 +23,5 @@ export interface ServiceFormData {
   benefits?: string[];
   relatedProducts?: number[];
   category_id?: number;
+  image_urls?: string[]; // Added this field
 }

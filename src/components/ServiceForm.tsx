@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,7 +31,6 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
     description: initialData?.description || "",
     relatedProducts: initialData?.relatedProducts || [],
     benefits: initialData?.benefits || [],
-    image_urls: initialData?.image_urls || [],
   });
   
   const fileInputRef = useRef<HTMLInputElement>(null);

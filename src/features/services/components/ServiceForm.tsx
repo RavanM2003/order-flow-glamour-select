@@ -132,9 +132,9 @@ const ServiceForm: React.FC = () => {
     form.setValue('benefits', updatedBenefits);
   };
 
-  // Product options for multi-select
+  // Product options for multi-select - Convert numbers to strings to match MultiSelectOption type
   const productOptions = products.map(product => ({
-    value: product.id as number,
+    value: String(product.id), // Convert number to string
     label: product.name
   }));
 
@@ -228,7 +228,7 @@ const ServiceForm: React.FC = () => {
                   <FormControl>
                     <MultiSelect
                       options={productOptions}
-                      selected={field.value?.map(v => v.toString()) || []}
+                      selected={field.value?.map(v => String(v)) || []} // Convert numbers to strings
                       onChange={(selected) => field.onChange(selected.map(Number))}
                       placeholder="Select related products"
                     />

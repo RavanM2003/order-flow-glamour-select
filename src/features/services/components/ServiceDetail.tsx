@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -74,19 +73,19 @@ const ServiceDetail: React.FC = () => {
               </div>
             </div>
             
-            {service.image_urls && service.image_urls.length > 0 ? (
-              <div className="h-80 mb-8 rounded-lg overflow-hidden">
+            <div className="h-80 mb-8 rounded-lg overflow-hidden">
+              {service.image_urls && service.image_urls.length > 0 ? (
                 <img 
                   src={service.image_urls[0]} 
                   alt={service.name} 
                   className="w-full h-full object-cover"
                 />
-              </div>
-            ) : (
-              <div className="bg-gray-200 h-80 rounded-lg mb-8 flex items-center justify-center">
-                <p className="text-glamour-600">No image available</p>
-              </div>
-            )}
+              ) : (
+                <div className="bg-gray-200 h-full rounded-lg flex items-center justify-center">
+                  <p className="text-glamour-600">No image available</p>
+                </div>
+              )}
+            </div>
             
             <div className="prose max-w-none mb-8">
               <h2 className="text-2xl font-semibold text-glamour-800 mb-4">Description</h2>

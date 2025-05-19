@@ -1,283 +1,347 @@
+import { Appointment, AppointmentCreate, Customer, Service } from '@/models/types';
+import { SupabaseClient, createClient } from '@supabase/supabase-js';
+import { Database } from './database.types';
 
-import { supabase } from "@/integrations/supabase/client";
-import { Product, ProductFormData } from "@/models/product.model";
-import { Service } from "@/models/service.model";
-import { Customer } from "@/models/customer.model";
-import { Staff } from "@/models/staff.model";
-import { Appointment } from "@/models/appointment.model";
-import { ApiResponse } from "@/models/types";
+class SupabaseService {
+  private supabase: SupabaseClient<Database>;
 
-// Supabase service to handle all database operations
-export class SupabaseService {
-  // Products
-  async getProducts(): Promise<ApiResponse<Product[]>> {
+  constructor() {
+    this.supabase = createClient<Database>(
+      process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+    );
+  }
+
+  // Method to upload image to Supabase storage
+  async uploadImage(file: File, storagePath: string): Promise<string | null> {
     try {
-      const { data, error } = await supabase
-        .from('products')
+      const { data, error } = await this.supabase.storage
+        .from('images') // Replace 'your-bucket-name' with your actual bucket name
+        .upload(`${storagePath}/${file.name}`, file, {
+          cacheControl: '3600',
+          upsert: false // Set to true if you want to overwrite existing files
+        });
+
+      if (error) {
+        console.error('Error uploading image:', error);
+        return null;
+      }
+
+      // Construct public URL
+      const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${data.Key}`;
+      return imageUrl;
+    } catch (error) {
+      console.error('Error during image upload:', error);
+      return null;
+    }
+  }
+  
+  async getServices(): Promise<Service[]> {
+    try {
+      const { data, error } = await this.supabase
+        .from('services')
         .select('*');
       
       if (error) throw error;
       
-      return { data: data as unknown as Product[] };
+      return data as Service[];
     } catch (error) {
-      console.error('Error fetching products:', error);
-      return { error: 'Failed to fetch products', data: null };
+      console.error('Error fetching services:', error);
+      throw error;
     }
   }
-  
-  async getProductById(id: number): Promise<ApiResponse<Product>> {
+
+  async getServiceById(id: string): Promise<Service | null> {
     try {
-      const { data, error } = await supabase
-        .from('products')
+      const { data, error } = await this.supabase
+        .from('services')
         .select('*')
         .eq('id', id)
         .single();
       
       if (error) throw error;
       
-      return { data: data as unknown as Product };
+      return data as Service;
     } catch (error) {
-      console.error(`Error fetching product ${id}:`, error);
-      return { error: `Failed to fetch product ${id}`, data: null };
+      console.error('Error fetching service:', error);
+      return null;
     }
   }
   
-  async createProduct(product: ProductFormData): Promise<ApiResponse<Product>> {
+  async createService(service: Omit<Service, 'id' | 'created_at' | 'updated_at'>): Promise<Service> {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .insert({
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          stock: product.stock_quantity || 0,
-          image_url: product.image_url ? product.image_url : null,
-        })
+      const { data, error } = await this.supabase
+        .from('services')
+        .insert([service])
         .select()
         .single();
       
       if (error) throw error;
       
-      return { data: data as unknown as Product };
+      return data as Service;
     } catch (error) {
-      console.error('Error creating product:', error);
-      return { error: 'Failed to create product', data: null };
+      console.error('Error creating service:', error);
+      throw error;
     }
   }
   
-  async updateProduct(id: number, product: Partial<ProductFormData>): Promise<ApiResponse<Product>> {
+  async updateService(id: string, updates: Partial<Service>): Promise<Service> {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .update({
-          name: product.name,
-          price: product.price,
-          description: product.description,
-          stock: product.stock_quantity,
-          image_url: product.image_url,
-        })
+      const { data, error } = await this.supabase
+        .from('services')
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
       
       if (error) throw error;
       
-      return { data: data as unknown as Product };
+      return data as Service;
     } catch (error) {
-      console.error(`Error updating product ${id}:`, error);
-      return { error: `Failed to update product ${id}`, data: null };
+      console.error('Error updating service:', error);
+      throw error;
     }
   }
   
-  async deleteProduct(id: number): Promise<ApiResponse<boolean>> {
+  async deleteService(id: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('products')
+      const { error } = await this.supabase
+        .from('services')
         .delete()
         .eq('id', id);
       
       if (error) throw error;
-      
-      return { data: true };
     } catch (error) {
-      console.error(`Error deleting product ${id}:`, error);
-      return { error: `Failed to delete product ${id}`, data: null };
+      console.error('Error deleting service:', error);
+      throw error;
     }
   }
 
-  // Services
-  async getServiceProducts(serviceId: number): Promise<ApiResponse<Product[]>> {
+  getCustomers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('service_products')
-        .select('product_id')
-        .eq('service_id', serviceId);
-      
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        const productIds = data.map(item => item.product_id);
-        const { data: products, error: productsError } = await supabase
-          .from('products')
-          .select('*')
-          .in('id', productIds);
-        
-        if (productsError) throw productsError;
-        
-        return { data: products as unknown as Product[] };
-      }
-      
-      return { data: [] };
-    } catch (error) {
-      console.error(`Error fetching products for service ${serviceId}:`, error);
-      return { error: `Failed to fetch products for service ${serviceId}`, data: null };
-    }
-  }
-
-  // Customers
-  async getCustomers(): Promise<ApiResponse<Customer[]>> {
-    try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('customers')
         .select('*');
       
       if (error) throw error;
-      
-      // Add calculated fields for frontend
-      const customersWithExtras = data.map(customer => ({
-        ...customer,
+
+      // Make sure we handle the conversion properly
+      const customers = data.map(customer => ({
+        id: customer.id,
         name: customer.full_name, // Map full_name to name for compatibility
-        lastVisit: new Date().toISOString().split('T')[0], // Default to today
-        totalSpent: 0 // Default to 0
+        email: customer.email,
+        phone: customer.phone,
+        gender: customer.gender,
+        birth_date: customer.birth_date,
+        note: customer.note,
+        created_at: customer.created_at,
+        updated_at: customer.updated_at,
+        lastVisit: '', // Default value
+        totalSpent: 0 // Default value
+        // Add any other required fields from Customer interface
       }));
       
-      return { data: customersWithExtras as unknown as Customer[] };
+      return customers;
     } catch (error) {
       console.error('Error fetching customers:', error);
-      return { error: 'Failed to fetch customers', data: null };
+      throw error;
     }
-  }
-  
-  async getCustomerById(id: string): Promise<ApiResponse<Customer>> {
+  };
+
+  getCustomerById = async (id: string) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('customers')
         .select('*')
         .eq('id', id)
         .single();
       
       if (error) throw error;
-      
-      // Add calculated fields for frontend
-      const customerWithExtras = {
-        ...data,
+
+      // Properly map the customer data
+      const customer = {
+        id: data.id,
         name: data.full_name, // Map full_name to name for compatibility
-        lastVisit: new Date().toISOString().split('T')[0], // Default to today
-        totalSpent: 0 // Default to 0
+        email: data.email,
+        phone: data.phone,
+        gender: data.gender,
+        birth_date: data.birth_date,
+        note: data.note,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        lastVisit: '', // Default value
+        totalSpent: 0 // Default value
+        // Add any other required fields from Customer interface
       };
       
-      return { data: customerWithExtras as unknown as Customer };
+      return customer;
     } catch (error) {
-      console.error(`Error fetching customer ${id}:`, error);
-      return { error: `Failed to fetch customer ${id}`, data: null };
+      console.error('Error fetching customer:', error);
+      throw error;
+    }
+  };
+  
+  async createCustomer(customer: Customer): Promise<Customer> {
+    try {
+      const { data, error } = await this.supabase
+        .from('customers')
+        .insert([customer])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return data as Customer;
+    } catch (error) {
+      console.error('Error creating customer:', error);
+      throw error;
+    }
+  }
+  
+  async updateCustomer(id: string, updates: Partial<Customer>): Promise<Customer> {
+    try {
+      const { data, error } = await this.supabase
+        .from('customers')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return data as Customer;
+    } catch (error) {
+      console.error('Error updating customer:', error);
+      throw error;
+    }
+  }
+  
+  async deleteCustomer(id: string): Promise<void> {
+    try {
+      const { error } = await this.supabase
+        .from('customers')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting customer:', error);
+      throw error;
     }
   }
 
-  // Appointments
-  async getAppointments(): Promise<ApiResponse<Appointment[]>> {
+  getAppointments = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('appointments')
         .select(`
-          *,
-          customer_info:customers!inner(full_name, phone),
-          appointment_services(
-            *,
-            services(name, price, duration),
-            products(name, price),
-            staff_id
-          )
-        `);
-      
+        *,
+        appointment_services(*)
+      `);
+    
       if (error) throw error;
-      
-      // Transform the data to match our frontend model
-      const appointments = data.map(appointment => {
-        const services = appointment.appointment_services
-          .filter((as: any) => as.service_id)
-          .map((as: any) => ({
-            id: as.service_id,
-            name: as.services?.name || '',
-            price: as.services?.price || 0,
-            duration: as.services?.duration || 0
-          }));
-        
-        const products = appointment.appointment_services
-          .filter((as: any) => as.product_id)
-          .map((as: any) => ({
-            id: as.product_id,
-            name: as.products?.name || '',
-            price: as.products?.price || 0,
-            quantity: as.quantity || 1
-          }));
-        
-        const serviceProviders = appointment.appointment_services
-          .filter((as: any) => as.staff_id)
-          .map((as: any) => ({
-            id: as.staff_id,
-            name: '', // We'll need to fetch staff names separately
-            serviceId: as.service_id
-          }));
 
-        return {
-          id: appointment.id,
-          customerId: appointment.customer_user_id,
-          date: appointment.appointment_date,
-          startTime: appointment.start_time,
-          endTime: appointment.end_time,
-          status: appointment.status,
-          customerName: appointment.customer_info?.full_name || '',
-          customerPhone: appointment.customer_info?.phone || '',
-          services,
-          products,
-          serviceProviders,
-          createdAt: appointment.created_at
-        };
-      });
-      
-      return { data: appointments as unknown as Appointment[] };
+      // Process the appointments data
+      const appointments = await Promise.all(data.map(async (appointment) => {
+        try {
+          // Fetch customer data separately
+          const { data: customerData, error: customerError } = await this.supabase
+            .from('customers')
+            .select('*')
+            .eq('id', appointment.customer_user_id)
+            .single();
+        
+          if (customerError) throw customerError;
+        
+          return {
+            ...appointment,
+            customer: {
+              name: customerData.full_name,
+              phone: customerData.phone,
+              full_name: customerData.full_name
+            }
+          };
+        } catch (error) {
+          console.error('Error fetching customer for appointment:', error);
+          return {
+            ...appointment,
+            customer: { name: 'Unknown', phone: 'Unknown', full_name: 'Unknown' }
+          };
+        }
+      }));
+    
+      return appointments;
     } catch (error) {
       console.error('Error fetching appointments:', error);
-      return { error: 'Failed to fetch appointments', data: null };
+      throw error;
     }
-  }
-
-  // Staff
-  async getStaff(): Promise<ApiResponse<Staff[]>> {
+  };
+  
+  async getAppointmentById(id: string): Promise<Appointment | null> {
     try {
-      const { data, error } = await supabase
-        .from('users')
+      const { data, error } = await this.supabase
+        .from('appointments')
         .select('*')
-        .eq('role', 'staff');
+        .eq('id', id)
+        .single();
       
       if (error) throw error;
       
-      // Transform to match Staff interface
-      const staff = data.map(user => ({
-        id: user.id,
-        name: user.email.split('@')[0], // Use email username as name
-        email: user.email,
-        position: 'Staff',
-        specializations: []
-      }));
-      
-      return { data: staff as unknown as Staff[] };
+      return data as Appointment;
     } catch (error) {
-      console.error('Error fetching staff:', error);
-      return { error: 'Failed to fetch staff', data: null };
+      console.error('Error fetching appointment:', error);
+      return null;
+    }
+  }
+    
+  async createAppointments(appointment: AppointmentCreate): Promise<Appointment> {
+    try {
+      const { data, error } = await this.supabase
+        .from('appointments')
+        .insert([appointment])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return data as Appointment;
+    } catch (error) {
+      console.error('Error creating appointment:', error);
+      throw error;
+    }
+  }
+    
+  async updateAppointments(id: string, updates: Partial<Appointment>): Promise<Appointment> {
+    try {
+      const { data, error } = await this.supabase
+        .from('appointments')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      return data as Appointment;
+    } catch (error) {
+      console.error('Error updating appointment:', error);
+      throw error;
+    }
+  }
+    
+  async deleteAppointments(id: string): Promise<void> {
+    try {
+      const { error } = await this.supabase
+        .from('appointments')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      throw error;
     }
   }
 }
 
-// Create a singleton instance
 export const supabaseService = new SupabaseService();
