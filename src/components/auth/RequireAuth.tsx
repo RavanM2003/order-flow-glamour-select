@@ -35,7 +35,9 @@ const RequireAuth = ({ children, allowedRoles = [] }: RequireAuthProps) => {
         <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
         <p className="text-gray-600 mb-6 text-center">
           You don't have permission to access this page.
-          Your role ({session.user?.role}) doesn't have the required permissions.
+          {session.profile?.role && (
+            <span> Your role ({session.profile.role}) doesn't have the required permissions.</span>
+          )}
         </p>
         <button
           onClick={() => window.history.back()}

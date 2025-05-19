@@ -1,19 +1,30 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { authService } from '@/services/auth.service';
-import { User, UserSession, AuthResponse } from '@/models/user.model';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
+import { config } from '@/config/env';
+import { UserRole } from '@/models/user.model';
 
-// Local storage keys
-const TOKEN_KEY = 'salon-auth-token';
-const USER_KEY = 'salon-auth-user';
-const EXPIRES_KEY = 'salon-auth-expires';
+// Interface for our session state
+interface UserSession {
+  user: User | null;
+  isAuthenticated: boolean;
+  profile: {
+    firstName: string | null;
+    lastName: string | null;
+    role: UserRole;
+    avatar: string | null;
+    staffId: number | null;
+  } | null;
+}
 
 // Create context
 interface AuthContextType {
   session: UserSession;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  signup: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
   isLoading: boolean;
   checkAccess: (requiredRoles: string[]) => boolean;
 }
@@ -24,88 +35,124 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [supabaseSession, setSupabaseSession] = useState<Session | null>(null);
   const [session, setSession] = useState<UserSession>({
     user: null,
-    token: null,
     isAuthenticated: false,
-    expiresAt: null
+    profile: null
   });
 
-  // Check if user is logged in on mount
+  // Fetch user profile data
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+      return null;
+    }
+  };
+
+  // Update session state based on auth state
+  const updateSessionState = async (session: Session | null) => {
+    if (session?.user) {
+      const profile = await fetchUserProfile(session.user.id);
+      
+      setSession({
+        user: session.user,
+        isAuthenticated: true,
+        profile: profile ? {
+          firstName: profile.first_name,
+          lastName: profile.last_name,
+          role: profile.role as UserRole,
+          avatar: profile.avatar_url,
+          staffId: profile.staff_id
+        } : null
+      });
+    } else {
+      setSession({
+        user: null,
+        isAuthenticated: false,
+        profile: null
+      });
+    }
+    
+    setIsLoading(false);
+  };
+
+  // Initialize auth state
   useEffect(() => {
+    // First, set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state changed:', event);
+        setSupabaseSession(session);
+        
+        // Use setTimeout to prevent deadlocks
+        setTimeout(() => {
+          updateSessionState(session);
+        }, 0);
+      }
+    );
+
+    // Then check for existing session
     const initAuth = async () => {
       try {
-        const savedToken = localStorage.getItem(TOKEN_KEY);
-        const savedUser = localStorage.getItem(USER_KEY);
-        const savedExpires = localStorage.getItem(EXPIRES_KEY);
-        
-        if (savedToken && savedUser && savedExpires) {
-          const expiresAt = parseInt(savedExpires, 10);
-          
-          // Check if token has expired
-          if (expiresAt > Date.now()) {
-            // Token still valid, restore session
-            const user = JSON.parse(savedUser) as User;
-            setSession({
-              user,
-              token: savedToken,
-              isAuthenticated: true,
-              expiresAt
-            });
-          } else {
-            // Token expired, clear storage
-            localStorage.removeItem(TOKEN_KEY);
-            localStorage.removeItem(USER_KEY);
-            localStorage.removeItem(EXPIRES_KEY);
-          }
-        }
+        const { data: { session } } = await supabase.auth.getSession();
+        setSupabaseSession(session);
+        await updateSessionState(session);
       } catch (error) {
         console.error('Error initializing auth:', error);
-      } finally {
         setIsLoading(false);
       }
     };
 
     initAuth();
+
+    // Cleanup subscription
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Login function
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const response = await authService.login({ email, password });
-      
-      if (response.error || !response.data) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: response.error || "Invalid credentials"
+          description: error.message
         });
+        setIsLoading(false);
         return false;
       }
-      
-      // Fixed: accessing the correct AuthResponse properties
-      const { user, token, expiresAt } = response.data as AuthResponse;
-      
-      // Store session data
-      localStorage.setItem(TOKEN_KEY, token);
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-      localStorage.setItem(EXPIRES_KEY, expiresAt.toString());
-      
-      // Update state
-      setSession({
-        user,
-        token,
-        isAuthenticated: true,
-        expiresAt
-      });
-      
-      toast({
-        title: "Login successful",
-        description: `Welcome back, ${user.firstName || user.email}!`
-      });
-      
-      return true;
+
+      if (data.session) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back!"
+        });
+        return true;
+      }
+
+      return false;
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -113,49 +160,93 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         title: "Login error",
         description: "An unexpected error occurred"
       });
-      return false;
-    } finally {
       setIsLoading(false);
+      return false;
+    }
+  };
+
+  // Signup function
+  const signup = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Signup failed",
+          description: error.message
+        });
+        setIsLoading(false);
+        return false;
+      }
+
+      if (data.user) {
+        toast({
+          title: "Signup successful",
+          description: "Your account has been created. You can now log in."
+        });
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error('Signup error:', error);
+      toast({
+        variant: "destructive",
+        title: "Signup error",
+        description: "An unexpected error occurred"
+      });
+      setIsLoading(false);
+      return false;
     }
   };
 
   // Logout function
-  const logout = () => {
-    // Clear storage
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(EXPIRES_KEY);
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
     
-    // Reset session state
-    setSession({
-      user: null,
-      token: null,
-      isAuthenticated: false,
-      expiresAt: null
-    });
-    
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out"
-    });
+    if (error) {
+      console.error('Error signing out:', error);
+      toast({
+        variant: "destructive",
+        title: "Logout error",
+        description: error.message
+      });
+    } else {
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out"
+      });
+    }
   };
 
-  // Check if user has access to a feature based on their role
+  // Check if user has access based on role
   const checkAccess = (requiredRoles: string[]): boolean => {
-    if (!session.isAuthenticated || !session.user) return false;
+    if (!session.isAuthenticated || !session.profile) return false;
     
     // If no specific roles are required, any authenticated user has access
     if (!requiredRoles || requiredRoles.length === 0) return true;
     
     // Admin role has access to everything
-    if (session.user.role === 'admin') return true;
+    if (session.profile.role === 'admin') return true;
     
-    // Check if user's role is in the required roles list
-    return requiredRoles.includes(session.user.role);
+    // Check if user's role is in the required roles
+    return requiredRoles.includes(session.profile.role);
   };
 
   return (
-    <AuthContext.Provider value={{ session, login, logout, isLoading, checkAccess }}>
+    <AuthContext.Provider value={{ 
+      session, 
+      login, 
+      signup,
+      logout, 
+      isLoading, 
+      checkAccess 
+    }}>
       {children}
     </AuthContext.Provider>
   );

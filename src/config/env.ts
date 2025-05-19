@@ -21,8 +21,8 @@ export const currentEnv: Environment =
 const envConfigs: Record<Environment, EnvConfig> = {
   development: {
     apiBaseUrl: import.meta.env.VITE_API_URL || '/api',
-    usesMockData: true,
-    useSupabase: false,
+    usesMockData: false,
+    useSupabase: true,
     appName: 'Gözəllik Salonu (Dev)',
     featureFlags: {
       showDebugInfo: true,
@@ -44,7 +44,7 @@ const envConfigs: Record<Environment, EnvConfig> = {
   production: {
     apiBaseUrl: import.meta.env.VITE_API_URL || '/api',
     usesMockData: false,
-    useSupabase: false,
+    useSupabase: true,
     appName: 'Gözəllik Salonu',
     featureFlags: {
       showDebugInfo: false,
