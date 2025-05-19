@@ -97,35 +97,35 @@ const Services = () => {
                     // Set mock services if no services are found
                     const mockServices = [
                       { 
-                        id: "1", 
+                        id: 1, // Changed from string to number
                         name: "Üz müalicəsi", 
                         price: 150, 
                         duration: 60, 
                         description: "Premium məhsullarla dərin təmizləyici üz müalicəsi"
                       },
                       { 
-                        id: "2", 
+                        id: 2, // Changed from string to number
                         name: "Masaj terapiyası", 
                         price: 120, 
                         duration: 45, 
                         description: "Rahatlaşdırıcı tam bədən masajı"
                       },
                       { 
-                        id: "3", 
+                        id: 3, // Changed from string to number
                         name: "Manikür", 
                         price: 50, 
                         duration: 30, 
                         description: "Dırnaq baxımı və lak tətbiqi"
                       },
                       { 
-                        id: "4", 
+                        id: 4, // Changed from string to number
                         name: "Saç stilləşdirmə", 
                         price: 80, 
                         duration: 45, 
                         description: "Peşəkar saç stilləşdirmə xidməti"
                       },
                       { 
-                        id: "5", 
+                        id: 5, // Changed from string to number
                         name: "Makiyaj tətbiqi", 
                         price: 90, 
                         duration: 60, 
