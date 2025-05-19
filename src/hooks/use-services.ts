@@ -69,8 +69,11 @@ export function useServices() {
   
   const getService = useCallback(async (id: number | string) => {
     try {
+      // Convert string id to number for consistency
+      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+      
       // First try using the service abstraction
-      const response = await serviceService.getById(id);
+      const response = await serviceService.getById(numericId);
       
       if (response.data) {
         return response.data;
@@ -81,7 +84,7 @@ export function useServices() {
       const { data, error } = await supabase
         .from('services')
         .select('*')
-        .eq('id', id)
+        .eq('id', numericId)
         .single();
       
       if (error) {
@@ -171,9 +174,12 @@ export function useServices() {
   
   const updateService = useCallback(async (id: number | string, data: Partial<ServiceFormData>) => {
     try {
+      // Convert string id to number for consistency
+      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+      
       // Try using the service abstraction first
       const result = await api.execute(
-        () => serviceService.update(id, data),
+        () => serviceService.update(numericId, data),
         {
           showSuccessToast: true,
           successMessage: 'Xidmət yeniləndi',
@@ -199,7 +205,7 @@ export function useServices() {
           duration: data.duration,
           image_urls: data.image_urls
         })
-        .eq('id', id)
+        .eq('id', numericId)
         .select()
         .single();
       
@@ -236,9 +242,12 @@ export function useServices() {
   
   const deleteService = useCallback(async (id: number | string) => {
     try {
+      // Convert string id to number for consistency
+      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+      
       // Try using the service abstraction first
       const result = await api.execute(
-        () => serviceService.delete(id),
+        () => serviceService.delete(numericId),
         {
           showSuccessToast: true,
           successMessage: 'Xidmət silindi',
@@ -258,7 +267,7 @@ export function useServices() {
       const { error } = await supabase
         .from('services')
         .delete()
-        .eq('id', id);
+        .eq('id', numericId);
       
       if (error) {
         console.error(`Error deleting service ${id} from Supabase:`, error);
