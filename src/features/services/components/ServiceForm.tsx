@@ -339,7 +339,7 @@ const ServiceForm: React.FC<ServiceFormProps> = ({
                 disabled={isSubmitting}
                 className="bg-green-700 hover:bg-green-800"
               >
-                {isSubmitting ? "Saving..." : initialData?.id ? "Update Service" : "Create Service"}
+                {isSubmitting ? "Saving..." : initialData?.name ? "Update Service" : "Create Service"}
               </Button>
             </div>
           </div>

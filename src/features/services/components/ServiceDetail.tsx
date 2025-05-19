@@ -43,7 +43,7 @@ const ServiceDetail: React.FC = () => {
         <main className="container py-12 text-center">
           <h1 className="text-4xl font-bold text-glamour-800 mb-6">Service Not Found</h1>
           <p className="text-lg text-gray-600 mb-8">
-            {error || "The service you're looking for doesn't exist or has been removed."}
+            {error ? String(error) : "The service you're looking for doesn't exist or has been removed."}
           </p>
           <Button className="bg-glamour-700 hover:bg-glamour-800" asChild>
             <Link to="/services">Browse All Services</Link>

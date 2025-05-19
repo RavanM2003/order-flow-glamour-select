@@ -2,7 +2,6 @@
 import { ApiService } from '@/services/api.service';
 import { Service, ServiceFormData } from '../types';
 import { ApiResponse } from '@/models/types';
-import { config } from '@/config/env';
 
 export class ServiceService extends ApiService {
   async getAll(): Promise<ApiResponse<Service[]>> {
@@ -21,7 +20,7 @@ export class ServiceService extends ApiService {
     return this.put(`/services/${id}`, data);
   }
   
-  // Override delete method with specific implementation using the ApiService's delete method
+  // Override delete method with specific endpoint using the parent's delete method
   async delete(id: number): Promise<ApiResponse<boolean>> {
     return super.delete(`/services/${id}`);
   }
