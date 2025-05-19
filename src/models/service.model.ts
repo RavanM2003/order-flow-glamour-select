@@ -1,15 +1,17 @@
 
 export interface Service {
-  id: number; // Changed from optional to required for consistency with usage in service
+  id: number; 
   name: string;
   description?: string;
   duration: number; // Duration in minutes (must be number type)
   price: number;
-  image_urls?: string[];
   benefits?: string[];
-  is_active?: boolean;
+  category_id?: number;
+  user_id?: string;
   created_at?: string;
   updated_at?: string;
+  is_active?: boolean;
+  image_urls?: string[];
   relatedProducts?: number[];
 }
 
@@ -21,4 +23,5 @@ export interface ServiceFormData {
   image_urls?: string[];
   benefits?: string[];
   relatedProducts?: number[];
+  category_id?: number;
 }

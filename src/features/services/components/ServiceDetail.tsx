@@ -15,7 +15,7 @@ const ServiceDetail: React.FC = () => {
   
   useEffect(() => {
     if (id) {
-      fetchService(parseInt(id, 10));
+      fetchService(parseInt(id, 10)).catch(console.error);
     }
   }, [id, fetchService]);
   

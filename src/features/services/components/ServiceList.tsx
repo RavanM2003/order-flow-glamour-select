@@ -60,7 +60,7 @@ const ServiceList: React.FC = () => {
     return (
       <div className="text-center py-12">
         <p className="text-lg text-red-600 mb-4">Error loading services</p>
-        <p className="text-gray-600 mb-6">{error}</p>
+        <p className="text-gray-600 mb-6">{String(error)}</p>
         <Button onClick={() => refetch()}>Try Again</Button>
       </div>
     );

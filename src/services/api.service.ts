@@ -63,10 +63,14 @@ export abstract class ApiService {
     }
   }
 
-  // Generic DELETE request - updated to remove type parameter
-  protected async delete(endpoint: string): Promise<ApiResponse<boolean>> {
+  // Generic DELETE request - updated to accept endpoint or numeric id
+  protected async delete(endpoint: string | number): Promise<ApiResponse<boolean>> {
     try {
-      const response = await fetch(`${this.baseEndpoint}${endpoint}`, {
+      const finalEndpoint = typeof endpoint === 'number' 
+        ? `${this.baseEndpoint}/services/${endpoint}` 
+        : `${this.baseEndpoint}${endpoint}`;
+      
+      const response = await fetch(finalEndpoint, {
         method: 'DELETE',
       });
       if (!response.ok) {

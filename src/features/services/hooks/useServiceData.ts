@@ -38,7 +38,8 @@ export function useServiceData(initialFilters?: ServiceFilters) {
         if (supabaseData) {
           return supabaseData.map(item => ({
             ...item,
-            duration: typeof item.duration === 'string' ? parseInt(item.duration, 10) : item.duration
+            image_urls: item.image_urls || [],
+            relatedProducts: []
           })) as Service[];
         }
         
@@ -57,11 +58,21 @@ export function useServiceData(initialFilters?: ServiceFilters) {
 
   // Fetch single service
   const fetchService = useCallback(async (id: number | string) => {
-    const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    const response = await serviceService.getById(numericId);
-    if (response.error) throw new Error(response.error);
-    setService(response.data || null);
-    return response.data;
+    try {
+      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+      const response = await serviceService.getById(numericId);
+      if (response.error) throw new Error(response.error);
+      setService(response.data || null);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching service ${id}:`, error);
+      toast({
+        variant: "destructive",
+        title: "Xidmət yüklənmədi",
+        description: error instanceof Error ? error.message : "Xəta baş verdi"
+      });
+      throw error;
+    }
   }, []);
 
   // Update filters

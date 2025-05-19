@@ -9,39 +9,85 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      appointment_products: {
+        Row: {
+          amount: number | null
+          appointment_id: number | null
+          id: number
+          price: number | null
+          product_id: number | null
+          quantity: number | null
+          staff_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          appointment_id?: number | null
+          id?: number
+          price?: number | null
+          product_id?: number | null
+          quantity?: number | null
+          staff_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          appointment_id?: number | null
+          id?: number
+          price?: number | null
+          product_id?: number | null
+          quantity?: number | null
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_products_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_products_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_services: {
         Row: {
           appointment_id: number | null
-          created_at: string | null
-          duration: number
+          duration: number | null
           id: number
-          note: string | null
-          product_id: number | null
+          price: number | null
           quantity: number | null
           service_id: number | null
-          staff_id: number | null
+          staff_id: string | null
         }
         Insert: {
           appointment_id?: number | null
-          created_at?: string | null
-          duration: number
+          duration?: number | null
           id?: number
-          note?: string | null
-          product_id?: number | null
+          price?: number | null
           quantity?: number | null
           service_id?: number | null
-          staff_id?: number | null
+          staff_id?: string | null
         }
         Update: {
           appointment_id?: number | null
-          created_at?: string | null
-          duration?: number
+          duration?: number | null
           id?: number
-          note?: string | null
-          product_id?: number | null
+          price?: number | null
           quantity?: number | null
           service_id?: number | null
-          staff_id?: number | null
+          staff_id?: string | null
         }
         Relationships: [
           {
@@ -49,13 +95,6 @@ export type Database = {
             columns: ["appointment_id"]
             isOneToOne: false
             referencedRelation: "appointments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointment_services_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
             referencedColumns: ["id"]
           },
           {
@@ -69,7 +108,7 @@ export type Database = {
             foreignKeyName: "appointment_services_staff_id_fkey"
             columns: ["staff_id"]
             isOneToOne: false
-            referencedRelation: "staff"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -77,73 +116,168 @@ export type Database = {
       appointments: {
         Row: {
           appointment_date: string
+          cancel_reason: string | null
           created_at: string | null
-          customer_id: number | null
+          customer_user_id: string | null
           end_time: string
           id: number
+          is_no_show: boolean | null
           start_time: string
-          status: string | null
+          status: Database["public"]["Enums"]["appointment_status"] | null
+          total: number | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           appointment_date: string
+          cancel_reason?: string | null
           created_at?: string | null
-          customer_id?: number | null
+          customer_user_id?: string | null
           end_time: string
           id?: number
+          is_no_show?: boolean | null
           start_time: string
-          status?: string | null
+          status?: Database["public"]["Enums"]["appointment_status"] | null
+          total?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           appointment_date?: string
+          cancel_reason?: string | null
           created_at?: string | null
-          customer_id?: number | null
+          customer_user_id?: string | null
           end_time?: string
           id?: number
+          is_no_show?: boolean | null
           start_time?: string
-          status?: string | null
+          status?: Database["public"]["Enums"]["appointment_status"] | null
+          total?: number | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "appointments_customer_id_fkey"
-            columns: ["customer_id"]
+            foreignKeyName: "appointments_customer_user_id_fkey"
+            columns: ["customer_user_id"]
             isOneToOne: false
-            referencedRelation: "customers"
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
       }
       customers: {
         Row: {
+          birth_date: string | null
           created_at: string | null
           email: string | null
-          gender: string | null
-          id: number
-          name: string
+          full_name: string
+          gender: Database["public"]["Enums"]["gender_enum"] | null
+          id: string
+          note: string | null
           phone: string | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
+          birth_date?: string | null
           created_at?: string | null
           email?: string | null
-          gender?: string | null
-          id?: number
-          name: string
+          full_name: string
+          gender?: Database["public"]["Enums"]["gender_enum"] | null
+          id?: string
+          note?: string | null
           phone?: string | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
+          birth_date?: string | null
           created_at?: string | null
           email?: string | null
-          gender?: string | null
-          id?: number
-          name?: string
+          full_name?: string
+          gender?: Database["public"]["Enums"]["gender_enum"] | null
+          id?: string
+          note?: string | null
           phone?: string | null
           updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      histories: {
+        Row: {
+          action: Database["public"]["Enums"]["action_enum"] | null
+          created_at: string | null
+          history: Json
+          id: number
+          source_id: string
+          table_name: string
+        }
+        Insert: {
+          action?: Database["public"]["Enums"]["action_enum"] | null
+          created_at?: string | null
+          history: Json
+          id?: number
+          source_id: string
+          table_name: string
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["action_enum"] | null
+          created_at?: string | null
+          history?: Json
+          id?: number
+          source_id?: string
+          table_name?: string
         }
         Relationships: []
+      }
+      invoices: {
+        Row: {
+          appointment_id: number | null
+          id: number
+          invoice_number: string
+          issued_at: string | null
+          total_amount: number
+        }
+        Insert: {
+          appointment_id?: number | null
+          id?: number
+          invoice_number: string
+          issued_at?: string | null
+          total_amount: number
+        }
+        Update: {
+          appointment_id?: number | null
+          id?: number
+          invoice_number?: string
+          issued_at?: string | null
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -151,8 +285,9 @@ export type Database = {
           appointment_id: number | null
           created_at: string | null
           id: number
-          payment_date: string | null
-          status: string | null
+          method: Database["public"]["Enums"]["payment_method"]
+          source: string | null
+          type: Database["public"]["Enums"]["payment_type"]
           updated_at: string | null
         }
         Insert: {
@@ -160,8 +295,9 @@ export type Database = {
           appointment_id?: number | null
           created_at?: string | null
           id?: number
-          payment_date?: string | null
-          status?: string | null
+          method: Database["public"]["Enums"]["payment_method"]
+          source?: string | null
+          type: Database["public"]["Enums"]["payment_type"]
           updated_at?: string | null
         }
         Update: {
@@ -169,8 +305,9 @@ export type Database = {
           appointment_id?: number | null
           created_at?: string | null
           id?: number
-          payment_date?: string | null
-          status?: string | null
+          method?: Database["public"]["Enums"]["payment_method"]
+          source?: string | null
+          type?: Database["public"]["Enums"]["payment_type"]
           updated_at?: string | null
         }
         Relationships: [
@@ -183,41 +320,85 @@ export type Database = {
           },
         ]
       }
+      product_categories: {
+        Row: {
+          category_id: number
+          product_id: number
+        }
+        Insert: {
+          category_id: number
+          product_id: number
+        }
+        Update: {
+          category_id?: number
+          product_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_categories_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           created_at: string | null
           description: string | null
+          details: string | null
+          how_to_use: string | null
           id: number
-          image_url: Json | null
-          is_active: boolean | null
+          ingredients: string | null
           name: string
           price: number
-          stock_quantity: number | null
+          stock: number
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
+          details?: string | null
+          how_to_use?: string | null
           id?: number
-          image_url?: Json | null
-          is_active?: boolean | null
+          ingredients?: string | null
           name: string
           price: number
-          stock_quantity?: number | null
+          stock: number
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
+          details?: string | null
+          how_to_use?: string | null
           id?: number
-          image_url?: Json | null
-          is_active?: boolean | null
+          ingredients?: string | null
           name?: string
           price?: number
-          stock_quantity?: number | null
+          stock?: number
           updated_at?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "products_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -260,29 +441,93 @@ export type Database = {
           },
         ]
       }
-      roles: {
+      promo_codes: {
         Row: {
-          created_at: string
-          description: string | null
+          code: string
+          created_at: string | null
+          created_by: string | null
+          discount_percent: number | null
           id: number
-          name: string
-          updated_at: string
+          max_usage: number | null
+          valid_from: string | null
+          valid_to: string | null
         }
         Insert: {
-          created_at?: string
-          description?: string | null
+          code: string
+          created_at?: string | null
+          created_by?: string | null
+          discount_percent?: number | null
           id?: number
-          name: string
-          updated_at?: string
+          max_usage?: number | null
+          valid_from?: string | null
+          valid_to?: string | null
         }
         Update: {
-          created_at?: string
-          description?: string | null
+          code?: string
+          created_at?: string | null
+          created_by?: string | null
+          discount_percent?: number | null
+          id?: number
+          max_usage?: number | null
+          valid_from?: string | null
+          valid_to?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_codes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          id: number
+          name: string
+        }
+        Insert: {
+          id?: number
+          name: string
+        }
+        Update: {
           id?: number
           name?: string
-          updated_at?: string
         }
         Relationships: []
+      }
+      service_categories: {
+        Row: {
+          created_at: string | null
+          id: number
+          name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_categories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       service_products: {
         Row: {
@@ -316,39 +561,57 @@ export type Database = {
       }
       services: {
         Row: {
+          benefits: string[] | null
+          category_id: number | null
           created_at: string | null
           description: string | null
           duration: number
           id: number
-          image_urls: Json | null
-          is_active: boolean | null
           name: string
           price: number
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
-          created_at?: string | null
-          description?: string | null
-          duration: number
-          id?: number
-          image_urls?: Json | null
-          is_active?: boolean | null
-          name: string
-          price: number
-          updated_at?: string | null
-        }
-        Update: {
+          benefits?: string[] | null
+          category_id?: number | null
           created_at?: string | null
           description?: string | null
           duration?: number
           id?: number
-          image_urls?: Json | null
-          is_active?: boolean | null
+          name: string
+          price?: number
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          benefits?: string[] | null
+          category_id?: number | null
+          created_at?: string | null
+          description?: string | null
+          duration?: number
+          id?: number
           name?: string
           price?: number
           updated_at?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff: {
         Row: {
@@ -381,15 +644,66 @@ export type Database = {
           specializations?: Json | null
           updated_at?: string | null
         }
+        Relationships: []
+      }
+      staff_availability: {
+        Row: {
+          end_time: string
+          staff_user_id: string
+          start_time: string
+          weekday: number
+        }
+        Insert: {
+          end_time: string
+          staff_user_id: string
+          start_time: string
+          weekday: number
+        }
+        Update: {
+          end_time?: string
+          staff_user_id?: string
+          start_time?: string
+          weekday?: number
+        }
         Relationships: [
           {
-            foreignKeyName: "staff_role_id_fkey"
-            columns: ["role_id"]
+            foreignKeyName: "staff_availability_staff_user_id_fkey"
+            columns: ["staff_user_id"]
             isOneToOne: false
-            referencedRelation: "roles"
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          email: string
+          hashed_password: string
+          id: string
+          number: string
+          role: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          hashed_password: string
+          id?: string
+          number: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          hashed_password?: string
+          id?: string
+          number?: string
+          role?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -399,7 +713,17 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      action_enum: "INSERT" | "UPDATE" | "DELETE"
+      appointment_status: "scheduled" | "completed" | "cancelled"
+      gender_enum: "male" | "female" | "other"
+      payment_method:
+        | "cash"
+        | "card"
+        | "bank"
+        | "pos"
+        | "discount"
+        | "promo_code"
+      payment_type: "income" | "expense"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -514,6 +838,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      action_enum: ["INSERT", "UPDATE", "DELETE"],
+      appointment_status: ["scheduled", "completed", "cancelled"],
+      gender_enum: ["male", "female", "other"],
+      payment_method: ["cash", "card", "bank", "pos", "discount", "promo_code"],
+      payment_type: ["income", "expense"],
+    },
   },
 } as const
