@@ -1,6 +1,6 @@
 
 // User model and related types
-export type UserRole = "admin" | "staff" | "cashier" | "guest";
+export type UserRole = "super_admin" | "admin" | "staff" | "cashier" | "appointment" | "service" | "product" | "guest";
 
 export interface User {
   id: string;
@@ -12,6 +12,7 @@ export interface User {
   profileImage?: string;
   lastLogin: string;
   isActive: boolean;
+  roleId?: number;
 }
 
 export interface UserFormData {
@@ -22,6 +23,7 @@ export interface UserFormData {
   role: UserRole;
   staffId?: number;
   isActive?: boolean;
+  roleId?: number;
 }
 
 export interface AuthFormData {

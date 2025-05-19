@@ -39,52 +39,52 @@ const App = () => (
             
             {/* Protected Admin Routes */}
             <Route path="/admin" element={
-              <RequireAuth allowedRoles={['admin', 'staff', 'cashier']}>
+              <RequireAuth allowedRoles={['super_admin', 'admin', 'cash', 'appointment', 'service', 'product']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/customers" element={
-              <RequireAuth allowedRoles={['admin', 'staff']}>
+              <RequireAuth allowedRoles={['super_admin', 'admin', 'appointment']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/services" element={
-              <RequireAuth allowedRoles={['admin', 'staff']}>
+              <RequireAuth allowedRoles={['super_admin', 'admin', 'service']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/products" element={
-              <RequireAuth allowedRoles={['admin', 'staff', 'cashier']}>
+              <RequireAuth allowedRoles={['super_admin', 'admin', 'cash', 'product']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/appointments" element={
-              <RequireAuth allowedRoles={['admin', 'staff']}>
+              <RequireAuth allowedRoles={['super_admin', 'admin', 'appointment']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/cash" element={
-              <RequireAuth allowedRoles={['admin', 'cashier']}>
+              <RequireAuth allowedRoles={['super_admin', 'admin', 'cash']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/staff" element={
-              <RequireAuth allowedRoles={['admin']}>
+              <RequireAuth allowedRoles={['super_admin', 'admin']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/settings" element={
-              <RequireAuth allowedRoles={['admin']}>
+              <RequireAuth allowedRoles={['super_admin']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/profile" element={
-              <RequireAuth allowedRoles={['admin', 'staff', 'cashier']}>
+              <RequireAuth allowedRoles={['super_admin', 'admin', 'cash', 'appointment', 'service', 'product']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/customers/:customerId" element={
-              <RequireAuth allowedRoles={['admin', 'staff']}>
+              <RequireAuth allowedRoles={['super_admin', 'admin', 'appointment']}>
                 <CustomerDetailPage />
               </RequireAuth>
             } />

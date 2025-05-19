@@ -1,58 +1,26 @@
 
-type Environment = 'development' | 'staging' | 'production';
+import { appConfig, apiSchema } from './modes';
 
-interface EnvConfig {
-  apiBaseUrl: string;
-  usesMockData: boolean;
-  useSupabase: boolean;
-  appName: string;
-  featureFlags: {
-    showDebugInfo: boolean;
-    enableAdvancedFiltering: boolean;
-    enableBatchOperations: boolean;
-  };
-}
-
-// Current environment
-export const currentEnv: Environment = 
-  (import.meta.env.VITE_APP_ENV as Environment) || 'development';
-
-// Environment-specific configurations
-const envConfigs: Record<Environment, EnvConfig> = {
-  development: {
-    apiBaseUrl: import.meta.env.VITE_API_URL || '/api',
-    usesMockData: true,
-    useSupabase: false,
-    appName: 'Gözəllik Salonu (Dev)',
-    featureFlags: {
-      showDebugInfo: true,
-      enableAdvancedFiltering: true,
-      enableBatchOperations: false
-    }
+// Export the application environment configuration
+export const config = {
+  ...appConfig,
+  
+  // API configuration
+  api: {
+    url: appConfig.apiUrl || import.meta.env.VITE_API_URL,
+    key: import.meta.env.VITE_API_KEY,
+    schema: apiSchema
   },
-  staging: {
-    apiBaseUrl: import.meta.env.VITE_API_URL || '/api',
-    usesMockData: false,
-    useSupabase: true,
-    appName: 'Gözəllik Salonu (Staging)',
-    featureFlags: {
-      showDebugInfo: true,
-      enableAdvancedFiltering: true,
-      enableBatchOperations: true
-    }
+  
+  // Supabase configuration
+  supabase: {
+    url: import.meta.env.VITE_SUPABASE_URL,
+    key: import.meta.env.VITE_SUPABASE_KEY
   },
-  production: {
-    apiBaseUrl: import.meta.env.VITE_API_URL || '/api',
-    usesMockData: false,
-    useSupabase: false,
-    appName: 'Gözəllik Salonu',
-    featureFlags: {
-      showDebugInfo: false,
-      enableAdvancedFiltering: true,
-      enableBatchOperations: true
-    }
+  
+  // Feature flags
+  features: {
+    enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true',
+    debugMode: import.meta.env.VITE_DEBUG_MODE === 'true'
   }
 };
-
-// Export the config for the current environment
-export const config = envConfigs[currentEnv];

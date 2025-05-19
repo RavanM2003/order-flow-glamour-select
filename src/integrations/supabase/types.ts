@@ -260,6 +260,30 @@ export type Database = {
           },
         ]
       }
+      roles: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       service_products: {
         Row: {
           product_id: number
@@ -329,29 +353,43 @@ export type Database = {
       staff: {
         Row: {
           created_at: string | null
+          email: string | null
           id: number
           name: string
           position: string | null
+          role_id: number | null
           specializations: Json | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          email?: string | null
           id?: number
           name: string
           position?: string | null
+          role_id?: number | null
           specializations?: Json | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          email?: string | null
           id?: number
           name?: string
           position?: string | null
+          role_id?: number | null
           specializations?: Json | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "staff_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

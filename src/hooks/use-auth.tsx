@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 import { config } from '@/config/env';
 import { UserRole } from '@/models/user.model';
+import { ROLE_PERMISSIONS } from '@/models/role.model';
 
 // Interface for our session state
 interface UserSession {
@@ -16,6 +17,7 @@ interface UserSession {
     role: UserRole;
     avatar: string | null;
     staffId: number | null;
+    roleId: number | null;
   } | null;
 }
 
@@ -27,6 +29,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isLoading: boolean;
   checkAccess: (requiredRoles: string[]) => boolean;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,7 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('*, staff:staff_id(*)')
         .eq('id', userId)
         .single();
 
@@ -76,7 +79,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           lastName: profile.last_name,
           role: profile.role as UserRole,
           avatar: profile.avatar_url,
-          staffId: profile.staff_id
+          staffId: profile.staff_id,
+          roleId: profile.staff?.role_id
         } : null
       });
     } else {
@@ -231,11 +235,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // If no specific roles are required, any authenticated user has access
     if (!requiredRoles || requiredRoles.length === 0) return true;
     
-    // Admin role has access to everything
-    if (session.profile.role === 'admin') return true;
+    // Super admin role has access to everything
+    if (session.profile.role === 'super_admin') return true;
     
     // Check if user's role is in the required roles
     return requiredRoles.includes(session.profile.role);
+  };
+
+  // Check if user has a specific permission
+  const hasPermission = (permission: string): boolean => {
+    if (!session.isAuthenticated || !session.profile) return false;
+    
+    const role = session.profile.role as string;
+    
+    // Super admin has all permissions
+    if (role === 'super_admin') return true;
+    
+    // Check role permissions
+    if (ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS]) {
+      const permissions = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS];
+      return permissions.includes('all') || permissions.includes(permission);
+    }
+    
+    return false;
   };
 
   return (
@@ -245,7 +267,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signup,
       logout, 
       isLoading, 
-      checkAccess 
+      checkAccess,
+      hasPermission
     }}>
       {children}
     </AuthContext.Provider>

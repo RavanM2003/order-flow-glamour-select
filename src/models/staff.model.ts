@@ -1,10 +1,10 @@
 
 // Staff member model
 export interface Staff {
-  id: number;  // Changed from optional to required for consistency
+  id: number;
   name: string;
-  position: string;  // Changed from optional to required to match usage in services
-  specializations: string[];  // Changed from optional to required to match usage in services
+  position: string;
+  specializations: string[];
   email?: string;
   phone?: string;
   salary?: number;
@@ -13,17 +13,19 @@ export interface Staff {
   created_at?: string;
   updated_at?: string;
   workingHours?: StaffWorkingHours[];
+  role_id?: number;
 }
 
 export interface StaffFormData {
   name: string;
-  position: string;  // Changed from optional to required
+  position: string;
   specializations: string[];
   email?: string;
   phone?: string;
   salary?: number;
   commissionRate?: number;
   paymentType?: 'salary' | 'commission' | 'both';
+  role_id?: number;
 }
 
 // Updated StaffPayment type
