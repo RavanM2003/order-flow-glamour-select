@@ -1,3 +1,4 @@
+
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -210,15 +211,15 @@ export class StaffService extends ApiService {
         name: data.name,
         position: data.position,
         specializations: data.specializations,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        user_id: undefined,
         email: data.email,
         phone: data.phone,
         salary: data.salary,
         commissionRate: data.commissionRate,
         paymentType: data.paymentType,
-        role_id: data.role_id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        user_id: undefined // Set an appropriate value here if needed
+        role_id: data.role_id
       };
       
       mockStaff.push(newStaff);
@@ -241,19 +242,34 @@ export class StaffService extends ApiService {
         // Update the staff member with proper type handling
         const existingStaff = mockStaff[index];
         
-        mockStaff[index] = { 
-          ...existingStaff,
-          ...data,
-          // Ensure required properties are maintained
+        // Create a valid Staff object with updated fields
+        const updatedStaff: Staff = { 
           id: existingStaff.id,
           name: data.name || existingStaff.name || `Staff #${existingStaff.id}`,
           position: data.position || existingStaff.position || 'Staff Member',
-          // Convert specializations to string[]
           specializations: (data.specializations || existingStaff.specializations || []).map(String),
-          updated_at: new Date().toISOString()
-        } as Staff;
+          updated_at: new Date().toISOString(),
+          created_at: existingStaff.created_at || new Date().toISOString(),
+          user_id: existingStaff.user_id,
+          // Preserve other optional fields
+          ...(existingStaff.email !== undefined || data.email !== undefined ? 
+              { email: data.email || existingStaff.email } : {}),
+          ...(existingStaff.phone !== undefined || data.phone !== undefined ? 
+              { phone: data.phone || existingStaff.phone } : {}),
+          ...(existingStaff.role_id !== undefined || data.role_id !== undefined ? 
+              { role_id: data.role_id || existingStaff.role_id } : {}),
+          ...(existingStaff.avatar_url !== undefined ? 
+              { avatar_url: existingStaff.avatar_url } : {}),
+          ...(existingStaff.salary !== undefined || data.salary !== undefined ? 
+              { salary: data.salary || existingStaff.salary } : {}),
+          ...(existingStaff.commissionRate !== undefined || data.commissionRate !== undefined ? 
+              { commissionRate: data.commissionRate || existingStaff.commissionRate } : {}),
+          ...(existingStaff.paymentType !== undefined || data.paymentType !== undefined ? 
+              { paymentType: data.paymentType || existingStaff.paymentType } : {})
+        };
         
-        return { data: mockStaff[index] as Staff };
+        mockStaff[index] = updatedStaff;
+        return { data: updatedStaff };
       }
       return { error: 'Staff not found' };
     }
