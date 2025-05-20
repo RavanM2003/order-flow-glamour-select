@@ -1,3 +1,4 @@
+
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -142,12 +143,24 @@ export class StaffService extends ApiService {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 250));
       // Ensure position and specializations are set for all staff
-      const staffList = [...mockStaff].map(s => ({
-        ...s,
-        name: s.name || `Staff #${s.id}`, // Ensure name is set
-        position: s.position || 'Staff Member', // Default position if not set
-        specializations: s.specializations || []
-      })) as Staff[];
+      const staffList = [...mockStaff].map(s => {
+        // Create a valid Staff object with all required properties
+        const staffMember: Staff = {
+          id: s.id,
+          name: s.name || `Staff #${s.id}`, // Ensure name is set
+          position: s.position || 'Staff Member', // Default position if not set
+          specializations: (s.specializations || []).map(String), // Convert to string[]
+          created_at: s.created_at,
+          updated_at: s.updated_at,
+          user_id: s.user_id,
+          // Add optional fields with defaults if present
+          ...(s.email !== undefined ? { email: s.email } : {}),
+          ...(s.phone !== undefined ? { phone: s.phone } : {}),
+          ...(s.role_id !== undefined ? { role_id: s.role_id } : {}),
+          ...(s.avatar_url !== undefined ? { avatar_url: s.avatar_url } : {})
+        };
+        return staffMember;
+      });
       
       return { data: staffList };
     }
@@ -163,15 +176,24 @@ export class StaffService extends ApiService {
       if (!staff) {
         return { error: 'Staff not found' };
       }
+      
       // Ensure all required properties are set
-      return { 
-        data: {
-          ...staff,
-          name: staff.name || `Staff #${staff.id}`, // Ensure name is set
-          position: staff.position || 'Staff Member', // Default position if not set
-          specializations: staff.specializations || [] // Ensure specializations is defined
-        } as Staff
+      const staffMember: Staff = {
+        id: staff.id,
+        name: staff.name || `Staff #${staff.id}`,
+        position: staff.position || 'Staff Member',
+        specializations: (staff.specializations || []).map(String), // Convert to string[]
+        created_at: staff.created_at,
+        updated_at: staff.updated_at,
+        user_id: staff.user_id,
+        // Add optional fields if present
+        ...(staff.email !== undefined ? { email: staff.email } : {}),
+        ...(staff.phone !== undefined ? { phone: staff.phone } : {}),
+        ...(staff.role_id !== undefined ? { role_id: staff.role_id } : {}),
+        ...(staff.avatar_url !== undefined ? { avatar_url: staff.avatar_url } : {})
       };
+      
+      return { data: staffMember };
     }
     
     return this.get(`/staff/${id}`);
@@ -183,19 +205,21 @@ export class StaffService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 400));
       const newId = Math.max(...mockStaff.map(s => s.id || 0), 0) + 1;
       
-      // Ensure required fields
+      // Create a new valid Staff object
       const newStaff: Staff = { 
         id: newId,
         name: data.name,
-        position: data.position || 'Staff Member', // Ensure position is never empty
-        specializations: data.specializations || [], // Ensure specializations is always an array
+        position: data.position || 'Staff Member',
+        specializations: data.specializations?.map(String) || [],
         email: data.email,
         phone: data.phone,
         salary: data.salary,
         commissionRate: data.commissionRate,
         paymentType: data.paymentType,
+        role_id: data.role_id,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        user_id: undefined // Set an appropriate value here if needed
       };
       
       mockStaff.push(newStaff);
@@ -215,17 +239,22 @@ export class StaffService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockStaff.findIndex(s => s.id === Number(id));
       if (index >= 0) {
-        // Ensure required fields are maintained when updating
+        // Update the staff member with proper type handling
+        const existingStaff = mockStaff[index];
+        
         mockStaff[index] = { 
-          ...mockStaff[index], 
+          ...existingStaff,
           ...data,
-          name: data.name || mockStaff[index].name || `Staff #${mockStaff[index].id}`, // Ensure name is preserved
-          position: data.position || mockStaff[index].position || 'Staff Member',
-          specializations: data.specializations || mockStaff[index].specializations || [],
+          // Ensure required properties are maintained
+          id: existingStaff.id,
+          name: data.name || existingStaff.name || `Staff #${existingStaff.id}`,
+          position: data.position || existingStaff.position || 'Staff Member',
+          // Convert specializations to string[]
+          specializations: (data.specializations || existingStaff.specializations || []).map(String),
           updated_at: new Date().toISOString()
         } as Staff;
         
-        return { data: mockStaff[index] };
+        return { data: mockStaff[index] as Staff };
       }
       return { error: 'Staff not found' };
     }

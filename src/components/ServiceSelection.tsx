@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -107,14 +108,21 @@ const ServiceSelection = () => {
         }
         
         if (data) {
-          // Make sure each staff object has a name property
-          const staffWithNames = data.map(staff => ({
-            ...staff,
-            // If name is missing, provide a default
-            name: staff.name || `Staff #${staff.id}`
-          }));
+          // Process staff data with type-safe transformations
+          const processedStaff = data.map(staffMember => {
+            const processedSpecializations = Array.isArray(staffMember.specializations) 
+              ? staffMember.specializations.map(s => String(s)) // Convert numbers to strings
+              : [];
+              
+            return {
+              ...staffMember,
+              name: staffMember.name || `Staff #${staffMember.id}`,
+              specializations: processedSpecializations, // Ensure specializations is string[]
+              position: staffMember.position || 'Staff Member' // Ensure position exists
+            } as Staff;
+          });
           
-          setStaffMembers(staffWithNames as Staff[]);
+          setStaffMembers(processedStaff);
           // Reset selected staff when service changes
           setSelectedStaff(null);
         }

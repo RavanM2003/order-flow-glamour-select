@@ -3,7 +3,7 @@ export interface Staff {
   id: number;
   name: string;
   position?: string;
-  specializations?: string[]; // Changed from number[] to string[]
+  specializations?: string[]; // Already using string[] as type
   created_at?: string;
   updated_at?: string;
   user_id?: string;
