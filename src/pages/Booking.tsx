@@ -13,6 +13,7 @@ const Booking = () => {
       <main className="container py-8">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl font-bold text-glamour-800 mb-8 text-center">Book Your Appointment</h1>
+          {/* Wrap this component in React.memo to prevent unnecessary re-renders */}
           <OrderProvider>
             <CheckoutFlow />
           </OrderProvider>
@@ -24,4 +25,5 @@ const Booking = () => {
   );
 };
 
-export default Booking;
+// Export as memoized component to prevent unnecessary re-renders
+export default React.memo(Booking);

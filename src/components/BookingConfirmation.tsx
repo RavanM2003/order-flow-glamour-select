@@ -111,32 +111,42 @@ const BookingConfirmation = () => {
       }
       
       // 3. Add service to appointment
-      await supabase
+      const appointmentService = {
+        appointment_id: appointment.id,
+        service_id: selectedService.id,
+        staff_id: selectedStaff.id.toString(),
+        price: selectedService.price,
+        duration: selectedService.duration,
+        quantity: 1
+      };
+      
+      const { error: serviceError } = await supabase
         .from('appointment_services')
-        .insert([
-          {
-            appointment_id: appointment.id,
-            service_id: selectedService.id,
-            staff_id: selectedStaff.id,
-            price: selectedService.price,
-            duration: selectedService.duration,
-            quantity: 1
-          }
-        ]);
+        .insert(appointmentService);
+        
+      if (serviceError) {
+        throw serviceError;
+      }
       
       // 4. Add products to appointment if any
       if (selectedProducts.length > 0) {
         const appointmentProducts = selectedProducts.map(product => ({
           appointment_id: appointment.id,
           product_id: product.id,
-          staff_id: selectedStaff.id,
+          staff_id: selectedStaff.id.toString(),
           price: product.price,
           quantity: 1
         }));
         
-        await supabase
-          .from('appointment_products')
-          .insert(appointmentProducts);
+        for (const product of appointmentProducts) {
+          const { error: productError } = await supabase
+            .from('appointment_products')
+            .insert(product);
+            
+          if (productError) {
+            throw productError;
+          }
+        }
       }
       
       // Show success message

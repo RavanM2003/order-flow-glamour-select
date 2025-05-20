@@ -1,62 +1,135 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOrder } from '@/context/OrderContext';
 import { Card, CardContent } from "@/components/ui/card";
 import { Receipt, Calendar, Clock, User, Phone, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { QRCodeSVG } from 'qrcode.react';
-
-const services = [
-  { id: 1, name: "Facial Treatment", price: 150, duration: "60 min" },
-  { id: 2, name: "Massage Therapy", price: 120, duration: "45 min" },
-  { id: 3, name: "Manicure", price: 50, duration: "30 min" },
-  { id: 4, name: "Hair Styling", price: 80, duration: "45 min" },
-  { id: 5, name: "Makeup Application", price: 90, duration: "60 min" }
-];
-
-const products = [
-  { id: 1, name: "Moisturizer Cream", price: 45 },
-  { id: 2, name: "Anti-Aging Serum", price: 75 },
-  { id: 3, name: "Hair Care Kit", price: 60 }
-];
-
-const demoOrder = {
-  orderId: "GS-123456-789",
-  customerInfo: {
-    name: "Aysel Məmmədova",
-    gender: "Qadın",
-    phone: "+994501234567",
-    email: "aysel@example.com",
-    date: "2024-06-10",
-    time: "15:00",
-    notes: "Zəhmət olmasa vaxtında gəlin.",
-  },
-  selectedServices: [1, 3],
-  selectedProducts: [2],
-  paymentMethod: "Nəğd",
-  serviceProviders: [
-    { serviceId: 1, name: "Elvin Əliyev" },
-    { serviceId: 3, name: "Aygün Qasımova" }
-  ],
-  status: "Gözləmədə"
-};
+import { useParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 
 const BookingDetails = () => {
   const { orderState } = useOrder();
-  // Use demo data if orderState is missing or incomplete
-  const [localStatus, setLocalStatus] = useState(
-    (orderState && orderState.orderId ? orderState.status : demoOrder.status) || "Gözləmədə"
-  );
-  
-  // Merge demo data with actual order state or use demo data if no order state is available
-  const data = orderState && orderState.orderId 
-    ? { ...orderState, status: localStatus } 
-    : { ...demoOrder, status: localStatus };
-  
-  const bookingUrl = `${window.location.origin}/booking-details/${data.orderId}`;
+  const { orderId } = useParams<{ orderId: string }>();
+  const [appointmentData, setAppointmentData] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [localStatus, setLocalStatus] = useState("Gözləmədə");
   const [cancelMsg, setCancelMsg] = useState("");
 
-  if (!data.customerInfo || !data.orderId) {
+  // Demo data for when no real data is available
+  const demoData = {
+    orderId: "GS-123456-789",
+    customerInfo: {
+      name: "Aysel Məmmədova",
+      gender: "Qadın",
+      phone: "+994501234567",
+      email: "aysel@example.com",
+      date: "2024-06-10",
+      time: "15:00",
+      notes: "Zəhmət olmasa vaxtında gəlin.",
+    },
+    selectedServices: [1, 3],
+    selectedProducts: [2],
+    services: [
+      { id: 1, name: "Facial Treatment", price: 150, duration: "60 min" },
+      { id: 3, name: "Manicure", price: 50, duration: "30 min" },
+    ],
+    products: [
+      { id: 2, name: "Anti-Aging Serum", price: 75 }
+    ],
+    paymentMethod: "Nəğd",
+    serviceProviders: [
+      { serviceId: 1, name: "Elvin Əliyev" },
+      { serviceId: 3, name: "Aygün Qasımova" }
+    ],
+    status: "Gözləmədə"
+  };
+
+  useEffect(() => {
+    const fetchAppointmentData = async () => {
+      if (orderId) {
+        try {
+          const { data, error } = await supabase
+            .from('appointments')
+            .select(`
+              *,
+              appointment_services(*,
+                service:services(*),
+                staff:staff(*)
+              ),
+              appointment_products(*,
+                product:products(*),
+                staff:staff(*)
+              ),
+              customer:customers(*)
+            `)
+            .eq('id', orderId)
+            .single();
+
+          if (error) throw error;
+          
+          if (data) {
+            setAppointmentData({
+              orderId: data.id,
+              status: data.status,
+              customerInfo: {
+                name: data.customer.full_name,
+                gender: data.customer.gender || 'N/A',
+                phone: data.customer.phone,
+                email: data.customer.email,
+                date: data.appointment_date,
+                time: data.start_time,
+                notes: data.notes || '',
+              },
+              services: data.appointment_services.map((as: any) => ({
+                id: as.service.id,
+                name: as.service.name,
+                price: as.price,
+                duration: `${as.service.duration} min`,
+              })),
+              selectedServices: data.appointment_services.map((as: any) => as.service.id),
+              products: data.appointment_products.map((ap: any) => ({
+                id: ap.product.id,
+                name: ap.product.name,
+                price: ap.price,
+              })),
+              selectedProducts: data.appointment_products.map((ap: any) => ap.product.id),
+              paymentMethod: data.payment_method || 'Nəğd',
+              serviceProviders: data.appointment_services.map((as: any) => ({
+                serviceId: as.service.id,
+                name: as.staff.name,
+              })),
+            });
+            setLocalStatus(data.status);
+          }
+        } catch (error) {
+          console.error("Error fetching appointment:", error);
+          // Fall back to demo data
+          setAppointmentData(demoData);
+          setLocalStatus(demoData.status);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        // If no orderId, use demo data
+        setAppointmentData(demoData);
+        setLocalStatus(demoData.status);
+        setLoading(false);
+      }
+    };
+
+    fetchAppointmentData();
+  }, [orderId]);
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-600">Yüklənir...</p>
+      </div>
+    );
+  }
+
+  if (!appointmentData) {
     return (
       <div className="text-center py-8">
         <p className="text-gray-600">No booking details found.</p>
@@ -64,22 +137,19 @@ const BookingDetails = () => {
     );
   }
 
-  const selectedServices = services.filter(service => 
-    data.selectedServices.includes(service.id)
-  );
-
-  const selectedProducts = products.filter(product => 
-    data.selectedProducts.includes(product.id)
-  );
-
-  const total = selectedServices.reduce((sum, service) => sum + service.price, 0) +
-                selectedProducts.reduce((sum, product) => sum + product.price, 0);
+  // Use the fetched data or demo data
+  const data = appointmentData;
+  const bookingUrl = `${window.location.origin}/booking-details/${data.orderId}`;
 
   // Calculate total duration in minutes
-  const totalDuration = selectedServices.reduce((sum, service) => {
+  const totalDuration = data.services.reduce((sum: number, service: any) => {
     const match = service.duration.match(/(\d+)/);
     return sum + (match ? parseInt(match[1], 10) : 0);
   }, 0);
+
+  // Calculate total
+  const total = data.services.reduce((sum: number, service: any) => sum + service.price, 0) +
+               (data.products ? data.products.reduce((sum: number, product: any) => sum + product.price, 0) : 0);
 
   // Calculate inTime and outTime
   const inTime = data.customerInfo.time || "00:00";
@@ -110,8 +180,8 @@ const BookingDetails = () => {
 
               <div className="space-y-4">
                 <h3 className="font-semibold text-glamour-800">Selected Services</h3>
-                {selectedServices.map(service => {
-                  const provider = data.serviceProviders && data.serviceProviders.find(p => p.serviceId === service.id);
+                {data.services && data.services.map((service: any) => {
+                  const provider = data.serviceProviders && data.serviceProviders.find((p: any) => p.serviceId === service.id);
                   return (
                     <div key={service.id} className="flex justify-between items-center">
                       <div>
@@ -129,10 +199,10 @@ const BookingDetails = () => {
                   Selected Services Total duration: {totalDuration} min
                 </div>
 
-                {selectedProducts.length > 0 && (
+                {data.products && data.products.length > 0 && (
                   <>
                     <h3 className="font-semibold text-glamour-800 mt-6">Selected Products</h3>
-                    {selectedProducts.map(product => (
+                    {data.products.map((product: any) => (
                       <div key={product.id} className="flex justify-between items-center">
                         <p className="font-medium">{product.name}</p>
                         <p className="font-medium">${product.price}</p>
@@ -192,7 +262,19 @@ const BookingDetails = () => {
               {localStatus !== "Ləğv edildi" ? (
                 <button
                   className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded transition-colors"
-                  onClick={() => {
+                  onClick={async () => {
+                    if (orderId) {
+                      try {
+                        const { error } = await supabase
+                          .from('appointments')
+                          .update({ status: 'cancelled' })
+                          .eq('id', orderId);
+                          
+                        if (error) throw error;
+                      } catch (error) {
+                        console.error("Error cancelling appointment:", error);
+                      }
+                    }
                     setLocalStatus("Ləğv edildi");
                     setCancelMsg("Sifariş uğurla ləğv edildi.");
                   }}

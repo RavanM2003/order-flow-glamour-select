@@ -60,18 +60,13 @@ export class AuthService extends ApiService {
         return { error: 'User data not found' };
       }
       
-      // Get staff ID from the staff object (not array)
-      const staffData = userData.staff;
-      
-      // Explicitly type and check the staff data
+      // Handle staffData properly - check for existence and proper structure
       let staffId: number | null = null;
-      if (staffData && 
-          typeof staffData === 'object' && 
-          !Array.isArray(staffData) && 
-          'id' in staffData) {
-        // Use a type assertion to tell TypeScript that staffData has an id property
-        const typedStaffData = staffData as { id: number };
-        staffId = typedStaffData.id;
+      if (userData.staff && typeof userData.staff === 'object') {
+        // Type guard to ensure staff has an id property
+        if ('id' in userData.staff) {
+          staffId = (userData.staff as any).id;
+        }
       }
       
       // Create user object
@@ -130,18 +125,13 @@ export class AuthService extends ApiService {
         return { error: 'Invalid email or password' };
       }
       
-      // Get staff ID from the staff object (not array)
-      const staffData = userData.staff;
-      
-      // Explicitly type and check the staff data
+      // Handle staffData properly - check for existence and proper structure
       let staffId: number | null = null;
-      if (staffData && 
-          typeof staffData === 'object' && 
-          !Array.isArray(staffData) && 
-          'id' in staffData) {
-        // Use a type assertion to tell TypeScript that staffData has an id property
-        const typedStaffData = staffData as { id: number };
-        staffId = typedStaffData.id;
+      if (userData.staff && typeof userData.staff === 'object') {
+        // Type guard to ensure staff has an id property
+        if ('id' in userData.staff) {
+          staffId = (userData.staff as any).id;
+        }
       }
       
       // Create user object

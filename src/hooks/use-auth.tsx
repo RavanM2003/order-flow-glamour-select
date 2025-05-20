@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -81,20 +80,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userData = await fetchUserProfile(session.user.id);
       
       if (userData) {
-        // Get the staff record if it exists
-        const staffData = userData.staff;
-        
         // Handle staffData properly by explicitly typing it
         let staffId: number | null = null;
         
-        // Check if staffData is an object and has an id property
-        if (staffData && 
-            typeof staffData === 'object' && 
-            !Array.isArray(staffData) && 
-            'id' in staffData) {
-          // Use a type assertion to tell TypeScript that staffData has an id property
-          const typedStaffData = staffData as { id: number };
-          staffId = typedStaffData.id;
+        // Check if staffData exists and has an id
+        if (userData.staff && typeof userData.staff === 'object') {
+          // Type guard to ensure staff has an id property
+          if ('id' in userData.staff) {
+            staffId = (userData.staff as any).id;
+          }
         }
 
         setSession(prev => ({

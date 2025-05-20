@@ -27,4 +27,5 @@ const BookingDetailsPage = () => {
   );
 };
 
-export default BookingDetailsPage;
+// Export as memoized component to prevent unnecessary re-renders
+export default React.memo(BookingDetailsPage);

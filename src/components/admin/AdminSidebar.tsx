@@ -33,7 +33,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab }) 
   ];
   
   return (
-    <div className={`bg-white border-r flex flex-col ${collapsed ? 'w-16' : 'w-64'} transition-width duration-300 ease-in-out`}>
+    <div className={`h-screen bg-white border-r flex flex-col ${collapsed ? 'w-16' : 'w-64'} transition-all duration-300 ease-in-out`}>
       <div className="p-4 border-b flex items-center justify-between">
         {!collapsed && <div className="font-bold text-xl text-glamour-800">Admin</div>}
         <Button 
