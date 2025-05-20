@@ -1,4 +1,3 @@
-
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -209,8 +208,8 @@ export class StaffService extends ApiService {
       const newStaff: Staff = { 
         id: newId,
         name: data.name,
-        position: data.position || 'Staff Member',
-        specializations: data.specializations?.map(String) || [],
+        position: data.position,
+        specializations: data.specializations,
         email: data.email,
         phone: data.phone,
         salary: data.salary,

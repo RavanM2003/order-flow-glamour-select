@@ -2,8 +2,8 @@
 export interface Staff {
   id: number;
   name: string;
-  position?: string;
-  specializations?: string[]; // Using string[] as the type
+  position: string; // Changed from optional to required
+  specializations: string[]; // Changed from optional to required
   created_at?: string;
   updated_at?: string;
   user_id?: string;
@@ -41,8 +41,8 @@ export interface StaffServiceRecord {
 
 export interface StaffFormData {
   name: string;
-  position?: string;
-  specializations?: string[];
+  position: string; // Changed from optional to required
+  specializations: string[]; // Changed from optional to required
   email?: string;
   phone?: string;
   salary?: number;

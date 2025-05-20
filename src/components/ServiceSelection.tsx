@@ -110,15 +110,19 @@ const ServiceSelection = () => {
         if (data) {
           // Process staff data with type-safe transformations
           const processedStaff: Staff[] = data.map(staffMember => {
-            const staffName = staffMember.name || `Staff #${staffMember.id}`;
+            // Ensure name has a default value
+            const staffName = staffMember.name !== undefined ? staffMember.name : `Staff #${staffMember.id}`;
+            
+            // Ensure specializations is a string array
             const processedSpecializations = Array.isArray(staffMember.specializations) 
               ? staffMember.specializations.map(s => String(s)) // Convert numbers to strings
               : [];
               
+            // Create a valid Staff object with required properties
             return {
               ...staffMember,
               name: staffName,
-              specializations: processedSpecializations, // Ensure specializations is string[]
+              specializations: processedSpecializations,
               position: staffMember.position || 'Staff Member' // Ensure position exists
             } as Staff;
           });
