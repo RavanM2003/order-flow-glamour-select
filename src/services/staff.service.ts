@@ -146,8 +146,8 @@ export class StaffService extends ApiService {
         ...s,
         position: s.position || 'Staff Member', // Default position if not set
         specializations: s.specializations || []
-      })) as Staff[];
-      return { data: staffList };
+      }));
+      return { data: staffList as Staff[] };
     }
     
     return this.get('/staff');
@@ -219,7 +219,7 @@ export class StaffService extends ApiService {
           position: data.position || mockStaff[index].position || 'Staff Member',
           specializations: data.specializations || mockStaff[index].specializations || [],
           updated_at: new Date().toISOString()
-        } as Staff;
+        };
         return { data: mockStaff[index] as Staff };
       }
       return { error: 'Staff not found' };

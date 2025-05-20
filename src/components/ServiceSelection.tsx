@@ -108,7 +108,8 @@ const ServiceSelection = () => {
         }
         
         if (data) {
-          setStaffMembers(data);
+          // Fix: Convert data to Staff[] type with type assertion to include the name property
+          setStaffMembers(data as Staff[]);
           // Reset selected staff when service changes
           setSelectedStaff(null);
         }
