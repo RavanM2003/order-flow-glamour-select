@@ -13,6 +13,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -21,19 +22,23 @@ interface AdminSidebarProps {
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const { t } = useLanguage();
   
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: <PieChart size={20} /> },
-    { id: 'customers', label: 'Customers', icon: <Users size={20} /> },
-    { id: 'services', label: 'Services', icon: <Scissors size={20} /> },
-    { id: 'products', label: 'Products', icon: <Package size={20} /> },
-    { id: 'appointments', label: 'Appointments', icon: <Calendar size={20} /> },
-    { id: 'staff', label: 'Staff', icon: <Users size={20} /> },
-    { id: 'settings', label: 'Settings', icon: <Settings size={20} /> },
+    { id: 'dashboard', label: t('admin.dashboard'), icon: <PieChart size={20} /> },
+    { id: 'customers', label: t('admin.customers'), icon: <Users size={20} /> },
+    { id: 'services', label: t('admin.services'), icon: <Scissors size={20} /> },
+    { id: 'products', label: t('admin.products'), icon: <Package size={20} /> },
+    { id: 'appointments', label: t('admin.appointments'), icon: <Calendar size={20} /> },
+    { id: 'staff', label: t('admin.staff'), icon: <Users size={20} /> },
+    { id: 'settings', label: t('admin.settings'), icon: <Settings size={20} /> },
   ];
   
   return (
-    <div className={`h-screen bg-white border-r flex flex-col ${collapsed ? 'w-16' : 'w-64'} transition-all duration-300 ease-in-out`}>
+    <div 
+      className={`h-screen bg-white border-r flex flex-col ${collapsed ? 'w-16' : 'w-64'} 
+        transition-all duration-300 ease-in-out z-10 shadow-sm`}
+    >
       <div className="p-4 border-b flex items-center justify-between">
         {!collapsed && <div className="font-bold text-xl text-glamour-800">Admin</div>}
         <Button 
@@ -66,7 +71,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab }) 
         <Button variant="outline" className="w-full" asChild>
           <Link to="/">
             <Home size={18} className="mr-2" />
-            {!collapsed && <span>Back to Site</span>}
+            {!collapsed && <span>{t('admin.backToSite')}</span>}
           </Link>
         </Button>
       </div>

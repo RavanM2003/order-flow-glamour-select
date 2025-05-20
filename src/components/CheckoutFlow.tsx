@@ -5,6 +5,7 @@ import CustomerInfo from "./CustomerInfo";
 import ServiceSelection from "./ServiceSelection";
 import PaymentDetails from "./PaymentDetails";
 import BookingConfirmation from "./BookingConfirmation";
+import { useLanguage } from "@/context/LanguageContext";
 
 export type BookingMode = "customer" | "staff";
 
@@ -17,6 +18,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = React.memo(({
 }) => {
   const { orderState } = useOrder();
   const { currentStep } = orderState;
+  const { t } = useLanguage();
 
   return (
     <div>
@@ -24,22 +26,22 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = React.memo(({
         <div className="flex justify-between items-center">
           <div className={`step ${currentStep >= 1 ? "active" : ""}`}>
             <div className="step-number">1</div>
-            <div className="step-label">Customer Info</div>
+            <div className="step-label">{t('booking.customerInfo')}</div>
           </div>
           <div className="step-connector"></div>
           <div className={`step ${currentStep >= 2 ? "active" : ""}`}>
             <div className="step-number">2</div>
-            <div className="step-label">Services & Products</div>
+            <div className="step-label">{t('booking.services')}</div>
           </div>
           <div className="step-connector"></div>
           <div className={`step ${currentStep >= 3 ? "active" : ""}`}>
             <div className="step-number">3</div>
-            <div className="step-label">Payment</div>
+            <div className="step-label">{t('booking.payment')}</div>
           </div>
           <div className="step-connector"></div>
           <div className={`step ${currentStep >= 4 ? "active" : ""}`}>
             <div className="step-number">4</div>
-            <div className="step-label">Confirmation</div>
+            <div className="step-label">{t('booking.confirmation')}</div>
           </div>
         </div>
       </div>

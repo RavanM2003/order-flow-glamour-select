@@ -8,6 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { useLanguage } from '@/context/LanguageContext';
 
 const BookingDetails = () => {
   const { orderState } = useOrder();
@@ -16,6 +17,7 @@ const BookingDetails = () => {
   const [loading, setLoading] = useState(true);
   const [localStatus, setLocalStatus] = useState("Gözləmədə");
   const [cancelMsg, setCancelMsg] = useState("");
+  const { t } = useLanguage();
 
   // Demo data for when no real data is available
   const demoData = {
@@ -93,6 +95,12 @@ const BookingDetails = () => {
               }
             }
             
+            // Extract notes from data or default to empty string
+            const notes = data.cancel_reason || '';
+            
+            // Extract payment method or default to cash
+            const paymentMethod = 'Nəğd'; // Default value since it doesn't exist in the database structure
+            
             setAppointmentData({
               orderId: data.id,
               status: data.status,
@@ -103,7 +111,7 @@ const BookingDetails = () => {
                 email: customerData.email,
                 date: data.appointment_date,
                 time: data.start_time,
-                notes: data.notes || '',
+                notes: notes,
               } : {
                 name: "Customer info not found",
                 gender: "N/A",
@@ -111,7 +119,7 @@ const BookingDetails = () => {
                 email: "N/A",
                 date: data.appointment_date,
                 time: data.start_time,
-                notes: "",
+                notes: notes,
               },
               services: data.appointment_services?.map((as: any) => ({
                 id: as.service?.id,
@@ -126,7 +134,7 @@ const BookingDetails = () => {
                 price: ap.price || 0,
               })) || [],
               selectedProducts: data.appointment_products?.map((ap: any) => ap.product?.id) || [],
-              paymentMethod: data.payment_method || 'Nəğd',
+              paymentMethod: paymentMethod,
               serviceProviders: data.appointment_services?.map((as: any) => ({
                 serviceId: as.service?.id,
                 name: as.staff?.name || 'Unknown Staff',
@@ -168,7 +176,7 @@ const BookingDetails = () => {
   if (loading) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-600">Yüklənir...</p>
+        <p className="text-gray-600">{t('common.loading')}</p>
       </div>
     );
   }
@@ -211,7 +219,7 @@ const BookingDetails = () => {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-6">
               <Receipt className="h-6 w-6 text-glamour-700" />
-              <h2 className="text-2xl font-bold text-glamour-800">Booking Details</h2>
+              <h2 className="text-2xl font-bold text-glamour-800">{t('booking.bookingDetails')}</h2>
             </div>
 
             <div className="space-y-6">
@@ -257,7 +265,7 @@ const BookingDetails = () => {
 
                 <div className="border-t pt-4 mt-4">
                   <div className="flex justify-between items-center">
-                    <p className="font-semibold">Total</p>
+                    <p className="font-semibold">{t('booking.total')}</p>
                     <p className="font-bold text-lg">${total}</p>
                   </div>
                 </div>
@@ -279,19 +287,19 @@ const BookingDetails = () => {
             </p>
             <div className="w-full bg-glamour-50 rounded-lg p-4 space-y-2 text-glamour-800 text-sm">
               <div>
-                <span className="font-semibold">Ödənişin Qaydası</span><br />
+                <span className="font-semibold">{t('booking.paymentMethod')}</span><br />
                 {data.paymentMethod}
               </div>
               <div>
-                <span className="font-semibold">Status</span><br />
+                <span className="font-semibold">{t('booking.status')}</span><br />
                 {localStatus}
               </div>
               <div>
-                <span className="font-semibold">In time</span><br />
+                <span className="font-semibold">{t('booking.inTime')}</span><br />
                 {inTime}
               </div>
               <div>
-                <span className="font-semibold">Out time</span><br />
+                <span className="font-semibold">{t('booking.outTime')}</span><br />
                 {outTime}
               </div>
               <div>
@@ -323,13 +331,13 @@ const BookingDetails = () => {
                       }
                     }
                     setLocalStatus("Ləğv edildi");
-                    setCancelMsg("Sifariş uğurla ləğv edildi.");
+                    setCancelMsg(t('booking.successCancel'));
                   }}
                 >
-                  Sifarişi ləğv et
+                  {t('booking.cancel')}
                 </button>
               ) : (
-                <div className="mt-4 text-center text-red-600 font-semibold">Sifariş artıq ləğv edilib</div>
+                <div className="mt-4 text-center text-red-600 font-semibold">{t('booking.canceled')}</div>
               )}
               {cancelMsg && (
                 <div className="mt-2 text-green-700 text-center">{cancelMsg}</div>
