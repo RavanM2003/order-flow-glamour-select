@@ -2,10 +2,11 @@
 import React, { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '../ui/button';
+import { Customer } from '@/models/customer.model';
 
 interface DetailDrawerProps {
   children: ReactNode;
-  initialCustomer?: any; // For CustomerTab compatibility
+  initialCustomer?: Customer; // Added this prop to fix the error
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;

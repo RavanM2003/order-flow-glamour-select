@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -110,13 +109,10 @@ const ServiceSelection = () => {
         if (data) {
           // Process staff data with type-safe transformations
           const processedStaff: Staff[] = data.map(staffMember => {
-            // Add required name property if it doesn't exist in database response
-            const staffName = staffMember.name || `Staff #${staffMember.id}`;
-            
             // Create a proper Staff object with all required properties
-            return {
+            const staffData: Staff = {
               id: staffMember.id,
-              name: staffName, 
+              name: staffMember.name || `Staff #${staffMember.id}`,
               position: staffMember.position || 'Staff Member',
               specializations: Array.isArray(staffMember.specializations) 
                 ? staffMember.specializations.map(s => String(s))
@@ -124,7 +120,9 @@ const ServiceSelection = () => {
               created_at: staffMember.created_at,
               updated_at: staffMember.updated_at,
               user_id: staffMember.user_id
-            } as Staff;
+            };
+            
+            return staffData;
           });
           
           setStaffMembers(processedStaff);
