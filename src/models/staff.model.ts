@@ -65,12 +65,6 @@ export interface StaffWorkingHours {
   start_time: string;
   end_time: string;
   is_day_off: boolean;
-  // Alias properties for compatibility with existing code
-  staffId?: number;
-  dayOfWeek?: number;
-  startTime?: string;
-  endTime?: string;
-  isWorkingDay?: boolean;
 }
 
 export type StaffFilter = {
