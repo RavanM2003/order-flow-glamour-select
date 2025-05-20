@@ -27,7 +27,7 @@ const queryClient = new QueryClient();
 
 // Define role access for each route
 const routeRoleAccess: Record<string, UserRole[]> = {
-  '/admin': ['super_admin', 'admin', 'staff', 'cash', 'appointment', 'service', 'product', 'guest'],
+  '/admin': ['super_admin', 'admin', 'staff', 'cash', 'appointment', 'service', 'product', 'customer'],
   '/admin/customers': ['super_admin', 'admin', 'appointment'],
   '/admin/services': ['super_admin', 'admin', 'service'],
   '/admin/products': ['super_admin', 'admin', 'cash', 'product'],

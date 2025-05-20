@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -83,8 +84,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Get the staff record if it exists
         const staffData = userData.staff;
         
-        // If staffData exists, it could be an object (not an array)
-        const staffId = staffData ? staffData.id : null;
+        // staffData might be null or an object, not an array
+        const staffId = staffData && typeof staffData === 'object' ? staffData.id : null;
 
         setSession(prev => ({
           ...prev,

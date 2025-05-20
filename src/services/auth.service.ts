@@ -1,3 +1,4 @@
+
 import { User, UserCredentials, UserRole, AuthResponse } from '@/models/user.model';
 import { ApiService } from './api.service';
 import { ApiResponse } from '@/models/types';
@@ -62,7 +63,7 @@ export class AuthService extends ApiService {
       
       // Get staff ID from the staff object (not array)
       const staffData = userData.staff;
-      const staffId = staffData ? staffData.id : null;
+      const staffId = staffData && typeof staffData === 'object' ? staffData.id : null;
       
       // Create user object
       const user: User = {
@@ -122,7 +123,7 @@ export class AuthService extends ApiService {
       
       // Get staff ID from the staff object (not array)
       const staffData = userData.staff;
-      const staffId = staffData ? staffData.id : null;
+      const staffId = staffData && typeof staffData === 'object' ? staffData.id : null;
       
       // Create user object
       const user: User = {
@@ -130,7 +131,7 @@ export class AuthService extends ApiService {
         email: userData.email,
         firstName: userData.first_name || userData.email.split('@')[0],
         lastName: userData.last_name || 'User',
-        role: (userData.role || 'guest') as UserRole,
+        role: (userData.role || 'customer') as UserRole,
         staffId: staffId,
         profileImage: userData.avatar_url,
         lastLogin: new Date().toISOString(),

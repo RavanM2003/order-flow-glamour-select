@@ -1,5 +1,6 @@
+
 // User roles and permissions model
-export type UserRole = "super_admin" | "admin" | "staff" | "cash" | "appointment" | "service" | "product" | "guest" | "customer" | "reception";
+export type UserRole = "super_admin" | "admin" | "staff" | "cash" | "appointment" | "service" | "product" | "customer" | "reception";
 
 // Define Role interface
 export interface Role {
@@ -49,7 +50,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'dashboard:view',
     'products:view', 'products:create', 'products:edit'
   ],
-  guest: ['dashboard:view'],
   customer: ['dashboard:view'],
   reception: ['dashboard:view', 'appointments:view', 'appointments:create', 'customers:view']
 };
@@ -81,7 +81,7 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     label: "Dashboard", 
     icon: "Home", 
     route: "/admin",
-    requiredRoles: ["super_admin", "admin", "staff", "cash", "appointment", "service", "product", "guest", "cash", "customer", "reception"]
+    requiredRoles: ["super_admin", "admin", "staff", "cash", "appointment", "service", "product", "customer", "reception"]
   },
   { 
     id: "customers", 
