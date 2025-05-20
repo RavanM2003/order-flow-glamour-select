@@ -1,4 +1,3 @@
-
 import { ApiResponse } from '@/models/types';
 import { ApiService } from './api.service';
 import { authService } from './auth.service';
@@ -56,7 +55,15 @@ export class CustomerService extends ApiService {
       }
       
       // Otherwise create a customer without a user account
-      const customer = await supabaseService.createCustomer(supabaseCustomerData as Customer);
+      // Add default values for required Customer properties that might be missing
+      const customerWithDefaults = {
+        ...supabaseCustomerData,
+        id: 0, // This will be replaced by the database
+        lastVisit: '',
+        totalSpent: 0
+      } as Customer;
+      
+      const customer = await supabaseService.createCustomer(customerWithDefaults);
       return { data: customer, message: 'Customer created successfully' };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Failed to create customer' };
