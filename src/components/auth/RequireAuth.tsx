@@ -1,13 +1,14 @@
 
 import { ReactNode, useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
 import { UserRole } from '@/models/user.model';
+import { ROUTE_PERMISSIONS } from '@/models/role.model';
 
 interface RequireAuthProps {
   children: ReactNode;
-  allowedRoles?: string[];
+  allowedRoles?: UserRole[];
   requiredPermission?: string;
 }
 
@@ -18,6 +19,7 @@ const RequireAuth = ({
 }: RequireAuthProps) => {
   const { session, isLoading, checkAccess, hasPermission } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMockAuthenticated, setIsMockAuthenticated] = useState(false);
   const [mockUserRole, setMockUserRole] = useState<UserRole | null>(null);
   
@@ -38,8 +40,18 @@ const RequireAuth = ({
       }
     }
   }, []);
+
+  // Check if the current route requires specific permission
+  useEffect(() => {
+    const path = location.pathname;
+    const requiredPermissionForRoute = ROUTE_PERMISSIONS[path];
+    
+    if (requiredPermissionForRoute && !hasPermission(requiredPermissionForRoute) && !isMockAuthenticated) {
+      navigate('/admin', { replace: true });
+    }
+  }, [location, hasPermission, navigate, isMockAuthenticated]);
   
-  // Check mock user access
+  // Mock user access check
   const mockUserHasAccess = () => {
     if (!isMockAuthenticated || !mockUserRole) return false;
     
@@ -73,48 +85,14 @@ const RequireAuth = ({
   // If permission is required, check for it
   if (requiredPermission && !hasPermission(requiredPermission) && !mockUserHasAccess()) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-        <p className="text-gray-600 mb-6 text-center">
-          You don't have the required permission to access this page.
-          {session.profile?.role && (
-            <span> Your role ({session.profile.role}) doesn't have the necessary permissions.</span>
-          )}
-          {isMockAuthenticated && mockUserRole && (
-            <span> Your role ({mockUserRole}) doesn't have the necessary permissions.</span>
-          )}
-        </p>
-        <button
-          onClick={() => window.history.back()}
-          className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-        >
-          Go Back
-        </button>
-      </div>
+      <Navigate to="/admin" replace />
     );
   }
   
-  // If roles are specified and user doesn't have access, show unauthorized or redirect
+  // If roles are specified and user doesn't have access, redirect to dashboard
   if (allowedRoles.length > 0 && !checkAccess(allowedRoles) && !mockUserHasAccess()) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
-        <p className="text-gray-600 mb-6 text-center">
-          You don't have permission to access this page.
-          {session.profile?.role && (
-            <span> Your role ({session.profile.role}) doesn't have the required permissions.</span>
-          )}
-          {isMockAuthenticated && mockUserRole && (
-            <span> Your role ({mockUserRole}) doesn't have the required permissions.</span>
-          )}
-        </p>
-        <button
-          onClick={() => window.history.back()}
-          className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
-        >
-          Go Back
-        </button>
-      </div>
+      <Navigate to="/admin" replace />
     );
   }
   

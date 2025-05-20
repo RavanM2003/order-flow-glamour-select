@@ -21,8 +21,22 @@ import ProductDetail from "./pages/ProductDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import CustomerDetailPage from './pages/CustomerDetailPage';
+import { UserRole } from "./models/user.model";
 
 const queryClient = new QueryClient();
+
+// Define role access for each route
+const routeRoleAccess: Record<string, UserRole[]> = {
+  '/admin': ['super_admin', 'admin', 'staff', 'cashier', 'appointment', 'service', 'product', 'guest'],
+  '/admin/customers': ['super_admin', 'admin', 'appointment'],
+  '/admin/services': ['super_admin', 'admin', 'service'],
+  '/admin/products': ['super_admin', 'admin', 'cashier', 'product'],
+  '/admin/appointments': ['super_admin', 'admin', 'staff', 'appointment'],
+  '/admin/cash': ['super_admin', 'admin', 'cashier'],
+  '/admin/staff': ['super_admin', 'admin'],
+  '/admin/settings': ['super_admin'],
+  '/admin/profile': ['super_admin', 'admin', 'staff', 'cashier', 'appointment', 'service', 'product']
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -41,52 +55,52 @@ const App = () => (
             
             {/* Protected Admin Routes */}
             <Route path="/admin" element={
-              <RequireAuth allowedRoles={['super_admin', 'admin', 'cash', 'appointment', 'service', 'product']}>
+              <RequireAuth allowedRoles={routeRoleAccess['/admin']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/customers" element={
-              <RequireAuth allowedRoles={['super_admin', 'admin', 'appointment']}>
+              <RequireAuth allowedRoles={routeRoleAccess['/admin/customers']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/services" element={
-              <RequireAuth allowedRoles={['super_admin', 'admin', 'service']}>
+              <RequireAuth allowedRoles={routeRoleAccess['/admin/services']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/products" element={
-              <RequireAuth allowedRoles={['super_admin', 'admin', 'cash', 'product']}>
+              <RequireAuth allowedRoles={routeRoleAccess['/admin/products']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/appointments" element={
-              <RequireAuth allowedRoles={['super_admin', 'admin', 'appointment']}>
+              <RequireAuth allowedRoles={routeRoleAccess['/admin/appointments']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/cash" element={
-              <RequireAuth allowedRoles={['super_admin', 'admin', 'cash']}>
+              <RequireAuth allowedRoles={routeRoleAccess['/admin/cash']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/staff" element={
-              <RequireAuth allowedRoles={['super_admin', 'admin']}>
+              <RequireAuth allowedRoles={routeRoleAccess['/admin/staff']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/settings" element={
-              <RequireAuth allowedRoles={['super_admin']}>
+              <RequireAuth allowedRoles={routeRoleAccess['/admin/settings']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/profile" element={
-              <RequireAuth allowedRoles={['super_admin', 'admin', 'cash', 'appointment', 'service', 'product']}>
+              <RequireAuth allowedRoles={routeRoleAccess['/admin/profile']}>
                 <Admin />
               </RequireAuth>
             } />
             <Route path="/admin/customers/:customerId" element={
-              <RequireAuth allowedRoles={['super_admin', 'admin', 'appointment']}>
+              <RequireAuth allowedRoles={routeRoleAccess['/admin/customers']}>
                 <CustomerDetailPage />
               </RequireAuth>
             } />

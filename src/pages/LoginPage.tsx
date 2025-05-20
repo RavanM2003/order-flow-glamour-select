@@ -93,14 +93,14 @@ const LoginPage = () => {
 
   const loginAsUser = async (userEmail: string) => {
     setEmail(userEmail);
-    setPassword('password123');
+    setPassword('admin123'); // Using the password from our SQL insert
     
     try {
       setIsSubmitting(true);
       setError('');
       
-      console.log('Attempting login with Supabase test account...');
-      const success = await login(userEmail, 'password123');
+      console.log('Attempting login with test account...');
+      const success = await login(userEmail, 'admin123');
       
       if (success) {
         // Redirect to the page user was trying to access or to admin dashboard
@@ -143,12 +143,12 @@ const LoginPage = () => {
         isActive: true,
         lastLogin: new Date().toISOString(),
       },
-      'cash': {
-        id: 'mock-cash-id',
+      'cashier': {
+        id: 'mock-cashier-id',
         email: 'cash@example.com',
         firstName: 'Cash',
         lastName: 'Manager',
-        role: 'cash',
+        role: 'cashier',
         isActive: true,
         lastLogin: new Date().toISOString(),
       },
@@ -272,7 +272,7 @@ const LoginPage = () => {
           </form>
 
           <div className="mt-8">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Demo giriş (Supabase qeydiyyatı olmadan)</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Demo giriş</h3>
             <div className="grid grid-cols-2 gap-2">
               <Button 
                 variant="outline" 
@@ -295,7 +295,7 @@ const LoginPage = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={() => bypassLogin('cash')}
+                onClick={() => bypassLogin('cashier')}
                 className="text-xs"
               >
                 <UserCheck className="h-3 w-3 mr-1" />
@@ -330,7 +330,7 @@ const LoginPage = () => {
               </Button>
             </div>
             <div className="mt-6 border-t pt-4">
-              <h3 className="text-sm font-medium text-gray-500 mb-2">Supabase ilə giriş</h3>
+              <h3 className="text-sm font-medium text-gray-500 mb-2">Test hesablar (email/şifrə)</h3>
               <div className="grid grid-cols-2 gap-2">
                 <Button 
                   variant="secondary" 
@@ -345,12 +345,12 @@ const LoginPage = () => {
                 <Button 
                   variant="secondary" 
                   size="sm" 
-                  onClick={() => loginAsUser('staff@example.com')}
+                  onClick={() => loginAsUser('manager@example.com')}
                   className="text-xs"
                   disabled={isSubmitting || !!authDebug}
                 >
                   <UserCheck className="h-3 w-3 mr-1" />
-                  Staff
+                  Admin
                 </Button>
                 <Button 
                   variant="secondary" 
@@ -394,7 +394,7 @@ const LoginPage = () => {
                 </Button>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Supabase test istifadəçiləri üçün şifrə: <code className="bg-gray-100 px-1 py-0.5 rounded">password123</code>
+                Test istifadəçiləri üçün şifrə: <code className="bg-gray-100 px-1 py-0.5 rounded">admin123</code>
               </p>
             </div>
           </div>

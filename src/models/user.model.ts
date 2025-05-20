@@ -49,3 +49,18 @@ export interface UserCredentials {
   email: string;
   password: string;
 }
+
+// Customer creation with user account
+export interface CustomerWithUserFormData {
+  // User data
+  email: string;
+  password: string;
+  
+  // Customer data
+  firstName: string;
+  lastName: string;
+  phone: string;
+  gender?: string;
+  birthDate?: string;
+  note?: string;
+}

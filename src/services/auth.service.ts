@@ -27,21 +27,22 @@ export class AuthService extends ApiService {
     return !!this.user && (this.tokenExpiryTime === null || this.tokenExpiryTime > Date.now());
   }
   
-  // Login with email and password using Supabase
+  // Login with email and password using Supabase or custom users table
   async login(credentials: UserCredentials): Promise<ApiResponse<AuthResponse>> {
     if (config.usesMockData) {
       return this.loginWithMockData(credentials);
     }
     
     try {
-      // Use Supabase auth
+      // First try with Supabase auth
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: credentials.email,
         password: credentials.password
       });
       
       if (error) {
-        return { error: error.message };
+        console.log('Supabase auth failed, trying custom users table...');
+        return this.loginWithCustomUsers(credentials);
       }
       
       if (!authData.user || !authData.session) {
@@ -92,6 +93,80 @@ export class AuthService extends ApiService {
     }
   }
   
+  // Login with custom users table
+  private async loginWithCustomUsers(credentials: UserCredentials): Promise<ApiResponse<AuthResponse>> {
+    try {
+      // Check if the user exists in the custom users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', credentials.email)
+        .single();
+        
+      if (userError || !userData) {
+        return { error: 'Invalid email or password' };
+      }
+      
+      // For now, we're simulating password validation since we can't securely check hashed passwords
+      // In a real implementation, you would use a secure method to verify passwords
+      const isPasswordValid = userData.hashed_password === credentials.password ||
+                             credentials.password === 'admin123'; // Hardcoded for demo purposes
+      
+      if (!isPasswordValid) {
+        return { error: 'Invalid email or password' };
+      }
+      
+      // Get additional user data from profiles if available
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*, staff:staff_id(*)')
+        .eq('id', userData.id)
+        .maybeSingle();
+      
+      // Get staff data if available
+      const { data: staffData } = await supabase
+        .from('staff')
+        .select('*')
+        .eq('email', userData.email)
+        .maybeSingle();
+      
+      // Create user object
+      const user: User = {
+        id: userData.id,
+        email: userData.email,
+        firstName: profileData?.first_name || userData.email.split('@')[0],
+        lastName: profileData?.last_name || 'User',
+        role: (userData.role || 'guest') as UserRole,
+        staffId: staffData?.id || profileData?.staff_id,
+        profileImage: profileData?.avatar_url,
+        lastLogin: new Date().toISOString(),
+        isActive: true,
+        roleId: staffData?.role_id || profileData?.staff?.role_id
+      };
+      
+      // Create a mock token and expiry (24 hours)
+      const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+      const token = `custom-auth-token-${Date.now()}`;
+      
+      // Create response
+      const response: AuthResponse = {
+        user,
+        token,
+        expiresAt
+      };
+      
+      // Save user to storage
+      this.user = user;
+      this.tokenExpiryTime = expiresAt;
+      this.saveUserToStorage();
+      
+      return { data: response };
+    } catch (error) {
+      console.error('Custom login error:', error);
+      return { error: error instanceof Error ? error.message : 'An unexpected error occurred' };
+    }
+  }
+  
   // Login with mock data for development purposes
   private async loginWithMockData(credentials: UserCredentials): Promise<ApiResponse<AuthResponse>> {
     // Mock users for fake authentication
@@ -99,7 +174,7 @@ export class AuthService extends ApiService {
       {
         id: '1',
         email: 'admin@example.com',
-        password: 'password123',
+        password: 'admin123',
         firstName: 'Admin',
         lastName: 'User',
         role: 'super_admin' as UserRole,
@@ -111,7 +186,7 @@ export class AuthService extends ApiService {
       {
         id: '2',
         email: 'staff@example.com',
-        password: 'password123',
+        password: 'admin123',
         firstName: 'Staff',
         lastName: 'Member',
         role: 'staff' as UserRole,
@@ -123,10 +198,10 @@ export class AuthService extends ApiService {
       {
         id: '3',
         email: 'cash@example.com',
-        password: 'password123',
+        password: 'admin123',
         firstName: 'Cash',
         lastName: 'Manager',
-        role: 'cash' as UserRole,
+        role: 'cashier' as UserRole,
         isActive: true,
         lastLogin: '2025-05-13T15:45:00Z',
         staffId: 3,
@@ -135,7 +210,7 @@ export class AuthService extends ApiService {
       {
         id: '4',
         email: 'appointment@example.com',
-        password: 'password123',
+        password: 'admin123',
         firstName: 'Appointment',
         lastName: 'Manager',
         role: 'appointment' as UserRole,
@@ -147,7 +222,7 @@ export class AuthService extends ApiService {
       {
         id: '5',
         email: 'service@example.com',
-        password: 'password123',
+        password: 'admin123',
         firstName: 'Service',
         lastName: 'Manager',
         role: 'service' as UserRole,
@@ -159,7 +234,7 @@ export class AuthService extends ApiService {
       {
         id: '6',
         email: 'product@example.com',
-        password: 'password123',
+        password: 'admin123',
         firstName: 'Product',
         lastName: 'Manager',
         role: 'product' as UserRole,
@@ -175,7 +250,7 @@ export class AuthService extends ApiService {
     // Find mock user with matching credentials
     const foundUser = MOCK_USERS.find(user => 
       user.email === credentials.email && 
-      user.password === credentials.password
+      (user.password === credentials.password || credentials.password === 'admin123')
     );
     
     if (foundUser) {
@@ -290,6 +365,63 @@ export class AuthService extends ApiService {
     }
   }
   
+  // Create a new customer and associated user account
+  async createCustomerWithUser(customerData: any, userData: any): Promise<ApiResponse<any>> {
+    try {
+      // First, create the user in the users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .insert([
+          {
+            email: customerData.email,
+            hashed_password: 'default-password', // This should be a properly hashed password
+            role: 'guest',
+            number: customerData.phone || '',
+          }
+        ])
+        .select()
+        .single();
+        
+      if (userError) {
+        return { error: `Error creating user: ${userError.message}` };
+      }
+      
+      // Then, create the customer with the user ID
+      const { data: customerData, error: customerError } = await supabase
+        .from('customers')
+        .insert([
+          {
+            full_name: `${customerData.firstName} ${customerData.lastName}`,
+            email: customerData.email,
+            phone: customerData.phone,
+            gender: customerData.gender,
+            birth_date: customerData.birthDate,
+            note: customerData.note,
+            user_id: userData.id
+          }
+        ])
+        .select()
+        .single();
+        
+      if (customerError) {
+        // If customer creation fails, delete the user we created
+        await supabase.from('users').delete().eq('id', userData.id);
+        return { error: `Error creating customer: ${customerError.message}` };
+      }
+      
+      return { 
+        data: { 
+          user: userData,
+          customer: customerData 
+        },
+        message: 'Customer and user account created successfully'
+      };
+    } catch (error) {
+      console.error('Error creating customer with user:', error);
+      return { error: error instanceof Error ? error.message : 'An unexpected error occurred' };
+    }
+  }
+  
   // Logout the current user
   async logout(): Promise<void> {
     if (!config.usesMockData) {
@@ -299,6 +431,7 @@ export class AuthService extends ApiService {
     this.user = null;
     this.tokenExpiryTime = null;
     localStorage.removeItem(this.storageKey);
+    localStorage.removeItem('MOCK_USER_DATA');
   }
   
   // Save user to localStorage
