@@ -48,18 +48,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Fetch user profile data
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*, staff:staff_id(*)')
+      // Get user data directly from users table since we no longer have a profiles table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*, staff:staff(*)')
         .eq('id', userId)
         .single();
 
-      if (error) {
-        console.error('Error fetching user profile:', error);
+      if (userError) {
+        console.error('Error fetching user data:', userError);
         return null;
       }
 
-      return data;
+      return userData;
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
       return null;
@@ -77,18 +78,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }));
       
       // Then fetch profile in background
-      const profile = await fetchUserProfile(session.user.id);
+      const userData = await fetchUserProfile(session.user.id);
       
-      if (profile) {
+      if (userData) {
         setSession(prev => ({
           ...prev,
           profile: {
-            firstName: profile.first_name,
-            lastName: profile.last_name,
-            role: profile.role as UserRole,
-            avatar: profile.avatar_url,
-            staffId: profile.staff_id,
-            roleId: profile.staff?.role_id
+            firstName: userData.first_name || null,
+            lastName: userData.last_name || null,
+            role: userData.role as UserRole,
+            avatar: userData.avatar_url || null,
+            staffId: userData.staff?.id || null,
+            roleId: userData.staff?.id || null // Using staff ID as role ID since we don't have role_id
           }
         }));
       }

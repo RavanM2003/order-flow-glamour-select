@@ -1,6 +1,6 @@
 
 // User roles and permissions model
-export type UserRole = "super_admin" | "admin" | "staff" | "cashier" | "appointment" | "service" | "product" | "guest";
+export type UserRole = "super_admin" | "admin" | "staff" | "cashier" | "appointment" | "service" | "product" | "guest" | "cash" | "customer" | "reception";
 
 // Define Role interface
 export interface Role {
@@ -50,7 +50,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     'dashboard:view',
     'products:view', 'products:create', 'products:edit'
   ],
-  guest: ['dashboard:view']
+  guest: ['dashboard:view'],
+  cash: ['dashboard:view', 'cash:view', 'cash:create', 'cash:edit'],
+  customer: ['dashboard:view'],
+  reception: ['dashboard:view', 'appointments:view', 'appointments:create', 'customers:view']
 };
 
 // Map routes to required permissions
@@ -80,14 +83,14 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     label: "Dashboard", 
     icon: "Home", 
     route: "/admin",
-    requiredRoles: ["super_admin", "admin", "staff", "cashier", "appointment", "service", "product", "guest"]
+    requiredRoles: ["super_admin", "admin", "staff", "cashier", "appointment", "service", "product", "guest", "cash", "customer", "reception"]
   },
   { 
     id: "customers", 
     label: "Customers", 
     icon: "Users", 
     route: "/admin/customers",
-    requiredRoles: ["super_admin", "admin", "appointment"]
+    requiredRoles: ["super_admin", "admin", "appointment", "reception"]
   },
   { 
     id: "services", 
@@ -108,14 +111,14 @@ export const SIDEBAR_ITEMS: SidebarItem[] = [
     label: "Appointments", 
     icon: "Calendar", 
     route: "/admin/appointments",
-    requiredRoles: ["super_admin", "admin", "appointment", "staff"]
+    requiredRoles: ["super_admin", "admin", "appointment", "staff", "reception"]
   },
   { 
     id: "cash", 
     label: "Cash", 
     icon: "DollarSign", 
     route: "/admin/cash",
-    requiredRoles: ["super_admin", "admin", "cashier"]
+    requiredRoles: ["super_admin", "admin", "cashier", "cash"]
   },
   { 
     id: "staff", 

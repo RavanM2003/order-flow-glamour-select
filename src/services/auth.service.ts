@@ -1,8 +1,10 @@
+
 import { User, UserCredentials, UserRole, AuthResponse } from '@/models/user.model';
 import { ApiService } from './api.service';
 import { ApiResponse } from '@/models/types';
 import { config } from '@/config/env';
 import { supabase } from '@/integrations/supabase/client';
+import { supabaseService } from './supabase.service';
 
 export class AuthService extends ApiService {
   private readonly storageKey = 'auth_user';
@@ -48,29 +50,29 @@ export class AuthService extends ApiService {
         return { error: 'Authentication failed' };
       }
       
-      // Get user profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*, staff:staff_id(*)')
+      // Get user data
+      const { data: userData } = await supabase
+        .from('users')
+        .select('*, staff:staff(*)')
         .eq('id', authData.user.id)
         .single();
         
-      if (!profile) {
-        return { error: 'User profile not found' };
+      if (!userData) {
+        return { error: 'User data not found' };
       }
       
       // Create user object
       const user: User = {
         id: authData.user.id,
         email: authData.user.email || '',
-        firstName: profile.first_name || '',
-        lastName: profile.last_name || '',
-        role: profile.role as UserRole,
-        staffId: profile.staff_id,
-        profileImage: profile.avatar_url,
+        firstName: userData.first_name || '',
+        lastName: userData.last_name || '',
+        role: userData.role as UserRole,
+        staffId: userData.staff?.id,
+        profileImage: userData.avatar_url,
         lastLogin: authData.user.last_sign_in_at || new Date().toISOString(),
         isActive: true,
-        roleId: profile.staff?.role_id
+        roleId: userData.staff?.id // Using staff ID as role ID
       };
       
       // Create response
@@ -98,7 +100,7 @@ export class AuthService extends ApiService {
       // Check if the user exists in the custom users table
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('*')
+        .select('*, staff:staff(*)')
         .eq('email', credentials.email)
         .single();
         
@@ -115,32 +117,18 @@ export class AuthService extends ApiService {
         return { error: 'Invalid email or password' };
       }
       
-      // Get additional user data from profiles if available
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('*, staff:staff_id(*)')
-        .eq('id', userData.id)
-        .maybeSingle();
-      
-      // Get staff data if available
-      const { data: staffData } = await supabase
-        .from('staff')
-        .select('*')
-        .eq('email', userData.email)
-        .maybeSingle();
-      
       // Create user object
       const user: User = {
         id: userData.id,
         email: userData.email,
-        firstName: profileData?.first_name || userData.email.split('@')[0],
-        lastName: profileData?.last_name || 'User',
+        firstName: userData.first_name || userData.email.split('@')[0],
+        lastName: userData.last_name || 'User',
         role: (userData.role || 'guest') as UserRole,
-        staffId: staffData?.id || profileData?.staff_id,
-        profileImage: profileData?.avatar_url,
+        staffId: userData.staff?.id,
+        profileImage: userData.avatar_url,
         lastLogin: new Date().toISOString(),
         isActive: true,
-        roleId: staffData?.role_id || profileData?.staff?.role_id
+        roleId: userData.staff?.id // Using staff ID as role ID
       };
       
       // Create a mock token and expiry (24 hours)
@@ -332,29 +320,39 @@ export class AuthService extends ApiService {
         return { error: 'Registration failed' };
       }
       
-      // Get the created user profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*, staff:staff_id(*)')
-        .eq('id', authData.user.id)
+      // Create a user entry in the users table
+      const { data: newUserData, error: userError } = await supabase
+        .from('users')
+        .insert([{
+          id: authData.user.id,
+          email: authData.user.email || '',
+          first_name: userData.firstName || '',
+          last_name: userData.lastName || '',
+          role: userData.role || 'customer',
+          number: Math.random().toString().slice(2, 12), // Generate random number
+          hashed_password: userData.password, // Not secure, but just for demo
+          avatar_url: null
+        }])
+        .select()
         .single();
-        
-      if (!profile) {
-        return { error: 'User profile not found' };
+
+      if (userError) {
+        console.error('Error creating user entry:', userError);
+        return { error: userError.message };
       }
       
       // Create user object
       const user: User = {
         id: authData.user.id,
         email: authData.user.email || '',
-        firstName: profile.first_name || '',
-        lastName: profile.last_name || '',
-        role: profile.role as UserRole,
-        staffId: profile.staff_id,
-        profileImage: profile.avatar_url,
+        firstName: newUserData.first_name || '',
+        lastName: newUserData.last_name || '',
+        role: newUserData.role as UserRole,
+        staffId: null,
+        profileImage: newUserData.avatar_url || null,
         lastLogin: authData.user.last_sign_in_at || new Date().toISOString(),
         isActive: true,
-        roleId: profile.staff?.role_id
+        roleId: null
       };
       
       return { data: user };
@@ -368,27 +366,41 @@ export class AuthService extends ApiService {
   async createCustomerWithUser(customerData: any, userData: any): Promise<ApiResponse<any>> {
     try {
       // First create the user
-      const response = await fetch(`${this.apiUrl}/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: userData.email,
-          password: userData.password,
-          role: userData.role || 'guest'
-        })
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password
       });
 
-      const result = await response.json();
-
-      if (result.error) {
-        return { error: result.error.message || 'Failed to create user' };
+      if (authError) {
+        return { error: authError.message || 'Failed to create user' };
       }
 
-      // Then associate a customer with the user
+      if (!authData.user) {
+        return { error: 'User creation failed' };
+      }
+
+      // Insert user data in users table
+      const { error: userError } = await supabase
+        .from('users')
+        .insert([{
+          id: authData.user.id,
+          email: authData.user.email,
+          first_name: customerData.firstName || '',
+          last_name: customerData.lastName || '',
+          role: 'customer',
+          number: customerData.phone || Math.random().toString().slice(2, 12),
+          hashed_password: userData.password, // Not secure, but just for demo
+          avatar_url: null
+        }]);
+
+      if (userError) {
+        console.error('Error creating user entry:', userError);
+        return { error: userError.message };
+      }
+
+      // Then create customer record
       const customer = {
-        user_id: result.data.user.id,
+        user_id: authData.user.id,
         full_name: `${customerData.firstName || ''} ${customerData.lastName || ''}`.trim(),
         email: customerData.email,
         phone: customerData.phone,
@@ -398,17 +410,21 @@ export class AuthService extends ApiService {
       };
 
       // Create the customer
-      const customerResult = await supabaseService.createCustomer(customer);
+      const { data: customerResult, error: customerError } = await supabase
+        .from('customers')
+        .insert([customer])
+        .select()
+        .single();
 
-      if (customerResult instanceof Error) {
-        return { error: customerResult.message };
+      if (customerError) {
+        return { error: customerError.message };
       }
 
       return {
         data: {
-          user: result.data.user,
+          user: authData.user,
           customer: customerResult,
-          session: result.data.session
+          session: authData.session
         },
         message: 'Customer created with user account successfully'
       };

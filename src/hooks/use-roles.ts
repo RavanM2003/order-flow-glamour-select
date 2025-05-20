@@ -15,16 +15,32 @@ export function useRoles() {
     setError(null);
     
     try {
-      const { data, error } = await supabase
-        .from('roles')
-        .select('*')
-        .order('id');
+      // Since we don't have a roles table in the database anymore,
+      // we'll create a list of roles from the role_enum type values
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('role')
+        .limit(1);
       
       if (error) {
         throw error;
       }
       
-      setRoles(data || []);
+      // Create roles from the role enum types we know are available
+      const roleEnums: string[] = [
+        'super_admin', 'admin', 'staff', 'cashier', 'appointment', 
+        'service', 'product', 'guest', 'cash', 'customer', 'reception'
+      ];
+      
+      const rolesList: Role[] = roleEnums.map((roleName, index) => ({
+        id: index + 1,
+        name: roleName,
+        description: `Role for ${roleName} users`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
+      
+      setRoles(rolesList);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch roles';
       setError(message);

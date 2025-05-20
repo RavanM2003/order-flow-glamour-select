@@ -52,6 +52,20 @@ export class RoleService extends ApiService {
           description: 'Has access to product management features',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
+        },
+        {
+          id: 7,
+          name: 'customer',
+          description: 'Regular customer role',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id: 8,
+          name: 'reception',
+          description: 'Reception role for managing appointments',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }
       ];
       
@@ -60,25 +74,31 @@ export class RoleService extends ApiService {
     }
     
     try {
-      const { data, error } = await supabase
-        .from('roles')
-        .select('*')
-        .order('id');
+      // Since we don't have a roles table in the database anymore,
+      // we'll create a list of roles from the role_enum type values
+      const roleEnums: string[] = [
+        'super_admin', 'admin', 'staff', 'cashier', 'appointment', 
+        'service', 'product', 'guest', 'cash', 'customer', 'reception'
+      ];
       
-      if (error) {
-        throw error;
-      }
+      const rolesList: Role[] = roleEnums.map((roleName, index) => ({
+        id: index + 1,
+        name: roleName,
+        description: `Role for ${roleName} users`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }));
       
-      return { data: data as Role[] };
+      return { data: rolesList };
     } catch (error) {
-      console.error('Error fetching roles:', error);
+      console.error('Error creating roles list:', error);
       return { error: error instanceof Error ? error.message : 'Failed to fetch roles' };
     }
   }
 
   // Get role by ID
   async getById(id: number): Promise<ApiResponse<Role>> {
-    if (config.usesMockData) {
+    try {
       const roles = await this.getAll();
       const role = roles.data?.find(r => r.id === id);
       
@@ -87,20 +107,6 @@ export class RoleService extends ApiService {
       }
       
       return { data: role };
-    }
-    
-    try {
-      const { data, error } = await supabase
-        .from('roles')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) {
-        throw error;
-      }
-      
-      return { data: data as Role };
     } catch (error) {
       console.error(`Error fetching role with ID ${id}:`, error);
       return { error: error instanceof Error ? error.message : `Failed to fetch role with ID ${id}` };
