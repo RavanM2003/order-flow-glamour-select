@@ -1,196 +1,131 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useState } from "react";
+import { Service } from "@/models/service.model";
+import { Product } from "@/models/product.model";
+import { Staff } from "@/models/staff.model";
 
-export interface CustomerInfo {
+export interface Customer {
   name: string;
   email: string;
   phone: string;
-  date: string;
-  time: string;
-  notes: string;
-  gender: string;
-}
-
-export interface ServiceProvider {
-  serviceId: number;
-  name: string;
-}
-
-export interface OrderState {
-  currentStep: number;
-  customerInfo: CustomerInfo | null;
-  selectedServices: number[];
-  selectedProducts: number[];
-  paymentMethod: string;
-  total: number;
-  orderId: string | null;
-  status: string;
-  serviceProviders: ServiceProvider[];
-  appliedProducts?: Record<number, number[]>;
 }
 
 interface OrderContextType {
-  orderState: OrderState;
-  goToStep: (step: number) => void;
-  updateCustomerInfo: (info: CustomerInfo) => void;
-  selectService: (serviceId: number) => void;
-  unselectService: (serviceId: number) => void;
-  selectProduct: (productId: number) => void;
-  unselectProduct: (productId: number) => void;
-  setPaymentMethod: (method: string) => void;
-  updateTotal: (total: number) => void;
-  completeOrder: (orderId: string) => void;
-  updateStatus: (status: string) => void;
-  updateServiceProviders: (providers: ServiceProvider[]) => void;
-  updateAppliedProducts: (appliedProducts: Record<number, number[]>) => void;
+  orderState: {
+    currentStep: number;
+    customer: Customer;
+    selectedService: Service | null;
+    selectedStaff: Staff | null;
+    selectedProducts: Product[];
+    appointmentDate: Date | null;
+    appointmentTime: string | null;
+    totalAmount: number;
+  };
+  setCustomer: (customer: Customer) => void;
+  setSelectedService: (service: Service | null) => void;
+  setSelectedStaff: (staff: Staff | null) => void;
+  addProduct: (product: Product) => void;
+  removeProduct: (product: Product) => void;
+  setAppointmentDate: (date: Date | null) => void;
+  setAppointmentTime: (time: string | null) => void;
+  setNextStep: () => void;
+  setPrevStep: () => void;
   resetOrder: () => void;
 }
 
-const defaultCustomer: CustomerInfo = {
-  name: '',
-  email: '',
-  phone: '',
-  date: '',
-  time: '',
-  notes: '',
-  gender: 'female'
-};
-
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
-interface OrderProviderProps {
-  children: ReactNode;
-  initialCustomer?: any;
-}
-
-export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialCustomer }) => {
-  // Initialize with customer data if provided
-  const initialCustomerInfo = initialCustomer ? {
-    name: initialCustomer.name || '',
-    email: initialCustomer.email || '',
-    phone: initialCustomer.phone || '',
-    date: '',
-    time: '',
-    notes: '',
-    gender: initialCustomer.gender || 'female'
-  } : null;
-
-  const [orderState, setOrderState] = useState<OrderState>({
-    currentStep: 1,
-    customerInfo: initialCustomerInfo,
-    selectedServices: [],
-    selectedProducts: [],
-    paymentMethod: 'cash',
-    total: 0,
-    orderId: null,
-    status: 'pending',
-    serviceProviders: [],
-    appliedProducts: {}
+export const OrderProvider = ({ children }: { children: ReactNode }) => {
+  const [currentStep, setCurrentStep] = useState(1);
+  
+  const [customer, setCustomer] = useState<Customer>({
+    name: "",
+    email: "",
+    phone: "",
   });
+  
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [appointmentDate, setAppointmentDate] = useState<Date | null>(null);
+  const [appointmentTime, setAppointmentTime] = useState<string | null>(null);
 
-  const goToStep = (step: number) => {
-    setOrderState(prev => ({ ...prev, currentStep: step }));
+  const calculateTotal = (): number => {
+    let total = 0;
+    
+    // Add service price
+    if (selectedService) {
+      total += selectedService.price;
+    }
+    
+    // Add product prices
+    total += selectedProducts.reduce((sum, product) => sum + (product.price || 0), 0);
+    
+    return total;
   };
 
-  const updateCustomerInfo = (info: CustomerInfo) => {
-    setOrderState(prev => ({ ...prev, customerInfo: info }));
+  const addProduct = (product: Product) => {
+    setSelectedProducts((prev) => [...prev, product]);
   };
 
-  const selectService = (serviceId: number) => {
-    setOrderState(prev => ({ 
-      ...prev, 
-      selectedServices: [...prev.selectedServices, serviceId] 
-    }));
+  const removeProduct = (product: Product) => {
+    setSelectedProducts((prev) => 
+      prev.filter((p) => p.id !== product.id)
+    );
   };
 
-  const unselectService = (serviceId: number) => {
-    setOrderState(prev => ({ 
-      ...prev, 
-      selectedServices: prev.selectedServices.filter(id => id !== serviceId),
-      // Also remove any service providers associated with this service
-      serviceProviders: prev.serviceProviders.filter(sp => sp.serviceId !== serviceId)
-    }));
+  const setNextStep = () => {
+    setCurrentStep((prev) => Math.min(prev + 1, 4));
   };
 
-  const selectProduct = (productId: number) => {
-    setOrderState(prev => ({ 
-      ...prev, 
-      selectedProducts: [...prev.selectedProducts, productId] 
-    }));
-  };
-
-  const unselectProduct = (productId: number) => {
-    setOrderState(prev => ({ 
-      ...prev, 
-      selectedProducts: prev.selectedProducts.filter(id => id !== productId) 
-    }));
-  };
-
-  const setPaymentMethod = (method: string) => {
-    setOrderState(prev => ({ ...prev, paymentMethod: method }));
-  };
-
-  const updateTotal = (total: number) => {
-    setOrderState(prev => ({ ...prev, total }));
-  };
-
-  const completeOrder = (orderId: string) => {
-    setOrderState(prev => ({ ...prev, orderId, status: 'confirmed' }));
-  };
-
-  const updateStatus = (status: string) => {
-    setOrderState(prev => ({ ...prev, status }));
-  };
-
-  const updateServiceProviders = (providers: ServiceProvider[]) => {
-    setOrderState(prev => ({ ...prev, serviceProviders: providers }));
-  };
-
-  const updateAppliedProducts = (appliedProducts: Record<number, number[]>) => {
-    setOrderState(prev => ({ ...prev, appliedProducts }));
+  const setPrevStep = () => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
   const resetOrder = () => {
-    setOrderState({
-      currentStep: 1,
-      customerInfo: null,
-      selectedServices: [],
-      selectedProducts: [],
-      paymentMethod: 'cash',
-      total: 0,
-      orderId: null,
-      status: 'pending',
-      serviceProviders: [],
-      appliedProducts: {}
+    setCurrentStep(1);
+    setCustomer({
+      name: "",
+      email: "",
+      phone: "",
     });
+    setSelectedService(null);
+    setSelectedStaff(null);
+    setSelectedProducts([]);
+    setAppointmentDate(null);
+    setAppointmentTime(null);
   };
 
-  return (
-    <OrderContext.Provider value={{
-      orderState,
-      goToStep,
-      updateCustomerInfo,
-      selectService,
-      unselectService,
-      selectProduct,
-      unselectProduct,
-      setPaymentMethod,
-      updateTotal,
-      completeOrder,
-      updateStatus,
-      updateServiceProviders,
-      updateAppliedProducts,
-      resetOrder
-    }}>
-      {children}
-    </OrderContext.Provider>
-  );
+  const value = {
+    orderState: {
+      currentStep,
+      customer,
+      selectedService,
+      selectedStaff,
+      selectedProducts,
+      appointmentDate,
+      appointmentTime,
+      totalAmount: calculateTotal(),
+    },
+    setCustomer,
+    setSelectedService,
+    setSelectedStaff,
+    addProduct,
+    removeProduct,
+    setAppointmentDate,
+    setAppointmentTime,
+    setNextStep,
+    setPrevStep,
+    resetOrder,
+  };
+
+  return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>;
 };
 
 export const useOrder = () => {
   const context = useContext(OrderContext);
   if (context === undefined) {
-    throw new Error('useOrder must be used within an OrderProvider');
+    throw new Error("useOrder must be used within an OrderProvider");
   }
   return context;
 };

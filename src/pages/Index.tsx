@@ -4,8 +4,10 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { HelpCircle, Calendar, ChevronRight, Lock, ShoppingBag, Scissors, Shield } from 'lucide-react';
+import { HelpCircle, Calendar, ChevronRight, Lock } from 'lucide-react';
 import { config } from '@/config/env';
+import FeaturedServices from '@/components/FeaturedServices';
+import FeaturedProducts from '@/components/FeaturedProducts';
 
 const Index = () => {
   return (
@@ -69,41 +71,17 @@ const Index = () => {
           <div className="container mx-auto max-w-6xl">
             <h2 className="text-3xl font-bold text-center mb-12">Bizim platforma üstünlükləri</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div className="bg-card p-6 rounded-lg shadow-sm border border-border">
-                <Calendar className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Təyinat İdarəetməsi</h3>
-                <p className="text-muted-foreground">Təyinatları asanlıqla təşkil edin, planlaşdırın və idarə edin.</p>
+            <div className="space-y-12">
+              {/* Services Section */}
+              <div>
+                <h3 className="text-2xl font-semibold mb-6 text-center">Xidmətlər</h3>
+                <FeaturedServices />
               </div>
               
-              <div className="bg-card p-6 rounded-lg shadow-sm border border-border">
-                <ShoppingBag className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">İnventarın İdarə Edilməsi</h3>
-                <p className="text-muted-foreground">Məhsullarınızı izləyin və stokdan çıxdıqda avtomatik bildirişlər alın.</p>
-              </div>
-              
-              <div className="bg-card p-6 rounded-lg shadow-sm border border-border">
-                <Scissors className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Xidmət Kataloqu</h3>
-                <p className="text-muted-foreground">Xidmətlərinizi qurun və müştərilərin onlayn bron etməsinə imkan verin.</p>
-              </div>
-              
-              <div className="bg-card p-6 rounded-lg shadow-sm border border-border">
-                <Shield className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Təhlükəsiz Ödənişlər</h3>
-                <p className="text-muted-foreground">Təhlükəsiz və etibarlı ödəniş üsulları ilə müştəri məmnuniyyətini artırın.</p>
-              </div>
-              
-              <div className="bg-card p-6 rounded-lg shadow-sm border border-border">
-                <HelpCircle className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Müştəri Dəstəyi</h3>
-                <p className="text-muted-foreground">Müştərilərinizə yüksək səviyyəli dəstək təmin edin.</p>
-              </div>
-              
-              <div className="bg-card p-6 rounded-lg shadow-sm border border-border">
-                <Lock className="h-10 w-10 text-primary mb-4" />
-                <h3 className="text-xl font-semibold mb-2">Rol Əsaslı Giriş</h3>
-                <p className="text-muted-foreground">Müxtəlif istifadəçi səviyyələri üçün rol əsaslı giriş nəzarəti.</p>
+              {/* Products Section */}
+              <div>
+                <h3 className="text-2xl font-semibold mb-6 text-center">Məhsullar</h3>
+                <FeaturedProducts />
               </div>
             </div>
             
