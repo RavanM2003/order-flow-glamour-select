@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,8 +30,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { API } from "@/lib/api";
+import { useServices } from "@/hooks/use-services";
+import { useProducts } from "@/hooks/use-products";
 
-const PaymentDetails = () => {
+const PaymentDetails = React.memo(() => {
   const { orderState, setPaymentMethod, goToStep, completeOrder } = useOrder();
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethodState] = useState(
@@ -39,10 +41,12 @@ const PaymentDetails = () => {
   );
   const [loading, setLoading] = useState(false);
   const [showBankDetails, setShowBankDetails] = useState(false);
-  const [showServiceDetails, setShowServiceDetails] = useState(false);
-  const [services, setServices] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
+  const [servicesData, setServicesData] = useState<any[]>([]);
+  const [productsData, setProductsData] = useState<any[]>([]);
   const [isLoadingData, setIsLoadingData] = useState(false);
+
+  const { services, isLoading: servicesLoading } = useServices();
+  const { products, isLoading: productsLoading } = useProducts();
   
   // Credit card form
   const [cardDetails, setCardDetails] = useState({
@@ -52,17 +56,17 @@ const PaymentDetails = () => {
     cvv: ''
   });
 
-  const handlePaymentMethodChange = (value: string) => {
+  const handlePaymentMethodChange = useCallback((value: string) => {
     setPaymentMethodState(value);
-  };
+  }, []);
   
-  const handleCardDetailsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCardDetailsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
     // Format card number with spaces after every 4 digits
     if (name === 'cardNumber') {
       const formatted = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
-      setCardDetails({ ...cardDetails, [name]: formatted });
+      setCardDetails(prev => ({ ...prev, [name]: formatted }));
       return;
     }
     
@@ -70,18 +74,18 @@ const PaymentDetails = () => {
     if (name === 'expiry') {
       const sanitized = value.replace(/[^\d]/g, '');
       if (sanitized.length <= 2) {
-        setCardDetails({ ...cardDetails, [name]: sanitized });
+        setCardDetails(prev => ({ ...prev, [name]: sanitized }));
       } else {
-        setCardDetails({ 
-          ...cardDetails, 
+        setCardDetails(prev => ({ 
+          ...prev, 
           [name]: `${sanitized.substring(0, 2)}/${sanitized.substring(2, 4)}`
-        });
+        }));
       }
       return;
     }
     
-    setCardDetails({ ...cardDetails, [name]: value });
-  };
+    setCardDetails(prev => ({ ...prev, [name]: value }));
+  }, []);
 
   const bankAccounts = [
     {
@@ -99,30 +103,19 @@ const PaymentDetails = () => {
   ];
   
   // Fetch services and products data
-  React.useEffect(() => {
-    const loadData = async () => {
-      if (orderState.selectedServices.length > 0 || orderState.selectedProducts.length > 0) {
-        try {
-          setIsLoadingData(true);
-          const [servicesRes, productsRes] = await Promise.all([
-            API.services.list(),
-            API.products.list()
-          ]);
-          
-          setServices(servicesRes.data || []);
-          setProducts(productsRes.data || []);
-        } catch (error) {
-          console.error("Failed to load services and products:", error);
-        } finally {
-          setIsLoadingData(false);
-        }
-      }
-    };
+  useEffect(() => {
+    if (!servicesLoading && services.length > 0) {
+      setServicesData(services);
+    }
     
-    loadData();
-  }, [orderState.selectedServices, orderState.selectedProducts]);
+    if (!productsLoading && products.length > 0) {
+      setProductsData(products);
+    }
+    
+    setIsLoadingData(servicesLoading || productsLoading);
+  }, [services, servicesLoading, products, productsLoading]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate card details if card payment method is selected
@@ -203,18 +196,18 @@ const PaymentDetails = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [paymentMethod, cardDetails, toast, setPaymentMethod, completeOrder, goToStep, config.usesMockData]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     goToStep(2);
-  };
+  }, [goToStep]);
 
   // Get selected services and products details
-  const selectedServicesDetails = services
-    .filter(service => orderState.selectedServices.includes(service.id));
+  const selectedServicesDetails = servicesData
+    .filter(service => orderState.selectedServices?.includes(service.id)) || [];
   
-  const selectedProductsDetails = products
-    .filter(product => orderState.selectedProducts.includes(product.id));
+  const selectedProductsDetails = productsData
+    .filter(product => orderState.selectedProducts.some(p => p.id === product.id)) || [];
   
   // Find staff assigned to each service
   const getServiceProvider = (serviceId: number) => {
@@ -222,7 +215,7 @@ const PaymentDetails = () => {
   };
   
   // Calculate the order subtotal
-  const total = orderState.total || 0;
+  const total = orderState.totalAmount || 0;
 
   return (
     <div className="mt-6">
@@ -244,7 +237,7 @@ const PaymentDetails = () => {
                   <AccordionContent>
                     <div className="space-y-4 mt-2">
                       {/* Services */}
-                      {orderState.selectedServices.length > 0 && (
+                      {orderState.selectedServices && orderState.selectedServices.length > 0 && (
                         <div>
                           <h4 className="text-sm font-semibold mb-2 flex items-center">
                             <Sparkles className="h-4 w-4 mr-1" /> Services
@@ -261,7 +254,7 @@ const PaymentDetails = () => {
                                   </div>
                                   <div className="flex justify-between text-xs text-gray-500 mt-1">
                                     <div className="flex items-center">
-                                      <Clock className="h-3 w-3 mr-1" /> {service.duration}
+                                      <Clock className="h-3 w-3 mr-1" /> {service.duration} min
                                     </div>
                                     <div className="flex items-center">
                                       <User className="h-3 w-3 mr-1" /> 
@@ -305,8 +298,8 @@ const PaymentDetails = () => {
                         </h4>
                         <div className="bg-white p-2 rounded border">
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>Date: {orderState.customerInfo?.date}</div>
-                            <div>Time: {orderState.customerInfo?.time}</div>
+                            <div>Date: {orderState.customerInfo?.date || 'Not set'}</div>
+                            <div>Time: {orderState.customerInfo?.time || 'Not set'}</div>
                             <div className="col-span-2 text-xs text-gray-500 mt-1">
                               {orderState.customerInfo?.notes && (
                                 <div>Notes: {orderState.customerInfo.notes}</div>
@@ -324,7 +317,7 @@ const PaymentDetails = () => {
                 <div className="flex justify-between">
                   <span>Services:</span>
                   <Badge variant="outline" className="font-normal">
-                    {orderState.selectedServices.length} selected
+                    {orderState.selectedServices?.length || 0} selected
                   </Badge>
                 </div>
                 <div className="flex justify-between">
@@ -563,6 +556,6 @@ const PaymentDetails = () => {
       </Card>
     </div>
   );
-};
+});
 
-export default PaymentDetails;
+export default React.memo(PaymentDetails);

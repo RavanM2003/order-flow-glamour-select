@@ -12,7 +12,7 @@ interface CheckoutFlowProps {
   bookingMode?: BookingMode;
 }
 
-const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
+const CheckoutFlow: React.FC<CheckoutFlowProps> = React.memo(({
   bookingMode = "customer",
 }) => {
   const { orderState } = useOrder();
@@ -91,6 +91,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
       </style>
     </div>
   );
-};
+});
 
-export default CheckoutFlow;
+export default React.memo(CheckoutFlow);

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Home,
@@ -20,7 +20,7 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab }) => {
-  const [collapsed, setCollapsed] = React.useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <PieChart size={20} /> },
@@ -74,4 +74,4 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, setActiveTab }) 
   );
 };
 
-export default AdminSidebar;
+export default React.memo(AdminSidebar);

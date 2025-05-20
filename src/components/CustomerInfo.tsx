@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { CalendarIcon, Clock, UserCircle } from "lucide-react";
 import { BookingMode } from "./CheckoutFlow";
-import { useAppointments } from "@/hooks/use-appointments";
 import { useCustomers } from "@/hooks/use-customers";
 import { toast } from "@/components/ui/use-toast";
 
@@ -17,35 +16,21 @@ interface CustomerInfoProps {
   bookingMode?: BookingMode;
 }
 
-const CustomerInfo: React.FC<CustomerInfoProps> = ({
+const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
   bookingMode = "customer",
 }) => {
-  const { orderState, updateCustomerInfo, goToStep } = useOrder();
+  const { orderState, setCustomer, updateCustomerInfo, goToStep } = useOrder();
   const { createCustomer } = useCustomers();
+
   const [formData, setFormData] = useState({
-    name: orderState.customerInfo?.name || "",
-    email: orderState.customerInfo?.email || "",
-    phone: orderState.customerInfo?.phone || "",
+    name: orderState.customerInfo?.name || orderState.customer.name || "",
+    email: orderState.customerInfo?.email || orderState.customer.email || "",
+    phone: orderState.customerInfo?.phone || orderState.customer.phone || "",
     date: orderState.customerInfo?.date || "",
     time: orderState.customerInfo?.time || "",
     notes: orderState.customerInfo?.notes || "",
-    gender: orderState.customerInfo?.gender || "female",
+    gender: orderState.customerInfo?.gender || orderState.customer.gender || "female",
   });
-
-  useEffect(() => {
-    // If we have customer info in context, use it
-    if (orderState.customerInfo) {
-      setFormData({
-        name: orderState.customerInfo.name || "",
-        email: orderState.customerInfo.email || "",
-        phone: orderState.customerInfo.phone || "",
-        date: orderState.customerInfo.date || "",
-        time: orderState.customerInfo.time || "",
-        notes: orderState.customerInfo.notes || "",
-        gender: orderState.customerInfo.gender || "female",
-      });
-    }
-  }, [orderState.customerInfo]);
 
   // Work hours
   const workHours = {
@@ -53,18 +38,19 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
     end: "19:00",
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }, 
+    []
+  );
 
-  const handleGenderChange = (value: string) => {
+  const handleGenderChange = useCallback((value: string) => {
     setFormData((prev) => ({ ...prev, gender: value }));
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
@@ -87,7 +73,15 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
         });
       }
       
-      // Update order context
+      // Update customer in order context
+      setCustomer({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        gender: formData.gender
+      });
+      
+      // Update customer info in order context
       updateCustomerInfo(formData);
       
       // Go to next step
@@ -100,7 +94,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
         variant: "destructive",
       });
     }
-  };
+  }, [formData, bookingMode, createCustomer, setCustomer, updateCustomerInfo, goToStep]);
 
   // Calculate min and max date (today + 7 days) for date picker
   const today = new Date();
@@ -114,8 +108,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
   // For staff mode with existing customer
   const isExistingCustomerInStaffMode: boolean =
     bookingMode === "staff" &&
-    orderState.customerInfo &&
-    !!(orderState.customerInfo.name || orderState.customerInfo.phone);
+    !!(orderState.customer?.name || orderState.customer?.phone);
 
   return (
     <div className="mt-6">
@@ -299,6 +292,6 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
       </Card>
     </div>
   );
-};
+});
 
-export default CustomerInfo;
+export default React.memo(CustomerInfo);

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { QRCodeSVG } from 'qrcode.react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 const BookingDetails = () => {
   const { orderState } = useOrder();
@@ -49,6 +50,13 @@ const BookingDetails = () => {
     const fetchAppointmentData = async () => {
       if (orderId) {
         try {
+          // Parse orderId to ensure it's a number (if your IDs are numbers)
+          const appointmentId = parseInt(orderId, 10);
+          
+          if (isNaN(appointmentId)) {
+            throw new Error("Invalid appointment ID");
+          }
+          
           const { data, error } = await supabase
             .from('appointments')
             .select(`
@@ -60,53 +68,84 @@ const BookingDetails = () => {
               appointment_products(*,
                 product:products(*),
                 staff:staff(*)
-              ),
-              customer:customers(*)
+              )
             `)
-            .eq('id', orderId)
+            .eq('id', appointmentId)
             .single();
 
-          if (error) throw error;
+          if (error) {
+            console.error("Error fetching appointment:", error);
+            throw error;
+          }
           
           if (data) {
+            // Get customer data separately if needed
+            let customerData = null;
+            if (data.customer_user_id) {
+              const { data: customer, error: customerError } = await supabase
+                .from('customers')
+                .select('*')
+                .eq('id', data.customer_user_id)
+                .single();
+                
+              if (!customerError) {
+                customerData = customer;
+              }
+            }
+            
             setAppointmentData({
               orderId: data.id,
               status: data.status,
-              customerInfo: {
-                name: data.customer.full_name,
-                gender: data.customer.gender || 'N/A',
-                phone: data.customer.phone,
-                email: data.customer.email,
+              customerInfo: customerData ? {
+                name: customerData.full_name,
+                gender: customerData.gender || 'N/A',
+                phone: customerData.phone,
+                email: customerData.email,
                 date: data.appointment_date,
                 time: data.start_time,
                 notes: data.notes || '',
+              } : {
+                name: "Customer info not found",
+                gender: "N/A",
+                phone: "N/A",
+                email: "N/A",
+                date: data.appointment_date,
+                time: data.start_time,
+                notes: "",
               },
-              services: data.appointment_services.map((as: any) => ({
-                id: as.service.id,
-                name: as.service.name,
-                price: as.price,
-                duration: `${as.service.duration} min`,
-              })),
-              selectedServices: data.appointment_services.map((as: any) => as.service.id),
-              products: data.appointment_products.map((ap: any) => ({
-                id: ap.product.id,
-                name: ap.product.name,
-                price: ap.price,
-              })),
-              selectedProducts: data.appointment_products.map((ap: any) => ap.product.id),
+              services: data.appointment_services?.map((as: any) => ({
+                id: as.service?.id,
+                name: as.service?.name || 'Unknown Service',
+                price: as.price || 0,
+                duration: `${as.service?.duration || 0} min`,
+              })) || [],
+              selectedServices: data.appointment_services?.map((as: any) => as.service?.id) || [],
+              products: data.appointment_products?.map((ap: any) => ({
+                id: ap.product?.id,
+                name: ap.product?.name || 'Unknown Product',
+                price: ap.price || 0,
+              })) || [],
+              selectedProducts: data.appointment_products?.map((ap: any) => ap.product?.id) || [],
               paymentMethod: data.payment_method || 'Nəğd',
-              serviceProviders: data.appointment_services.map((as: any) => ({
-                serviceId: as.service.id,
-                name: as.staff.name,
-              })),
+              serviceProviders: data.appointment_services?.map((as: any) => ({
+                serviceId: as.service?.id,
+                name: as.staff?.name || 'Unknown Staff',
+              })) || [],
             });
             setLocalStatus(data.status);
+          } else {
+            throw new Error("No data found");
           }
         } catch (error) {
           console.error("Error fetching appointment:", error);
           // Fall back to demo data
           setAppointmentData(demoData);
           setLocalStatus(demoData.status);
+          toast({
+            title: "Demo mode",
+            description: "Showing sample booking data",
+            variant: "default"
+          });
         } finally {
           setLoading(false);
         }
@@ -114,6 +153,11 @@ const BookingDetails = () => {
         // If no orderId, use demo data
         setAppointmentData(demoData);
         setLocalStatus(demoData.status);
+        toast({
+          title: "Demo mode",
+          description: "Showing sample booking data",
+          variant: "default"
+        });
         setLoading(false);
       }
     };
@@ -265,12 +309,15 @@ const BookingDetails = () => {
                   onClick={async () => {
                     if (orderId) {
                       try {
-                        const { error } = await supabase
-                          .from('appointments')
-                          .update({ status: 'cancelled' })
-                          .eq('id', orderId);
-                          
-                        if (error) throw error;
+                        const numericId = parseInt(orderId, 10);
+                        if (!isNaN(numericId)) {
+                          const { error } = await supabase
+                            .from('appointments')
+                            .update({ status: 'cancelled' })
+                            .eq('id', numericId);
+                            
+                          if (error) throw error;
+                        }
                       } catch (error) {
                         console.error("Error cancelling appointment:", error);
                       }
@@ -295,4 +342,4 @@ const BookingDetails = () => {
   );
 };
 
-export default BookingDetails;
+export default React.memo(BookingDetails);
