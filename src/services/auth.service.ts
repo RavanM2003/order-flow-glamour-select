@@ -63,8 +63,14 @@ export class AuthService extends ApiService {
       
       // Get staff ID from the staff object (not array)
       const staffData = userData.staff;
-      let staffId = null;
-      if (staffData && typeof staffData === 'object' && !Array.isArray(staffData)) {
+      
+      // Explicitly type and check the staff data
+      let staffId: number | null = null;
+      if (staffData && 
+          typeof staffData === 'object' && 
+          !Array.isArray(staffData) && 
+          'id' in staffData && 
+          typeof staffData.id === 'number') {
         staffId = staffData.id;
       }
       
@@ -126,8 +132,14 @@ export class AuthService extends ApiService {
       
       // Get staff ID from the staff object (not array)
       const staffData = userData.staff;
-      let staffId = null;
-      if (staffData && typeof staffData === 'object' && !Array.isArray(staffData)) {
+      
+      // Explicitly type and check the staff data
+      let staffId: number | null = null;
+      if (staffData && 
+          typeof staffData === 'object' && 
+          !Array.isArray(staffData) && 
+          'id' in staffData && 
+          typeof staffData.id === 'number') {
         staffId = staffData.id;
       }
       

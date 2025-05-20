@@ -84,10 +84,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Get the staff record if it exists
         const staffData = userData.staff;
         
-        // Handle staffData properly - it could be null, an object, or something else
-        let staffId = null;
-        if (staffData && typeof staffData === 'object' && !Array.isArray(staffData)) {
-          // If it's a non-array object, access the id
+        // Handle staffData properly by explicitly typing it
+        let staffId: number | null = null;
+        
+        // Check if staffData is an object and has an id property
+        if (staffData && 
+            typeof staffData === 'object' && 
+            !Array.isArray(staffData) && 
+            'id' in staffData && 
+            typeof staffData.id === 'number') {
           staffId = staffData.id;
         }
 
