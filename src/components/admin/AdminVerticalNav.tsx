@@ -51,8 +51,8 @@ const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminV
   const { session, logout } = useAuth();
   const navigate = useNavigate();
   
-  // Get user role from auth context
-  const userRole = session.profile?.role as UserRole || 'guest';
+  // Get user role from auth context and ensure it's a valid UserRole
+  const userRole = (session.profile?.role || 'customer') as UserRole;
   
   // Filter sidebar items based on user role
   const filteredItems = SIDEBAR_ITEMS.filter(item => 

@@ -63,7 +63,10 @@ export class AuthService extends ApiService {
       
       // Get staff ID from the staff object (not array)
       const staffData = userData.staff;
-      const staffId = staffData && typeof staffData === 'object' ? staffData.id : null;
+      let staffId = null;
+      if (staffData && typeof staffData === 'object' && !Array.isArray(staffData)) {
+        staffId = staffData.id;
+      }
       
       // Create user object
       const user: User = {
@@ -123,7 +126,10 @@ export class AuthService extends ApiService {
       
       // Get staff ID from the staff object (not array)
       const staffData = userData.staff;
-      const staffId = staffData && typeof staffData === 'object' ? staffData.id : null;
+      let staffId = null;
+      if (staffData && typeof staffData === 'object' && !Array.isArray(staffData)) {
+        staffId = staffData.id;
+      }
       
       // Create user object
       const user: User = {
@@ -332,7 +338,7 @@ export class AuthService extends ApiService {
       let safeRole: UserRole = userData.role || 'customer' as UserRole;
       
       // Handle the special case for 'cashier' role
-      if (safeRole === 'cashier' as any) {
+      if (safeRole === 'cash' || safeRole === 'cashier' as any) {
         safeRole = 'cash';
       }
       

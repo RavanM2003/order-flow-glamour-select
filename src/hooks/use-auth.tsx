@@ -84,8 +84,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Get the staff record if it exists
         const staffData = userData.staff;
         
-        // staffData might be null or an object, not an array
-        const staffId = staffData && typeof staffData === 'object' ? staffData.id : null;
+        // Handle staffData properly - it could be null, an object, or something else
+        let staffId = null;
+        if (staffData && typeof staffData === 'object' && !Array.isArray(staffData)) {
+          // If it's a non-array object, access the id
+          staffId = staffData.id;
+        }
 
         setSession(prev => ({
           ...prev,
