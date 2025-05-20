@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { config } from "@/config/env";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import LanguageSelector from "@/components/LanguageSelector";
+import { useLanguage } from "@/context/LanguageContext";
 
 const AdminHeader = () => {
   const isMobile = useIsMobile();
@@ -15,6 +17,7 @@ const AdminHeader = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [mockUser, setMockUser] = useState<any>(null);
+  const { t } = useLanguage();
   
   // Check for mock user
   useEffect(() => {
@@ -55,8 +58,8 @@ const AdminHeader = () => {
     if (mockUser) {
       localStorage.removeItem('MOCK_USER_DATA');
       toast({
-        title: "Çıxış edildi",
-        description: "Demo rejimindən çıxış etdiniz"
+        title: t('common.logout'),
+        description: t('common.logoutSuccess')
       });
     }
     
@@ -98,7 +101,7 @@ const AdminHeader = () => {
               <div className="relative w-full">
                 <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <Input
-                  placeholder="Search..."
+                  placeholder={t('admin.searchPlaceholder')}
                   className="pl-8 pr-4"
                 />
               </div>
@@ -106,6 +109,9 @@ const AdminHeader = () => {
           </div>
 
           <div className="flex items-center space-x-2 md:space-x-4">
+            {/* Language Selector - adding it here */}
+            <LanguageSelector />
+            
             {mockUser && (
               <div className="hidden md:flex items-center mr-2">
                 <User size={16} className="text-gray-500 mr-2" />
@@ -126,7 +132,7 @@ const AdminHeader = () => {
               onClick={handleLogout}
             >
               <LogOut size={18} />
-              {!isMobile && <span>Çıx</span>}
+              {!isMobile && <span>{t('admin.logout')}</span>}
             </Button>
           </div>
         </>

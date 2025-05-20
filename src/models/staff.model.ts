@@ -2,60 +2,69 @@
 export interface Staff {
   id: number;
   name: string;
-  position: string; // Required field
-  specializations: string[]; // Required field
-  created_at?: string;
-  updated_at?: string;
-  user_id?: string;
-  avatar_url?: string;
-  rating?: number;
-  bio?: string;
+  position: string;
+  specializations: string[];
+  created_at: string;
+  updated_at: string;
+  user_id: string;
   email?: string;
   phone?: string;
   role_id?: number;
+  avatar_url?: string;
   salary?: number;
   commissionRate?: number;
-  paymentType?: 'salary' | 'commission' | 'both';
+  paymentType?: string;
 }
 
 export interface StaffPayment {
   id: number;
-  staffId: number;
+  staff_id: number;
   amount: number;
-  date: string;
-  type: 'salary' | 'commission' | 'expense';
-  description?: string;
+  payment_date: string;
+  payment_type: string;
+  note?: string;
+  created_at: string;
 }
 
 export interface StaffServiceRecord {
   id: number;
-  staffId: number;
-  customerId: number;
-  customerName: string;
-  serviceId: number;
-  serviceName: string;
+  staff_id: number;
+  service_id: number;
+  customer_id: number;
   date: string;
-  amount: number;
-  commission?: number;
+  note?: string;
+  created_at: string;
+  service_name?: string;
+  customer_name?: string;
+  price?: number;
 }
 
 export interface StaffFormData {
   name: string;
-  position: string; // Required field
-  specializations: string[]; // Required field
+  position: string;
+  specializations: string[];
   email?: string;
   phone?: string;
+  role_id?: number;
   salary?: number;
   commissionRate?: number;
-  paymentType?: 'salary' | 'commission' | 'both';
-  role_id?: number;
+  paymentType?: string;
 }
 
 export interface StaffWorkingHours {
   id?: number;
-  staffId: number;
-  dayOfWeek: number; // 0-6, where 0 is Sunday
-  startTime: string; // Format: "HH:MM" (24-hour format)
-  endTime: string;   // Format: "HH:MM" (24-hour format)
-  isWorkingDay: boolean;
+  staff_id: number;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_day_off: boolean;
+}
+
+export type StaffFilter = {
+  search?: string;
+  position?: string;
+  specialization?: string;
+  status?: 'active' | 'inactive';
+  sort?: 'name' | 'position' | 'created_at';
+  direction?: 'asc' | 'desc';
 }

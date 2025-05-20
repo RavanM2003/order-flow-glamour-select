@@ -36,6 +36,12 @@ const translations: Record<Language, Record<string, string>> = {
     'common.status': 'Status',
     'common.date': 'Tarix',
     'common.time': 'Vaxt',
+    'common.logout': 'Çıxış',
+    'common.logoutSuccess': 'Uğurla çıxış edildi',
+    'common.search': 'Axtarış',
+    'common.back': 'Geri',
+    'common.continue': 'Davam et',
+    'common.selected': 'Seçildi',
 
     // Home
     'home.title': 'Gözəllik salonunuz üçün mükəmməl idarəetmə həlli',
@@ -68,6 +74,15 @@ const translations: Record<Language, Record<string, string>> = {
     'booking.cancel': 'Sifarişi ləğv et',
     'booking.canceled': 'Sifariş artıq ləğv edilib',
     'booking.successCancel': 'Sifariş uğurla ləğv edildi.',
+    'booking.selectService': 'Xidmət seçin',
+    'booking.selectStaff': 'İşçi seçin',
+    'booking.duration': 'Müddət',
+    'booking.minutes': 'dəq',
+    'booking.noStaffForService': 'Bu xidmət üçün işçi tapılmadı.',
+    'booking.additionalProducts': 'Əlavə məhsullar',
+    'booking.selected': 'Seçildi',
+    'booking.addItem': 'Əlavə et',
+    'booking.selectServiceAndStaff': 'Xahiş edirik xidmət və işçi seçin',
 
     // Admin
     'admin.dashboard': 'İdarəetmə paneli',
@@ -80,6 +95,9 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.login': 'Admin panelə daxil ol',
     'admin.backToSite': 'Sayta qayıt',
     'admin.profile': 'Profil',
+    'admin.logout': 'Çıxış',
+    'admin.cash': 'Kassa',
+    'admin.searchPlaceholder': 'Axtarış...',
   },
   ru: {
     // Navigation
@@ -101,6 +119,12 @@ const translations: Record<Language, Record<string, string>> = {
     'common.status': 'Статус',
     'common.date': 'Дата',
     'common.time': 'Время',
+    'common.logout': 'Выйти',
+    'common.logoutSuccess': 'Вы успешно вышли из системы',
+    'common.search': 'Поиск',
+    'common.back': 'Назад',
+    'common.continue': 'Продолжить',
+    'common.selected': 'Выбрано',
 
     // Home
     'home.title': 'Идеальное решение для управления вашим салоном красоты',
@@ -133,6 +157,15 @@ const translations: Record<Language, Record<string, string>> = {
     'booking.cancel': 'Отменить заказ',
     'booking.canceled': 'Заказ уже отменен',
     'booking.successCancel': 'Заказ успешно отменен.',
+    'booking.selectService': 'Выберите услугу',
+    'booking.selectStaff': 'Выберите сотрудника',
+    'booking.duration': 'Длительность',
+    'booking.minutes': 'мин',
+    'booking.noStaffForService': 'Для этой услуги нет доступных сотрудников.',
+    'booking.additionalProducts': 'Дополнительные продукты',
+    'booking.selected': 'Выбрано',
+    'booking.addItem': 'Добавить',
+    'booking.selectServiceAndStaff': 'Пожалуйста, выберите услугу и сотрудника',
 
     // Admin
     'admin.dashboard': 'Панель управления',
@@ -145,6 +178,9 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.login': 'Войти в админ панель',
     'admin.backToSite': 'Вернуться на сайт',
     'admin.profile': 'Профиль',
+    'admin.logout': 'Выйти',
+    'admin.cash': 'Касса',
+    'admin.searchPlaceholder': 'Поиск...',
   },
   en: {
     // Navigation
@@ -166,6 +202,12 @@ const translations: Record<Language, Record<string, string>> = {
     'common.status': 'Status',
     'common.date': 'Date',
     'common.time': 'Time',
+    'common.logout': 'Logout',
+    'common.logoutSuccess': 'Successfully logged out',
+    'common.search': 'Search',
+    'common.back': 'Back',
+    'common.continue': 'Continue',
+    'common.selected': 'Selected',
 
     // Home
     'home.title': 'Perfect management solution for your beauty salon',
@@ -198,6 +240,15 @@ const translations: Record<Language, Record<string, string>> = {
     'booking.cancel': 'Cancel Order',
     'booking.canceled': 'Order already canceled',
     'booking.successCancel': 'Order successfully canceled.',
+    'booking.selectService': 'Select a Service',
+    'booking.selectStaff': 'Select Staff',
+    'booking.duration': 'Duration',
+    'booking.minutes': 'min',
+    'booking.noStaffForService': 'No staff available for this service.',
+    'booking.additionalProducts': 'Additional Products',
+    'booking.selected': 'Selected',
+    'booking.addItem': 'Add item',
+    'booking.selectServiceAndStaff': 'Please select a service and staff member',
 
     // Admin
     'admin.dashboard': 'Dashboard',
@@ -210,6 +261,9 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.login': 'Log in to Admin',
     'admin.backToSite': 'Back to Site',
     'admin.profile': 'Profile',
+    'admin.logout': 'Logout',
+    'admin.cash': 'Cash',
+    'admin.searchPlaceholder': 'Search...',
   },
   uz: {
     // Navigation
@@ -231,6 +285,12 @@ const translations: Record<Language, Record<string, string>> = {
     'common.status': 'Holat',
     'common.date': 'Sana',
     'common.time': 'Vaqt',
+    'common.logout': 'Chiqish',
+    'common.logoutSuccess': 'Muvaffaqiyatli chiqildi',
+    'common.search': 'Qidirish',
+    'common.back': 'Orqaga',
+    'common.continue': 'Davom etish',
+    'common.selected': 'Tanlandi',
 
     // Home
     'home.title': 'Go\'zallik saloningiz uchun mukammal boshqaruv yechimlari',
@@ -263,6 +323,15 @@ const translations: Record<Language, Record<string, string>> = {
     'booking.cancel': 'Buyurtmani bekor qilish',
     'booking.canceled': 'Buyurtma allaqachon bekor qilingan',
     'booking.successCancel': 'Buyurtma muvaffaqiyatli bekor qilindi.',
+    'booking.selectService': 'Xizmatni tanlang',
+    'booking.selectStaff': 'Xodimni tanlang',
+    'booking.duration': 'Davomiyligi',
+    'booking.minutes': 'daqiqa',
+    'booking.noStaffForService': 'Bu xizmat uchun xodim mavjud emas.',
+    'booking.additionalProducts': 'Qo\'shimcha mahsulotlar',
+    'booking.selected': 'Tanlandi',
+    'booking.addItem': 'Qo\'shish',
+    'booking.selectServiceAndStaff': 'Iltimos, xizmat va xodimni tanlang',
 
     // Admin
     'admin.dashboard': 'Boshqaruv paneli',
@@ -275,6 +344,9 @@ const translations: Record<Language, Record<string, string>> = {
     'admin.login': 'Admin paneliga kirish',
     'admin.backToSite': 'Saytga qaytish',
     'admin.profile': 'Profil',
+    'admin.logout': 'Chiqish',
+    'admin.cash': 'Kassa',
+    'admin.searchPlaceholder': 'Qidirish...',
   }
 };
 

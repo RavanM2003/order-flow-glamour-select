@@ -6,10 +6,12 @@ import { Service } from "@/models/service.model";
 import { Product } from "@/models/product.model";
 import { Staff } from "@/models/staff.model";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/context/LanguageContext";
 
 const ServiceSelection = () => {
   const { orderState, setPrevStep, setNextStep, setSelectedService, addProduct, removeProduct } = useOrder();
   const { selectedService, selectedProducts } = orderState;
+  const { t } = useLanguage();
   
   const [services, setServices] = useState<Service[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -112,18 +114,18 @@ const ServiceSelection = () => {
           const processedStaff: Staff[] = data.map(staffMember => {
             // Create a proper Staff object with all required properties
             // First, check if staff data from API has name property or add a default
-            const name = staffMember.name || `Staff #${staffMember.id}`;
+            const staffName = staffMember.name || `Staff #${staffMember.id}`;
             
             const staffData: Staff = {
               id: staffMember.id,
-              name: name,
+              name: staffName,
               position: staffMember.position || 'Staff Member',
               specializations: Array.isArray(staffMember.specializations) 
                 ? staffMember.specializations.map(s => String(s))
                 : [],
-              created_at: staffMember.created_at,
-              updated_at: staffMember.updated_at,
-              user_id: staffMember.user_id
+              created_at: staffMember.created_at || new Date().toISOString(),
+              updated_at: staffMember.updated_at || new Date().toISOString(),
+              user_id: staffMember.user_id || ''
             };
             
             return staffData;
@@ -167,18 +169,18 @@ const ServiceSelection = () => {
       // For now, we'll just move to the next step
       setNextStep();
     } else {
-      alert("Xahiş edirik xidmət və işçi seçin");
+      alert(t('booking.selectServiceAndStaff'));
     }
   };
 
   if (loading) {
-    return <div className="py-8 text-center">Xidmətlər yüklənir...</div>;
+    return <div className="py-8 text-center">{t('common.loading')}</div>;
   }
 
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold mb-4">Xidmət seçin</h2>
+        <h2 className="text-2xl font-bold mb-4">{t('booking.selectService')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {services.map((service) => (
             <div
@@ -202,7 +204,7 @@ const ServiceSelection = () => {
                 </p>
               )}
               <div className="text-xs text-gray-500 mt-2">
-                Müddət: {service.duration} dəq
+                {t('booking.duration')}: {service.duration} {t('booking.minutes')}
               </div>
             </div>
           ))}
@@ -211,9 +213,9 @@ const ServiceSelection = () => {
 
       {selectedService && (
         <div>
-          <h2 className="text-2xl font-bold mb-4">İşçi seçin</h2>
+          <h2 className="text-2xl font-bold mb-4">{t('booking.selectStaff')}</h2>
           {staffLoading ? (
-            <div className="text-center">İşçilər yüklənir...</div>
+            <div className="text-center">{t('common.loading')}</div>
           ) : staffMembers.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {staffMembers.map((staff) => (
@@ -239,16 +241,16 @@ const ServiceSelection = () => {
               ))}
             </div>
           ) : (
-            <p className="text-gray-500">Bu xidmət üçün işçi tapılmadı.</p>
+            <p className="text-gray-500">{t('booking.noStaffForService')}</p>
           )}
         </div>
       )}
 
       {selectedService && products.length > 0 && (
         <div>
-          <h2 className="text-2xl font-bold mb-4">Əlavə məhsullar</h2>
+          <h2 className="text-2xl font-bold mb-4">{t('booking.additionalProducts')}</h2>
           {productLoading ? (
-            <div className="text-center">Məhsullar yüklənir...</div>
+            <div className="text-center">{t('common.loading')}</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {products.map((product) => {
@@ -275,7 +277,7 @@ const ServiceSelection = () => {
                       </p>
                     )}
                     <div className="text-xs text-gray-500 mt-2">
-                      {isSelected ? "Seçildi" : "Əlavə et"}
+                      {isSelected ? t('booking.selected') : t('booking.addItem')}
                     </div>
                   </div>
                 );
@@ -287,13 +289,13 @@ const ServiceSelection = () => {
 
       <div className="flex justify-between pt-6">
         <Button variant="outline" onClick={setPrevStep}>
-          Geri
+          {t('common.back')}
         </Button>
         <Button 
           onClick={handleNext}
           disabled={!selectedService || !selectedStaff}
         >
-          Davam et
+          {t('common.continue')}
         </Button>
       </div>
     </div>

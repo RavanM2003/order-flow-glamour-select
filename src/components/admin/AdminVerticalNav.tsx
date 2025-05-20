@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from '@/hooks/use-auth';
 import { Button } from "@/components/ui/button";
 import { SIDEBAR_ITEMS, SidebarItem, UserRole } from '@/models/role.model';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface AdminVerticalNavProps {
   activeTab: string;
@@ -50,6 +51,7 @@ const tabToUrl: Record<string, string> = {
 const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminVerticalNavProps) => {
   const { session, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   // Get user role from auth context and ensure it's a valid UserRole
   const userRole = (session.profile?.role || 'customer') as UserRole;
@@ -91,7 +93,7 @@ const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminV
               onClick={() => setActiveTab(item.id)}
             >
               {IconComponent && <IconComponent className="h-5 w-5 mr-3" />}
-              {item.label}
+              {t(`admin.${item.id}`)}
             </Link>
           );
         })}
@@ -116,10 +118,10 @@ const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminV
           </div>
         </div>
         <div className="mt-4 space-y-2">
-          <a href="/admin/profile" className="block w-full text-center py-2 rounded bg-glamour-700 text-white font-semibold hover:bg-glamour-800 transition-colors">Profil</a>
+          <a href="/admin/profile" className="block w-full text-center py-2 rounded bg-glamour-700 text-white font-semibold hover:bg-glamour-800 transition-colors">{t('admin.profile')}</a>
           <Button variant="outline" className="w-full" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-2" />
-            Çıxış et
+            {t('admin.logout')}
           </Button>
         </div>
       </div>
