@@ -1,34 +1,22 @@
 
-import React from 'react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import React, { ReactNode } from 'react';
+import { X } from 'lucide-react';
+import { Button } from '../ui/button';
 
-export interface DetailDrawerProps {
-  children: React.ReactNode;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  title: string;
-  className?: string;
+interface DetailDrawerProps {
+  children: ReactNode;
+  initialCustomer?: any; // Add this prop to make TypeScript happy
 }
 
-const DetailDrawer: React.FC<DetailDrawerProps> = ({ 
-  children, 
-  open, 
-  onOpenChange, 
-  title, 
-  className = '' 
-}) => {
+const DetailDrawer: React.FC<DetailDrawerProps> = ({ children, initialCustomer }) => {
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className={`w-full md:max-w-lg lg:max-w-xl overflow-y-auto ${className}`} side="right">
-        <SheetHeader>
-          <SheetTitle>{title}</SheetTitle>
-        </SheetHeader>
-        <ScrollArea className="h-[calc(100vh-80px)]">
+    <div className="fixed inset-0 z-50 bg-black/50 overflow-hidden">
+      <div className="absolute inset-y-0 right-0 w-full max-w-md bg-white shadow-xl overflow-y-auto animate-slide-in-right">
+        <div className="p-6">
           {children}
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+        </div>
+      </div>
+    </div>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -108,8 +107,14 @@ const ServiceSelection = () => {
         }
         
         if (data) {
-          // Fix: Convert data to Staff[] type with type assertion to include the name property
-          setStaffMembers(data as Staff[]);
+          // Make sure each staff object has a name property
+          const staffWithNames = data.map(staff => ({
+            ...staff,
+            // If name is missing, provide a default
+            name: staff.name || `Staff #${staff.id}`
+          }));
+          
+          setStaffMembers(staffWithNames as Staff[]);
           // Reset selected staff when service changes
           setSelectedStaff(null);
         }

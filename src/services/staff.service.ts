@@ -144,10 +144,12 @@ export class StaffService extends ApiService {
       // Ensure position and specializations are set for all staff
       const staffList = [...mockStaff].map(s => ({
         ...s,
+        name: s.name || `Staff #${s.id}`, // Ensure name is set
         position: s.position || 'Staff Member', // Default position if not set
         specializations: s.specializations || []
-      }));
-      return { data: staffList as Staff[] };
+      })) as Staff[];
+      
+      return { data: staffList };
     }
     
     return this.get('/staff');
@@ -161,10 +163,11 @@ export class StaffService extends ApiService {
       if (!staff) {
         return { error: 'Staff not found' };
       }
-      // Ensure position and specializations are set
+      // Ensure all required properties are set
       return { 
         data: {
           ...staff,
+          name: staff.name || `Staff #${staff.id}`, // Ensure name is set
           position: staff.position || 'Staff Member', // Default position if not set
           specializations: staff.specializations || [] // Ensure specializations is defined
         } as Staff
@@ -212,15 +215,17 @@ export class StaffService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 400));
       const index = mockStaff.findIndex(s => s.id === Number(id));
       if (index >= 0) {
-        // Ensure position and specializations remain set when updating
+        // Ensure required fields are maintained when updating
         mockStaff[index] = { 
           ...mockStaff[index], 
           ...data,
+          name: data.name || mockStaff[index].name || `Staff #${mockStaff[index].id}`, // Ensure name is preserved
           position: data.position || mockStaff[index].position || 'Staff Member',
           specializations: data.specializations || mockStaff[index].specializations || [],
           updated_at: new Date().toISOString()
-        };
-        return { data: mockStaff[index] as Staff };
+        } as Staff;
+        
+        return { data: mockStaff[index] };
       }
       return { error: 'Staff not found' };
     }
