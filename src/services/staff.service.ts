@@ -1,3 +1,4 @@
+
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -107,12 +108,7 @@ const mockWorkingHours: StaffWorkingHours[] = [
     day_of_week: 1, // Monday
     start_time: "09:00",
     end_time: "17:00",
-    is_day_off: false,
-    // Compatibility fields 
-    dayOfWeek: 1,
-    startTime: "09:00",
-    endTime: "17:00",
-    isWorkingDay: true
+    is_day_off: false
   },
   {
     id: 2,
@@ -120,11 +116,7 @@ const mockWorkingHours: StaffWorkingHours[] = [
     day_of_week: 2, // Tuesday
     start_time: "09:00",
     end_time: "17:00",
-    is_day_off: false,
-    dayOfWeek: 2,
-    startTime: "09:00",
-    endTime: "17:00",
-    isWorkingDay: true
+    is_day_off: false
   },
   {
     id: 3,
@@ -132,11 +124,7 @@ const mockWorkingHours: StaffWorkingHours[] = [
     day_of_week: 3, // Wednesday
     start_time: "09:00",
     end_time: "17:00",
-    is_day_off: false,
-    dayOfWeek: 3,
-    startTime: "09:00", 
-    endTime: "17:00",
-    isWorkingDay: true
+    is_day_off: false
   },
   {
     id: 4,
@@ -144,11 +132,7 @@ const mockWorkingHours: StaffWorkingHours[] = [
     day_of_week: 4, // Thursday
     start_time: "09:00",
     end_time: "17:00",
-    is_day_off: false,
-    dayOfWeek: 4,
-    startTime: "09:00",
-    endTime: "17:00",
-    isWorkingDay: true
+    is_day_off: false
   },
   {
     id: 5,
@@ -156,11 +140,7 @@ const mockWorkingHours: StaffWorkingHours[] = [
     day_of_week: 5, // Friday
     start_time: "09:00",
     end_time: "17:00",
-    is_day_off: false,
-    dayOfWeek: 5,
-    startTime: "09:00",
-    endTime: "17:00",
-    isWorkingDay: true
+    is_day_off: false
   },
   {
     id: 6,
@@ -168,11 +148,7 @@ const mockWorkingHours: StaffWorkingHours[] = [
     day_of_week: 6, // Saturday
     start_time: "10:00",
     end_time: "14:00",
-    is_day_off: false,
-    dayOfWeek: 6,
-    startTime: "10:00",
-    endTime: "14:00",
-    isWorkingDay: true
+    is_day_off: false
   },
   {
     id: 7,
@@ -180,11 +156,7 @@ const mockWorkingHours: StaffWorkingHours[] = [
     day_of_week: 0, // Sunday
     start_time: "00:00",
     end_time: "00:00",
-    is_day_off: true,
-    dayOfWeek: 0,
-    startTime: "00:00",
-    endTime: "00:00",
-    isWorkingDay: false
+    is_day_off: true
   }
 ];
 
@@ -447,7 +419,7 @@ export class StaffService extends ApiService {
       );
       
       if (index >= 0) {
-        // Create a normalized version with both snake_case and camelCase properties
+        // Create a normalized version with the correct property names
         const updatedHours: StaffWorkingHours = {
           ...mockWorkingHours[index],
           ...hours,
@@ -455,12 +427,7 @@ export class StaffService extends ApiService {
           day_of_week: dayOfWeek,
           start_time: hours.start_time || mockWorkingHours[index].start_time,
           end_time: hours.end_time || mockWorkingHours[index].end_time,
-          is_day_off: hours.is_day_off !== undefined ? hours.is_day_off : mockWorkingHours[index].is_day_off,
-          // Include compatibility fields
-          dayOfWeek: dayOfWeek,
-          startTime: hours.start_time || mockWorkingHours[index].start_time,
-          endTime: hours.end_time || mockWorkingHours[index].end_time,
-          isWorkingDay: hours.is_day_off !== undefined ? !hours.is_day_off : !mockWorkingHours[index].is_day_off
+          is_day_off: hours.is_day_off !== undefined ? hours.is_day_off : mockWorkingHours[index].is_day_off
         };
         
         mockWorkingHours[index] = updatedHours;
@@ -475,12 +442,7 @@ export class StaffService extends ApiService {
         day_of_week: dayOfWeek,
         start_time: hours.start_time || "09:00",
         end_time: hours.end_time || "17:00",
-        is_day_off: hours.is_day_off !== undefined ? hours.is_day_off : false,
-        // Include compatibility fields
-        dayOfWeek: dayOfWeek,
-        startTime: hours.start_time || "09:00",
-        endTime: hours.end_time || "17:00",
-        isWorkingDay: hours.is_day_off !== undefined ? !hours.is_day_off : true
+        is_day_off: hours.is_day_off !== undefined ? hours.is_day_off : false
       };
       
       mockWorkingHours.push(newHours);
@@ -509,12 +471,7 @@ export class StaffService extends ApiService {
           day_of_week: day,
           start_time: startTime,
           end_time: endTime,
-          is_day_off: isDayOff,
-          // Include compatibility fields
-          dayOfWeek: day,
-          startTime: startTime,
-          endTime: endTime,
-          isWorkingDay: !isDayOff
+          is_day_off: isDayOff
         });
       });
     }

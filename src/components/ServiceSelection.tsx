@@ -125,7 +125,14 @@ const ServiceSelection = () => {
                 : [],
               created_at: staffMember.created_at || new Date().toISOString(),
               updated_at: staffMember.updated_at || new Date().toISOString(),
-              user_id: staffMember.user_id || ''
+              user_id: staffMember.user_id || '',
+              email: staffMember.email,
+              phone: staffMember.phone,
+              role_id: staffMember.role_id,
+              avatar_url: staffMember.avatar_url,
+              salary: staffMember.salary,
+              commissionRate: staffMember.commissionRate,
+              paymentType: staffMember.paymentType
             };
             
             return staffData;
