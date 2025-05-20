@@ -312,15 +312,39 @@ class SupabaseService {
   
   async createCustomer(customer: Customer): Promise<Customer> {
     try {
+      // Transform the frontend Customer model to match the database schema
+      const dbCustomer = {
+        full_name: customer.name,
+        email: customer.email,
+        phone: customer.phone,
+        gender: customer.gender,
+        birth_date: customer.birth_date || null,
+        note: customer.note || '',
+        user_id: customer.user_id || null
+      };
+
       const { data, error } = await this.supabase
         .from('customers')
-        .insert([customer])
+        .insert([dbCustomer])
         .select()
         .single();
       
       if (error) throw error;
       
-      return data as Customer;
+      // Transform the database response back to the frontend Customer model
+      return {
+        id: data.id,
+        name: data.full_name,
+        email: data.email || '',
+        phone: data.phone || '',
+        gender: data.gender || 'other',
+        lastVisit: '',
+        totalSpent: 0,
+        birth_date: data.birth_date || '',
+        note: data.note || '',
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || ''
+      } as Customer;
     } catch (error) {
       console.error('Error creating customer:', error);
       throw error;
@@ -329,16 +353,39 @@ class SupabaseService {
   
   async updateCustomer(id: string, updates: Partial<Customer>): Promise<Customer> {
     try {
+      // Transform the frontend Customer model to match the database schema
+      const dbUpdates: any = {};
+      
+      if (updates.name) dbUpdates.full_name = updates.name;
+      if (updates.email !== undefined) dbUpdates.email = updates.email;
+      if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
+      if (updates.gender !== undefined) dbUpdates.gender = updates.gender;
+      if (updates.birth_date !== undefined) dbUpdates.birth_date = updates.birth_date;
+      if (updates.note !== undefined) dbUpdates.note = updates.note;
+      
       const { data, error } = await this.supabase
         .from('customers')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', id)
         .select()
         .single();
       
       if (error) throw error;
       
-      return data as Customer;
+      // Transform the database response back to the frontend Customer model
+      return {
+        id: data.id,
+        name: data.full_name,
+        email: data.email || '',
+        phone: data.phone || '',
+        gender: data.gender || 'other',
+        lastVisit: '',
+        totalSpent: 0,
+        birth_date: data.birth_date || '',
+        note: data.note || '',
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || ''
+      } as Customer;
     } catch (error) {
       console.error('Error updating customer:', error);
       throw error;

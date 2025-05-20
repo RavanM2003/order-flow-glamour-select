@@ -400,47 +400,6 @@ export type Database = {
           },
         ]
       }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          first_name: string | null
-          id: string
-          last_name: string | null
-          role: string
-          staff_id: number | null
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          first_name?: string | null
-          id: string
-          last_name?: string | null
-          role?: string
-          staff_id?: number | null
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          role?: string
-          staff_id?: number | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_staff_id_fkey"
-            columns: ["staff_id"]
-            isOneToOne: false
-            referencedRelation: "staff"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       promo_codes: {
         Row: {
           code: string
@@ -481,21 +440,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      roles: {
-        Row: {
-          id: number
-          name: string
-        }
-        Insert: {
-          id?: number
-          name: string
-        }
-        Update: {
-          id?: number
-          name?: string
-        }
-        Relationships: []
       }
       service_categories: {
         Row: {
@@ -616,35 +560,37 @@ export type Database = {
       staff: {
         Row: {
           created_at: string | null
-          email: string | null
           id: number
-          name: string
           position: string | null
-          role_id: number | null
-          specializations: Json | null
+          specializations: number[] | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
-          email?: string | null
           id?: number
-          name: string
           position?: string | null
-          role_id?: number | null
-          specializations?: Json | null
+          specializations?: number[] | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
-          email?: string | null
           id?: number
-          name?: string
           position?: string | null
-          role_id?: number | null
-          specializations?: Json | null
+          specializations?: number[] | null
           updated_at?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "staff_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       staff_availability: {
         Row: {
@@ -677,30 +623,39 @@ export type Database = {
       }
       users: {
         Row: {
+          avatar_url: string | null
           created_at: string | null
           email: string
+          first_name: string | null
           hashed_password: string
           id: string
+          last_name: string | null
           number: string
-          role: string | null
+          role: Database["public"]["Enums"]["role_enum"] | null
           updated_at: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string | null
           email: string
+          first_name?: string | null
           hashed_password: string
           id?: string
+          last_name?: string | null
           number: string
-          role?: string | null
+          role?: Database["public"]["Enums"]["role_enum"] | null
           updated_at?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string | null
           email?: string
+          first_name?: string | null
           hashed_password?: string
           id?: string
+          last_name?: string | null
           number?: string
-          role?: string | null
+          role?: Database["public"]["Enums"]["role_enum"] | null
           updated_at?: string | null
         }
         Relationships: []
@@ -724,6 +679,16 @@ export type Database = {
         | "discount"
         | "promo_code"
       payment_type: "income" | "expense"
+      role_enum:
+        | "cash"
+        | "customer"
+        | "super_admin"
+        | "admin"
+        | "staff"
+        | "appointment"
+        | "reception"
+        | "service"
+        | "product"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -844,6 +809,17 @@ export const Constants = {
       gender_enum: ["male", "female", "other"],
       payment_method: ["cash", "card", "bank", "pos", "discount", "promo_code"],
       payment_type: ["income", "expense"],
+      role_enum: [
+        "cash",
+        "customer",
+        "super_admin",
+        "admin",
+        "staff",
+        "appointment",
+        "reception",
+        "service",
+        "product",
+      ],
     },
   },
 } as const

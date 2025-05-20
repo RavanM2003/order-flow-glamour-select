@@ -365,59 +365,55 @@ export class AuthService extends ApiService {
   }
   
   // Create a new customer and associated user account
-  async createCustomerWithUser(formData: any, userData: any): Promise<ApiResponse<any>> {
+  async createCustomerWithUser(customerData: any, userData: any): Promise<ApiResponse<any>> {
     try {
-      // First, create the user in the users table
-      const { data: newUserData, error: userError } = await supabase
-        .from('users')
-        .insert([
-          {
-            email: formData.email,
-            hashed_password: 'default-password', // This should be a properly hashed password
-            role: 'guest',
-            number: formData.phone || '',
-          }
-        ])
-        .select()
-        .single();
-        
-      if (userError) {
-        return { error: `Error creating user: ${userError.message}` };
-      }
-      
-      // Then, create the customer with the user ID
-      const { data: newCustomerData, error: customerError } = await supabase
-        .from('customers')
-        .insert([
-          {
-            full_name: `${formData.firstName} ${formData.lastName}`,
-            email: formData.email,
-            phone: formData.phone,
-            gender: formData.gender,
-            birth_date: formData.birthDate,
-            note: formData.note,
-            user_id: newUserData.id
-          }
-        ])
-        .select()
-        .single();
-        
-      if (customerError) {
-        // If customer creation fails, delete the user we created
-        await supabase.from('users').delete().eq('id', newUserData.id);
-        return { error: `Error creating customer: ${customerError.message}` };
-      }
-      
-      return { 
-        data: { 
-          user: newUserData,
-          customer: newCustomerData 
+      // First create the user
+      const response = await fetch(`${this.apiUrl}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
         },
-        message: 'Customer and user account created successfully'
+        body: JSON.stringify({
+          email: userData.email,
+          password: userData.password,
+          role: userData.role || 'guest'
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        return { error: result.error.message || 'Failed to create user' };
+      }
+
+      // Then associate a customer with the user
+      const customer = {
+        user_id: result.data.user.id,
+        full_name: `${customerData.firstName || ''} ${customerData.lastName || ''}`.trim(),
+        email: customerData.email,
+        phone: customerData.phone,
+        gender: customerData.gender || 'other',
+        birth_date: customerData.birthDate || null,
+        note: customerData.note || ''
+      };
+
+      // Create the customer
+      const customerResult = await supabaseService.createCustomer(customer);
+
+      if (customerResult instanceof Error) {
+        return { error: customerResult.message };
+      }
+
+      return {
+        data: {
+          user: result.data.user,
+          customer: customerResult,
+          session: result.data.session
+        },
+        message: 'Customer created with user account successfully'
       };
     } catch (error) {
-      console.error('Error creating customer with user:', error);
-      return { error: error instanceof Error ? error.message : 'An unexpected error occurred' };
+      return { error: error instanceof Error ? error.message : 'Failed to create customer with user account' };
     }
   }
   
