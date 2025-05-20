@@ -6,7 +6,7 @@ import { Button } from '../ui/button';
 interface DetailDrawerProps {
   children: ReactNode;
   initialCustomer?: any; // For CustomerTab compatibility
-  open: boolean; // Add required open property
+  open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
   className?: string;

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -110,21 +109,19 @@ const ServiceSelection = () => {
         if (data) {
           // Process staff data with type-safe transformations
           const processedStaff: Staff[] = data.map(staffMember => {
-            // Ensure name has a default value
-            const staffName = staffMember.name !== undefined ? staffMember.name : `Staff #${staffMember.id}`;
-            
-            // Ensure specializations is a string array
-            const processedSpecializations = Array.isArray(staffMember.specializations) 
-              ? staffMember.specializations.map(s => String(s)) // Convert numbers to strings
-              : [];
-              
-            // Create a valid Staff object with required properties
-            return {
+            // Create a proper Staff object that matches our interface
+            const staffWithName = { 
               ...staffMember,
-              name: staffName,
-              specializations: processedSpecializations,
-              position: staffMember.position || 'Staff Member' // Ensure position exists
-            } as Staff;
+              // Ensure required fields have values
+              name: typeof staffMember.name === 'string' ? staffMember.name : `Staff #${staffMember.id}`,
+              position: typeof staffMember.position === 'string' ? staffMember.position : 'Staff Member',
+              // Convert specializations to string array
+              specializations: Array.isArray(staffMember.specializations) 
+                ? staffMember.specializations.map(s => String(s)) 
+                : []
+            };
+            
+            return staffWithName as Staff;
           });
           
           setStaffMembers(processedStaff);
