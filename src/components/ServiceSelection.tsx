@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -300,6 +299,33 @@ const ServiceSelection = () => {
       </div>
     </div>
   );
+  
+  function handleServiceSelect(service: Service) {
+    setSelectedService(service);
+  }
+
+  function handleProductToggle(product: Product) {
+    if (selectedProducts.some(p => p.id === product.id)) {
+      removeProduct(product);
+    } else {
+      addProduct(product);
+    }
+  }
+
+  function handleStaffSelect(staff: Staff) {
+    setSelectedStaff(staff);
+  }
+
+  function handleNext() {
+    if (selectedService && selectedStaff) {
+      // Save selected staff to order context
+      // You'll need to update your OrderContext to include staff
+      // For now, we'll just move to the next step
+      setNextStep();
+    } else {
+      alert(t('booking.selectServiceAndStaff'));
+    }
+  }
 };
 
 export default ServiceSelection;

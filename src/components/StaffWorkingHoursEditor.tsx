@@ -37,7 +37,12 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
         day_of_week: index,
         start_time: "09:00",
         end_time: "17:00",
-        is_day_off: index === 0 // Sunday off by default
+        is_day_off: index === 0, // Sunday off by default
+        // Add compatibility properties
+        dayOfWeek: index,
+        startTime: "09:00", 
+        endTime: "17:00",
+        isWorkingDay: index !== 0
       }));
       setLocalHours(defaultHours);
     }
@@ -49,22 +54,35 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
     value: string
   ) => {
     setLocalHours(prev => 
-      prev.map(day => 
-        day.day_of_week === dayOfWeek 
-          ? { ...day, [field]: value } 
-          : day
-      )
+      prev.map(day => {
+        if (day.day_of_week === dayOfWeek) {
+          const updatedDay = { 
+            ...day, 
+            [field]: value,
+            // Update corresponding camelCase property
+            [field === 'start_time' ? 'startTime' : 'endTime']: value
+          };
+          return updatedDay;
+        }
+        return day;
+      })
     );
     setHasChanges(true);
   };
   
   const handleWorkingDayToggle = (dayOfWeek: number, isWorkingDay: boolean) => {
     setLocalHours(prev => 
-      prev.map(day => 
-        day.day_of_week === dayOfWeek 
-          ? { ...day, is_day_off: !isWorkingDay } 
-          : day
-      )
+      prev.map(day => {
+        if (day.day_of_week === dayOfWeek) {
+          return { 
+            ...day, 
+            is_day_off: !isWorkingDay,
+            // Update corresponding camelCase property
+            isWorkingDay: isWorkingDay 
+          };
+        }
+        return day;
+      })
     );
     setHasChanges(true);
   };

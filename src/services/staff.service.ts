@@ -1,4 +1,3 @@
-
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -202,14 +201,17 @@ export class StaffService extends ApiService {
           name: s.name || `Staff #${s.id}`, // Ensure name is set
           position: s.position || 'Staff Member', // Default position if not set
           specializations: (s.specializations || []).map(String), // Convert to string[]
-          created_at: s.created_at,
-          updated_at: s.updated_at,
-          user_id: s.user_id,
+          created_at: s.created_at || new Date().toISOString(),
+          updated_at: s.updated_at || new Date().toISOString(),
+          user_id: s.user_id || '',
           // Add optional fields with defaults if present
           ...(s.email !== undefined ? { email: s.email } : {}),
           ...(s.phone !== undefined ? { phone: s.phone } : {}),
           ...(s.role_id !== undefined ? { role_id: s.role_id } : {}),
-          ...(s.avatar_url !== undefined ? { avatar_url: s.avatar_url } : {})
+          ...(s.avatar_url !== undefined ? { avatar_url: s.avatar_url } : {}),
+          ...(s.salary !== undefined ? { salary: s.salary } : {}),
+          ...(s.commissionRate !== undefined ? { commissionRate: s.commissionRate } : {}),
+          ...(s.paymentType !== undefined ? { paymentType: s.paymentType } : {})
         };
         return staffMember;
       });
@@ -235,14 +237,17 @@ export class StaffService extends ApiService {
         name: staff.name || `Staff #${staff.id}`,
         position: staff.position || 'Staff Member',
         specializations: (staff.specializations || []).map(String), // Convert to string[]
-        created_at: staff.created_at,
-        updated_at: staff.updated_at,
-        user_id: staff.user_id,
+        created_at: staff.created_at || new Date().toISOString(),
+        updated_at: staff.updated_at || new Date().toISOString(),
+        user_id: staff.user_id || '',
         // Add optional fields if present
         ...(staff.email !== undefined ? { email: staff.email } : {}),
         ...(staff.phone !== undefined ? { phone: staff.phone } : {}),
         ...(staff.role_id !== undefined ? { role_id: staff.role_id } : {}),
-        ...(staff.avatar_url !== undefined ? { avatar_url: staff.avatar_url } : {})
+        ...(staff.avatar_url !== undefined ? { avatar_url: staff.avatar_url } : {}),
+        ...(staff.salary !== undefined ? { salary: staff.salary } : {}),
+        ...(staff.commissionRate !== undefined ? { commissionRate: staff.commissionRate } : {}),
+        ...(staff.paymentType !== undefined ? { paymentType: staff.paymentType } : {})
       };
       
       return { data: staffMember };
@@ -438,7 +443,7 @@ export class StaffService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 300));
       
       const index = mockWorkingHours.findIndex(h => 
-        h.staff_id === Number(staffId) && (h.day_of_week === dayOfWeek || h.dayOfWeek === dayOfWeek)
+        h.staff_id === Number(staffId) && h.day_of_week === dayOfWeek
       );
       
       if (index >= 0) {
