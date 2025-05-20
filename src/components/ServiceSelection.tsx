@@ -109,14 +109,15 @@ const ServiceSelection = () => {
         
         if (data) {
           // Process staff data with type-safe transformations
-          const processedStaff = data.map(staffMember => {
+          const processedStaff: Staff[] = data.map(staffMember => {
+            const staffName = staffMember.name || `Staff #${staffMember.id}`;
             const processedSpecializations = Array.isArray(staffMember.specializations) 
               ? staffMember.specializations.map(s => String(s)) // Convert numbers to strings
               : [];
               
             return {
               ...staffMember,
-              name: staffMember.name || `Staff #${staffMember.id}`,
+              name: staffName,
               specializations: processedSpecializations, // Ensure specializations is string[]
               position: staffMember.position || 'Staff Member' // Ensure position exists
             } as Staff;
