@@ -1,6 +1,6 @@
 
 // User model and related types
-export type UserRole = "super_admin" | "admin" | "staff" | "cashier" | "appointment" | "service" | "product" | "guest";
+export type UserRole = "super_admin" | "admin" | "staff" | "cash" | "appointment" | "service" | "product" | "guest" | "customer" | "reception";
 
 export interface User {
   id: string;

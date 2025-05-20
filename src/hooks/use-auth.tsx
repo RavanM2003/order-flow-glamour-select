@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Get user data directly from users table since we no longer have a profiles table
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('*, staff:staff(*)')
+        .select('*, staff(*)')
         .eq('id', userId)
         .single();
 
@@ -81,6 +81,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const userData = await fetchUserProfile(session.user.id);
       
       if (userData) {
+        // Get the staff record if it exists
+        // Note that staffData might be null or a single object (not an array)
+        const staffData = userData.staff;
+        const staffId = staffData?.id || null;
+
         setSession(prev => ({
           ...prev,
           profile: {
@@ -88,8 +93,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             lastName: userData.last_name || null,
             role: userData.role as UserRole,
             avatar: userData.avatar_url || null,
-            staffId: userData.staff?.id || null,
-            roleId: userData.staff?.id || null // Using staff ID as role ID since we don't have role_id
+            staffId: staffId,
+            roleId: staffId // Using staff ID as role ID since we don't have role_id
           }
         }));
       }

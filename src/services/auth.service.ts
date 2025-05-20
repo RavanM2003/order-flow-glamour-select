@@ -53,13 +53,17 @@ export class AuthService extends ApiService {
       // Get user data
       const { data: userData } = await supabase
         .from('users')
-        .select('*, staff:staff(*)')
+        .select('*, staff(*)')
         .eq('id', authData.user.id)
         .single();
         
       if (!userData) {
         return { error: 'User data not found' };
       }
+      
+      // Get staff ID from the staff object (not array)
+      const staffData = userData.staff;
+      const staffId = staffData?.id || null;
       
       // Create user object
       const user: User = {
@@ -68,11 +72,11 @@ export class AuthService extends ApiService {
         firstName: userData.first_name || '',
         lastName: userData.last_name || '',
         role: userData.role as UserRole,
-        staffId: userData.staff?.id,
+        staffId: staffId,
         profileImage: userData.avatar_url,
         lastLogin: authData.user.last_sign_in_at || new Date().toISOString(),
         isActive: true,
-        roleId: userData.staff?.id // Using staff ID as role ID
+        roleId: staffId // Using staff ID as role ID
       };
       
       // Create response
@@ -100,7 +104,7 @@ export class AuthService extends ApiService {
       // Check if the user exists in the custom users table
       const { data: userData, error: userError } = await supabase
         .from('users')
-        .select('*, staff:staff(*)')
+        .select('*, staff(*)')
         .eq('email', credentials.email)
         .single();
         
@@ -117,6 +121,10 @@ export class AuthService extends ApiService {
         return { error: 'Invalid email or password' };
       }
       
+      // Get staff ID from the staff object (not array)
+      const staffData = userData.staff;
+      const staffId = staffData?.id || null;
+      
       // Create user object
       const user: User = {
         id: userData.id,
@@ -124,11 +132,11 @@ export class AuthService extends ApiService {
         firstName: userData.first_name || userData.email.split('@')[0],
         lastName: userData.last_name || 'User',
         role: (userData.role || 'guest') as UserRole,
-        staffId: userData.staff?.id,
+        staffId: staffId,
         profileImage: userData.avatar_url,
         lastLogin: new Date().toISOString(),
         isActive: true,
-        roleId: userData.staff?.id // Using staff ID as role ID
+        roleId: staffId // Using staff ID as role ID
       };
       
       // Create a mock token and expiry (24 hours)
@@ -320,19 +328,22 @@ export class AuthService extends ApiService {
         return { error: 'Registration failed' };
       }
       
+      // Ensure role is one of the valid role_enum values from the database
+      const safeRole = (userData.role === 'cashier') ? 'cash' : (userData.role || 'customer');
+      
       // Create a user entry in the users table
       const { data: newUserData, error: userError } = await supabase
         .from('users')
-        .insert([{
+        .insert({
           id: authData.user.id,
           email: authData.user.email || '',
           first_name: userData.firstName || '',
           last_name: userData.lastName || '',
-          role: userData.role || 'customer',
+          role: safeRole,
           number: Math.random().toString().slice(2, 12), // Generate random number
           hashed_password: userData.password, // Not secure, but just for demo
           avatar_url: null
-        }])
+        })
         .select()
         .single();
 
@@ -379,19 +390,22 @@ export class AuthService extends ApiService {
         return { error: 'User creation failed' };
       }
 
+      // Ensure role is valid for the database
+      const safeRole = 'customer'; // Always use 'customer' for new customer accounts
+
       // Insert user data in users table
       const { error: userError } = await supabase
         .from('users')
-        .insert([{
+        .insert({
           id: authData.user.id,
           email: authData.user.email,
           first_name: customerData.firstName || '',
           last_name: customerData.lastName || '',
-          role: 'customer',
+          role: safeRole,
           number: customerData.phone || Math.random().toString().slice(2, 12),
           hashed_password: userData.password, // Not secure, but just for demo
           avatar_url: null
-        }]);
+        });
 
       if (userError) {
         console.error('Error creating user entry:', userError);
@@ -525,3 +539,7 @@ export class AuthService extends ApiService {
 
 // Create a singleton instance
 export const authService = new AuthService();
+
+// Add to services index
+export * from './role.service';
+
