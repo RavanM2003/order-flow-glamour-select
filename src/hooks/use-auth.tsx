@@ -91,9 +91,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (staffData && 
             typeof staffData === 'object' && 
             !Array.isArray(staffData) && 
-            'id' in staffData && 
-            typeof staffData.id === 'number') {
-          staffId = staffData.id;
+            'id' in staffData) {
+          // Use a type assertion to tell TypeScript that staffData has an id property
+          const typedStaffData = staffData as { id: number };
+          staffId = typedStaffData.id;
         }
 
         setSession(prev => ({
