@@ -9,32 +9,49 @@ import { mockStaff } from '@/lib/mock-data';
 const mockStaffPayments: StaffPayment[] = [
   {
     id: 1,
-    staffId: 1,
+    staff_id: 1,
     amount: 500,
+    payment_date: '2025-05-01',
+    payment_type: 'salary',
+    note: 'Monthly salary for May 2025',
+    created_at: new Date().toISOString(),
+    // Compatibility properties
     date: '2025-05-01',
     type: 'salary',
     description: 'Monthly salary for May 2025'
   },
   {
     id: 2,
-    staffId: 1,
+    staff_id: 1,
     amount: 125,
+    payment_date: '2025-05-12',
+    payment_type: 'commission',
+    note: 'Commission for services provided',
+    created_at: new Date().toISOString(),
     date: '2025-05-12',
     type: 'commission',
     description: 'Commission for services provided'
   },
   {
     id: 3,
-    staffId: 2,
+    staff_id: 2,
     amount: 450,
+    payment_date: '2025-05-01',
+    payment_type: 'salary',
+    note: 'Monthly salary for May 2025',
+    created_at: new Date().toISOString(),
     date: '2025-05-01',
     type: 'salary',
     description: 'Monthly salary for May 2025'
   },
   {
     id: 4,
-    staffId: 1,
+    staff_id: 1,
     amount: 75,
+    payment_date: '2025-05-15',
+    payment_type: 'expense',
+    note: 'Equipment expense',
+    created_at: new Date().toISOString(),
     date: '2025-05-15',
     type: 'expense',
     description: 'Equipment expense'
@@ -44,34 +61,40 @@ const mockStaffPayments: StaffPayment[] = [
 const mockServiceRecords: StaffServiceRecord[] = [
   {
     id: 1,
-    staffId: 1,
-    customerId: 201,
-    customerName: 'John Doe',
-    serviceId: 301,
-    serviceName: 'Facial Treatment',
+    staff_id: 1,
+    customer_id: 201,
+    customer_name: 'John Doe',
+    service_id: 301,
+    service_name: 'Facial Treatment',
     date: '2025-05-10',
+    created_at: new Date().toISOString(),
+    price: 250,
     amount: 250,
     commission: 25
   },
   {
     id: 2,
-    staffId: 1,
-    customerId: 202,
-    customerName: 'Jane Smith',
-    serviceId: 302,
-    serviceName: 'Massage Therapy',
+    staff_id: 1,
+    customer_id: 202,
+    customer_name: 'Jane Smith',
+    service_id: 302,
+    service_name: 'Massage Therapy',
     date: '2025-05-11',
+    created_at: new Date().toISOString(),
+    price: 300,
     amount: 300,
     commission: 30
   },
   {
     id: 3,
-    staffId: 2,
-    customerId: 203,
-    customerName: 'Alice Johnson',
-    serviceId: 303,
-    serviceName: 'Hair Styling',
+    staff_id: 2,
+    customer_id: 203,
+    customer_name: 'Alice Johnson',
+    service_id: 303,
+    service_name: 'Hair Styling',
     date: '2025-05-09',
+    created_at: new Date().toISOString(),
+    price: 150,
     amount: 150,
     commission: 15
   }
@@ -81,56 +104,85 @@ const mockServiceRecords: StaffServiceRecord[] = [
 const mockWorkingHours: StaffWorkingHours[] = [
   {
     id: 1,
-    staffId: 1,
-    dayOfWeek: 1, // Monday
+    staff_id: 1,
+    day_of_week: 1, // Monday
+    start_time: "09:00",
+    end_time: "17:00",
+    is_day_off: false,
+    // Compatibility fields 
+    dayOfWeek: 1,
     startTime: "09:00",
     endTime: "17:00",
     isWorkingDay: true
   },
   {
     id: 2,
-    staffId: 1,
-    dayOfWeek: 2, // Tuesday
+    staff_id: 1,
+    day_of_week: 2, // Tuesday
+    start_time: "09:00",
+    end_time: "17:00",
+    is_day_off: false,
+    dayOfWeek: 2,
     startTime: "09:00",
     endTime: "17:00",
     isWorkingDay: true
   },
   {
     id: 3,
-    staffId: 1,
-    dayOfWeek: 3, // Wednesday
-    startTime: "09:00",
+    staff_id: 1,
+    day_of_week: 3, // Wednesday
+    start_time: "09:00",
+    end_time: "17:00",
+    is_day_off: false,
+    dayOfWeek: 3,
+    startTime: "09:00", 
     endTime: "17:00",
     isWorkingDay: true
   },
   {
     id: 4,
-    staffId: 1,
-    dayOfWeek: 4, // Thursday
+    staff_id: 1,
+    day_of_week: 4, // Thursday
+    start_time: "09:00",
+    end_time: "17:00",
+    is_day_off: false,
+    dayOfWeek: 4,
     startTime: "09:00",
     endTime: "17:00",
     isWorkingDay: true
   },
   {
     id: 5,
-    staffId: 1,
-    dayOfWeek: 5, // Friday
+    staff_id: 1,
+    day_of_week: 5, // Friday
+    start_time: "09:00",
+    end_time: "17:00",
+    is_day_off: false,
+    dayOfWeek: 5,
     startTime: "09:00",
     endTime: "17:00",
     isWorkingDay: true
   },
   {
     id: 6,
-    staffId: 1,
-    dayOfWeek: 6, // Saturday
+    staff_id: 1,
+    day_of_week: 6, // Saturday
+    start_time: "10:00",
+    end_time: "14:00",
+    is_day_off: false,
+    dayOfWeek: 6,
     startTime: "10:00",
     endTime: "14:00",
     isWorkingDay: true
   },
   {
     id: 7,
-    staffId: 1,
-    dayOfWeek: 0, // Sunday
+    staff_id: 1,
+    day_of_week: 0, // Sunday
+    start_time: "00:00",
+    end_time: "00:00",
+    is_day_off: true,
+    dayOfWeek: 0,
     startTime: "00:00",
     endTime: "00:00",
     isWorkingDay: false
@@ -213,7 +265,7 @@ export class StaffService extends ApiService {
         specializations: data.specializations,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        user_id: undefined,
+        user_id: '',
         email: data.email,
         phone: data.phone,
         salary: data.salary,
@@ -250,7 +302,7 @@ export class StaffService extends ApiService {
           specializations: (data.specializations || existingStaff.specializations || []).map(String),
           updated_at: new Date().toISOString(),
           created_at: existingStaff.created_at || new Date().toISOString(),
-          user_id: existingStaff.user_id,
+          user_id: existingStaff.user_id || '',
           // Preserve other optional fields
           ...(existingStaff.email !== undefined || data.email !== undefined ? 
               { email: data.email || existingStaff.email } : {}),
@@ -296,7 +348,7 @@ export class StaffService extends ApiService {
   async getPayments(id: number | string): Promise<ApiResponse<StaffPayment[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 200));
-      const payments = mockStaffPayments.filter(p => p.staffId === Number(id));
+      const payments = mockStaffPayments.filter(p => p.staff_id === Number(id));
       return { data: [...payments] };
     }
     
@@ -307,7 +359,7 @@ export class StaffService extends ApiService {
   async getServiceRecords(id: number | string): Promise<ApiResponse<StaffServiceRecord[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 200));
-      const records = mockServiceRecords.filter(r => r.staffId === Number(id));
+      const records = mockServiceRecords.filter(r => r.staff_id === Number(id));
       return { data: [...records] };
     }
     
@@ -335,23 +387,23 @@ export class StaffService extends ApiService {
       const monthEnd = new Date(year, month, 0);
       
       const payments = mockStaffPayments.filter(p => {
-        const paymentDate = new Date(p.date);
-        return p.staffId === Number(id) && 
+        const paymentDate = new Date(p.payment_date || p.date || '');
+        return p.staff_id === Number(id) && 
                paymentDate >= monthStart && 
                paymentDate <= monthEnd;
       });
       
       // Calculate totals
       const salary = payments
-        .filter(p => p.type === 'salary')
+        .filter(p => p.payment_type === 'salary' || p.type === 'salary')
         .reduce((sum, p) => sum + p.amount, 0);
         
       const commission = payments
-        .filter(p => p.type === 'commission')
+        .filter(p => p.payment_type === 'commission' || p.type === 'commission')
         .reduce((sum, p) => sum + p.amount, 0);
         
       const expenses = payments
-        .filter(p => p.type === 'expense')
+        .filter(p => p.payment_type === 'expense' || p.type === 'expense')
         .reduce((sum, p) => sum + p.amount, 0);
       
       return { 
@@ -373,7 +425,7 @@ export class StaffService extends ApiService {
   async getWorkingHours(id: number | string): Promise<ApiResponse<StaffWorkingHours[]>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 200));
-      const hours = mockWorkingHours.filter(h => h.staffId === Number(id));
+      const hours = mockWorkingHours.filter(h => h.staff_id === Number(id));
       return { data: [...hours] };
     }
     
@@ -386,28 +438,44 @@ export class StaffService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 300));
       
       const index = mockWorkingHours.findIndex(h => 
-        h.staffId === Number(staffId) && h.dayOfWeek === dayOfWeek
+        h.staff_id === Number(staffId) && (h.day_of_week === dayOfWeek || h.dayOfWeek === dayOfWeek)
       );
       
       if (index >= 0) {
-        mockWorkingHours[index] = {
+        // Create a normalized version with both snake_case and camelCase properties
+        const updatedHours: StaffWorkingHours = {
           ...mockWorkingHours[index],
           ...hours,
-          staffId: Number(staffId),
-          dayOfWeek
+          staff_id: Number(staffId),
+          day_of_week: dayOfWeek,
+          start_time: hours.start_time || mockWorkingHours[index].start_time,
+          end_time: hours.end_time || mockWorkingHours[index].end_time,
+          is_day_off: hours.is_day_off !== undefined ? hours.is_day_off : mockWorkingHours[index].is_day_off,
+          // Include compatibility fields
+          dayOfWeek: dayOfWeek,
+          startTime: hours.start_time || mockWorkingHours[index].start_time,
+          endTime: hours.end_time || mockWorkingHours[index].end_time,
+          isWorkingDay: hours.is_day_off !== undefined ? !hours.is_day_off : !mockWorkingHours[index].is_day_off
         };
-        return { data: mockWorkingHours[index] };
+        
+        mockWorkingHours[index] = updatedHours;
+        return { data: updatedHours };
       }
       
       // If not found, create new working hour entry
       const newId = Math.max(...mockWorkingHours.map(h => h.id || 0), 0) + 1;
       const newHours: StaffWorkingHours = {
         id: newId,
-        staffId: Number(staffId),
-        dayOfWeek,
-        startTime: hours.startTime || "09:00",
-        endTime: hours.endTime || "17:00",
-        isWorkingDay: hours.isWorkingDay !== undefined ? hours.isWorkingDay : true
+        staff_id: Number(staffId),
+        day_of_week: dayOfWeek,
+        start_time: hours.start_time || "09:00",
+        end_time: hours.end_time || "17:00",
+        is_day_off: hours.is_day_off !== undefined ? hours.is_day_off : false,
+        // Include compatibility fields
+        dayOfWeek: dayOfWeek,
+        startTime: hours.start_time || "09:00",
+        endTime: hours.end_time || "17:00",
+        isWorkingDay: hours.is_day_off !== undefined ? !hours.is_day_off : true
       };
       
       mockWorkingHours.push(newHours);
@@ -426,14 +494,22 @@ export class StaffService extends ApiService {
       daysOfWeek.forEach(day => {
         const isWeekend = (day === 0 || day === 6);
         const newId = Math.max(...mockWorkingHours.map(h => h.id || 0), 0) + 1 + day;
+        const isDayOff = day === 0; // Sunday is off
+        const startTime = isWeekend ? (day === 6 ? "10:00" : "00:00") : "09:00"; // Saturday: 10:00, Sunday: Off
+        const endTime = isWeekend ? (day === 6 ? "14:00" : "00:00") : "17:00"; // Saturday: 14:00, Sunday: Off
         
         mockWorkingHours.push({
           id: newId,
-          staffId,
+          staff_id: staffId,
+          day_of_week: day,
+          start_time: startTime,
+          end_time: endTime,
+          is_day_off: isDayOff,
+          // Include compatibility fields
           dayOfWeek: day,
-          startTime: isWeekend ? (day === 6 ? "10:00" : "00:00") : "09:00", // Saturday: 10:00, Sunday: Off
-          endTime: isWeekend ? (day === 6 ? "14:00" : "00:00") : "17:00",   // Saturday: 14:00, Sunday: Off
-          isWorkingDay: day !== 0 // Sunday is off by default
+          startTime: startTime,
+          endTime: endTime,
+          isWorkingDay: !isDayOff
         });
       });
     }
@@ -449,21 +525,21 @@ export class StaffService extends ApiService {
       
       // Get hours for this day
       const workingHoursForDay = mockWorkingHours.find(h => 
-        h.staffId === Number(staffId) && h.dayOfWeek === dayOfWeek
+        h.staff_id === Number(staffId) && h.day_of_week === dayOfWeek
       );
       
       if (!workingHoursForDay) {
         return { data: false }; // No working hours defined for this day
       }
       
-      if (!workingHoursForDay.isWorkingDay) {
+      if (workingHoursForDay.is_day_off) {
         return { data: false }; // Not a working day
       }
       
       // Check if time is within working hours
       const timeString = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-      const isAfterStart = timeString >= workingHoursForDay.startTime;
-      const isBeforeEnd = timeString <= workingHoursForDay.endTime;
+      const isAfterStart = timeString >= workingHoursForDay.start_time;
+      const isBeforeEnd = timeString <= workingHoursForDay.end_time;
       
       return { data: isAfterStart && isBeforeEnd };
     }

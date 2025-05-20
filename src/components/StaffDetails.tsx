@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -251,9 +250,9 @@ const StaffDetails: React.FC<StaffDetailsProps> = ({ staffId }) => {
                     {serviceRecords.map(record => (
                       <TableRow key={record.id}>
                         <TableCell>{record.date}</TableCell>
-                        <TableCell>{record.customerName}</TableCell>
-                        <TableCell>{record.serviceName}</TableCell>
-                        <TableCell className="text-right">${record.amount}</TableCell>
+                        <TableCell>{record.customer_name}</TableCell>
+                        <TableCell>{record.service_name}</TableCell>
+                        <TableCell className="text-right">${record.price || record.amount || 0}</TableCell>
                         <TableCell className="text-right">${record.commission || 0}</TableCell>
                       </TableRow>
                     ))}
@@ -292,15 +291,15 @@ const StaffDetails: React.FC<StaffDetailsProps> = ({ staffId }) => {
                 <TableBody>
                   {staffPayments.map(payment => (
                     <TableRow key={payment.id}>
-                      <TableCell>{payment.date}</TableCell>
+                      <TableCell>{payment.payment_date || payment.date}</TableCell>
                       <TableCell>
-                        <span className={`capitalize ${payment.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
-                          {payment.type}
+                        <span className={`capitalize ${(payment.payment_type || payment.type) === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
+                          {payment.payment_type || payment.type}
                         </span>
                       </TableCell>
-                      <TableCell>{payment.description}</TableCell>
+                      <TableCell>{payment.note || payment.description}</TableCell>
                       <TableCell className="text-right">
-                        {payment.type === 'expense' ? '-' : ''}${payment.amount}
+                        {(payment.payment_type || payment.type) === 'expense' ? '-' : ''}${payment.amount}
                       </TableCell>
                     </TableRow>
                   ))}

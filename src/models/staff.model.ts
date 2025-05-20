@@ -24,6 +24,10 @@ export interface StaffPayment {
   payment_type: string;
   note?: string;
   created_at: string;
+  // Additional properties used in the components
+  date?: string;
+  type?: string;
+  description?: string;
 }
 
 export interface StaffServiceRecord {
@@ -37,6 +41,9 @@ export interface StaffServiceRecord {
   service_name?: string;
   customer_name?: string;
   price?: number;
+  // Additional properties used in the components
+  amount?: number;
+  commission?: number;
 }
 
 export interface StaffFormData {
@@ -58,6 +65,12 @@ export interface StaffWorkingHours {
   start_time: string;
   end_time: string;
   is_day_off: boolean;
+  // Alias properties for compatibility with existing code
+  staffId?: number;
+  dayOfWeek?: number;
+  startTime?: string;
+  endTime?: string;
+  isWorkingDay?: boolean;
 }
 
 export type StaffFilter = {

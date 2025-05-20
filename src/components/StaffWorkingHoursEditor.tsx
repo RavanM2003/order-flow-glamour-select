@@ -33,11 +33,11 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
     } else if (staffId) {
       // Create default hours if none exists
       const defaultHours = dayNames.map((_, index) => ({
-        staffId: Number(staffId),
-        dayOfWeek: index,
-        startTime: "09:00",
-        endTime: "17:00",
-        isWorkingDay: index !== 0 // Sunday off by default
+        staff_id: Number(staffId),
+        day_of_week: index,
+        start_time: "09:00",
+        end_time: "17:00",
+        is_day_off: index === 0 // Sunday off by default
       }));
       setLocalHours(defaultHours);
     }
@@ -45,12 +45,12 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
   
   const handleTimeChange = (
     dayOfWeek: number, 
-    field: 'startTime' | 'endTime', 
+    field: 'start_time' | 'end_time', 
     value: string
   ) => {
     setLocalHours(prev => 
       prev.map(day => 
-        day.dayOfWeek === dayOfWeek 
+        day.day_of_week === dayOfWeek 
           ? { ...day, [field]: value } 
           : day
       )
@@ -61,8 +61,8 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
   const handleWorkingDayToggle = (dayOfWeek: number, isWorkingDay: boolean) => {
     setLocalHours(prev => 
       prev.map(day => 
-        day.dayOfWeek === dayOfWeek 
-          ? { ...day, isWorkingDay } 
+        day.day_of_week === dayOfWeek 
+          ? { ...day, is_day_off: !isWorkingDay } 
           : day
       )
     );
@@ -72,7 +72,7 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
   const saveAllChanges = async () => {
     try {
       for (const hours of localHours) {
-        await updateWorkingHours(staffId, hours.dayOfWeek, hours);
+        await updateWorkingHours(staffId, hours.day_of_week, hours);
       }
       
       setHasChanges(false);
@@ -110,19 +110,19 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
             </div>
             
             {localHours.map(day => (
-              <div key={day.dayOfWeek} className="grid grid-cols-7 items-center py-2 border-b">
+              <div key={day.day_of_week} className="grid grid-cols-7 items-center py-2 border-b">
                 <div className="font-medium">
-                  {dayNames[day.dayOfWeek]}
+                  {dayNames[day.day_of_week]}
                 </div>
                 
                 <div className="col-span-2">
                   <div className="flex items-center space-x-2">
                     <Switch 
-                      checked={day.isWorkingDay} 
-                      onCheckedChange={(checked) => handleWorkingDayToggle(day.dayOfWeek, checked)}
+                      checked={!day.is_day_off} 
+                      onCheckedChange={(checked) => handleWorkingDayToggle(day.day_of_week, checked)}
                     />
                     <Label>
-                      {day.isWorkingDay ? "Working" : "Off"}
+                      {!day.is_day_off ? "Working" : "Off"}
                     </Label>
                   </div>
                 </div>
@@ -131,9 +131,9 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
                   <input 
                     type="time"
                     className="w-full border rounded px-2 py-1"
-                    value={day.startTime}
-                    onChange={(e) => handleTimeChange(day.dayOfWeek, 'startTime', e.target.value)}
-                    disabled={!day.isWorkingDay}
+                    value={day.start_time}
+                    onChange={(e) => handleTimeChange(day.day_of_week, 'start_time', e.target.value)}
+                    disabled={day.is_day_off}
                   />
                 </div>
                 
@@ -141,9 +141,9 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
                   <input 
                     type="time"
                     className="w-full border rounded px-2 py-1"
-                    value={day.endTime}
-                    onChange={(e) => handleTimeChange(day.dayOfWeek, 'endTime', e.target.value)}
-                    disabled={!day.isWorkingDay}
+                    value={day.end_time}
+                    onChange={(e) => handleTimeChange(day.day_of_week, 'end_time', e.target.value)}
+                    disabled={day.is_day_off}
                   />
                 </div>
               </div>
