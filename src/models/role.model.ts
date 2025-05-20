@@ -2,6 +2,15 @@
 // User roles and permissions model
 export type UserRole = "super_admin" | "admin" | "staff" | "cashier" | "appointment" | "service" | "product" | "guest";
 
+// Define Role interface
+export interface Role {
+  id: number;
+  name: string;
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // Define permissions for each role
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   super_admin: ['all'], // Super admins have all permissions

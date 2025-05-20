@@ -1,11 +1,13 @@
-import { ApiResponse, Customer } from '@/models/types';
+
+import { ApiResponse } from '@/models/types';
 import { ApiService } from './api.service';
 import { authService } from './auth.service';
 import { supabaseService } from './supabase.service';
 import { CustomerWithUserFormData } from '@/models/user.model';
+import { Customer, CustomerFormData } from '@/models/customer.model';
 
 export class CustomerService extends ApiService {
-  async getCustomers(): Promise<ApiResponse<Customer[]>> {
+  async getAll(): Promise<ApiResponse<Customer[]>> {
     try {
       const customers = await supabaseService.getCustomers();
       return { data: customers };
@@ -14,9 +16,9 @@ export class CustomerService extends ApiService {
     }
   }
 
-  async getCustomerById(id: string): Promise<ApiResponse<Customer>> {
+  async getById(id: string | number): Promise<ApiResponse<Customer>> {
     try {
-      const customer = await supabaseService.getCustomerById(id);
+      const customer = await supabaseService.getCustomerById(id.toString());
       if (!customer) {
         return { error: 'Customer not found' };
       }
@@ -26,13 +28,12 @@ export class CustomerService extends ApiService {
     }
   }
 
-  async createCustomer(customerData: Partial<Customer>): Promise<ApiResponse<Customer>> {
+  async create(customerData: CustomerFormData): Promise<ApiResponse<Customer>> {
     try {
       // Prepare customer data for Supabase
       const supabaseCustomerData = {
         ...customerData,
-        // Combine first and last name for full_name field in Supabase
-        full_name: `${customerData.name}`
+        full_name: customerData.name
       };
       
       // If we're creating a customer with a user account
@@ -76,7 +77,7 @@ export class CustomerService extends ApiService {
     }
   }
 
-  async updateCustomer(id: string, customerData: Partial<Customer>): Promise<ApiResponse<Customer>> {
+  async update(id: string | number, customerData: Partial<CustomerFormData>): Promise<ApiResponse<Customer>> {
     try {
       // Prepare customer data for Supabase
       const supabaseCustomerData = {
@@ -85,16 +86,16 @@ export class CustomerService extends ApiService {
         ...(customerData.name && { full_name: customerData.name })
       };
       
-      const customer = await supabaseService.updateCustomer(id, supabaseCustomerData as Partial<Customer>);
+      const customer = await supabaseService.updateCustomer(id.toString(), supabaseCustomerData as Partial<Customer>);
       return { data: customer, message: 'Customer updated successfully' };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Failed to update customer' };
     }
   }
 
-  async deleteCustomer(id: string): Promise<ApiResponse<boolean>> {
+  async delete(id: string | number): Promise<ApiResponse<boolean>> {
     try {
-      await supabaseService.deleteCustomer(id);
+      await supabaseService.deleteCustomer(id.toString());
       return { data: true, message: 'Customer deleted successfully' };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Failed to delete customer' };

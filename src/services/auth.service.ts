@@ -1,4 +1,3 @@
-
 import { User, UserCredentials, UserRole, AuthResponse } from '@/models/user.model';
 import { ApiService } from './api.service';
 import { ApiResponse } from '@/models/types';
@@ -366,17 +365,17 @@ export class AuthService extends ApiService {
   }
   
   // Create a new customer and associated user account
-  async createCustomerWithUser(customerData: any, userData: any): Promise<ApiResponse<any>> {
+  async createCustomerWithUser(formData: any, userData: any): Promise<ApiResponse<any>> {
     try {
       // First, create the user in the users table
-      const { data: userData, error: userError } = await supabase
+      const { data: newUserData, error: userError } = await supabase
         .from('users')
         .insert([
           {
-            email: customerData.email,
+            email: formData.email,
             hashed_password: 'default-password', // This should be a properly hashed password
             role: 'guest',
-            number: customerData.phone || '',
+            number: formData.phone || '',
           }
         ])
         .select()
@@ -387,17 +386,17 @@ export class AuthService extends ApiService {
       }
       
       // Then, create the customer with the user ID
-      const { data: customerData, error: customerError } = await supabase
+      const { data: newCustomerData, error: customerError } = await supabase
         .from('customers')
         .insert([
           {
-            full_name: `${customerData.firstName} ${customerData.lastName}`,
-            email: customerData.email,
-            phone: customerData.phone,
-            gender: customerData.gender,
-            birth_date: customerData.birthDate,
-            note: customerData.note,
-            user_id: userData.id
+            full_name: `${formData.firstName} ${formData.lastName}`,
+            email: formData.email,
+            phone: formData.phone,
+            gender: formData.gender,
+            birth_date: formData.birthDate,
+            note: formData.note,
+            user_id: newUserData.id
           }
         ])
         .select()
@@ -405,14 +404,14 @@ export class AuthService extends ApiService {
         
       if (customerError) {
         // If customer creation fails, delete the user we created
-        await supabase.from('users').delete().eq('id', userData.id);
+        await supabase.from('users').delete().eq('id', newUserData.id);
         return { error: `Error creating customer: ${customerError.message}` };
       }
       
       return { 
         data: { 
-          user: userData,
-          customer: customerData 
+          user: newUserData,
+          customer: newCustomerData 
         },
         message: 'Customer and user account created successfully'
       };
