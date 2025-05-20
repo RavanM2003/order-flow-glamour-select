@@ -1,4 +1,3 @@
-
 import { User, UserCredentials, UserRole, AuthResponse } from '@/models/user.model';
 import { ApiService } from './api.service';
 import { ApiResponse } from '@/models/types';
@@ -63,7 +62,7 @@ export class AuthService extends ApiService {
       
       // Get staff ID from the staff object (not array)
       const staffData = userData.staff;
-      const staffId = staffData?.id || null;
+      const staffId = staffData ? staffData.id : null;
       
       // Create user object
       const user: User = {
@@ -123,7 +122,7 @@ export class AuthService extends ApiService {
       
       // Get staff ID from the staff object (not array)
       const staffData = userData.staff;
-      const staffId = staffData?.id || null;
+      const staffId = staffData ? staffData.id : null;
       
       // Create user object
       const user: User = {
@@ -196,7 +195,7 @@ export class AuthService extends ApiService {
         password: 'admin123',
         firstName: 'Cash',
         lastName: 'Manager',
-        role: 'cashier' as UserRole,
+        role: 'cash' as UserRole,
         isActive: true,
         lastLogin: '2025-05-13T15:45:00Z',
         staffId: 3,
@@ -329,7 +328,11 @@ export class AuthService extends ApiService {
       }
       
       // Ensure role is one of the valid role_enum values from the database
-      const safeRole = (userData.role === 'cashier') ? 'cash' : (userData.role || 'customer');
+      // Map 'cashier' to 'cash' if needed
+      let safeRole: UserRole = userData.role || 'customer' as UserRole;
+      if (safeRole === 'cashier') {
+        safeRole = 'cash';
+      }
       
       // Create a user entry in the users table
       const { data: newUserData, error: userError } = await supabase
@@ -542,4 +545,3 @@ export const authService = new AuthService();
 
 // Add to services index
 export * from './role.service';
-

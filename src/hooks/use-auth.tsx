@@ -84,7 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Get the staff record if it exists
         // Note that staffData might be null or a single object (not an array)
         const staffData = userData.staff;
-        const staffId = staffData?.id || null;
+        const staffId = staffData ? staffData.id : null;
 
         setSession(prev => ({
           ...prev,
@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             role: userData.role as UserRole,
             avatar: userData.avatar_url || null,
             staffId: staffId,
-            roleId: staffId // Using staff ID as role ID since we don't have role_id
+            roleId: staffData ? staffData.id : null // Using staff ID as role ID since we don't have role_id
           }
         }));
       }

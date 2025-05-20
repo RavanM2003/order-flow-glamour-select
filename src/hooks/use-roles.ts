@@ -28,8 +28,8 @@ export function useRoles() {
       
       // Create roles from the role enum types we know are available
       const roleEnums: string[] = [
-        'super_admin', 'admin', 'staff', 'cashier', 'appointment', 
-        'service', 'product', 'guest', 'cash', 'customer', 'reception'
+        'super_admin', 'admin', 'staff', 'cash', 'appointment', 
+        'service', 'product', 'guest', 'customer', 'reception'
       ];
       
       const rolesList: Role[] = roleEnums.map((roleName, index) => ({
