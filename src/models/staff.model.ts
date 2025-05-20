@@ -56,6 +56,10 @@ export interface StaffFormData {
   salary?: number;
   commissionRate?: number;
   paymentType?: string;
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string;
+  avatar_url?: string;
 }
 
 export interface StaffWorkingHours {
