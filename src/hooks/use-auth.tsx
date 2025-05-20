@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,8 +81,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (userData) {
         // Get the staff record if it exists
-        // Note that staffData might be null or a single object (not an array)
         const staffData = userData.staff;
+        
+        // If staffData exists, it could be an object (not an array)
         const staffId = staffData ? staffData.id : null;
 
         setSession(prev => ({
@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             role: userData.role as UserRole,
             avatar: userData.avatar_url || null,
             staffId: staffId,
-            roleId: staffData ? staffData.id : null // Using staff ID as role ID since we don't have role_id
+            roleId: staffId // Using staff ID as role ID since we don't have role_id
           }
         }));
       }

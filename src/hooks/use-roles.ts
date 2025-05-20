@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Role } from '@/models/role.model';
@@ -29,7 +28,7 @@ export function useRoles() {
       // Create roles from the role enum types we know are available
       const roleEnums: string[] = [
         'super_admin', 'admin', 'staff', 'cash', 'appointment', 
-        'service', 'product', 'guest', 'customer', 'reception'
+        'service', 'product', 'customer', 'reception'
       ];
       
       const rolesList: Role[] = roleEnums.map((roleName, index) => ({

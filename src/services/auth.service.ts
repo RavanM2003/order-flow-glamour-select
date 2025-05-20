@@ -328,10 +328,17 @@ export class AuthService extends ApiService {
       }
       
       // Ensure role is one of the valid role_enum values from the database
-      // Map 'cashier' to 'cash' if needed
       let safeRole: UserRole = userData.role || 'customer' as UserRole;
-      if (safeRole === 'cashier') {
+      
+      // Handle the special case for 'cashier' role
+      if (safeRole === 'cashier' as any) {
         safeRole = 'cash';
+      }
+      
+      // Ensure the role matches one of the allowed values in the database enum
+      const validRoles: UserRole[] = ['super_admin', 'admin', 'staff', 'cash', 'appointment', 'service', 'product', 'customer', 'reception'];
+      if (!validRoles.includes(safeRole)) {
+        safeRole = 'customer';
       }
       
       // Create a user entry in the users table
