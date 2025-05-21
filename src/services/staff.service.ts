@@ -1,3 +1,4 @@
+
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours, DefaultStaff } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -183,25 +184,25 @@ export class StaffService extends ApiService {
         };
         
         // Add optional properties only if they exist in the source object
-        if (s && typeof s === 'object' && 'email' in s && s.email !== undefined) 
+        if ('email' in s && s.email !== undefined) 
           staffMember.email = String(s.email);
         
-        if (s && typeof s === 'object' && 'phone' in s && s.phone !== undefined) 
+        if ('phone' in s && s.phone !== undefined) 
           staffMember.phone = String(s.phone);
         
-        if (s && typeof s === 'object' && 'role_id' in s && s.role_id !== undefined) 
+        if ('role_id' in s && s.role_id !== undefined) 
           staffMember.role_id = Number(s.role_id);
         
-        if (s && typeof s === 'object' && 'avatar_url' in s && s.avatar_url !== undefined) 
+        if ('avatar_url' in s && s.avatar_url !== undefined) 
           staffMember.avatar_url = String(s.avatar_url);
         
-        if (s && typeof s === 'object' && 'salary' in s && s.salary !== undefined) 
+        if ('salary' in s && s.salary !== undefined) 
           staffMember.salary = Number(s.salary);
         
-        if (s && typeof s === 'object' && 'commissionRate' in s && s.commissionRate !== undefined) 
+        if ('commissionRate' in s && s.commissionRate !== undefined) 
           staffMember.commissionRate = Number(s.commissionRate);
         
-        if (s && typeof s === 'object' && 'paymentType' in s && s.paymentType !== undefined) 
+        if ('paymentType' in s && s.paymentType !== undefined) 
           staffMember.paymentType = String(s.paymentType);
         
         return staffMember;
@@ -236,25 +237,25 @@ export class StaffService extends ApiService {
       };
       
       // Add optional properties only if they exist in the source object
-      if (staffData && typeof staffData === 'object' && 'email' in staffData && staffData.email !== undefined) 
+      if ('email' in staffData && staffData.email !== undefined) 
         staffMember.email = String(staffData.email);
       
-      if (staffData && typeof staffData === 'object' && 'phone' in staffData && staffData.phone !== undefined) 
+      if ('phone' in staffData && staffData.phone !== undefined) 
         staffMember.phone = String(staffData.phone);
       
-      if (staffData && typeof staffData === 'object' && 'role_id' in staffData && staffData.role_id !== undefined) 
+      if ('role_id' in staffData && staffData.role_id !== undefined) 
         staffMember.role_id = Number(staffData.role_id);
       
-      if (staffData && typeof staffData === 'object' && 'avatar_url' in staffData && staffData.avatar_url !== undefined) 
+      if ('avatar_url' in staffData && staffData.avatar_url !== undefined) 
         staffMember.avatar_url = String(staffData.avatar_url);
       
-      if (staffData && typeof staffData === 'object' && 'salary' in staffData && staffData.salary !== undefined) 
+      if ('salary' in staffData && staffData.salary !== undefined) 
         staffMember.salary = Number(staffData.salary);
       
-      if (staffData && typeof staffData === 'object' && 'commissionRate' in staffData && staffData.commissionRate !== undefined) 
+      if ('commissionRate' in staffData && staffData.commissionRate !== undefined) 
         staffMember.commissionRate = Number(staffData.commissionRate);
       
-      if (staffData && typeof staffData === 'object' && 'paymentType' in staffData && staffData.paymentType !== undefined) 
+      if ('paymentType' in staffData && staffData.paymentType !== undefined) 
         staffMember.paymentType = String(staffData.paymentType);
       
       return { data: staffMember };
@@ -311,7 +312,7 @@ export class StaffService extends ApiService {
       const index = mockStaff.findIndex(s => s?.id === Number(id));
       if (index >= 0) {
         // Find the existing staff or create a default object
-        const existingStaff = mockStaff[index] || {};
+        const existingStaff = mockStaff[index] || this.createDefaultStaff(Number(id));
         
         // Create a valid Staff object with updated fields
         const updatedStaff: Staff = { 
@@ -327,32 +328,32 @@ export class StaffService extends ApiService {
         };
         
         // Handle optional properties safely
-        if (data.email !== undefined || existingStaff.email !== undefined) {
-          updatedStaff.email = data.email || existingStaff.email || '';
+        if (data.email !== undefined || ('email' in existingStaff && existingStaff.email !== undefined)) {
+          updatedStaff.email = data.email || (existingStaff.email as string) || '';
         }
         
-        if (data.phone !== undefined || existingStaff.phone !== undefined) {
-          updatedStaff.phone = data.phone || existingStaff.phone || '';
+        if (data.phone !== undefined || ('phone' in existingStaff && existingStaff.phone !== undefined)) {
+          updatedStaff.phone = data.phone || (existingStaff.phone as string) || '';
         }
         
-        if (data.role_id !== undefined || existingStaff.role_id !== undefined) {
-          updatedStaff.role_id = data.role_id || existingStaff.role_id || 0;
+        if (data.role_id !== undefined || ('role_id' in existingStaff && existingStaff.role_id !== undefined)) {
+          updatedStaff.role_id = data.role_id || (existingStaff.role_id as number) || 0;
         }
         
-        if (data.avatar_url !== undefined || existingStaff.avatar_url !== undefined) {
-          updatedStaff.avatar_url = data.avatar_url || existingStaff.avatar_url || '';
+        if (data.avatar_url !== undefined || ('avatar_url' in existingStaff && existingStaff.avatar_url !== undefined)) {
+          updatedStaff.avatar_url = data.avatar_url || (existingStaff.avatar_url as string) || '';
         }
         
-        if (data.salary !== undefined || existingStaff.salary !== undefined) {
-          updatedStaff.salary = data.salary || existingStaff.salary || 0;
+        if (data.salary !== undefined || ('salary' in existingStaff && existingStaff.salary !== undefined)) {
+          updatedStaff.salary = data.salary || (existingStaff.salary as number) || 0;
         }
         
-        if (data.commissionRate !== undefined || existingStaff.commissionRate !== undefined) {
-          updatedStaff.commissionRate = data.commissionRate || existingStaff.commissionRate || 0;
+        if (data.commissionRate !== undefined || ('commissionRate' in existingStaff && existingStaff.commissionRate !== undefined)) {
+          updatedStaff.commissionRate = data.commissionRate || (existingStaff.commissionRate as number) || 0;
         }
         
-        if (data.paymentType !== undefined || existingStaff.paymentType !== undefined) {
-          updatedStaff.paymentType = data.paymentType || existingStaff.paymentType || '';
+        if (data.paymentType !== undefined || ('paymentType' in existingStaff && existingStaff.paymentType !== undefined)) {
+          updatedStaff.paymentType = data.paymentType || (existingStaff.paymentType as string) || '';
         }
         
         mockStaff[index] = updatedStaff;
