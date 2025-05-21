@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -112,8 +111,8 @@ const ServiceSelection = () => {
         if (data) {
           // Process staff data with type-safe transformations
           const processedStaff: Staff[] = data.map(staffMember => {
-            // Create a proper Staff object with all required properties
-            const staffData: Staff = {
+            // Ensure all required properties are set with proper types
+            return {
               id: staffMember.id,
               name: staffMember.name || `Staff #${staffMember.id}`,
               position: staffMember.position || 'Staff Member',
@@ -131,8 +130,6 @@ const ServiceSelection = () => {
               commissionRate: staffMember.commissionRate,
               paymentType: staffMember.paymentType
             };
-            
-            return staffData;
           });
           
           setStaffMembers(processedStaff);
