@@ -24,7 +24,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = React.memo(({
   const getStepTitle = (step: number) => {
     switch (step) {
       case 1:
-        return bookingMode === "staff" ? t('booking.staffBooking') : t('booking.customerInfo');
+        return t('booking.customerInfo');
       case 2:
         return t('booking.services');
       case 3:
