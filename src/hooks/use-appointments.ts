@@ -9,23 +9,35 @@ export function useAppointments() {
   const api = useApi<Appointment[]>();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const fetchedRef = useRef(false);
+  const fetchPromiseRef = useRef<Promise<Appointment[] | undefined> | null>(null);
   
   const fetchAppointments = useCallback(async (forceRefresh = false) => {
     // Skip fetching if we've already fetched and no force refresh is requested
     if (fetchedRef.current && !forceRefresh) return;
     
-    const data = await api.execute(
+    // If we already have a fetch in progress, return that promise
+    if (fetchPromiseRef.current && !forceRefresh) {
+      return fetchPromiseRef.current;
+    }
+    
+    // Start a new fetch and store the promise
+    fetchPromiseRef.current = api.execute(
       () => appointmentService.getAll(),
       {
         showErrorToast: true,
         errorPrefix: 'Failed to load appointments'
       }
-    );
+    ).then(data => {
+      if (data) {
+        setAppointments(data);
+        fetchedRef.current = true;
+      }
+      // Clear the promise reference when done
+      fetchPromiseRef.current = null;
+      return data;
+    });
     
-    if (data) {
-      setAppointments(data);
-      fetchedRef.current = true;
-    }
+    return fetchPromiseRef.current;
   }, [api]);
   
   useEffect(() => {

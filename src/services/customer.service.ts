@@ -1,9 +1,11 @@
+
 import { ApiResponse } from '@/models/types';
 import { ApiService } from './api.service';
 import { authService } from './auth.service';
 import { supabaseService } from './supabase.service';
 import { CustomerWithUserFormData } from '@/models/user.model';
 import { Customer, CustomerFormData } from '@/models/customer.model';
+import { UserRole } from '@/models/role.model';
 
 export class CustomerService extends ApiService {
   async getAll(): Promise<ApiResponse<Customer[]>> {
@@ -39,8 +41,7 @@ export class CustomerService extends ApiService {
       if (customerData.email && (customerData as any).createUser) {
         const userData = {
           email: customerData.email,
-          password: "default-password",
-          role: 'guest'
+          role: 'guest' as UserRole
         };
         
         const result = await authService.createCustomerWithUser({
@@ -83,13 +84,13 @@ export class CustomerService extends ApiService {
       const result = await authService.createCustomerWithUser({
         email: formData.email,
         password: formData.password,
-        firstName: formData.name,
-        lastName: "",
+        firstName: formData.firstName || formData.email.split('@')[0],
+        lastName: formData.lastName || "",
         phone: formData.phone,
         gender: formData.gender,
       }, {
         email: formData.email,
-        password: formData.password
+        role: 'guest' as UserRole
       });
       
       return result;

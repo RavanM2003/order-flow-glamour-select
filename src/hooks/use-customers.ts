@@ -8,23 +8,35 @@ export function useCustomers() {
   const api = useApi<Customer[]>();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const fetchedRef = useRef(false);
+  const fetchPromiseRef = useRef<Promise<Customer[] | undefined> | null>(null);
   
   const fetchCustomers = useCallback(async (forceRefresh = false) => {
     // Skip fetching if we've already fetched and no force refresh is requested
     if (fetchedRef.current && !forceRefresh) return;
     
-    const data = await api.execute(
+    // If we already have a fetch in progress, return that promise
+    if (fetchPromiseRef.current && !forceRefresh) {
+      return fetchPromiseRef.current;
+    }
+    
+    // Start a new fetch and store the promise
+    fetchPromiseRef.current = api.execute(
       () => customerService.getAll(),
       {
         showErrorToast: true,
         errorPrefix: 'Failed to load customers'
       }
-    );
+    ).then(data => {
+      if (data) {
+        setCustomers(data);
+        fetchedRef.current = true;
+      }
+      // Clear the promise reference when done
+      fetchPromiseRef.current = null;
+      return data;
+    });
     
-    if (data) {
-      setCustomers(data);
-      fetchedRef.current = true;
-    }
+    return fetchPromiseRef.current;
   }, [api]);
   
   useEffect(() => {
