@@ -15,6 +15,8 @@ import {
   DollarSign,
   ChevronDown,
   Search,
+  Phone,
+  Mail,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import {
@@ -128,6 +130,17 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
     }
   };
 
+  // Get gender-based icon color
+  const getGenderColor = () => {
+    if (!customer) return "text-gray-500";
+    
+    switch(customer.gender) {
+      case "female": return "text-pink-500";
+      case "male": return "text-blue-500";
+      default: return "text-gray-500";
+    }
+  };
+
   const getStatusBadgeColor = (status: string) => {
     switch (status?.toLowerCase()) {
       case "completed":
@@ -196,45 +209,44 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
         <CardContent className="pt-6">
           {!editMode ? (
             <div className="relative">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium w-24">Name:</span>
-                  <span className="flex-1 text-right">
-                    {customer?.name || "-"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-medium w-24">Email:</span>
-                  <span className="flex-1 text-right">
-                    {customer?.email || "-"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-medium w-24">Phone:</span>
-                  <span className="flex-1 text-right">
-                    {customer?.phone || "-"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-medium w-24">Gender:</span>
-                  <span className="flex items-center justify-end flex-1">
-                    {customer?.gender === "female" && (
-                      <UserCircle className="h-4 w-4 mr-1 text-pink-500" />
+              {/* Compact customer info display */}
+              <div className="mb-6">
+                <div className="flex items-center gap-3">
+                  <UserCircle className={`h-8 w-8 ${getGenderColor()}`} />
+                  <div>
+                    <h3 className="text-xl font-semibold">{customer?.name || "-"}</h3>
+                    {customer?.id && (
+                      <p className="text-xs text-gray-500">ID: {customer.id}</p>
                     )}
-                    {customer?.gender === "male" && (
-                      <UserCircle className="h-4 w-4 mr-1 text-blue-500" />
-                    )}
-                    {customer?.gender || "-"}
-                  </span>
+                  </div>
                 </div>
-                <div className="sm:col-span-2 flex justify-end mt-4">
-                  <Button
-                    className="bg-glamour-700 hover:bg-glamour-800 text-white"
-                    onClick={() => setEditMode(true)}
-                  >
-                    <Pencil className="w-4 h-4 mr-2" /> Edit
-                  </Button>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                <div className="flex items-center">
+                  <Phone className="h-5 w-5 mr-3 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Phone</p>
+                    <p>{customer?.phone || "-"}</p>
+                  </div>
                 </div>
+                
+                <div className="flex items-center">
+                  <Mail className="h-5 w-5 mr-3 text-gray-500" />
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Email</p>
+                    <p>{customer?.email || "-"}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="sm:col-span-2 flex justify-end mt-6">
+                <Button
+                  className="bg-glamour-700 hover:bg-glamour-800 text-white"
+                  onClick={() => setEditMode(true)}
+                >
+                  <Pencil className="w-4 h-4 mr-2" /> Edit
+                </Button>
               </div>
             </div>
           ) : (

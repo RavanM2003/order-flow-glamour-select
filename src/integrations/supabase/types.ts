@@ -173,53 +173,6 @@ export type Database = {
           },
         ]
       }
-      customers: {
-        Row: {
-          birth_date: string | null
-          created_at: string | null
-          email: string | null
-          full_name: string
-          gender: Database["public"]["Enums"]["gender_enum"] | null
-          id: string
-          note: string | null
-          phone: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          birth_date?: string | null
-          created_at?: string | null
-          email?: string | null
-          full_name: string
-          gender?: Database["public"]["Enums"]["gender_enum"] | null
-          id?: string
-          note?: string | null
-          phone?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          birth_date?: string | null
-          created_at?: string | null
-          email?: string | null
-          full_name?: string
-          gender?: Database["public"]["Enums"]["gender_enum"] | null
-          id?: string
-          note?: string | null
-          phone?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "customers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       histories: {
         Row: {
           action: Database["public"]["Enums"]["action_enum"] | null
@@ -624,37 +577,49 @@ export type Database = {
       users: {
         Row: {
           avatar_url: string | null
+          birth_date: string | null
           created_at: string | null
           email: string
           first_name: string | null
+          full_name: string | null
+          gender: Database["public"]["Enums"]["gender_enum"] | null
           hashed_password: string
           id: string
           last_name: string | null
-          number: string
+          note: string | null
+          phone: string
           role: Database["public"]["Enums"]["role_enum"] | null
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string | null
           email: string
           first_name?: string | null
+          full_name?: string | null
+          gender?: Database["public"]["Enums"]["gender_enum"] | null
           hashed_password: string
           id?: string
           last_name?: string | null
-          number: string
+          note?: string | null
+          phone: string
           role?: Database["public"]["Enums"]["role_enum"] | null
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          birth_date?: string | null
           created_at?: string | null
           email?: string
           first_name?: string | null
+          full_name?: string | null
+          gender?: Database["public"]["Enums"]["gender_enum"] | null
           hashed_password?: string
           id?: string
           last_name?: string | null
-          number?: string
+          note?: string | null
+          phone?: string
           role?: Database["public"]["Enums"]["role_enum"] | null
           updated_at?: string | null
         }

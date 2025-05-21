@@ -19,6 +19,8 @@ import {
   CalendarPlus,
   UserCircle,
   UserPlus,
+  Phone,
+  Mail,
 } from "lucide-react";
 import DetailDrawer from "@/components/common/DetailDrawer";
 import CustomerDetailPage from "@/pages/CustomerDetailPage";
@@ -29,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Customer } from "@/models/customer.model";
 import { useCustomers } from "@/hooks/use-customers";
+import CustomerInfo from "@/components/CustomerInfo";
 
 const CustomersTab = () => {
   const { toast } = useToast();
@@ -83,15 +86,14 @@ const CustomersTab = () => {
     }
 
     try {
-      // Use the createCustomer function from the hook instance we already have
       const result = await createCustomer(newCustomer);
       
       if (result) {
         setAddCustomerOpen(false);
         setNewCustomer({ name: "", email: "", phone: "", gender: "female" });
         
-        // Refresh the customers list
-        fetchCustomers(true);
+        // Refresh the customers list with force refresh
+        await fetchCustomers(true);
 
         // Automatically open appointment drawer for the new customer if we have customer data
         if (result) {
@@ -113,6 +115,28 @@ const CustomersTab = () => {
     setSelectedCustomerForAppointment(customer);
     setAddAppointmentOpen(true);
   };
+
+  // Display a serial number for customers in the table
+  const getDisplayId = (index: number) => {
+    return ((currentPage - 1) * pageSize) + index + 1;
+  };
+
+  // Get icon color based on gender
+  const getGenderIcon = (gender: string) => {
+    switch(gender) {
+      case "female":
+        return <UserCircle className="h-4 w-4 mr-2 text-pink-500" />;
+      case "male":
+        return <UserCircle className="h-4 w-4 mr-2 text-blue-500" />;
+      default:
+        return <UserCircle className="h-4 w-4 mr-2 text-gray-500" />;
+    }
+  };
+
+  useEffect(() => {
+    // Ensure we have the latest data
+    fetchCustomers(true);
+  }, [fetchCustomers]);
 
   return (
     <>
@@ -146,7 +170,7 @@ const CustomersTab = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[50px]">ID</TableHead>
+                    <TableHead className="w-[50px]">#</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead className="hidden md:table-cell">
                       Email
@@ -172,17 +196,12 @@ const CustomersTab = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    currentCustomers.map((customer) => (
+                    currentCustomers.map((customer, index) => (
                       <TableRow key={customer.id}>
-                        <TableCell>{customer.id}</TableCell>
+                        <TableCell>{getDisplayId(index)}</TableCell>
                         <TableCell className="font-medium">
                           <div className="flex items-center">
-                            {customer.gender === "female" && (
-                              <UserCircle className="h-4 w-4 mr-2 text-pink-500" />
-                            )}
-                            {customer.gender === "male" && (
-                              <UserCircle className="h-4 w-4 mr-2 text-blue-500" />
-                            )}
+                            {getGenderIcon(customer.gender)}
                             {customer.name}
                           </div>
                         </TableCell>
@@ -191,7 +210,7 @@ const CustomersTab = () => {
                         </TableCell>
                         <TableCell>{customer.phone}</TableCell>
                         <TableCell className="hidden md:table-cell">
-                          {customer.lastVisit || "-"}
+                          {new Date(customer.lastVisit || customer.created_at || '').toLocaleDateString() || "-"}
                         </TableCell>
                         <TableCell className="text-right hidden md:table-cell">
                           ${customer.totalSpent || 0}
@@ -266,6 +285,7 @@ const CustomersTab = () => {
           open={drawerOpen}
           onOpenChange={setDrawerOpen}
           title="Customer Details"
+          className="max-w-2xl"
         >
           {viewCustomer && <CustomerDetailPage customer={viewCustomer} />}
         </DetailDrawer>
@@ -404,30 +424,8 @@ const CustomersTab = () => {
             if (!open) setSelectedCustomerForAppointment(null);
           }}
           title="Book Appointment"
-          className="w-full md:max-w-3xl"
+          className="w-full max-w-2xl"
         >
-          <div className="p-4 mb-4 bg-gray-50 rounded-md border">
-            <h3 className="font-medium mb-2">Customer Information</h3>
-            {selectedCustomerForAppointment && (
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <span className="font-medium">Name:</span>{" "}
-                  {selectedCustomerForAppointment.name}
-                </div>
-                <div>
-                  <span className="font-medium">Phone:</span>{" "}
-                  {selectedCustomerForAppointment.phone}
-                </div>
-                {selectedCustomerForAppointment.email && (
-                  <div>
-                    <span className="font-medium">Email:</span>{" "}
-                    {selectedCustomerForAppointment.email}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
           <OrderProvider initialCustomer={selectedCustomerForAppointment}>
             <CheckoutFlow bookingMode="staff" />
           </OrderProvider>

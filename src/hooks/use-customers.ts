@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useApi } from "./use-api";
 import { customerService } from "@/services";
@@ -64,9 +65,7 @@ export function useCustomers() {
           })
           .then(async (data) => {
             if (data && data.length > 0) {
-              const transformedData = (
-                data as unknown as DatabaseCustomer[]
-              ).map(transformCustomer);
+              const transformedData = data.map(transformCustomer);
               setCustomers(transformedData);
               fetchedRef.current = true;
               return transformedData;
@@ -74,9 +73,12 @@ export function useCustomers() {
 
             // If no data from service, try direct Supabase query
             console.log("Trying to fetch customers directly from Supabase...");
+            
+            // Since customers are stored in the users table with role='customer'
             const { data: supabaseData, error } = await supabase
-              .from("customers")
-              .select("*");
+              .from("users")
+              .select("*")
+              .eq("role", "customer");
 
             if (error) {
               console.error("Error fetching customers from Supabase:", error);
@@ -89,9 +91,28 @@ export function useCustomers() {
             }
 
             if (supabaseData && supabaseData.length > 0) {
-              const transformedData = (supabaseData as DatabaseCustomer[]).map(
-                transformCustomer
+              // Map users table data to our customer structure
+              const transformedData = supabaseData.map(user => ({
+                id: user.id,
+                name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim(),
+                email: user.email || '',
+                phone: user.phone || '',
+                gender: user.gender || 'other',
+                lastVisit: user.created_at || '',
+                totalSpent: 0,
+                birth_date: user.birth_date || '',
+                note: user.note || '',
+                user_id: user.id,
+                created_at: user.created_at || '',
+                updated_at: user.updated_at || '',
+              }));
+              
+              // Sort by most recently updated first
+              transformedData.sort((a, b) => 
+                new Date(b.updated_at || b.created_at || '').getTime() - 
+                new Date(a.updated_at || a.created_at || '').getTime()
               );
+              
               setCustomers(transformedData);
               fetchedRef.current = true;
               return transformedData;
@@ -141,16 +162,23 @@ export function useCustomers() {
 
   const createCustomer = useCallback(
     async (data: CustomerFormData) => {
-      const result = await api.execute(() => customerService.create(data), {
-        showSuccessToast: true,
-        successMessage: "Customer created successfully",
-        errorPrefix: "Failed to create customer",
-        onSuccess: () => {
-          fetchCustomers(true);
-        },
-      });
+      try {
+        const result = await api.execute(() => customerService.create(data), {
+          showSuccessToast: true,
+          successMessage: "Customer created successfully",
+          errorPrefix: "Failed to create customer",
+        });
 
-      return result;
+        if (result) {
+          // Force a refresh to get the latest data
+          await fetchCustomers(true);
+        }
+
+        return result;
+      } catch (error) {
+        console.error("Error in createCustomer:", error);
+        return null;
+      }
     },
     [api, fetchCustomers]
   );

@@ -15,9 +15,13 @@ const DetailDrawer: React.FC<DetailDrawerProps> = ({
   showCloseButton = true,
   description
 }) => {
+  // Calculate drawer width based on context - wider for customer flows
+  const isCustomerFlow = title?.includes('Customer') || title?.includes('Appointment');
+  const drawerWidth = isCustomerFlow ? 'max-w-2xl' : 'max-w-md';
+  
   return (
     <div className={`fixed inset-0 z-50 bg-black/50 overflow-hidden ${open ? 'block' : 'hidden'}`}>
-      <div className={`absolute inset-y-0 ${position === 'right' ? 'right-0' : 'left-0'} w-full max-w-md bg-white shadow-xl overflow-y-auto animate-slide-in-${position}`}>
+      <div className={`absolute inset-y-0 ${position === 'right' ? 'right-0' : 'left-0'} w-full ${drawerWidth} bg-white shadow-xl overflow-y-auto animate-slide-in-${position} ${className}`}>
         <div className="flex justify-between items-center p-4 border-b">
           <div>
             <h3 className="font-semibold text-lg">{title}</h3>
