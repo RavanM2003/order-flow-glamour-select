@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -44,18 +43,67 @@ const BookingConfirmation = () => {
       // Format the date
       const formattedDate = format(appointmentDate, 'yyyy-MM-dd');
 
-      // 1. Create or get customer
+      // 1. First create user in users table
+      let userId;
       let customerId;
       
-      // Check if customer with this phone number exists
+      // Check if the user already exists by email
+      const { data: existingUser, error: userCheckError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', customer.email)
+        .limit(1);
+        
+      if (userCheckError) {
+        console.error("Error checking existing user:", userCheckError);
+      }
+      
+      if (existingUser && existingUser.length > 0) {
+        userId = existingUser[0].id;
+        
+        // Update user information
+        await supabase
+          .from('users')
+          .update({
+            first_name: customer.name.split(' ')[0] || '',
+            last_name: customer.name.split(' ').slice(1).join(' ') || '',
+            number: customer.phone
+          })
+          .eq('id', userId);
+      } else {
+        // Create new user
+        const { data: newUser, error: createUserError } = await supabase
+          .from('users')
+          .insert([
+            {
+              email: customer.email,
+              first_name: customer.name.split(' ')[0] || '',
+              last_name: customer.name.split(' ').slice(1).join(' ') || '',
+              number: customer.phone,
+              role: 'customer',
+              hashed_password: 'default-password' // In production, generate a random password or handle this differently
+            }
+          ])
+          .select('id')
+          .single();
+          
+        if (createUserError) {
+          console.error("Error creating user:", createUserError);
+          throw createUserError;
+        }
+        
+        userId = newUser.id;
+      }
+      
+      // 2. Check if customer with this email exists
       const { data: existingCustomers, error: customerError } = await supabase
         .from('customers')
         .select('id')
-        .eq('phone', customer.phone)
+        .eq('email', customer.email)
         .limit(1);
       
       if (customerError) {
-        throw customerError;
+        console.error("Error checking existing customer:", customerError);
       }
       
       if (existingCustomers && existingCustomers.length > 0) {
@@ -66,7 +114,8 @@ const BookingConfirmation = () => {
           .from('customers')
           .update({
             full_name: customer.name,
-            email: customer.email
+            phone: customer.phone,
+            user_id: userId // Link to user if not already linked
           })
           .eq('id', customerId);
       } else {
@@ -77,25 +126,29 @@ const BookingConfirmation = () => {
             {
               full_name: customer.name,
               email: customer.email,
-              phone: customer.phone
+              phone: customer.phone,
+              gender: customer.gender || 'female',
+              user_id: userId // Link to the user we just created
             }
           ])
           .select('id')
           .single();
         
         if (createError) {
+          console.error("Error creating customer:", createError);
           throw createError;
         }
         
         customerId = newCustomer.id;
       }
       
-      // 2. Create appointment
+      // 3. Create appointment
       const { data: appointment, error: appointmentError } = await supabase
         .from('appointments')
         .insert([
           {
             customer_user_id: customerId,
+            user_id: userId, // Link appointment directly to user
             appointment_date: formattedDate,
             start_time: startTime,
             end_time: endTime,
@@ -107,10 +160,11 @@ const BookingConfirmation = () => {
         .single();
       
       if (appointmentError) {
+        console.error("Error creating appointment:", appointmentError);
         throw appointmentError;
       }
       
-      // 3. Add service to appointment
+      // 4. Add service to appointment
       const appointmentService = {
         appointment_id: appointment.id,
         service_id: selectedService.id,
@@ -125,10 +179,11 @@ const BookingConfirmation = () => {
         .insert(appointmentService);
         
       if (serviceError) {
+        console.error("Error adding service to appointment:", serviceError);
         throw serviceError;
       }
       
-      // 4. Add products to appointment if any
+      // 5. Add products to appointment if any
       if (selectedProducts.length > 0) {
         const appointmentProducts = selectedProducts.map(product => ({
           appointment_id: appointment.id,
@@ -144,6 +199,7 @@ const BookingConfirmation = () => {
             .insert(product);
             
           if (productError) {
+            console.error("Error adding product to appointment:", productError);
             throw productError;
           }
         }

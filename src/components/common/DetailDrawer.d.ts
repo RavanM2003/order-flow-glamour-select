@@ -1,5 +1,6 @@
 
 import { ReactNode } from 'react';
+import { Customer } from '@/models/customer.model';
 
 export interface DetailDrawerProps {
   children: ReactNode;
@@ -10,5 +11,5 @@ export interface DetailDrawerProps {
   position?: 'left' | 'right';
   showCloseButton?: boolean;
   description?: string;
-  initialCustomer?: any;
+  initialCustomer?: Customer;
 }

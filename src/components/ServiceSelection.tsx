@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -9,19 +8,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/context/LanguageContext";
 
 const ServiceSelection = () => {
-  const { orderState, setPrevStep, setNextStep, setSelectedService, addProduct, removeProduct } = useOrder();
+  const { orderState, setPrevStep, setNextStep, setSelectedService, setSelectedStaff, addProduct, removeProduct } = useOrder();
   const { selectedService, selectedProducts } = orderState;
   const { t } = useLanguage();
   
   const [services, setServices] = useState<Service[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [staffMembers, setStaffMembers] = useState<Staff[]>([]);
-  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [loading, setLoading] = useState(true);
   const [productLoading, setProductLoading] = useState(false);
   const [staffLoading, setStaffLoading] = useState(false);
-
-  // Fetch services on component mount
+  
+  // Sadəcə component mount olanda services sorğusunu etsin
   useEffect(() => {
     const fetchServices = async () => {
       setLoading(true);
@@ -48,11 +46,11 @@ const ServiceSelection = () => {
     fetchServices();
   }, []);
 
-  // Fetch related products when a service is selected
+  // Servis seçiləndə məhsulları və işçi heyətini gətir
   useEffect(() => {
+    if (!selectedService) return;
+    
     const fetchRelatedProducts = async () => {
-      if (!selectedService) return;
-      
       setProductLoading(true);
       try {
         // First fetch service_products to get related product ids
@@ -94,8 +92,6 @@ const ServiceSelection = () => {
     };
 
     const fetchStaffForService = async () => {
-      if (!selectedService) return;
-      
       setStaffLoading(true);
       try {
         // In a real app, we would fetch staff who can perform this service
@@ -136,8 +132,6 @@ const ServiceSelection = () => {
           });
           
           setStaffMembers(processedStaff);
-          // Reset selected staff when service changes
-          setSelectedStaff(null);
         }
       } catch (error) {
         console.error("Error:", error);
@@ -167,6 +161,7 @@ const ServiceSelection = () => {
   };
 
   const handleNext = () => {
+    const selectedStaff = orderState.selectedStaff;
     if (selectedService && selectedStaff) {
       // Save selected staff to order context
       // You'll need to update your OrderContext to include staff
@@ -226,7 +221,7 @@ const ServiceSelection = () => {
                 <div
                   key={staff.id}
                   className={`border rounded-lg p-4 cursor-pointer ${
-                    selectedStaff?.id === staff.id
+                    orderState.selectedStaff?.id === staff.id
                       ? "border-purple-500 bg-purple-50"
                       : "hover:border-gray-400"
                   }`}
@@ -297,7 +292,7 @@ const ServiceSelection = () => {
         </Button>
         <Button 
           onClick={handleNext}
-          disabled={!selectedService || !selectedStaff}
+          disabled={!selectedService || !orderState.selectedStaff}
         >
           {t('common.continue')}
         </Button>

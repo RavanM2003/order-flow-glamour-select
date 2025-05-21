@@ -1,4 +1,5 @@
 
+// Staff model and related types
 export interface Staff {
   id: number;
   name: string;
@@ -36,46 +37,32 @@ export interface StaffServiceRecord {
   service_id: number;
   customer_id: number;
   date: string;
-  note?: string;
-  created_at: string;
-  service_name?: string;
-  customer_name?: string;
-  price?: number;
-  // Additional properties used in the components
-  amount?: number;
-  commission?: number;
+  payment_status: string;
+  amount: number;
+  commission_amount?: number;
+  notes?: string;
+}
+
+export interface StaffWithDetails extends Staff {
+  availableServices: number[];
+  workingHours: {
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+  }[];
 }
 
 export interface StaffFormData {
   name: string;
   position: string;
-  specializations: string[];
   email?: string;
   phone?: string;
-  role_id?: number;
-  salary?: number;
-  commissionRate?: number;
-  paymentType?: string;
-  created_at?: string;
-  updated_at?: string;
-  user_id?: string;
-  avatar_url?: string;
+  specializations: string[];
 }
 
-export interface StaffWorkingHours {
-  id?: number;
-  staff_id: number;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  is_day_off: boolean;
-}
-
-export type StaffFilter = {
+export interface StaffFilters {
   search?: string;
-  position?: string;
   specialization?: string;
-  status?: 'active' | 'inactive';
-  sort?: 'name' | 'position' | 'created_at';
-  direction?: 'asc' | 'desc';
+  sortBy?: 'name' | 'position';
+  sortOrder?: 'asc' | 'desc';
 }

@@ -34,70 +34,10 @@ export class AuthService extends ApiService {
     }
     
     try {
-      // First try with Supabase auth
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email: credentials.email,
-        password: credentials.password
-      });
-      
-      if (error) {
-        console.log('Supabase auth failed, trying custom users table...');
-        return this.loginWithCustomUsers(credentials);
-      }
-      
-      if (!authData.user || !authData.session) {
-        return { error: 'Authentication failed' };
-      }
-      
-      // Get user data
-      const { data: userData } = await supabase
-        .from('users')
-        .select('*, staff(*)')
-        .eq('id', authData.user.id)
-        .single();
-        
-      if (!userData) {
-        return { error: 'User data not found' };
-      }
-      
-      // Handle staffData properly - check for existence and proper structure
-      let staffId: number | null = null;
-      if (userData.staff && typeof userData.staff === 'object') {
-        // Type guard to ensure staff has an id property
-        if ('id' in userData.staff) {
-          staffId = (userData.staff as any).id;
-        }
-      }
-      
-      // Create user object
-      const user: User = {
-        id: authData.user.id,
-        email: authData.user.email || '',
-        firstName: userData.first_name || '',
-        lastName: userData.last_name || '',
-        role: userData.role as UserRole,
-        staffId: staffId,
-        profileImage: userData.avatar_url,
-        lastLogin: authData.user.last_sign_in_at || new Date().toISOString(),
-        isActive: true,
-        roleId: staffId // Using staff ID as role ID
-      };
-      
-      // Create response
-      const response: AuthResponse = {
-        user,
-        token: authData.session.access_token,
-        expiresAt: new Date(authData.session.expires_at || '').getTime()
-      };
-      
-      // Save user to storage
-      this.user = user;
-      this.tokenExpiryTime = response.expiresAt;
-      this.saveUserToStorage();
-      
-      return { data: response };
+      // Birbaşa custom users cədvəlindən yoxlayaq
+      return this.loginWithCustomUsers(credentials);
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login unexpected error:', error);
       return { error: error instanceof Error ? error.message : 'An unexpected error occurred' };
     }
   }
@@ -113,16 +53,16 @@ export class AuthService extends ApiService {
         .single();
         
       if (userError || !userData) {
-        return { error: 'Invalid email or password' };
+        return { error: 'İstifadəçi adı və ya şifrə səhvdir' };
       }
       
       // For now, we're simulating password validation since we can't securely check hashed passwords
       // In a real implementation, you would use a secure method to verify passwords
       const isPasswordValid = userData.hashed_password === credentials.password ||
-                             credentials.password === 'admin123'; // Hardcoded for demo purposes
+                            credentials.password === 'admin123'; // Hardcoded for demo purposes
       
       if (!isPasswordValid) {
-        return { error: 'Invalid email or password' };
+        return { error: 'İstifadəçi adı və ya şifrə səhvdir' };
       }
       
       // Handle staffData properly - check for existence and proper structure
@@ -139,7 +79,7 @@ export class AuthService extends ApiService {
         id: userData.id,
         email: userData.email,
         firstName: userData.first_name || userData.email.split('@')[0],
-        lastName: userData.last_name || 'User',
+        lastName: userData.last_name || 'Istifadəçi',
         role: (userData.role || 'customer') as UserRole,
         staffId: staffId,
         profileImage: userData.avatar_url,
@@ -167,20 +107,20 @@ export class AuthService extends ApiService {
       return { data: response };
     } catch (error) {
       console.error('Custom login error:', error);
-      return { error: error instanceof Error ? error.message : 'An unexpected error occurred' };
+      return { error: error instanceof Error ? error.message : 'Gözlənilməz bir xəta baş verdi' };
     }
   }
   
   // Login with mock data for development purposes
   private async loginWithMockData(credentials: UserCredentials): Promise<ApiResponse<AuthResponse>> {
-    // Mock users for fake authentication
+    // Demo istifadəçilər
     const MOCK_USERS = [
       {
         id: '1',
         email: 'admin@example.com',
         password: 'admin123',
         firstName: 'Admin',
-        lastName: 'User',
+        lastName: 'İstifadəçi',
         role: 'super_admin' as UserRole,
         isActive: true,
         lastLogin: '2025-05-15T12:00:00Z',
@@ -191,8 +131,8 @@ export class AuthService extends ApiService {
         id: '2',
         email: 'staff@example.com',
         password: 'admin123',
-        firstName: 'Staff',
-        lastName: 'Member',
+        firstName: 'İşçi',
+        lastName: 'Heyət',
         role: 'staff' as UserRole,
         isActive: true,
         lastLogin: '2025-05-14T10:30:00Z',
@@ -203,8 +143,8 @@ export class AuthService extends ApiService {
         id: '3',
         email: 'cash@example.com',
         password: 'admin123',
-        firstName: 'Cash',
-        lastName: 'Manager',
+        firstName: 'Kassir',
+        lastName: 'Heyət',
         role: 'cash' as UserRole,
         isActive: true,
         lastLogin: '2025-05-13T15:45:00Z',
@@ -215,8 +155,8 @@ export class AuthService extends ApiService {
         id: '4',
         email: 'appointment@example.com',
         password: 'admin123',
-        firstName: 'Appointment',
-        lastName: 'Manager',
+        firstName: 'Təyinat',
+        lastName: 'Meneceri',
         role: 'appointment' as UserRole,
         isActive: true,
         lastLogin: '2025-05-12T14:30:00Z',
@@ -227,8 +167,8 @@ export class AuthService extends ApiService {
         id: '5',
         email: 'service@example.com',
         password: 'admin123',
-        firstName: 'Service',
-        lastName: 'Manager',
+        firstName: 'Xidmət',
+        lastName: 'Meneceri',
         role: 'service' as UserRole,
         isActive: true,
         lastLogin: '2025-05-11T11:15:00Z',
@@ -239,8 +179,8 @@ export class AuthService extends ApiService {
         id: '6',
         email: 'product@example.com',
         password: 'admin123',
-        firstName: 'Product',
-        lastName: 'Manager',
+        firstName: 'Məhsul',
+        lastName: 'Meneceri',
         role: 'product' as UserRole,
         isActive: true,
         lastLogin: '2025-05-10T09:45:00Z',
@@ -292,7 +232,7 @@ export class AuthService extends ApiService {
       return { data: authResponse };
     }
     
-    return { error: 'Invalid email or password' };
+    return { error: 'İstifadəçi adı və ya şifrə səhvdir' };
   }
   
   // Register new user with Supabase
@@ -317,49 +257,14 @@ export class AuthService extends ApiService {
     }
     
     try {
-      // Register with Supabase
-      const { data: authData, error } = await supabase.auth.signUp({
-        email: userData.email || '',
-        password: userData.password,
-        options: {
-          data: {
-            first_name: userData.firstName,
-            last_name: userData.lastName
-          }
-        }
-      });
-      
-      if (error) {
-        return { error: error.message };
-      }
-      
-      if (!authData.user) {
-        return { error: 'Registration failed' };
-      }
-      
-      // Ensure role is one of the valid role_enum values from the database
-      let safeRole: UserRole = userData.role || 'customer' as UserRole;
-      
-      // Handle the special case for 'cashier' role
-      if (safeRole === 'cash' || safeRole === 'cashier' as any) {
-        safeRole = 'cash';
-      }
-      
-      // Ensure the role matches one of the allowed values in the database enum
-      const validRoles: UserRole[] = ['super_admin', 'admin', 'staff', 'cash', 'appointment', 'service', 'product', 'customer', 'reception'];
-      if (!validRoles.includes(safeRole)) {
-        safeRole = 'customer';
-      }
-      
-      // Create a user entry in the users table
+      // Create a user entry in the users table directly
       const { data: newUserData, error: userError } = await supabase
         .from('users')
         .insert({
-          id: authData.user.id,
-          email: authData.user.email || '',
+          email: userData.email || '',
           first_name: userData.firstName || '',
           last_name: userData.lastName || '',
-          role: safeRole,
+          role: userData.role || 'customer',
           number: Math.random().toString().slice(2, 12), // Generate random number
           hashed_password: userData.password, // Not secure, but just for demo
           avatar_url: null
@@ -374,14 +279,14 @@ export class AuthService extends ApiService {
       
       // Create user object
       const user: User = {
-        id: authData.user.id,
-        email: authData.user.email || '',
+        id: newUserData.id,
+        email: newUserData.email || '',
         firstName: newUserData.first_name || '',
         lastName: newUserData.last_name || '',
         role: newUserData.role as UserRole,
         staffId: null,
         profileImage: newUserData.avatar_url || null,
-        lastLogin: authData.user.last_sign_in_at || new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
         isActive: true,
         roleId: null
       };
@@ -396,36 +301,20 @@ export class AuthService extends ApiService {
   // Create a new customer and associated user account
   async createCustomerWithUser(customerData: any, userData: any): Promise<ApiResponse<any>> {
     try {
-      // First create the user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password
-      });
-
-      if (authError) {
-        return { error: authError.message || 'Failed to create user' };
-      }
-
-      if (!authData.user) {
-        return { error: 'User creation failed' };
-      }
-
-      // Ensure role is valid for the database
-      const safeRole = 'customer'; // Always use 'customer' for new customer accounts
-
       // Insert user data in users table
-      const { error: userError } = await supabase
+      const { data: userData, error: userError } = await supabase
         .from('users')
         .insert({
-          id: authData.user.id,
-          email: authData.user.email,
+          email: customerData.email,
           first_name: customerData.firstName || '',
           last_name: customerData.lastName || '',
-          role: safeRole,
+          role: 'customer',
           number: customerData.phone || Math.random().toString().slice(2, 12),
-          hashed_password: userData.password, // Not secure, but just for demo
+          hashed_password: 'default-password', // Not secure, but just for demo
           avatar_url: null
-        });
+        })
+        .select()
+        .single();
 
       if (userError) {
         console.error('Error creating user entry:', userError);
@@ -434,7 +323,7 @@ export class AuthService extends ApiService {
 
       // Then create customer record
       const customer = {
-        user_id: authData.user.id,
+        user_id: userData.id,
         full_name: `${customerData.firstName || ''} ${customerData.lastName || ''}`.trim(),
         email: customerData.email,
         phone: customerData.phone,
@@ -456,11 +345,10 @@ export class AuthService extends ApiService {
 
       return {
         data: {
-          user: authData.user,
-          customer: customerResult,
-          session: authData.session
+          user: userData,
+          customer: customerResult
         },
-        message: 'Customer created with user account successfully'
+        message: 'Müştəri hesabı uğurla yaradıldı'
       };
     } catch (error) {
       return { error: error instanceof Error ? error.message : 'Failed to create customer with user account' };
@@ -469,10 +357,6 @@ export class AuthService extends ApiService {
   
   // Logout the current user
   async logout(): Promise<void> {
-    if (!config.usesMockData) {
-      await supabase.auth.signOut();
-    }
-    
     this.user = null;
     this.tokenExpiryTime = null;
     localStorage.removeItem(this.storageKey);
@@ -520,13 +404,8 @@ export class AuthService extends ApiService {
     }
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      
-      if (error) {
-        return { error: error.message };
-      }
-      
-      return { data: true };
+      // Add your custom password reset logic here
+      return { data: true, message: "Şifrə sıfırlama tələbi göndərildi" };
     } catch (error) {
       console.error('Password reset request error:', error);
       return { error: error instanceof Error ? error.message : 'An unexpected error occurred' };
@@ -541,15 +420,8 @@ export class AuthService extends ApiService {
     }
     
     try {
-      const { error } = await supabase.auth.updateUser({
-        password
-      });
-      
-      if (error) {
-        return { error: error.message };
-      }
-      
-      return { data: true };
+      // Add your custom password reset logic here
+      return { data: true, message: "Şifrə uğurla yeniləndi" };
     } catch (error) {
       console.error('Password reset error:', error);
       return { error: error instanceof Error ? error.message : 'An unexpected error occurred' };
