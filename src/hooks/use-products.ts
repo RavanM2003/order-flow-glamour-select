@@ -1,30 +1,69 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { useApi } from './use-api';
 import { productService } from '@/services';
 import { Product, ProductFormData } from '@/models/product.model';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 export function useProducts() {
   const api = useApi<Product[]>();
   const [products, setProducts] = useState<Product[]>([]);
+  const [fetchedRef, setFetchedRef] = useState(false);
   
   const fetchProducts = useCallback(async () => {
-    const data = await api.execute(
-      () => productService.getAll(),
-      {
-        showErrorToast: true,
-        errorPrefix: 'Failed to load products'
+    try {
+      // First try using the service abstraction
+      const data = await api.execute(
+        () => productService.getAll(),
+        {
+          showErrorToast: false, // We'll handle errors ourselves
+        }
+      );
+      
+      if (data && data.length > 0) {
+        setProducts(data);
+        setFetchedRef(true);
+        return;
       }
-    );
-    
-    if (data) {
-      setProducts(data);
+      
+      // If that fails or returns empty, try direct Supabase query
+      console.log('Fetching products directly from Supabase...');
+      const { data: supabaseData, error } = await supabase
+        .from('products')
+        .select('*');
+      
+      if (error) {
+        console.error('Error fetching products from Supabase:', error);
+        toast({
+          variant: "destructive",
+          title: "Products not loaded",
+          description: error.message
+        });
+        return;
+      }
+      
+      if (supabaseData && supabaseData.length > 0) {
+        setProducts(supabaseData);
+        setFetchedRef(true);
+        console.log('Products loaded directly from Supabase:', supabaseData.length);
+      } else {
+        console.log('No products found in Supabase');
+      }
+    } catch (error) {
+      console.error('Error in fetchProducts:', error);
+      toast({
+        variant: "destructive",
+        title: "Products not loaded",
+        description: "Failed to load products data"
+      });
     }
   }, [api]);
   
   useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+    if (!fetchedRef) {
+      fetchProducts();
+    }
+  }, [fetchProducts, fetchedRef]);
   
   const getProduct = useCallback(async (id: number | string) => {
     const response = await productService.getById(id);

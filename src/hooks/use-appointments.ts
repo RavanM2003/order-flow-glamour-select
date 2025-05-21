@@ -1,8 +1,10 @@
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useApi } from './use-api';
 import { appointmentService } from '@/services';
 import { Appointment, AppointmentFormData, AppointmentStatus } from '@/models/appointment.model';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useAppointments() {
   const api = useApi<Appointment[]>();
@@ -21,24 +23,65 @@ export function useAppointments() {
     
     console.log('Fetching appointments...');
     
-    // Start a new fetch and store the promise
-    fetchPromiseRef.current = api.execute(
-      () => appointmentService.getAll(),
-      {
-        showErrorToast: true,
-        errorPrefix: 'Failed to load appointments'
-      }
-    ).then(data => {
-      if (data) {
-        setAppointments(data);
-        fetchedRef.current = true;
-      }
-      // Clear the promise reference when done
+    // Try to get data from Supabase directly if service doesn't work
+    try {
+      // Start a new fetch and store the promise
+      fetchPromiseRef.current = api.execute(
+        () => appointmentService.getAll(),
+        {
+          showErrorToast: false, // Don't show error toast yet
+          errorPrefix: 'Failed to load appointments'
+        }
+      ).then(async (data) => {
+        if (data && data.length > 0) {
+          setAppointments(data);
+          fetchedRef.current = true;
+          return data;
+        }
+        
+        // If no data from service, try direct Supabase query
+        console.log('Trying to fetch appointments directly from Supabase...');
+        const { data: supabaseData, error } = await supabase
+          .from('appointments')
+          .select('*');
+          
+        if (error) {
+          console.error('Error fetching appointments from Supabase:', error);
+          toast({
+            variant: "destructive",
+            title: "Failed to load appointments",
+            description: error.message
+          });
+          return [];
+        }
+        
+        if (supabaseData && supabaseData.length > 0) {
+          setAppointments(supabaseData);
+          fetchedRef.current = true;
+          return supabaseData;
+        }
+        
+        // If everything fails, return empty array
+        return [];
+      }).catch(error => {
+        console.error('Error in fetchAppointments:', error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load appointments",
+          description: "Could not load appointments data"
+        });
+        return [];
+      }).finally(() => {
+        // Clear the promise reference when done
+        fetchPromiseRef.current = null;
+      });
+      
+      return fetchPromiseRef.current;
+    } catch (error) {
+      console.error('Unexpected error in fetchAppointments:', error);
       fetchPromiseRef.current = null;
-      return data;
-    });
-    
-    return fetchPromiseRef.current;
+      return [];
+    }
   }, [api, appointments]);
   
   // Only fetch on component mount, not on every render

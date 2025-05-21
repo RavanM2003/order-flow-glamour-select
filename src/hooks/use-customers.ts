@@ -3,6 +3,8 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useApi } from './use-api';
 import { customerService } from '@/services';
 import { Customer, CustomerFormData } from '@/models/customer.model';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 export function useCustomers() {
   const api = useApi<Customer[]>();
@@ -21,24 +23,65 @@ export function useCustomers() {
     
     console.log('Fetching customers...');
     
-    // Start a new fetch and store the promise
-    fetchPromiseRef.current = api.execute(
-      () => customerService.getAll(),
-      {
-        showErrorToast: true,
-        errorPrefix: 'Failed to load customers'
-      }
-    ).then(data => {
-      if (data) {
-        setCustomers(data);
-        fetchedRef.current = true;
-      }
-      // Clear the promise reference when done
+    // Try to get data from Supabase directly if service doesn't work
+    try {
+      // Start a new fetch and store the promise
+      fetchPromiseRef.current = api.execute(
+        () => customerService.getAll(),
+        {
+          showErrorToast: false, // Don't show error toast yet
+          errorPrefix: 'Failed to load customers'
+        }
+      ).then(async (data) => {
+        if (data && data.length > 0) {
+          setCustomers(data);
+          fetchedRef.current = true;
+          return data;
+        }
+        
+        // If no data from service, try direct Supabase query
+        console.log('Trying to fetch customers directly from Supabase...');
+        const { data: supabaseData, error } = await supabase
+          .from('customers')
+          .select('*');
+          
+        if (error) {
+          console.error('Error fetching customers from Supabase:', error);
+          toast({
+            variant: "destructive",
+            title: "Failed to load customers",
+            description: error.message
+          });
+          return null;
+        }
+        
+        if (supabaseData && supabaseData.length > 0) {
+          setCustomers(supabaseData);
+          fetchedRef.current = true;
+          return supabaseData;
+        }
+        
+        // If everything fails, return null
+        return null;
+      }).catch(error => {
+        console.error('Error in fetchCustomers:', error);
+        toast({
+          variant: "destructive",
+          title: "Failed to load customers",
+          description: "Could not load customer data"
+        });
+        return null;
+      }).finally(() => {
+        // Clear the promise reference when done
+        fetchPromiseRef.current = null;
+      });
+      
+      return fetchPromiseRef.current;
+    } catch (error) {
+      console.error('Unexpected error in fetchCustomers:', error);
       fetchPromiseRef.current = null;
-      return data;
-    });
-    
-    return fetchPromiseRef.current;
+      return null;
+    }
   }, [api, customers]);
   
   // Only fetch on component mount, not on every render
@@ -47,7 +90,7 @@ export function useCustomers() {
     if (!fetchedRef.current && !fetchPromiseRef.current) {
       fetchCustomers();
     }
-    // We intentionally omit fetchCustomers from dependencies 
+    // We intentionally omit fetchCustomers from dependencies
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   

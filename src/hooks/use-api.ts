@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { ApiResponse } from "@/models/types";
 import { toast } from "@/components/ui/use-toast";
@@ -56,7 +57,8 @@ export function useApi<T = unknown>() {
           return null;
         }
 
-        if (response.data) {
+        // Check if data exists and is not an empty array
+        if (response.data !== undefined && response.data !== null) {
           setData(response.data as unknown as T);
           if (showSuccessToast) {
             toast({
