@@ -2,7 +2,6 @@
 import React, { ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '../ui/button';
-import { Customer } from '@/models/customer.model';
 import { DetailDrawerProps } from './DetailDrawer.d';
 
 const DetailDrawer: React.FC<DetailDrawerProps> = ({ 
