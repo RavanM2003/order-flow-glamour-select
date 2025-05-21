@@ -1,20 +1,22 @@
+
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
 import { Service } from "@/models/service.model";
-import { Product } from "@/models/product.model";
-import { Staff } from "@/models/staff.model";
+import { Product as ModelProduct } from "@/models/product.model";
+import { Staff as ModelStaff } from "@/models/staff.model";
+import { Product, Staff } from "@/context/OrderContext.d";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/context/LanguageContext";
 
 const ServiceSelection = () => {
-  const { orderState, setPrevStep, setNextStep, setSelectedService, setSelectedStaff, addProduct, removeProduct } = useOrder();
+  const { orderState, setPrevStep, setNextStep, setSelectedService, setSelectedStaff, addProduct, removeProduct, selectService } = useOrder();
   const { selectedService, selectedProducts } = orderState;
   const { t } = useLanguage();
   
   const [services, setServices] = useState<Service[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [staffMembers, setStaffMembers] = useState<Staff[]>([]);
+  const [products, setProducts] = useState<ModelProduct[]>([]);
+  const [staffMembers, setStaffMembers] = useState<ModelStaff[]>([]);
   const [loading, setLoading] = useState(true);
   const [productLoading, setProductLoading] = useState(false);
   const [staffLoading, setStaffLoading] = useState(false);
@@ -107,13 +109,13 @@ const ServiceSelection = () => {
         
         if (data) {
           // Create a valid Staff array with proper type checking
-          const processedStaff: Staff[] = data.map(staffMember => {
+          const processedStaff: ModelStaff[] = data.map(staffMember => {
             // Instead of trying to access name directly, create a name from available data
             const staffId = staffMember.id ? staffMember.id : 0;
             const staffName = `Staff #${staffId}`;
             
             // Create a base staff object with required properties
-            const staffObject: Staff = {
+            const staffObject: ModelStaff = {
               id: staffId,
               name: staffName,
               position: typeof staffMember.position === 'string' ? staffMember.position : 'Staff Member',
@@ -171,18 +173,28 @@ const ServiceSelection = () => {
 
   const handleServiceSelect = (service: Service) => {
     setSelectedService(service);
+    selectService(service.id);
   };
 
-  const handleProductToggle = (product: Product) => {
+  const handleProductToggle = (product: ModelProduct) => {
     if (selectedProducts.some(p => p.id === product.id)) {
-      removeProduct(product);
+      removeProduct(product.id);
     } else {
-      addProduct(product);
+      addProduct(product.id);
     }
   };
 
-  const handleStaffSelect = (staff: Staff) => {
-    setSelectedStaff(staff);
+  const handleStaffSelect = (staff: ModelStaff) => {
+    // Convert ModelStaff to OrderContext Staff type
+    const contextStaff: Staff = {
+      id: String(staff.id),
+      name: staff.name,
+      position: staff.position,
+      specializations: staff.specializations?.map(Number),
+      avatar_url: staff.avatar_url
+    };
+    
+    setSelectedStaff(contextStaff);
   };
 
   const handleNext = () => {
@@ -243,7 +255,7 @@ const ServiceSelection = () => {
                 <div
                   key={staff.id}
                   className={`border rounded-lg p-4 cursor-pointer ${
-                    orderState.selectedStaff?.id === staff.id
+                    orderState.selectedStaff?.id === String(staff.id)
                       ? "border-purple-500 bg-purple-50"
                       : "hover:border-gray-400"
                   }`}

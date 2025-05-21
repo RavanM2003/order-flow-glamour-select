@@ -36,7 +36,7 @@ import { useProducts } from "@/hooks/use-products";
 const PaymentDetails = React.memo(() => {
   const { orderState, setPaymentMethod, goToStep, completeOrder } = useOrder();
   const { toast } = useToast();
-  const [paymentMethod, setPaymentMethodState] = useState(
+  const [paymentMethodState, setPaymentMethodState] = useState(
     orderState.paymentMethod || "cash"
   );
   const [loading, setLoading] = useState(false);
@@ -119,7 +119,7 @@ const PaymentDetails = React.memo(() => {
     e.preventDefault();
     
     // Validate card details if card payment method is selected
-    if (paymentMethod === 'card') {
+    if (paymentMethodState === 'card') {
       if (cardDetails.cardNumber.replace(/\s/g, '').length < 16) {
         toast({
           title: "Invalid card number",
@@ -161,7 +161,7 @@ const PaymentDetails = React.memo(() => {
       setLoading(true);
       
       // Save the payment method to the order context
-      setPaymentMethod(paymentMethod);
+      setPaymentMethod(paymentMethodState);
       
       // Generate order ID (this would be done by the backend in production)
       const orderId = config.usesMockData
@@ -196,7 +196,7 @@ const PaymentDetails = React.memo(() => {
     } finally {
       setLoading(false);
     }
-  }, [paymentMethod, cardDetails, toast, setPaymentMethod, completeOrder, goToStep, config.usesMockData]);
+  }, [paymentMethodState, cardDetails, toast, setPaymentMethod, completeOrder, goToStep, config.usesMockData]);
 
   const handleBack = useCallback(() => {
     goToStep(2);
@@ -204,14 +204,14 @@ const PaymentDetails = React.memo(() => {
 
   // Get selected services and products details
   const selectedServicesDetails = servicesData
-    .filter(service => orderState.selectedServices?.includes(service.id)) || [];
+    .filter(service => orderState.selectedService && service.id === orderState.selectedService.id) || [];
   
   const selectedProductsDetails = productsData
     .filter(product => orderState.selectedProducts.some(p => p.id === product.id)) || [];
   
   // Find staff assigned to each service
   const getServiceProvider = (serviceId: number) => {
-    return orderState.serviceProviders?.find(sp => sp.serviceId === serviceId)?.name;
+    return orderState.serviceProviders?.find(sp => sp.serviceId === serviceId)?.name || 'No staff assigned';
   };
   
   // Calculate the order subtotal
@@ -237,7 +237,7 @@ const PaymentDetails = React.memo(() => {
                   <AccordionContent>
                     <div className="space-y-4 mt-2">
                       {/* Services */}
-                      {orderState.selectedServices && orderState.selectedServices.length > 0 && (
+                      {orderState.selectedService && (
                         <div>
                           <h4 className="text-sm font-semibold mb-2 flex items-center">
                             <Sparkles className="h-4 w-4 mr-1" /> Services
@@ -258,7 +258,7 @@ const PaymentDetails = React.memo(() => {
                                     </div>
                                     <div className="flex items-center">
                                       <User className="h-3 w-3 mr-1" /> 
-                                      {getServiceProvider(service.id) || 'No staff assigned'}
+                                      {getServiceProvider(service.id)}
                                     </div>
                                   </div>
                                 </li>
@@ -298,11 +298,11 @@ const PaymentDetails = React.memo(() => {
                         </h4>
                         <div className="bg-white p-2 rounded border">
                           <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>Date: {orderState.customerInfo?.date || 'Not set'}</div>
-                            <div>Time: {orderState.customerInfo?.time || 'Not set'}</div>
+                            <div>Date: {orderState.appointmentDate ? orderState.appointmentDate.toLocaleDateString() : 'Not set'}</div>
+                            <div>Time: {orderState.appointmentTime || 'Not set'}</div>
                             <div className="col-span-2 text-xs text-gray-500 mt-1">
-                              {orderState.customerInfo?.notes && (
-                                <div>Notes: {orderState.customerInfo.notes}</div>
+                              {orderState.customer?.address && (
+                                <div>Address: {orderState.customer.address}</div>
                               )}
                             </div>
                           </div>
@@ -317,7 +317,7 @@ const PaymentDetails = React.memo(() => {
                 <div className="flex justify-between">
                   <span>Services:</span>
                   <Badge variant="outline" className="font-normal">
-                    {orderState.selectedServices?.length || 0} selected
+                    {orderState.selectedService ? 1 : 0} selected
                   </Badge>
                 </div>
                 <div className="flex justify-between">
@@ -338,7 +338,7 @@ const PaymentDetails = React.memo(() => {
             <div>
               <h3 className="font-semibold mb-4 text-lg">Select Payment Method</h3>
               <RadioGroup
-                value={paymentMethod}
+                value={paymentMethodState}
                 onValueChange={handlePaymentMethodChange}
                 className="space-y-3"
               >
@@ -377,7 +377,7 @@ const PaymentDetails = React.memo(() => {
                     </Label>
                   </div>
                   
-                  {paymentMethod === 'card' && (
+                  {paymentMethodState === 'card' && (
                     <div className="border-t p-4 bg-gray-50">
                       <div className="space-y-3">
                         <div>

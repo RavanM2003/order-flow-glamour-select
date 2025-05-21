@@ -6,6 +6,7 @@ import ServiceSelection from "./ServiceSelection";
 import PaymentDetails from "./PaymentDetails";
 import BookingConfirmation from "./BookingConfirmation";
 import { useLanguage } from "@/context/LanguageContext";
+import { BookingMode as CustomerBookingMode } from "@/context/OrderContext.d";
 
 export type BookingMode = "customer" | "staff";
 
@@ -19,6 +20,13 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = React.memo(({
   const { orderState } = useOrder();
   const { currentStep } = orderState;
   const { t } = useLanguage();
+
+  // Map the BookingMode to CustomerBookingMode
+  const mapBookingMode = (mode: BookingMode): CustomerBookingMode => {
+    return mode === "customer" ? "salon" : "home";
+  };
+
+  const customerBookingMode = mapBookingMode(bookingMode);
 
   // Simplified step titles
   const getStepTitle = (step: number) => {
@@ -62,7 +70,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = React.memo(({
         </div>
       </div>
 
-      {currentStep === 1 && <CustomerInfo bookingMode={bookingMode} />}
+      {currentStep === 1 && <CustomerInfo bookingMode={customerBookingMode} onSubmit={() => {}} />}
       {currentStep === 2 && <ServiceSelection />}
       {currentStep === 3 && <PaymentDetails />}
       {currentStep === 4 && <BookingConfirmation />}

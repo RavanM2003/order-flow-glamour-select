@@ -37,36 +37,46 @@ export interface Product {
 export type BookingMode = 'salon' | 'home';
 
 export interface OrderState {
-  step: number;
+  currentStep: number;
   bookingMode: BookingMode;
   customer: Customer;
   selectedService: Service | null;
   selectedStaff: Staff | null;
   selectedProducts: Product[];
+  selectedServices: number[];
   appointmentDate: Date | null;
-  appointmentTime: string;
+  appointmentTime: string | null;
   totalAmount: number;
+  paymentMethod: string | null;
+  serviceProviders: Array<{serviceId: number, name: string}> | null;
 }
 
 export interface OrderContextType {
   orderState: OrderState;
-  setBookingMode: (mode: BookingMode) => void;
   setCustomer: (customer: Customer) => void;
   setSelectedService: (service: Service | null) => void;
   setSelectedStaff: (staff: Staff | null) => void;
-  addProduct: (product: Product) => void;
+  addProduct: (productId: number) => void;
   removeProduct: (productId: number) => void;
   setAppointmentDate: (date: Date | null) => void;
-  setAppointmentTime: (time: string) => void;
-  calculateTotal: () => void;
-  nextStep: () => void;
-  prevStep: () => void;
+  setAppointmentTime: (time: string | null) => void;
+  setBookingMode: (mode: BookingMode) => void;
+  calculateTotal: () => number;
   setNextStep: () => void;
   setPrevStep: () => void;
-  setStep: (step: number) => void;
+  goToStep: (step: number) => void;
   resetOrder: () => void;
+  setPaymentMethod: (method: string | null) => void;
+  completeOrder: (id: string) => void;
+  addServiceProvider: (serviceId: number, staffName: string) => void;
+  selectService: (serviceId: number) => void;
+  unselectService: (serviceId: number) => void;
+  nextStep: () => void;
+  prevStep: () => void;
+  setStep: (step: number) => void;
 }
 
 export interface OrderProviderProps {
   children: ReactNode;
+  initialCustomer?: Customer;
 }

@@ -1,200 +1,256 @@
 
-import { useState, useCallback, useEffect, useRef } from "react";
-import { useApi } from "./use-api";
-import { customerService } from "@/services";
-import { Customer } from "@/models/customer.model";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { Customer } from '@/models/customer.model';
+import { useToast } from './use-toast';
 
-interface DatabaseUser {
-  id: string;
-  birth_date: string | null;
-  created_at: string | null;
+// Define CustomerFormData type
+export interface CustomerFormData {
+  name: string;
   email: string;
-  first_name: string | null;
-  last_name: string | null;
-  full_name: string | null;
-  gender: "male" | "female" | "other" | null;
-  note: string | null;
   phone: string;
-  updated_at: string | null;
-  role: string;
-  avatar_url: string | null;
+  gender?: string;
+  birth_date?: string;
+  note?: string;
+  address?: string;
 }
 
-// Transform database user to our Customer model
-const transformUser = (dbUser: DatabaseUser): Customer => {
-  return {
-    id: dbUser.id,
-    name: dbUser.full_name || `${dbUser.first_name || ''} ${dbUser.last_name || ''}`.trim(),
-    email: dbUser.email,
-    phone: dbUser.phone,
-    gender: dbUser.gender || 'other',
-    lastVisit: dbUser.created_at || '',
-    totalSpent: 0, // This would need to be calculated from appointments
-    birth_date: dbUser.birth_date || '',
-    note: dbUser.note || '',
-    user_id: dbUser.id, // Same as id since we're working with users table
-    created_at: dbUser.created_at || '',
-    updated_at: dbUser.updated_at || '',
-  };
-};
+// Define database customer type for mapping
+interface DatabaseCustomer {
+  id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  gender?: string;
+  birth_date?: string;
+  note?: string;
+  created_at: string;
+  updated_at: string;
+  [key: string]: any;
+}
 
 export function useCustomers() {
-  const api = useApi<DatabaseUser[]>();
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const fetchedRef = useRef(false);
-  const fetchPromiseRef = useRef<Promise<Customer[] | null> | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const { toast } = useToast();
 
-  const fetchCustomers = useCallback(
-    async (forceRefresh = false) => {
-      // Skip fetching if we've already fetched and no force refresh is requested
-      if (fetchedRef.current && !forceRefresh) return customers;
-
-      // If we already have a fetch in progress, return that promise
-      if (fetchPromiseRef.current && !forceRefresh) {
-        return fetchPromiseRef.current;
-      }
-
-      console.log("Fetching customers...");
-
-      try {
-        // Start a new fetch and store the promise
-        fetchPromiseRef.current = api
-          .execute(() => customerService.getAll(), {
-            showErrorToast: false, // Don't show error toast yet
-            errorPrefix: "Failed to load customers",
-          })
-          .then(async (data) => {
-            if (data && data.length > 0) {
-              const transformedData = data.map(user => transformUser(user as unknown as DatabaseUser));
-              setCustomers(transformedData);
-              fetchedRef.current = true;
-              return transformedData;
-            }
-
-            // If no data from service, try direct Supabase query
-            console.log("Trying to fetch customers directly from Supabase...");
-            
-            // Get users with role='customer'
-            const { data: supabaseData, error } = await supabase
-              .from("users")
-              .select("*")
-              .eq("role", "customer");
-
-            if (error) {
-              console.error("Error fetching customers from Supabase:", error);
-              toast({
-                variant: "destructive",
-                title: "Failed to load customers",
-                description: error.message,
-              });
-              return null;
-            }
-
-            if (supabaseData && supabaseData.length > 0) {
-              // Map users table data to our customer structure
-              const transformedData = supabaseData.map(user => transformUser(user as DatabaseUser));
-              
-              // Sort by most recently updated first
-              transformedData.sort((a, b) => 
-                new Date(b.updated_at || b.created_at || '').getTime() - 
-                new Date(a.updated_at || a.created_at || '').getTime()
-              );
-              
-              setCustomers(transformedData);
-              fetchedRef.current = true;
-              return transformedData;
-            }
-
-            // If everything fails, return null
-            return null;
-          })
-          .catch((error) => {
-            console.error("Error in fetchCustomers:", error);
-            toast({
-              variant: "destructive",
-              title: "Failed to load customers",
-              description: "Could not load customer data",
-            });
-            return null;
-          })
-          .finally(() => {
-            // Clear the promise reference when done
-            fetchPromiseRef.current = null;
-          });
-
-        return fetchPromiseRef.current;
-      } catch (error) {
-        console.error("Unexpected error in fetchCustomers:", error);
-        fetchPromiseRef.current = null;
-        return null;
-      }
-    },
-    [api, customers]
-  );
-
-  // Only fetch on component mount, not on every render
-  useEffect(() => {
-    // Only fetch if we haven't already fetched
-    if (!fetchedRef.current && !fetchPromiseRef.current) {
-      fetchCustomers();
-    }
-    // We intentionally omit fetchCustomers from dependencies
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Map database customer to frontend customer model
+  const mapDbCustomerToCustomer = useCallback((dbCustomer: DatabaseCustomer): Customer => {
+    return {
+      id: dbCustomer.id,
+      name: dbCustomer.full_name || '',
+      email: dbCustomer.email || '',
+      phone: dbCustomer.phone || '',
+      gender: dbCustomer.gender || 'other',
+      birth_date: dbCustomer.birth_date,
+      note: dbCustomer.note,
+      lastVisit: '',  // Would be calculated from appointments
+      totalSpent: 0,   // Would be calculated from payments
+      created_at: dbCustomer.created_at,
+      updated_at: dbCustomer.updated_at,
+    };
   }, []);
 
-  const getCustomer = useCallback(async (id: number | string) => {
-    const response = await customerService.getById(id);
-    return response.data;
-  }, []);
+  // Fetch all customers
+  const fetchCustomers = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('role', 'customer');
 
-  const createCustomer = useCallback(
-    async (data: Partial<Customer>) => {
-      try {
-        const result = await api.execute(() => customerService.create(data), {
-          showSuccessToast: true,
-          successMessage: "Customer created successfully",
-          errorPrefix: "Failed to create customer",
-        });
+      if (error) throw new Error(error.message);
 
-        if (result) {
-          // Force a refresh to get the latest data
-          await fetchCustomers(true);
-        }
-
-        return result;
-      } catch (error) {
-        console.error("Error in createCustomer:", error);
-        return null;
+      if (data) {
+        const mappedCustomers = data.map(mapDbCustomerToCustomer);
+        setCustomers(mappedCustomers);
       }
-    },
-    [api, fetchCustomers]
-  );
-
-  const updateCustomer = useCallback(
-    async (id: number | string, data: Partial<Customer>) => {
-      const result = await api.execute(() => customerService.update(id, data), {
-        showSuccessToast: true,
-        successMessage: "Customer updated successfully",
-        errorPrefix: "Failed to update customer",
-        onSuccess: () => {
-          fetchCustomers(true);
-        },
+    } catch (err: any) {
+      setError(err);
+      toast({
+        title: 'Error fetching customers',
+        description: err.message,
+        variant: 'destructive'
       });
+    } finally {
+      setLoading(false);
+    }
+  }, [mapDbCustomerToCustomer, toast]);
 
-      return result;
-    },
-    [api, fetchCustomers]
-  );
+  // Create a new customer
+  const createCustomer = useCallback(async (customerData: CustomerFormData) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Transform frontend model to database model
+      const dbCustomer = {
+        full_name: customerData.name,
+        email: customerData.email,
+        phone: customerData.phone,
+        gender: customerData.gender || 'other',
+        birth_date: customerData.birth_date,
+        note: customerData.note,
+        role: 'customer',
+      };
+
+      const { data, error } = await supabase
+        .from('users')
+        .insert([dbCustomer])
+        .select();
+
+      if (error) throw new Error(error.message);
+
+      if (data && data.length > 0) {
+        const newCustomer = mapDbCustomerToCustomer(data[0] as DatabaseCustomer);
+        setCustomers(prev => [...prev, newCustomer]);
+        toast({
+          title: 'Customer created',
+          description: `${newCustomer.name} has been added successfully.`
+        });
+        return newCustomer;
+      }
+      return null;
+    } catch (err: any) {
+      setError(err);
+      toast({
+        title: 'Error creating customer',
+        description: err.message,
+        variant: 'destructive'
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [mapDbCustomerToCustomer, toast]);
+
+  // Update an existing customer
+  const updateCustomer = useCallback(async (id: string, customerData: Partial<CustomerFormData>) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Transform frontend model to database model
+      const dbCustomer: any = {};
+      
+      if (customerData.name !== undefined) dbCustomer.full_name = customerData.name;
+      if (customerData.email !== undefined) dbCustomer.email = customerData.email;
+      if (customerData.phone !== undefined) dbCustomer.phone = customerData.phone;
+      if (customerData.gender !== undefined) dbCustomer.gender = customerData.gender;
+      if (customerData.birth_date !== undefined) dbCustomer.birth_date = customerData.birth_date;
+      if (customerData.note !== undefined) dbCustomer.note = customerData.note;
+
+      const { data, error } = await supabase
+        .from('users')
+        .update(dbCustomer)
+        .eq('id', id)
+        .select();
+
+      if (error) throw new Error(error.message);
+
+      if (data && data.length > 0) {
+        const updatedCustomer = mapDbCustomerToCustomer(data[0] as DatabaseCustomer);
+        setCustomers(prev => prev.map(c => c.id === id ? updatedCustomer : c));
+        toast({
+          title: 'Customer updated',
+          description: `${updatedCustomer.name} has been updated successfully.`
+        });
+        return updatedCustomer;
+      }
+      return null;
+    } catch (err: any) {
+      setError(err);
+      toast({
+        title: 'Error updating customer',
+        description: err.message,
+        variant: 'destructive'
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [mapDbCustomerToCustomer, toast]);
+
+  // Delete a customer
+  const deleteCustomer = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw new Error(error.message);
+
+      setCustomers(prev => prev.filter(c => c.id !== id));
+      toast({
+        title: 'Customer deleted',
+        description: 'Customer has been deleted successfully.'
+      });
+      return true;
+    } catch (err: any) {
+      setError(err);
+      toast({
+        title: 'Error deleting customer',
+        description: err.message,
+        variant: 'destructive'
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  // Get a single customer by ID
+  const getCustomerById = useCallback(async (id: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', id)
+        .eq('role', 'customer')
+        .single();
+
+      if (error) throw new Error(error.message);
+
+      if (data) {
+        return mapDbCustomerToCustomer(data as DatabaseCustomer);
+      }
+      return null;
+    } catch (err: any) {
+      setError(err);
+      toast({
+        title: 'Error fetching customer',
+        description: err.message,
+        variant: 'destructive'
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [mapDbCustomerToCustomer, toast]);
+
+  // Load customers on component mount
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
 
   return {
     customers,
-    isLoading: api.isLoading,
-    error: api.error,
+    loading,
+    error,
     fetchCustomers,
-    getCustomer,
     createCustomer,
     updateCustomer,
+    deleteCustomer,
+    getCustomerById
   };
 }

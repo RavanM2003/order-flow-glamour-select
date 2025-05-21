@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import {
   Card,
@@ -20,10 +20,11 @@ import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { BookingMode } from "@/context/OrderContext.d";
 
 // Define props for the component
 export interface CustomerInfoProps {
-  bookingMode: "salon" | "home";
+  bookingMode: BookingMode;
   onSubmit: () => void;
 }
 

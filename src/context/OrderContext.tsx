@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { Customer } from '@/models/customer.model';
-import { OrderContextType, CustomerInfo } from './OrderContext.d';
+import { OrderContextType, OrderState, BookingMode } from './OrderContext.d';
 import { Service } from '@/models/service.model';
 import { Staff } from '@/models/staff.model';
 import { Product } from '@/models/product.model';
@@ -15,6 +15,7 @@ export const OrderContext = createContext<OrderContextType | undefined>(undefine
 
 export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialCustomer }) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [bookingMode, setBookingMode] = useState<BookingMode>('salon');
   
   const [customer, setCustomer] = useState<Customer>(initialCustomer || {
     id: "",
@@ -25,8 +26,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     lastVisit: "",
     totalSpent: 0
   });
-  
-  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
@@ -52,14 +51,36 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     return total;
   }, [selectedService, selectedProducts]);
 
-  const addProduct = useCallback((product: Product) => {
-    setSelectedProducts((prev) => [...prev, product]);
+  const addProduct = useCallback((productId: number) => {
+    // This should be modified to handle productId instead of product object
+    setSelectedProducts((prev) => {
+      // Check if product already exists to avoid duplicates
+      if (prev.some(p => p.id === productId)) {
+        return prev;
+      }
+      // Here we would typically fetch the product details based on ID
+      // For now, create a minimal product object
+      const newProduct: Product = {
+        id: productId,
+        name: `Product ${productId}`,
+        price: 0, // Default price, would be fetched from API
+      };
+      return [...prev, newProduct];
+    });
   }, []);
 
-  const removeProduct = useCallback((product: Product) => {
+  const removeProduct = useCallback((productId: number) => {
     setSelectedProducts((prev) => 
-      prev.filter((p) => p.id !== product.id)
+      prev.filter((p) => p.id !== productId)
     );
+  }, []);
+
+  const nextStep = useCallback(() => {
+    setCurrentStep((prev) => Math.min(prev + 1, 4));
+  }, []);
+
+  const prevStep = useCallback(() => {
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   }, []);
 
   const setNextStep = useCallback(() => {
@@ -70,14 +91,16 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   }, []);
 
-  const goToStep = useCallback((step: number) => {
+  const setStep = useCallback((step: number) => {
     if (step >= 1 && step <= 4) {
       setCurrentStep(step);
     }
   }, []);
 
-  const updateCustomerInfo = useCallback((info: CustomerInfo) => {
-    setCustomerInfo(info);
+  const goToStep = useCallback((step: number) => {
+    if (step >= 1 && step <= 4) {
+      setCurrentStep(step);
+    }
   }, []);
 
   const resetOrder = useCallback(() => {
@@ -91,7 +114,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
       lastVisit: "",
       totalSpent: 0
     });
-    setCustomerInfo(null);
     setSelectedService(null);
     setSelectedStaff(null);
     setSelectedProducts([]);
@@ -135,11 +157,11 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     setSelectedServices(prev => prev.filter(id => id !== serviceId));
   }, []);
 
-  const value = {
+  const value: OrderContextType = {
     orderState: {
       currentStep,
+      bookingMode,
       customer,
-      customerInfo,
       selectedService,
       selectedStaff,
       selectedProducts,
@@ -151,7 +173,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
       serviceProviders,
     },
     setCustomer,
-    updateCustomerInfo,
     setSelectedService,
     setSelectedStaff,
     addProduct,
@@ -167,6 +188,11 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     addServiceProvider,
     selectService,
     unselectService,
+    setBookingMode,
+    calculateTotal,
+    nextStep,
+    prevStep,
+    setStep,
   };
 
   return (
