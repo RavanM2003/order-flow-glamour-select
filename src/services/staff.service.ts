@@ -313,49 +313,46 @@ export class StaffService extends ApiService {
         // Find the existing staff or create a default object
         const existingStaff = mockStaff[index] || {};
         
-        // Safely cast the existing staff object with type checking
-        const typedExistingStaff = existingStaff as Partial<Staff>;
-        
         // Create a valid Staff object with updated fields
         const updatedStaff: Staff = { 
           id: Number(id),
-          name: data.name || typedExistingStaff.name || `Staff #${id}`,
-          position: data.position || typedExistingStaff.position || 'Staff Member',
+          name: data.name || existingStaff.name || `Staff #${id}`,
+          position: data.position || existingStaff.position || 'Staff Member',
           specializations: (data.specializations || 
-              (Array.isArray(typedExistingStaff.specializations) ? 
-                typedExistingStaff.specializations : [])).map(String),
+              (Array.isArray(existingStaff.specializations) ? 
+                existingStaff.specializations : [])).map(String),
           updated_at: new Date().toISOString(),
-          created_at: typedExistingStaff.created_at || new Date().toISOString(),
-          user_id: typedExistingStaff.user_id || '',
+          created_at: existingStaff.created_at || new Date().toISOString(),
+          user_id: existingStaff.user_id || '',
         };
         
         // Handle optional properties safely
-        if (data.email !== undefined || typedExistingStaff.email !== undefined) {
-          updatedStaff.email = data.email || typedExistingStaff.email || '';
+        if (data.email !== undefined || existingStaff.email !== undefined) {
+          updatedStaff.email = data.email || existingStaff.email || '';
         }
         
-        if (data.phone !== undefined || typedExistingStaff.phone !== undefined) {
-          updatedStaff.phone = data.phone || typedExistingStaff.phone || '';
+        if (data.phone !== undefined || existingStaff.phone !== undefined) {
+          updatedStaff.phone = data.phone || existingStaff.phone || '';
         }
         
-        if (data.role_id !== undefined || typedExistingStaff.role_id !== undefined) {
-          updatedStaff.role_id = data.role_id || typedExistingStaff.role_id || 0;
+        if (data.role_id !== undefined || existingStaff.role_id !== undefined) {
+          updatedStaff.role_id = data.role_id || existingStaff.role_id || 0;
         }
         
-        if (data.avatar_url !== undefined || typedExistingStaff.avatar_url !== undefined) {
-          updatedStaff.avatar_url = data.avatar_url || typedExistingStaff.avatar_url || '';
+        if (data.avatar_url !== undefined || existingStaff.avatar_url !== undefined) {
+          updatedStaff.avatar_url = data.avatar_url || existingStaff.avatar_url || '';
         }
         
-        if (data.salary !== undefined || typedExistingStaff.salary !== undefined) {
-          updatedStaff.salary = data.salary || typedExistingStaff.salary || 0;
+        if (data.salary !== undefined || existingStaff.salary !== undefined) {
+          updatedStaff.salary = data.salary || existingStaff.salary || 0;
         }
         
-        if (data.commissionRate !== undefined || typedExistingStaff.commissionRate !== undefined) {
-          updatedStaff.commissionRate = data.commissionRate || typedExistingStaff.commissionRate || 0;
+        if (data.commissionRate !== undefined || existingStaff.commissionRate !== undefined) {
+          updatedStaff.commissionRate = data.commissionRate || existingStaff.commissionRate || 0;
         }
         
-        if (data.paymentType !== undefined || typedExistingStaff.paymentType !== undefined) {
-          updatedStaff.paymentType = data.paymentType || typedExistingStaff.paymentType || '';
+        if (data.paymentType !== undefined || existingStaff.paymentType !== undefined) {
+          updatedStaff.paymentType = data.paymentType || existingStaff.paymentType || '';
         }
         
         mockStaff[index] = updatedStaff;
