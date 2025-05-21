@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ const ServiceSelection = () => {
   const [productLoading, setProductLoading] = useState(false);
   const [staffLoading, setStaffLoading] = useState(false);
   
-  // Sadəcə component mount olanda services sorğusunu etsin
+  // Fetch services when component mounts
   useEffect(() => {
     const fetchServices = async () => {
       setLoading(true);
@@ -46,7 +47,7 @@ const ServiceSelection = () => {
     fetchServices();
   }, []);
 
-  // Servis seçiləndə məhsulları və işçi heyətini gətir
+  // Fetch products and staff when service is selected
   useEffect(() => {
     if (!selectedService) return;
     
@@ -108,26 +109,30 @@ const ServiceSelection = () => {
         if (data) {
           // Create a valid Staff array with proper type checking
           const processedStaff: Staff[] = data.map(staffMember => {
-            // We need to create a proper Staff object from the data
-            return {
+            const staffObject: Staff = {
               id: staffMember.id,
+              // Handle case where name might be undefined
               name: staffMember.name || `Staff #${staffMember.id}`,
               position: staffMember.position || 'Staff Member',
+              // Ensure specializations is always an array of strings
               specializations: Array.isArray(staffMember.specializations) 
                 ? staffMember.specializations.map(String)
                 : [],
               created_at: staffMember.created_at || new Date().toISOString(),
               updated_at: staffMember.updated_at || new Date().toISOString(),
               user_id: staffMember.user_id || '',
-              // Handle optional properties safely
-              ...(staffMember.email !== undefined && { email: staffMember.email }),
-              ...(staffMember.phone !== undefined && { phone: staffMember.phone }),
-              ...(staffMember.role_id !== undefined && { role_id: staffMember.role_id }),
-              ...(staffMember.avatar_url !== undefined && { avatar_url: staffMember.avatar_url }),
-              ...(staffMember.salary !== undefined && { salary: staffMember.salary }),
-              ...(staffMember.commissionRate !== undefined && { commissionRate: staffMember.commissionRate }),
-              ...(staffMember.paymentType !== undefined && { paymentType: staffMember.paymentType })
             };
+
+            // Add optional properties only if they exist in the data
+            if (staffMember.email !== undefined) staffObject.email = String(staffMember.email);
+            if (staffMember.phone !== undefined) staffObject.phone = String(staffMember.phone);
+            if (staffMember.role_id !== undefined) staffObject.role_id = Number(staffMember.role_id);
+            if (staffMember.avatar_url !== undefined) staffObject.avatar_url = String(staffMember.avatar_url);
+            if (staffMember.salary !== undefined) staffObject.salary = Number(staffMember.salary);
+            if (staffMember.commissionRate !== undefined) staffObject.commissionRate = Number(staffMember.commissionRate);
+            if (staffMember.paymentType !== undefined) staffObject.paymentType = String(staffMember.paymentType);
+            
+            return staffObject;
           });
           
           setStaffMembers(processedStaff);
