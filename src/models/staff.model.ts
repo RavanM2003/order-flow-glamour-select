@@ -16,6 +16,11 @@ export interface Staff extends DefaultStaff {
   availability?: StaffAvailability[];
   services?: number[];
   rating?: number;
+  role_id?: number;
+  salary?: number;
+  commissionRate?: number;
+  paymentType?: string;
+  avatar_url?: string;
 }
 
 export interface StaffAvailability {
