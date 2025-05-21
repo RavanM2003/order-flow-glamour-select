@@ -3,9 +3,9 @@ export interface DefaultStaff {
   name: string;
   position: string;
   specializations: string[];
-  created_at?: string;
-  updated_at?: string;
-  user_id?: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
 }
 
 export interface Staff extends DefaultStaff {
