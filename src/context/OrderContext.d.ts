@@ -14,6 +14,13 @@ export interface CustomerInfo {
   postalCode?: string;
   country?: string;
   notes?: string;
+  // Additional fields needed by CustomerInfo.tsx
+  name?: string;
+  email?: string;
+  phone?: string;
+  date?: string;
+  time?: string;
+  gender?: string;
 }
 
 export interface OrderContextType {

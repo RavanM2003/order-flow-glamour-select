@@ -11,6 +11,7 @@ import { CalendarIcon, Clock, UserCircle } from "lucide-react";
 import { BookingMode } from "./CheckoutFlow";
 import { useCustomers } from "@/hooks/use-customers";
 import { toast } from "@/components/ui/use-toast";
+import { Customer } from "@/models/customer.model";
 
 interface CustomerInfoProps {
   bookingMode?: BookingMode;
@@ -74,12 +75,19 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
       }
       
       // Update customer in order context
-      setCustomer({
+      // Create a valid Customer object with all required fields
+      const customerObj: Customer = {
+        id: orderState.customer.id || "",
         name: formData.name,
         email: formData.email,
         phone: formData.phone,
-        gender: formData.gender
-      });
+        gender: formData.gender,
+        lastVisit: orderState.customer.lastVisit || "",
+        totalSpent: orderState.customer.totalSpent || 0
+      };
+      
+      // Update customer in order context
+      setCustomer(customerObj);
       
       // Update customer info in order context
       updateCustomerInfo(formData);
@@ -94,7 +102,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
         variant: "destructive",
       });
     }
-  }, [formData, bookingMode, createCustomer, setCustomer, updateCustomerInfo, goToStep]);
+  }, [formData, bookingMode, createCustomer, setCustomer, updateCustomerInfo, goToStep, orderState.customer]);
 
   // Calculate min and max date (today + 7 days) for date picker
   const today = new Date();

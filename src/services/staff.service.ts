@@ -313,15 +313,23 @@ export class StaffService extends ApiService {
         // Update the staff member with proper type handling
         const existingStaff = mockStaff[index] || {};
         
+        // Safely access properties with proper type checking
+        const existingId = typeof existingStaff.id === 'number' ? existingStaff.id : 0;
+        const existingName = typeof existingStaff.name === 'string' ? existingStaff.name : `Staff #${existingId}`;
+        const existingPosition = typeof existingStaff.position === 'string' ? existingStaff.position : 'Staff Member';
+        const existingSpecializations = Array.isArray(existingStaff.specializations) ? existingStaff.specializations : [];
+        const existingCreatedAt = typeof existingStaff.created_at === 'string' ? existingStaff.created_at : new Date().toISOString();
+        const existingUserId = typeof existingStaff.user_id === 'string' ? existingStaff.user_id : '';
+        
         // Create a valid Staff object with updated fields
         const updatedStaff: Staff = { 
-          id: Number(existingStaff.id || 0),
-          name: data.name || String(existingStaff.name || `Staff #${existingStaff.id || 0}`),
-          position: data.position || String(existingStaff.position || 'Staff Member'),
-          specializations: (data.specializations || (Array.isArray(existingStaff.specializations) ? existingStaff.specializations : [])).map(String),
+          id: Number(existingId),
+          name: data.name || existingName,
+          position: data.position || existingPosition,
+          specializations: (data.specializations || existingSpecializations).map(String),
           updated_at: new Date().toISOString(),
-          created_at: String(existingStaff.created_at || new Date().toISOString()),
-          user_id: String(existingStaff.user_id || ''),
+          created_at: existingCreatedAt,
+          user_id: existingUserId,
         };
         
         // Handle optional properties with type checks
