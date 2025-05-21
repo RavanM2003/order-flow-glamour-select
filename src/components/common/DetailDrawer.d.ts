@@ -1,5 +1,6 @@
 
 import { ReactNode } from "react";
+import { Customer } from "@/models/customer.model";
 
 export interface DetailDrawerProps {
   open: boolean;
@@ -7,7 +8,7 @@ export interface DetailDrawerProps {
   title: string;
   children: ReactNode;
   className?: string;
-  initialCustomer?: any; // Support for CustomersTab.tsx
+  initialCustomer?: Customer; // Add support for CustomersTab.tsx
   position?: 'left' | 'right';
   showCloseButton?: boolean;
   description?: string;
