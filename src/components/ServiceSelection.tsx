@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -234,7 +233,7 @@ const ServiceSelection = () => {
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-purple-200 rounded-full flex items-center justify-center">
-                      {staff.name?.charAt(0).toUpperCase() || "S"}
+                      {staff.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
                       <h3 className="font-semibold">{staff.name}</h3>
