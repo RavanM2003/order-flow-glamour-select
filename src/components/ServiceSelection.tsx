@@ -112,14 +112,22 @@ const ServiceSelection = () => {
             // Start with the required properties
             const staff: Staff = {
               id: staffMember.id,
-              name: staffMember.id ? `Staff #${staffMember.id}` : `Staff #${staffMember.id}`,
+              name: staffMember.name || `Staff #${staffMember.id}`,
               position: staffMember.position || 'Staff Member',
               specializations: Array.isArray(staffMember.specializations) 
                 ? staffMember.specializations.map(String)
                 : [],
               created_at: staffMember.created_at || new Date().toISOString(),
               updated_at: staffMember.updated_at || new Date().toISOString(),
-              user_id: staffMember.user_id || ''
+              user_id: staffMember.user_id || '',
+              // Optional properties
+              email: staffMember.email,
+              phone: staffMember.phone,
+              role_id: staffMember.role_id,
+              avatar_url: staffMember.avatar_url,
+              salary: staffMember.salary,
+              commissionRate: staffMember.commissionRate,
+              paymentType: staffMember.paymentType
             };
             
             return staff;

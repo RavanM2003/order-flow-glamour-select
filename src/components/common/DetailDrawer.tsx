@@ -28,7 +28,7 @@ const DetailDrawer: React.FC<DetailDrawerProps> = ({
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={() => onOpenChange(false)}
+              onClick={() => onOpenChange && onOpenChange(false)}
               className="h-8 w-8 rounded-full"
             >
               <X className="h-4 w-4" />
