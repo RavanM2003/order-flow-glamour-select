@@ -28,18 +28,12 @@ const Booking = () => {
               onValueChange={(value) => setBookingMode(value as BookingMode)}
               className="w-full"
             >
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-1">
                 <TabsTrigger value="customer">{t('booking.customerBooking')}</TabsTrigger>
-                <TabsTrigger value="staff">{t('booking.staffBooking')}</TabsTrigger>
               </TabsList>
               <TabsContent value="customer">
                 <div className="p-4 bg-muted rounded-lg mb-6">
                   <p className="text-sm">{t('booking.customerBookingDescription')}</p>
-                </div>
-              </TabsContent>
-              <TabsContent value="staff">
-                <div className="p-4 bg-muted rounded-lg mb-6">
-                  <p className="text-sm">{t('booking.staffBookingDescription')}</p>
                 </div>
               </TabsContent>
             </Tabs>
