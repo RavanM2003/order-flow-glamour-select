@@ -1,3 +1,4 @@
+
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours, DefaultStaff } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -313,7 +314,7 @@ export class StaffService extends ApiService {
         // Find the existing staff or create a default object
         const existingStaff = mockStaff[index] || {};
         
-        // Safely type the existing staff object
+        // Safely cast the existing staff object with type checking
         const typedExistingStaff = existingStaff as Partial<Staff>;
         
         // Create a valid Staff object with updated fields
