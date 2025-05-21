@@ -1,10 +1,9 @@
-
-import React, { useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Customer } from '@/models/customer.model';
+import React, { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Customer } from "@/models/customer.model";
 
 interface CustomerInfoProps {
   initialData?: {
@@ -22,6 +21,7 @@ interface CustomerInfoProps {
   onCancel?: () => void;
   selectedCustomer?: Customer | null;
   disabled?: boolean;
+  bookingMode?: "customer" | "staff";
 }
 
 const CustomerInfo: React.FC<CustomerInfoProps> = ({
@@ -30,18 +30,25 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
   onCancel,
   selectedCustomer,
   disabled = false,
+  bookingMode,
 }) => {
-  const [customerName, setCustomerName] = useState(initialData.customerName || '');
-  const [customerPhone, setCustomerPhone] = useState(initialData.customerPhone || '');
-  const [customerEmail, setCustomerEmail] = useState(initialData.customerEmail || '');
-  const [notes, setNotes] = useState(initialData.notes || '');
+  const [customerName, setCustomerName] = useState(
+    initialData.customerName || ""
+  );
+  const [customerPhone, setCustomerPhone] = useState(
+    initialData.customerPhone || ""
+  );
+  const [customerEmail, setCustomerEmail] = useState(
+    initialData.customerEmail || ""
+  );
+  const [notes, setNotes] = useState(initialData.notes || "");
 
   // Update form when selectedCustomer changes
   useEffect(() => {
     if (selectedCustomer) {
-      setCustomerName(selectedCustomer.name || '');
-      setCustomerPhone(selectedCustomer.phone || '');
-      setCustomerEmail(selectedCustomer.email || '');
+      setCustomerName(selectedCustomer.name || "");
+      setCustomerPhone(selectedCustomer.phone || "");
+      setCustomerEmail(selectedCustomer.email || "");
     }
   }, [selectedCustomer]);
 
