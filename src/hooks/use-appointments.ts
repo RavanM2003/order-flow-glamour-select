@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useApi } from './use-api';
 import { appointmentService } from '@/services';
 import { Appointment, AppointmentFormData, AppointmentStatus } from '@/models/appointment.model';
@@ -8,8 +8,12 @@ import { toast } from '@/components/ui/use-toast';
 export function useAppointments() {
   const api = useApi<Appointment[]>();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const fetchedRef = useRef(false);
   
-  const fetchAppointments = useCallback(async () => {
+  const fetchAppointments = useCallback(async (forceRefresh = false) => {
+    // Skip fetching if we've already fetched and no force refresh is requested
+    if (fetchedRef.current && !forceRefresh) return;
+    
     const data = await api.execute(
       () => appointmentService.getAll(),
       {
@@ -20,6 +24,7 @@ export function useAppointments() {
     
     if (data) {
       setAppointments(data);
+      fetchedRef.current = true;
     }
   }, [api]);
   
@@ -40,7 +45,7 @@ export function useAppointments() {
         successMessage: 'Appointment created successfully',
         errorPrefix: 'Failed to create appointment',
         onSuccess: () => {
-          fetchAppointments();
+          fetchAppointments(true);
         }
       }
     );
@@ -56,7 +61,7 @@ export function useAppointments() {
         successMessage: 'Appointment updated successfully',
         errorPrefix: 'Failed to update appointment',
         onSuccess: () => {
-          fetchAppointments();
+          fetchAppointments(true);
         }
       }
     );
@@ -72,7 +77,7 @@ export function useAppointments() {
         successMessage: 'Appointment confirmed successfully',
         errorPrefix: 'Failed to confirm appointment',
         onSuccess: () => {
-          fetchAppointments();
+          fetchAppointments(true);
           // Create a cash entry for this appointment - this would typically be done by the backend
           toast({
             title: "Payment Pending",
@@ -93,7 +98,7 @@ export function useAppointments() {
         successMessage: 'Appointment rejected',
         errorPrefix: 'Failed to reject appointment',
         onSuccess: () => {
-          fetchAppointments();
+          fetchAppointments(true);
         }
       }
     );
@@ -109,7 +114,7 @@ export function useAppointments() {
         successMessage: 'Appointment marked as completed',
         errorPrefix: 'Failed to complete appointment',
         onSuccess: () => {
-          fetchAppointments();
+          fetchAppointments(true);
         }
       }
     );
@@ -125,7 +130,7 @@ export function useAppointments() {
         successMessage: 'Appointment marked as paid',
         errorPrefix: 'Failed to mark appointment as paid',
         onSuccess: () => {
-          fetchAppointments();
+          fetchAppointments(true);
         }
       }
     );

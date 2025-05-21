@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useApi } from './use-api';
 import { customerService } from '@/services';
 import { Customer, CustomerFormData } from '@/models/customer.model';
@@ -7,8 +7,12 @@ import { Customer, CustomerFormData } from '@/models/customer.model';
 export function useCustomers() {
   const api = useApi<Customer[]>();
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const fetchedRef = useRef(false);
   
-  const fetchCustomers = useCallback(async () => {
+  const fetchCustomers = useCallback(async (forceRefresh = false) => {
+    // Skip fetching if we've already fetched and no force refresh is requested
+    if (fetchedRef.current && !forceRefresh) return;
+    
     const data = await api.execute(
       () => customerService.getAll(),
       {
@@ -19,6 +23,7 @@ export function useCustomers() {
     
     if (data) {
       setCustomers(data);
+      fetchedRef.current = true;
     }
   }, [api]);
   
@@ -39,7 +44,7 @@ export function useCustomers() {
         successMessage: 'Customer created successfully',
         errorPrefix: 'Failed to create customer',
         onSuccess: () => {
-          fetchCustomers();
+          fetchCustomers(true);
         }
       }
     );
@@ -55,7 +60,7 @@ export function useCustomers() {
         successMessage: 'Customer updated successfully',
         errorPrefix: 'Failed to update customer',
         onSuccess: () => {
-          fetchCustomers();
+          fetchCustomers(true);
         }
       }
     );

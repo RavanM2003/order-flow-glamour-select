@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,12 +25,13 @@ import CheckoutFlow from "@/components/CheckoutFlow";
 import { OrderProvider } from "@/context/OrderContext";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { API } from "@/lib/api";
 import { useToast } from "@/components/ui/use-toast";
 import { Customer } from "@/models/customer.model";
+import { useCustomers } from "@/hooks/use-customers";
 
 const CustomersTab = () => {
   const { toast } = useToast();
+  const { customers, isLoading, fetchCustomers } = useCustomers();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [viewCustomer, setViewCustomer] = useState<Customer | null>(null);
@@ -40,8 +40,6 @@ const CustomersTab = () => {
   const [addAppointmentOpen, setAddAppointmentOpen] = useState(false);
   const [selectedCustomerForAppointment, setSelectedCustomerForAppointment] =
     useState<Customer | null>(null);
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
   const pageSize = 10;
 
   // New customer form state
@@ -51,27 +49,6 @@ const CustomersTab = () => {
     phone: "",
     gender: "female" as "female" | "male" | "other",
   });
-
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        setLoading(true);
-        const { data } = await API.customers.list();
-        setCustomers(data || []);
-      } catch (error) {
-        console.error("Failed to load customers:", error);
-        toast({
-          title: "Error loading customers",
-          description: "Please try again later",
-          variant: "destructive",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCustomers();
-  }, [toast]);
 
   // Filter customers based on search term
   const filteredCustomers = customers.filter(
@@ -105,20 +82,21 @@ const CustomersTab = () => {
     }
 
     try {
-      const { data } = await API.customers.create(newCustomer);
-      if (data) {
-        setCustomers([data as Customer, ...customers]);
+      // Use the useCustomers hook instead of direct API call
+      const result = await useCustomers().createCustomer(newCustomer);
+      
+      if (result) {
         setAddCustomerOpen(false);
         setNewCustomer({ name: "", email: "", phone: "", gender: "female" });
+        
+        // Refresh the customers list
+        fetchCustomers(true);
 
-        toast({
-          title: "Customer added",
-          description: `${data.name} has been added successfully`,
-        });
-
-        // Automatically open appointment drawer for the new customer
-        setSelectedCustomerForAppointment(data as Customer);
-        setAddAppointmentOpen(true);
+        // Automatically open appointment drawer for the new customer if we have customer data
+        if (result) {
+          setSelectedCustomerForAppointment(result);
+          setAddAppointmentOpen(true);
+        }
       }
     } catch (error) {
       console.error("Failed to add customer:", error);
@@ -160,7 +138,7 @@ const CustomersTab = () => {
             </div>
           </div>
 
-          {loading ? (
+          {isLoading ? (
             <div className="text-center py-8">Loading customers...</div>
           ) : (
             <div className="border rounded-md overflow-hidden">
