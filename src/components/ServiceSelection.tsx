@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -109,12 +108,11 @@ const ServiceSelection = () => {
         if (data) {
           // Create a valid Staff array with proper type checking
           const processedStaff: Staff[] = data.map(staffMember => {
+            // Create a base staff object with required properties
             const staffObject: Staff = {
               id: staffMember.id,
-              // Handle fields that might be missing in database but required in our model
               name: staffMember.name || `Staff #${staffMember.id}`,
               position: staffMember.position || 'Staff Member',
-              // Convert specializations - could be numbers in DB but strings in model
               specializations: Array.isArray(staffMember.specializations) 
                 ? staffMember.specializations.map(String)
                 : [],
@@ -122,7 +120,7 @@ const ServiceSelection = () => {
               updated_at: staffMember.updated_at || new Date().toISOString(),
               user_id: staffMember.user_id || '',
             };
-
+            
             // Add optional properties only if they exist in the data
             if ('email' in staffMember && staffMember.email !== undefined) 
               staffObject.email = String(staffMember.email);
