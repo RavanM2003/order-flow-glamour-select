@@ -57,6 +57,7 @@ const mockStaffPayments: StaffPayment[] = [
   }
 ];
 
+// Mock data for staff service records
 const mockServiceRecords: StaffServiceRecord[] = [
   {
     id: 1,
