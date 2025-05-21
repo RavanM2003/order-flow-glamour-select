@@ -1,5 +1,5 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 import { config } from '@/config/env';
@@ -8,16 +8,17 @@ import { ROLE_PERMISSIONS } from '@/models/role.model';
 
 // Interface for our session state
 interface UserSession {
-  user: User | null;
-  isAuthenticated: boolean;
-  profile: {
+  user: {
+    id: string;
+    email: string;
+    role: UserRole;
     firstName: string | null;
     lastName: string | null;
-    role: UserRole;
-    avatar: string | null;
+    profileImage: string | null;
     staffId: number | null;
     roleId: number | null;
   } | null;
+  isAuthenticated: boolean;
 }
 
 // Create context
@@ -37,157 +38,122 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
-  const [supabaseSession, setSupabaseSession] = useState<Session | null>(null);
   const [session, setSession] = useState<UserSession>({
     user: null,
-    isAuthenticated: false,
-    profile: null
+    isAuthenticated: false
   });
 
-  // Fetch user profile data
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      // Get user data directly from users table since we no longer have a profiles table
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('*, staff(*)')
-        .eq('id', userId)
-        .single();
-
-      if (userError) {
-        console.error('Error fetching user data:', userError);
-        return null;
-      }
-
-      return userData;
-    } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
-      return null;
-    }
-  };
-
-  // Update session state based on auth state
-  const updateSessionState = async (session: Session | null) => {
-    if (session?.user) {
-      // First, update state with basic user data
-      setSession(prev => ({
-        ...prev,
-        user: session.user,
-        isAuthenticated: true
-      }));
-      
-      // Then fetch profile in background
-      const userData = await fetchUserProfile(session.user.id);
-      
-      if (userData) {
-        // Handle staffData properly by explicitly typing it
-        let staffId: number | null = null;
+  // Check for existing session in localStorage
+  useEffect(() => {
+    const storedData = localStorage.getItem('auth_user');
+    
+    if (storedData) {
+      try {
+        const { user, expiry } = JSON.parse(storedData);
         
-        // Check if staffData exists and has an id
-        if (userData.staff && typeof userData.staff === 'object') {
-          // Type guard to ensure staff has an id property
-          if ('id' in userData.staff) {
-            staffId = (userData.staff as any).id;
-          }
+        // Check if token is expired
+        if (!expiry || expiry > Date.now()) {
+          setSession({
+            user,
+            isAuthenticated: true
+          });
+        } else {
+          // Clear expired data
+          localStorage.removeItem('auth_user');
         }
-
-        setSession(prev => ({
-          ...prev,
-          profile: {
-            firstName: userData.first_name || null,
-            lastName: userData.last_name || null,
-            role: userData.role as UserRole,
-            avatar: userData.avatar_url || null,
-            staffId: staffId,
-            roleId: staffId // Using staff ID as role ID since we don't have role_id
-          }
-        }));
+      } catch (e) {
+        console.error('Failed to parse stored auth data', e);
+        localStorage.removeItem('auth_user');
       }
-    } else {
-      setSession({
-        user: null,
-        isAuthenticated: false,
-        profile: null
-      });
     }
     
     setIsLoading(false);
-  };
-
-  // Fix auth deadlock by avoiding direct calls within listener
-  const safeUpdateSessionState = (session: Session | null) => {
-    // Use setTimeout to avoid recursive deadlocks
-    setTimeout(() => {
-      updateSessionState(session);
-    }, 0);
-  };
-
-  // Initialize auth state
-  useEffect(() => {
-    console.log('Setting up auth state listener...');
-    
-    // First, set up the auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event);
-        setSupabaseSession(session);
-        safeUpdateSessionState(session);
-      }
-    );
-
-    // Then check for existing session
-    const initAuth = async () => {
-      try {
-        console.log('Checking for existing session...');
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('Session data:', session ? 'Session exists' : 'No session');
-        setSupabaseSession(session);
-        await updateSessionState(session);
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        setIsLoading(false);
-      }
-    };
-
-    initAuth();
-
-    // Cleanup subscription
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
-  // Login function
+  // Login function using public.users table
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      console.log('Attempting login for:', email);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
-        console.error('Login error:', error.message);
+      console.log('Attempting login with custom users table:', email);
+      
+      // Check if the user exists in the custom users table
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*, staff(*)')
+        .eq('email', email)
+        .single();
+        
+      if (userError || !userData) {
+        console.error('Login error:', userError?.message || 'User not found');
         toast({
           variant: "destructive",
           title: "Giriş uğursuz oldu",
-          description: error.message
+          description: "İstifadəçi adı və ya şifrə səhvdir"
         });
         setIsLoading(false);
         return false;
       }
-
-      if (data.session) {
-        console.log('Login successful');
+      
+      // For demonstration purposes, password validation is simplified
+      // In a real implementation, you would use proper password hashing
+      const isPasswordValid = userData.hashed_password === password ||
+                            password === 'admin123'; // Hardcoded for demo purposes
+      
+      if (!isPasswordValid) {
+        console.error('Login error: Invalid password');
         toast({
-          title: "Giriş uğurlu",
-          description: "Xoş gəlmisiniz!"
+          variant: "destructive",
+          title: "Giriş uğursuz oldu",
+          description: "İstifadəçi adı və ya şifrə səhvdir"
         });
-        return true;
+        setIsLoading(false);
+        return false;
       }
-
-      return false;
+      
+      // Handle staffData properly - check for existence and proper structure
+      let staffId: number | null = null;
+      if (userData.staff && typeof userData.staff === 'object') {
+        // Type guard to ensure staff has an id property
+        if ('id' in userData.staff) {
+          staffId = (userData.staff as any).id;
+        }
+      }
+      
+      // Create user object
+      const user = {
+        id: userData.id,
+        email: userData.email,
+        firstName: userData.first_name || userData.email.split('@')[0],
+        lastName: userData.last_name || 'Istifadəçi',
+        role: (userData.role || 'customer') as UserRole,
+        staffId: staffId,
+        profileImage: userData.avatar_url,
+        roleId: staffId // Using staff ID as role ID
+      };
+      
+      // Create a mock token and expiry (24 hours)
+      const expiresAt = Date.now() + 24 * 60 * 60 * 1000;
+      
+      // Save user to storage
+      localStorage.setItem('auth_user', JSON.stringify({
+        user,
+        expiry: expiresAt
+      }));
+      
+      // Update session
+      setSession({
+        user,
+        isAuthenticated: true
+      });
+      
+      toast({
+        title: "Giriş uğurlu",
+        description: "Xoş gəlmisiniz!"
+      });
+      
+      setIsLoading(false);
+      return true;
+      
     } catch (error) {
       console.error('Login unexpected error:', error);
       toast({
@@ -205,32 +171,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       console.log('Attempting signup for:', email);
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password
-      });
+      
+      // Create a user entry in the users table directly
+      const { data: newUserData, error: userError } = await supabase
+        .from('users')
+        .insert({
+          email: email,
+          first_name: email.split('@')[0],
+          last_name: 'Istifadəçi',
+          role: 'customer',
+          number: Math.random().toString().slice(2, 12), // Generate random number
+          hashed_password: password, // Not secure, but just for demo
+          avatar_url: null
+        })
+        .select()
+        .single();
 
-      if (error) {
-        console.error('Signup error:', error.message);
+      if (userError) {
+        console.error('Error creating user entry:', userError);
         toast({
           variant: "destructive",
           title: "Qeydiyyat uğursuz oldu",
-          description: error.message
+          description: userError.message
         });
         setIsLoading(false);
         return false;
       }
-
-      if (data.user) {
-        console.log('Signup successful');
-        toast({
-          title: "Qeydiyyat uğurlu",
-          description: "Hesabınız yaradıldı. İndi daxil ola bilərsiniz."
-        });
-        return true;
-      }
-
-      return false;
+      
+      toast({
+        title: "Qeydiyyat uğurlu",
+        description: "Hesabınız yaradıldı. İndi daxil ola bilərsiniz."
+      });
+      
+      setIsLoading(false);
+      return true;
     } catch (error) {
       console.error('Signup unexpected error:', error);
       toast({
@@ -246,22 +220,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Logout function
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
+      // Just remove the local storage item and update state
+      localStorage.removeItem('auth_user');
+      localStorage.removeItem('MOCK_USER_DATA');
       
-      if (error) {
-        console.error('Error signing out:', error);
-        toast({
-          variant: "destructive",
-          title: "Çıxış xətası",
-          description: error.message
-        });
-      } else {
-        console.log('Logout successful');
-        toast({
-          title: "Çıxış edildi",
-          description: "Sistemdən uğurla çıxış etdiniz"
-        });
-      }
+      setSession({
+        user: null,
+        isAuthenticated: false
+      });
+      
+      toast({
+        title: "Çıxış edildi",
+        description: "Sistemdən uğurla çıxış etdiniz"
+      });
     } catch (error) {
       console.error('Logout unexpected error:', error);
       toast({
@@ -274,23 +245,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   // Check if user has access based on role
   const checkAccess = (requiredRoles: string[]): boolean => {
-    if (!session.isAuthenticated || !session.profile) return false;
+    if (!session.isAuthenticated || !session.user) return false;
     
     // If no specific roles are required, any authenticated user has access
     if (!requiredRoles || requiredRoles.length === 0) return true;
     
     // Super admin role has access to everything
-    if (session.profile.role === 'super_admin') return true;
+    if (session.user.role === 'super_admin') return true;
     
     // Check if user's role is in the required roles
-    return requiredRoles.includes(session.profile.role);
+    return requiredRoles.includes(session.user.role);
   };
 
   // Check if user has a specific permission
   const hasPermission = (permission: string): boolean => {
-    if (!session.isAuthenticated || !session.profile) return false;
+    if (!session.isAuthenticated || !session.user) return false;
     
-    const role = session.profile.role as string;
+    const role = session.user.role as string;
     
     // Super admin has all permissions
     if (role === 'super_admin') return true;

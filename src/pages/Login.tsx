@@ -48,6 +48,7 @@ const Login = () => {
         return;
       }
       
+      // Use our custom login method that uses public.users table
       const success = await login(loginEmail, loginPassword);
       
       if (success) {
@@ -88,6 +89,7 @@ const Login = () => {
         return;
       }
       
+      // Use our custom signup method that creates a user in public.users table
       const success = await signup(signupEmail, signupPassword);
       
       if (success) {
