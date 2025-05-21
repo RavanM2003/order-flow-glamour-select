@@ -1,3 +1,4 @@
+
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -69,7 +70,8 @@ const mockServiceRecords: StaffServiceRecord[] = [
     created_at: new Date().toISOString(),
     price: 250,
     amount: 250,
-    commission: 25
+    commission: 25,
+    payment_status: 'paid'
   },
   {
     id: 2,
@@ -82,7 +84,8 @@ const mockServiceRecords: StaffServiceRecord[] = [
     created_at: new Date().toISOString(),
     price: 300,
     amount: 300,
-    commission: 30
+    commission: 30,
+    payment_status: 'paid'
   },
   {
     id: 3,
@@ -95,7 +98,8 @@ const mockServiceRecords: StaffServiceRecord[] = [
     created_at: new Date().toISOString(),
     price: 150,
     amount: 150,
-    commission: 15
+    commission: 15,
+    payment_status: 'pending'
   }
 ];
 

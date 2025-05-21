@@ -109,9 +109,10 @@ const ServiceSelection = () => {
         if (data) {
           // Create valid staff objects with proper type checking
           const processedStaff: Staff[] = data.map(staffMember => {
+            // Start with the required properties
             const staff: Staff = {
               id: staffMember.id,
-              name: staffMember.user_id ? `Staff #${staffMember.id}` : `Staff #${staffMember.id}`,
+              name: staffMember.name || `Staff #${staffMember.id}`,
               position: staffMember.position || 'Staff Member',
               specializations: Array.isArray(staffMember.specializations) 
                 ? staffMember.specializations.map(String)
@@ -121,7 +122,7 @@ const ServiceSelection = () => {
               user_id: staffMember.user_id || ''
             };
             
-            // Add optional properties if they exist in the database response
+            // Add optional properties if they exist
             if (staffMember.email !== undefined) staff.email = String(staffMember.email);
             if (staffMember.phone !== undefined) staff.phone = String(staffMember.phone);
             if (staffMember.role_id !== undefined) staff.role_id = Number(staffMember.role_id);
