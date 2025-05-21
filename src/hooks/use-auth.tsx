@@ -18,6 +18,12 @@ interface UserSession {
     staffId: number | null;
     roleId: number | null;
   } | null;
+  profile: {
+    firstName: string | null;
+    lastName: string | null;
+    role: UserRole;
+    profileImage: string | null;
+  } | null;
   isAuthenticated: boolean;
 }
 
@@ -40,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [session, setSession] = useState<UserSession>({
     user: null,
+    profile: null,
     isAuthenticated: false
   });
 
@@ -55,6 +62,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!expiry || expiry > Date.now()) {
           setSession({
             user,
+            profile: {
+              firstName: user.firstName,
+              lastName: user.lastName,
+              role: user.role,
+              profileImage: user.profileImage
+            },
             isAuthenticated: true
           });
         } else {
@@ -143,6 +156,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Update session
       setSession({
         user,
+        profile: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          profileImage: user.profileImage
+        },
         isAuthenticated: true
       });
       
@@ -226,6 +245,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       setSession({
         user: null,
+        profile: null,
         isAuthenticated: false
       });
       
