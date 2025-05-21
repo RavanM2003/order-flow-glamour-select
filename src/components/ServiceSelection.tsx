@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -122,14 +123,13 @@ const ServiceSelection = () => {
               created_at: staffMember.created_at || new Date().toISOString(),
               updated_at: staffMember.updated_at || new Date().toISOString(),
               user_id: staffMember.user_id || '',
-              // Add optional properties if they exist in the data
-              ...(staffMember.email ? { email: staffMember.email } : {}),
-              ...(staffMember.phone ? { phone: staffMember.phone } : {}),
-              ...(staffMember.role_id ? { role_id: staffMember.role_id } : {}),
-              ...(staffMember.avatar_url ? { avatar_url: staffMember.avatar_url } : {}),
-              ...(staffMember.salary ? { salary: staffMember.salary } : {}),
-              ...(staffMember.commissionRate ? { commissionRate: staffMember.commissionRate } : {}),
-              ...(staffMember.paymentType ? { paymentType: staffMember.paymentType } : {})
+              ...(staffMember.email !== undefined ? { email: String(staffMember.email) } : {}),
+              ...(staffMember.phone !== undefined ? { phone: String(staffMember.phone) } : {}),
+              ...(staffMember.role_id !== undefined ? { role_id: Number(staffMember.role_id) } : {}),
+              ...(staffMember.avatar_url !== undefined ? { avatar_url: String(staffMember.avatar_url) } : {}),
+              ...(staffMember.salary !== undefined ? { salary: Number(staffMember.salary) } : {}),
+              ...(staffMember.commissionRate !== undefined ? { commissionRate: Number(staffMember.commissionRate) } : {}),
+              ...(staffMember.paymentType !== undefined ? { paymentType: String(staffMember.paymentType) } : {})
             };
           });
           
