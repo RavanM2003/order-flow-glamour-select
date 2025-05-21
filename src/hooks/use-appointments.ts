@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useApi } from './use-api';
 import { appointmentService } from '@/services';
@@ -13,12 +12,14 @@ export function useAppointments() {
   
   const fetchAppointments = useCallback(async (forceRefresh = false) => {
     // Skip fetching if we've already fetched and no force refresh is requested
-    if (fetchedRef.current && !forceRefresh) return;
+    if (fetchedRef.current && !forceRefresh) return appointments;
     
     // If we already have a fetch in progress, return that promise
     if (fetchPromiseRef.current && !forceRefresh) {
       return fetchPromiseRef.current;
     }
+    
+    console.log('Fetching appointments...');
     
     // Start a new fetch and store the promise
     fetchPromiseRef.current = api.execute(
@@ -38,11 +39,21 @@ export function useAppointments() {
     });
     
     return fetchPromiseRef.current;
-  }, [api]);
+  }, [api, appointments]);
   
+  // Only run this effect once on mount
   useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
+    const doFetch = async () => {
+      if (!fetchedRef.current && !fetchPromiseRef.current) {
+        await fetchAppointments();
+      }
+    };
+    
+    doFetch();
+    // Intentionally not including fetchAppointments in the dependency array
+    // to prevent useEffect from running multiple times
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   const getAppointmentsByCustomer = useCallback(async (customerId: number | string) => {
     const response = await appointmentService.getByCustomerId(customerId);
