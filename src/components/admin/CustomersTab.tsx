@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -31,7 +32,7 @@ import { useCustomers } from "@/hooks/use-customers";
 
 const CustomersTab = () => {
   const { toast } = useToast();
-  const { customers, isLoading, fetchCustomers } = useCustomers();
+  const { customers, isLoading, fetchCustomers, createCustomer } = useCustomers();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [viewCustomer, setViewCustomer] = useState<Customer | null>(null);
@@ -82,8 +83,8 @@ const CustomersTab = () => {
     }
 
     try {
-      // Use the useCustomers hook instead of direct API call
-      const result = await useCustomers().createCustomer(newCustomer);
+      // Use the createCustomer function from the hook instance we already have
+      const result = await createCustomer(newCustomer);
       
       if (result) {
         setAddCustomerOpen(false);

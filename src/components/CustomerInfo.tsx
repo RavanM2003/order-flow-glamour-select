@@ -22,6 +22,12 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
 }) => {
   const { orderState, setCustomer, updateCustomerInfo, goToStep } = useOrder();
   const { createCustomer } = useCustomers();
+  
+  // Determine if we have an existing customer based on customer data
+  const hasExistingCustomer = !!(
+    orderState.customer?.id || 
+    (orderState.customer?.name && orderState.customer?.phone)
+  );
 
   const [formData, setFormData] = useState({
     name: orderState.customerInfo?.name || orderState.customer.name || "",
@@ -56,7 +62,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
     
     try {
       // First save customer data to database if needed
-      if (bookingMode === "customer") {
+      if (bookingMode === "customer" && !hasExistingCustomer) {
         // Check if customer already exists by phone number
         const customerData = {
           name: formData.name,
@@ -102,7 +108,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
         variant: "destructive",
       });
     }
-  }, [formData, bookingMode, createCustomer, setCustomer, updateCustomerInfo, goToStep, orderState.customer]);
+  }, [formData, bookingMode, createCustomer, setCustomer, updateCustomerInfo, goToStep, orderState.customer, hasExistingCustomer]);
 
   // Calculate min and max date (today + 7 days) for date picker
   const today = new Date();
@@ -115,8 +121,10 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
 
   // For staff mode with existing customer
   const isExistingCustomerInStaffMode: boolean =
-    bookingMode === "staff" &&
-    !!(orderState.customer?.name || orderState.customer?.phone);
+    (bookingMode === "staff" && hasExistingCustomer);
+
+  // Use this variable to determine if customer info fields should be disabled
+  const shouldDisableCustomerFields = isExistingCustomerInStaffMode;
 
   return (
     <div className="mt-6">
@@ -137,8 +145,8 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
                   onChange={handleChange}
                   placeholder="Enter full name"
                   required
-                  disabled={isExistingCustomerInStaffMode}
-                  className={isExistingCustomerInStaffMode ? "bg-gray-100" : ""}
+                  disabled={shouldDisableCustomerFields}
+                  className={shouldDisableCustomerFields ? "bg-gray-100" : ""}
                 />
               </div>
 
@@ -154,7 +162,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
                     <RadioGroupItem
                       value="female"
                       id="gender-female"
-                      disabled={isExistingCustomerInStaffMode}
+                      disabled={shouldDisableCustomerFields}
                     />
                     <Label
                       htmlFor="gender-female"
@@ -168,7 +176,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
                     <RadioGroupItem
                       value="male"
                       id="gender-male"
-                      disabled={isExistingCustomerInStaffMode}
+                      disabled={shouldDisableCustomerFields}
                     />
                     <Label
                       htmlFor="gender-male"
@@ -182,7 +190,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
                     <RadioGroupItem
                       value="other"
                       id="gender-other"
-                      disabled={isExistingCustomerInStaffMode}
+                      disabled={shouldDisableCustomerFields}
                     />
                     <Label
                       htmlFor="gender-other"
@@ -205,11 +213,11 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="your.email@example.com"
-                    disabled={isExistingCustomerInStaffMode}
+                    disabled={shouldDisableCustomerFields}
                     className={
-                      isExistingCustomerInStaffMode ? "bg-gray-100" : ""
+                      shouldDisableCustomerFields ? "bg-gray-100" : ""
                     }
-                    required={!isExistingCustomerInStaffMode}
+                    required={!shouldDisableCustomerFields}
                   />
                 </div>
 
@@ -221,9 +229,9 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="+994 XX XXX XX XX"
-                    disabled={isExistingCustomerInStaffMode}
+                    disabled={shouldDisableCustomerFields}
                     className={
-                      isExistingCustomerInStaffMode ? "bg-gray-100" : ""
+                      shouldDisableCustomerFields ? "bg-gray-100" : ""
                     }
                     required
                   />
@@ -302,4 +310,4 @@ const CustomerInfo: React.FC<CustomerInfoProps> = React.memo(({
   );
 });
 
-export default React.memo(CustomerInfo);
+export default CustomerInfo;

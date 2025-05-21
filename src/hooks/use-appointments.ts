@@ -41,17 +41,13 @@ export function useAppointments() {
     return fetchPromiseRef.current;
   }, [api, appointments]);
   
-  // Only run this effect once on mount
+  // Only fetch on component mount, not on every render
   useEffect(() => {
-    const doFetch = async () => {
-      if (!fetchedRef.current && !fetchPromiseRef.current) {
-        await fetchAppointments();
-      }
-    };
-    
-    doFetch();
-    // Intentionally not including fetchAppointments in the dependency array
-    // to prevent useEffect from running multiple times
+    // Only fetch if we haven't already fetched
+    if (!fetchedRef.current && !fetchPromiseRef.current) {
+      fetchAppointments();
+    }
+    // We intentionally omit fetchAppointments from dependencies
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   

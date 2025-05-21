@@ -8,16 +8,18 @@ export function useCustomers() {
   const api = useApi<Customer[]>();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const fetchedRef = useRef(false);
-  const fetchPromiseRef = useRef<Promise<Customer[] | undefined> | null>(null);
+  const fetchPromiseRef = useRef<Promise<Customer[] | null> | null>(null);
   
   const fetchCustomers = useCallback(async (forceRefresh = false) => {
     // Skip fetching if we've already fetched and no force refresh is requested
-    if (fetchedRef.current && !forceRefresh) return;
+    if (fetchedRef.current && !forceRefresh) return customers;
     
     // If we already have a fetch in progress, return that promise
     if (fetchPromiseRef.current && !forceRefresh) {
       return fetchPromiseRef.current;
     }
+    
+    console.log('Fetching customers...');
     
     // Start a new fetch and store the promise
     fetchPromiseRef.current = api.execute(
@@ -37,11 +39,17 @@ export function useCustomers() {
     });
     
     return fetchPromiseRef.current;
-  }, [api]);
+  }, [api, customers]);
   
+  // Only fetch on component mount, not on every render
   useEffect(() => {
-    fetchCustomers();
-  }, [fetchCustomers]);
+    // Only fetch if we haven't already fetched
+    if (!fetchedRef.current && !fetchPromiseRef.current) {
+      fetchCustomers();
+    }
+    // We intentionally omit fetchCustomers from dependencies 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   
   const getCustomer = useCallback(async (id: number | string) => {
     const response = await customerService.getById(id);
