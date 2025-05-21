@@ -176,13 +176,13 @@ export class StaffService extends ApiService {
           updated_at: s.updated_at || new Date().toISOString(),
           user_id: s.user_id || '',
           // Add optional fields if present
-          ...(s.email !== undefined ? { email: s.email } : {}),
-          ...(s.phone !== undefined ? { phone: s.phone } : {}),
-          ...(s.role_id !== undefined ? { role_id: s.role_id } : {}),
-          ...(s.avatar_url !== undefined ? { avatar_url: s.avatar_url } : {}),
-          ...(s.salary !== undefined ? { salary: s.salary } : {}),
-          ...(s.commissionRate !== undefined ? { commissionRate: s.commissionRate } : {}),
-          ...(s.paymentType !== undefined ? { paymentType: s.paymentType } : {})
+          ...(typeof s.email !== 'undefined' ? { email: String(s.email) } : {}),
+          ...(typeof s.phone !== 'undefined' ? { phone: String(s.phone) } : {}),
+          ...(typeof s.role_id !== 'undefined' ? { role_id: Number(s.role_id) } : {}),
+          ...(typeof s.avatar_url !== 'undefined' ? { avatar_url: String(s.avatar_url) } : {}),
+          ...(typeof s.salary !== 'undefined' ? { salary: Number(s.salary) } : {}),
+          ...(typeof s.commissionRate !== 'undefined' ? { commissionRate: Number(s.commissionRate) } : {}),
+          ...(typeof s.paymentType !== 'undefined' ? { paymentType: String(s.paymentType) } : {})
         };
         return staffMember;
       });
@@ -212,13 +212,13 @@ export class StaffService extends ApiService {
         updated_at: staff.updated_at || new Date().toISOString(),
         user_id: staff.user_id || '',
         // Add optional fields if present
-        ...(staff.email !== undefined ? { email: staff.email } : {}),
-        ...(staff.phone !== undefined ? { phone: staff.phone } : {}),
-        ...(staff.role_id !== undefined ? { role_id: staff.role_id } : {}),
-        ...(staff.avatar_url !== undefined ? { avatar_url: staff.avatar_url } : {}),
-        ...(staff.salary !== undefined ? { salary: staff.salary } : {}),
-        ...(staff.commissionRate !== undefined ? { commissionRate: staff.commissionRate } : {}),
-        ...(staff.paymentType !== undefined ? { paymentType: staff.paymentType } : {})
+        ...(typeof staff.email !== 'undefined' ? { email: String(staff.email) } : {}),
+        ...(typeof staff.phone !== 'undefined' ? { phone: String(staff.phone) } : {}),
+        ...(typeof staff.role_id !== 'undefined' ? { role_id: Number(staff.role_id) } : {}),
+        ...(typeof staff.avatar_url !== 'undefined' ? { avatar_url: String(staff.avatar_url) } : {}),
+        ...(typeof staff.salary !== 'undefined' ? { salary: Number(staff.salary) } : {}),
+        ...(typeof staff.commissionRate !== 'undefined' ? { commissionRate: Number(staff.commissionRate) } : {}),
+        ...(typeof staff.paymentType !== 'undefined' ? { paymentType: String(staff.paymentType) } : {})
       };
       
       return { data: staffMember };

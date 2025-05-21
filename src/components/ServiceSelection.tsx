@@ -112,7 +112,8 @@ const ServiceSelection = () => {
         if (data) {
           // Process staff data with type-safe transformations
           const processedStaff: Staff[] = data.map(staffMember => {
-            // Create a complete Staff object with proper types
+            // Make sure to cast or check properties before using them
+            // and provide default values when necessary
             return {
               id: staffMember.id,
               name: staffMember.user_id ? `Staff #${staffMember.id}` : `Staff #${staffMember.id}`,
@@ -123,13 +124,14 @@ const ServiceSelection = () => {
               created_at: staffMember.created_at || new Date().toISOString(),
               updated_at: staffMember.updated_at || new Date().toISOString(),
               user_id: staffMember.user_id || '',
-              ...(staffMember.email !== undefined ? { email: String(staffMember.email) } : {}),
-              ...(staffMember.phone !== undefined ? { phone: String(staffMember.phone) } : {}),
-              ...(staffMember.role_id !== undefined ? { role_id: Number(staffMember.role_id) } : {}),
-              ...(staffMember.avatar_url !== undefined ? { avatar_url: String(staffMember.avatar_url) } : {}),
-              ...(staffMember.salary !== undefined ? { salary: Number(staffMember.salary) } : {}),
-              ...(staffMember.commissionRate !== undefined ? { commissionRate: Number(staffMember.commissionRate) } : {}),
-              ...(staffMember.paymentType !== undefined ? { paymentType: String(staffMember.paymentType) } : {})
+              // Only add optional properties if they exist
+              ...(typeof staffMember.email !== 'undefined' ? { email: String(staffMember.email) } : {}),
+              ...(typeof staffMember.phone !== 'undefined' ? { phone: String(staffMember.phone) } : {}),
+              ...(typeof staffMember.role_id !== 'undefined' ? { role_id: Number(staffMember.role_id) } : {}),
+              ...(typeof staffMember.avatar_url !== 'undefined' ? { avatar_url: String(staffMember.avatar_url) } : {}),
+              ...(typeof staffMember.salary !== 'undefined' ? { salary: Number(staffMember.salary) } : {}),
+              ...(typeof staffMember.commissionRate !== 'undefined' ? { commissionRate: Number(staffMember.commissionRate) } : {}),
+              ...(typeof staffMember.paymentType !== 'undefined' ? { paymentType: String(staffMember.paymentType) } : {})
             };
           });
           
