@@ -41,6 +41,12 @@ export interface StaffServiceRecord {
   amount: number;
   commission_amount?: number;
   notes?: string;
+  // Additional properties for components
+  customer_name?: string;
+  service_name?: string;
+  price?: number;
+  commission?: number;
+  created_at?: string;
 }
 
 export interface StaffWithDetails extends Staff {
@@ -58,6 +64,12 @@ export interface StaffFormData {
   email?: string;
   phone?: string;
   specializations: string[];
+  salary?: number;
+  commissionRate?: number;
+  paymentType?: string;
+  role_id?: number;
+  avatar_url?: string;
+  user_id?: string;
 }
 
 export interface StaffFilters {
@@ -65,4 +77,13 @@ export interface StaffFilters {
   specialization?: string;
   sortBy?: 'name' | 'position';
   sortOrder?: 'asc' | 'desc';
+}
+
+export interface StaffWorkingHours {
+  id?: number;
+  staff_id: number;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_day_off: boolean;
 }

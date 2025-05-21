@@ -119,18 +119,20 @@ const BookingConfirmation = () => {
           })
           .eq('id', customerId);
       } else {
-        // Create new customer
+        // Create new customer with proper gender typing
+        const genderValue = (customer.gender === 'male' || customer.gender === 'female' || customer.gender === 'other') 
+          ? customer.gender 
+          : 'female'; // Default to female if not a valid value
+
         const { data: newCustomer, error: createError } = await supabase
           .from('customers')
-          .insert([
-            {
-              full_name: customer.name,
-              email: customer.email,
-              phone: customer.phone,
-              gender: customer.gender || 'female',
-              user_id: userId // Link to the user we just created
-            }
-          ])
+          .insert({
+            full_name: customer.name,
+            email: customer.email,
+            phone: customer.phone,
+            gender: genderValue,
+            user_id: userId // Link to the user we just created
+          })
           .select('id')
           .single();
         
@@ -234,9 +236,10 @@ const BookingConfirmation = () => {
   return (
     <div className="space-y-8">
       <div className="bg-purple-50 border border-purple-100 rounded-lg p-6">
-        <h2 className="text-2xl font-bold mb-6 text-purple-800">Təyinatınız</h2>
+        <h2 className="text-3xl font-bold mb-6 text-purple-800">Təyinatınız</h2>
         
         <div className="space-y-6">
+          {/* Customer information */}
           <div>
             <h3 className="font-semibold text-gray-700 mb-2">Müştəri məlumatları</h3>
             <div className="bg-white p-4 rounded border">
@@ -246,6 +249,7 @@ const BookingConfirmation = () => {
             </div>
           </div>
           
+          {/* Appointment time */}
           <div>
             <h3 className="font-semibold text-gray-700 mb-2">Təyinat vaxtı</h3>
             <div className="bg-white p-4 rounded border">
@@ -260,6 +264,7 @@ const BookingConfirmation = () => {
             </div>
           </div>
           
+          {/* Selected service */}
           {selectedService && (
             <div>
               <h3 className="font-semibold text-gray-700 mb-2">Seçilən xidmət</h3>
@@ -271,6 +276,7 @@ const BookingConfirmation = () => {
             </div>
           )}
           
+          {/* Selected staff */}
           {selectedStaff && (
             <div>
               <h3 className="font-semibold text-gray-700 mb-2">Seçilən işçi</h3>
@@ -281,6 +287,7 @@ const BookingConfirmation = () => {
             </div>
           )}
           
+          {/* Selected products */}
           {selectedProducts.length > 0 && (
             <div>
               <h3 className="font-semibold text-gray-700 mb-2">Əlavə məhsullar</h3>
@@ -296,6 +303,7 @@ const BookingConfirmation = () => {
             </div>
           )}
           
+          {/* Total amount */}
           <div>
             <h3 className="font-semibold text-gray-700 mb-2">Ümumi məbləğ</h3>
             <div className="bg-purple-100 p-4 rounded border border-purple-200">
@@ -305,6 +313,7 @@ const BookingConfirmation = () => {
         </div>
       </div>
       
+      {/* Action buttons */}
       <div className="flex justify-between pt-6">
         <Button variant="outline" onClick={() => resetOrder()}>
           Təyinatı ləğv et

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -106,11 +107,9 @@ const ServiceSelection = () => {
         }
         
         if (data) {
-          // Process staff data with type-safe transformations
+          // Create valid staff objects with proper type checking
           const processedStaff: Staff[] = data.map(staffMember => {
-            // Make sure to cast or check properties before using them
-            // and provide default values when necessary
-            return {
+            const staff: Staff = {
               id: staffMember.id,
               name: staffMember.user_id ? `Staff #${staffMember.id}` : `Staff #${staffMember.id}`,
               position: staffMember.position || 'Staff Member',
@@ -119,16 +118,19 @@ const ServiceSelection = () => {
                 : [],
               created_at: staffMember.created_at || new Date().toISOString(),
               updated_at: staffMember.updated_at || new Date().toISOString(),
-              user_id: staffMember.user_id || '',
-              // Only add optional properties if they exist
-              ...(typeof staffMember.email !== 'undefined' ? { email: String(staffMember.email) } : {}),
-              ...(typeof staffMember.phone !== 'undefined' ? { phone: String(staffMember.phone) } : {}),
-              ...(typeof staffMember.role_id !== 'undefined' ? { role_id: Number(staffMember.role_id) } : {}),
-              ...(typeof staffMember.avatar_url !== 'undefined' ? { avatar_url: String(staffMember.avatar_url) } : {}),
-              ...(typeof staffMember.salary !== 'undefined' ? { salary: Number(staffMember.salary) } : {}),
-              ...(typeof staffMember.commissionRate !== 'undefined' ? { commissionRate: Number(staffMember.commissionRate) } : {}),
-              ...(typeof staffMember.paymentType !== 'undefined' ? { paymentType: String(staffMember.paymentType) } : {})
+              user_id: staffMember.user_id || ''
             };
+            
+            // Add optional properties if they exist in the database response
+            if (staffMember.email !== undefined) staff.email = String(staffMember.email);
+            if (staffMember.phone !== undefined) staff.phone = String(staffMember.phone);
+            if (staffMember.role_id !== undefined) staff.role_id = Number(staffMember.role_id);
+            if (staffMember.avatar_url !== undefined) staff.avatar_url = String(staffMember.avatar_url);
+            if (staffMember.salary !== undefined) staff.salary = Number(staffMember.salary);
+            if (staffMember.commissionRate !== undefined) staff.commissionRate = Number(staffMember.commissionRate);
+            if (staffMember.paymentType !== undefined) staff.paymentType = String(staffMember.paymentType);
+            
+            return staff;
           });
           
           setStaffMembers(processedStaff);
