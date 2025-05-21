@@ -109,13 +109,13 @@ const ServiceSelection = () => {
         if (data) {
           // Create a valid Staff array with proper type checking
           const processedStaff: Staff[] = data.map(staffMember => {
-            // Make sure we have a name value
-            const staffName = staffMember.name || 
-              (staffMember.full_name ? staffMember.full_name : `Staff #${staffMember.id}`);
+            // Instead of trying to access name directly, create a name from available data
+            const staffId = staffMember.id ? staffMember.id : 0;
+            const staffName = `Staff #${staffId}`;
             
             // Create a base staff object with required properties
             const staffObject: Staff = {
-              id: staffMember.id,
+              id: staffId,
               name: staffName,
               position: typeof staffMember.position === 'string' ? staffMember.position : 'Staff Member',
               specializations: Array.isArray(staffMember.specializations) 
