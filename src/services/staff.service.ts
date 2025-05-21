@@ -1,3 +1,4 @@
+
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -171,10 +172,10 @@ export class StaffService extends ApiService {
       const staffList = [...mockStaff].map(s => {
         // Create a valid Staff object with all required properties
         const staffMember: Staff = {
-          id: s.id,
-          name: s.name || `Staff #${s.id}`, // Ensure name is set
-          position: s.position || 'Staff Member', // Default position if not set
-          specializations: Array.isArray(s.specializations) ? s.specializations.map(String) : [], // Convert to string[]
+          id: s.id || 0,
+          name: s.name || `Staff #${s.id}`,
+          position: s.position || 'Staff Member',
+          specializations: Array.isArray(s.specializations) ? s.specializations.map(String) : [],
           created_at: s.created_at || new Date().toISOString(),
           updated_at: s.updated_at || new Date().toISOString(),
           user_id: s.user_id || '',
@@ -222,7 +223,7 @@ export class StaffService extends ApiService {
       
       // Ensure all required properties are set
       const staffMember: Staff = {
-        id: staffData.id,
+        id: staffData.id || 0,
         name: staffData.name || `Staff #${staffData.id}`,
         position: staffData.position || 'Staff Member',
         specializations: Array.isArray(staffData.specializations) ? 
@@ -306,7 +307,7 @@ export class StaffService extends ApiService {
         
         // Create a valid Staff object with updated fields
         const updatedStaff: Staff = { 
-          id: existingStaff.id,
+          id: existingStaff.id || 0,
           name: data.name || existingStaff.name || `Staff #${existingStaff.id}`,
           position: data.position || existingStaff.position || 'Staff Member',
           specializations: (data.specializations || existingStaff.specializations || []).map(String),
