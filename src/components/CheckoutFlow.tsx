@@ -20,28 +20,44 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = React.memo(({
   const { currentStep } = orderState;
   const { t } = useLanguage();
 
+  // Determine the title based on the booking mode
+  const getStepTitle = (step: number) => {
+    switch (step) {
+      case 1:
+        return bookingMode === "staff" ? t('booking.staffBooking') : t('booking.customerInfo');
+      case 2:
+        return t('booking.services');
+      case 3:
+        return t('booking.payment');
+      case 4:
+        return t('booking.confirmation');
+      default:
+        return "";
+    }
+  };
+
   return (
     <div>
       <div className="mb-8">
         <div className="flex justify-between items-center">
           <div className={`step ${currentStep >= 1 ? "active" : ""}`}>
             <div className="step-number">1</div>
-            <div className="step-label">{t('booking.customerInfo')}</div>
+            <div className="step-label">{getStepTitle(1)}</div>
           </div>
           <div className="step-connector"></div>
           <div className={`step ${currentStep >= 2 ? "active" : ""}`}>
             <div className="step-number">2</div>
-            <div className="step-label">{t('booking.services')}</div>
+            <div className="step-label">{getStepTitle(2)}</div>
           </div>
           <div className="step-connector"></div>
           <div className={`step ${currentStep >= 3 ? "active" : ""}`}>
             <div className="step-number">3</div>
-            <div className="step-label">{t('booking.payment')}</div>
+            <div className="step-label">{getStepTitle(3)}</div>
           </div>
           <div className="step-connector"></div>
           <div className={`step ${currentStep >= 4 ? "active" : ""}`}>
             <div className="step-number">4</div>
-            <div className="step-label">{t('booking.confirmation')}</div>
+            <div className="step-label">{getStepTitle(4)}</div>
           </div>
         </div>
       </div>
