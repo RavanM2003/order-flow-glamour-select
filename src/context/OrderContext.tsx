@@ -1,63 +1,15 @@
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { Customer } from '@/models/customer.model';
+import { OrderContextType } from './OrderContext.d';
 
-import { createContext, useContext, ReactNode, useState, useEffect, useCallback } from "react";
-import { Service } from "@/models/service.model";
-import { Product } from "@/models/product.model";
-import { Staff } from "@/models/staff.model";
+type OrderProviderProps = {
+  children: ReactNode;
+  initialCustomer?: Customer;
+};
 
-export interface Customer {
-  name: string;
-  email: string;
-  phone: string;
-  gender: string;
-}
+export const OrderContext = createContext<OrderContextType | undefined>(undefined);
 
-export interface CustomerInfo {
-  name: string;
-  email: string;
-  phone: string;
-  gender: string;
-  date: string;
-  time: string;
-  notes: string;
-}
-
-interface OrderContextType {
-  orderState: {
-    currentStep: number;
-    customer: Customer;
-    customerInfo: CustomerInfo | null;
-    selectedService: Service | null;
-    selectedStaff: Staff | null;
-    selectedProducts: Product[];
-    selectedServices: number[];
-    appointmentDate: Date | null;
-    appointmentTime: string | null;
-    totalAmount: number;
-    paymentMethod: string | null;
-    serviceProviders: Array<{serviceId: number, name: string}> | null;
-  };
-  setCustomer: (customer: Customer) => void;
-  updateCustomerInfo: (info: CustomerInfo) => void;
-  setSelectedService: (service: Service | null) => void;
-  setSelectedStaff: (staff: Staff | null) => void;
-  addProduct: (product: Product) => void;
-  removeProduct: (product: Product) => void;
-  setAppointmentDate: (date: Date | null) => void;
-  setAppointmentTime: (time: string | null) => void;
-  setNextStep: () => void;
-  setPrevStep: () => void;
-  goToStep: (step: number) => void;
-  resetOrder: () => void;
-  setPaymentMethod: (method: string) => void;
-  completeOrder: (orderId: string) => void;
-  addServiceProvider: (serviceId: number, staffName: string) => void;
-  selectService: (serviceId: number) => void;
-  unselectService: (serviceId: number) => void;
-}
-
-const OrderContext = createContext<OrderContextType | undefined>(undefined);
-
-export const OrderProvider = ({ children }: { children: ReactNode }) => {
+export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialCustomer }) => {
   const [currentStep, setCurrentStep] = useState(1);
   
   const [customer, setCustomer] = useState<Customer>({
@@ -207,13 +159,17 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
     unselectService,
   };
 
-  return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>;
+  return (
+    <OrderContext.Provider value={value}>
+      {children}
+    </OrderContext.Provider>
+  );
 };
 
 export const useOrder = () => {
   const context = useContext(OrderContext);
   if (context === undefined) {
-    throw new Error("useOrder must be used within an OrderProvider");
+    throw new Error('useOrder must be used within an OrderProvider');
   }
   return context;
 };
