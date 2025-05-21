@@ -109,7 +109,7 @@ const ServiceSelection = () => {
         if (data) {
           // Create a valid Staff array with proper type checking
           const processedStaff: Staff[] = data.map(staffMember => {
-            // Make sure that staffMember.name exists and is a string
+            // Create a proper staff name even if it doesn't exist in the data
             const staffName = typeof staffMember.name === 'string' 
               ? staffMember.name 
               : `Staff #${staffMember.id}`;
