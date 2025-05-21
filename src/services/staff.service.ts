@@ -170,38 +170,41 @@ export class StaffService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 250));
       // Ensure all staff members have required properties
       const staffList = [...mockStaff].map(s => {
+        // Ensure we have a valid object to start with
+        const staffItem = s || {};
+        
         // Create a valid Staff object with all required properties
         const staffMember: Staff = {
-          id: s.id || 0,
-          name: s.name || `Staff #${s.id}`,
-          position: s.position || 'Staff Member',
-          specializations: Array.isArray(s.specializations) ? s.specializations.map(String) : [],
-          created_at: s.created_at || new Date().toISOString(),
-          updated_at: s.updated_at || new Date().toISOString(),
-          user_id: s.user_id || '',
+          id: staffItem.id || 0,
+          name: staffItem.name || `Staff #${staffItem.id || 0}`,
+          position: staffItem.position || 'Staff Member',
+          specializations: Array.isArray(staffItem.specializations) ? staffItem.specializations.map(String) : [],
+          created_at: staffItem.created_at || new Date().toISOString(),
+          updated_at: staffItem.updated_at || new Date().toISOString(),
+          user_id: staffItem.user_id || '',
         };
         
         // Add optional properties only if they exist
-        if ('email' in s && s.email !== undefined) 
-          staffMember.email = String(s.email);
+        if ('email' in staffItem && staffItem.email !== undefined) 
+          staffMember.email = String(staffItem.email);
         
-        if ('phone' in s && s.phone !== undefined) 
-          staffMember.phone = String(s.phone);
+        if ('phone' in staffItem && staffItem.phone !== undefined) 
+          staffMember.phone = String(staffItem.phone);
         
-        if ('role_id' in s && s.role_id !== undefined) 
-          staffMember.role_id = Number(s.role_id);
+        if ('role_id' in staffItem && staffItem.role_id !== undefined) 
+          staffMember.role_id = Number(staffItem.role_id);
         
-        if ('avatar_url' in s && s.avatar_url !== undefined) 
-          staffMember.avatar_url = String(s.avatar_url);
+        if ('avatar_url' in staffItem && staffItem.avatar_url !== undefined) 
+          staffMember.avatar_url = String(staffItem.avatar_url);
         
-        if ('salary' in s && s.salary !== undefined) 
-          staffMember.salary = Number(s.salary);
+        if ('salary' in staffItem && staffItem.salary !== undefined) 
+          staffMember.salary = Number(staffItem.salary);
         
-        if ('commissionRate' in s && s.commissionRate !== undefined) 
-          staffMember.commissionRate = Number(s.commissionRate);
+        if ('commissionRate' in staffItem && staffItem.commissionRate !== undefined) 
+          staffMember.commissionRate = Number(staffItem.commissionRate);
         
-        if ('paymentType' in s && s.paymentType !== undefined) 
-          staffMember.paymentType = String(s.paymentType);
+        if ('paymentType' in staffItem && staffItem.paymentType !== undefined) 
+          staffMember.paymentType = String(staffItem.paymentType);
         
         return staffMember;
       });
@@ -216,15 +219,12 @@ export class StaffService extends ApiService {
   async getById(id: number | string): Promise<ApiResponse<Staff>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 200));
-      const staffData = mockStaff.find(s => s.id === Number(id));
-      if (!staffData) {
-        return { error: 'Staff not found' };
-      }
+      const staffData = mockStaff.find(s => s.id === Number(id)) || {};
       
       // Ensure all required properties are set
       const staffMember: Staff = {
         id: staffData.id || 0,
-        name: staffData.name || `Staff #${staffData.id}`,
+        name: staffData.name || `Staff #${staffData.id || 0}`,
         position: staffData.position || 'Staff Member',
         specializations: Array.isArray(staffData.specializations) ? 
           staffData.specializations.map(String) : [],
@@ -303,12 +303,12 @@ export class StaffService extends ApiService {
       const index = mockStaff.findIndex(s => s.id === Number(id));
       if (index >= 0) {
         // Update the staff member with proper type handling
-        const existingStaff = mockStaff[index];
+        const existingStaff = mockStaff[index] || {};
         
         // Create a valid Staff object with updated fields
         const updatedStaff: Staff = { 
           id: existingStaff.id || 0,
-          name: data.name || existingStaff.name || `Staff #${existingStaff.id}`,
+          name: data.name || existingStaff.name || `Staff #${existingStaff.id || 0}`,
           position: data.position || existingStaff.position || 'Staff Member',
           specializations: (data.specializations || existingStaff.specializations || []).map(String),
           updated_at: new Date().toISOString(),
