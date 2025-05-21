@@ -111,10 +111,10 @@ const ServiceSelection = () => {
           const processedStaff: Staff[] = data.map(staffMember => {
             const staffObject: Staff = {
               id: staffMember.id,
-              // Handle case where name might be undefined
+              // Handle fields that might be missing in database but required in our model
               name: staffMember.name || `Staff #${staffMember.id}`,
               position: staffMember.position || 'Staff Member',
-              // Ensure specializations is always an array of strings
+              // Convert specializations - could be numbers in DB but strings in model
               specializations: Array.isArray(staffMember.specializations) 
                 ? staffMember.specializations.map(String)
                 : [],
@@ -124,13 +124,26 @@ const ServiceSelection = () => {
             };
 
             // Add optional properties only if they exist in the data
-            if (staffMember.email !== undefined) staffObject.email = String(staffMember.email);
-            if (staffMember.phone !== undefined) staffObject.phone = String(staffMember.phone);
-            if (staffMember.role_id !== undefined) staffObject.role_id = Number(staffMember.role_id);
-            if (staffMember.avatar_url !== undefined) staffObject.avatar_url = String(staffMember.avatar_url);
-            if (staffMember.salary !== undefined) staffObject.salary = Number(staffMember.salary);
-            if (staffMember.commissionRate !== undefined) staffObject.commissionRate = Number(staffMember.commissionRate);
-            if (staffMember.paymentType !== undefined) staffObject.paymentType = String(staffMember.paymentType);
+            if ('email' in staffMember && staffMember.email !== undefined) 
+              staffObject.email = String(staffMember.email);
+            
+            if ('phone' in staffMember && staffMember.phone !== undefined) 
+              staffObject.phone = String(staffMember.phone);
+            
+            if ('role_id' in staffMember && staffMember.role_id !== undefined) 
+              staffObject.role_id = Number(staffMember.role_id);
+            
+            if ('avatar_url' in staffMember && staffMember.avatar_url !== undefined) 
+              staffObject.avatar_url = String(staffMember.avatar_url);
+            
+            if ('salary' in staffMember && staffMember.salary !== undefined) 
+              staffObject.salary = Number(staffMember.salary);
+            
+            if ('commissionRate' in staffMember && staffMember.commissionRate !== undefined) 
+              staffObject.commissionRate = Number(staffMember.commissionRate);
+            
+            if ('paymentType' in staffMember && staffMember.paymentType !== undefined) 
+              staffObject.paymentType = String(staffMember.paymentType);
             
             return staffObject;
           });
@@ -167,9 +180,6 @@ const ServiceSelection = () => {
   const handleNext = () => {
     const selectedStaff = orderState.selectedStaff;
     if (selectedService && selectedStaff) {
-      // Save selected staff to order context
-      // You'll need to update your OrderContext to include staff
-      // For now, we'll just move to the next step
       setNextStep();
     } else {
       alert(t('booking.selectServiceAndStaff'));

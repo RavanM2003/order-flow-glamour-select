@@ -1,14 +1,15 @@
 
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
+import { Customer } from "@/models/customer.model";
 
 export interface DetailDrawerProps {
   children: ReactNode;
-  initialCustomer?: any;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   title?: string;
   className?: string;
-  position?: 'left' | 'right';
+  position?: "left" | "right";
   showCloseButton?: boolean;
   description?: string;
+  initialCustomer?: Customer;
 }
