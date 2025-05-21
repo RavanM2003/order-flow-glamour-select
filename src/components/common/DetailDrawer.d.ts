@@ -8,7 +8,7 @@ export interface DetailDrawerProps {
   title: string;
   children: ReactNode;
   className?: string;
-  initialCustomer?: Customer; // Add support for CustomersTab.tsx
+  initialCustomer?: Customer;
   position?: 'left' | 'right';
   showCloseButton?: boolean;
   description?: string;
