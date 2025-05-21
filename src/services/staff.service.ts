@@ -287,8 +287,8 @@ export class StaffService extends ApiService {
               { phone: data.phone || existingStaff.phone } : {}),
           ...(existingStaff.role_id !== undefined || data.role_id !== undefined ? 
               { role_id: data.role_id || existingStaff.role_id } : {}),
-          ...(existingStaff.avatar_url !== undefined ? 
-              { avatar_url: existingStaff.avatar_url } : {}),
+          ...(existingStaff.avatar_url !== undefined || data.avatar_url !== undefined ? 
+              { avatar_url: data.avatar_url || existingStaff.avatar_url } : {}),
           ...(existingStaff.salary !== undefined || data.salary !== undefined ? 
               { salary: data.salary || existingStaff.salary } : {}),
           ...(existingStaff.commissionRate !== undefined || data.commissionRate !== undefined ? 

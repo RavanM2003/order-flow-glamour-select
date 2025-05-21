@@ -122,14 +122,14 @@ const ServiceSelection = () => {
               created_at: staffMember.created_at || new Date().toISOString(),
               updated_at: staffMember.updated_at || new Date().toISOString(),
               user_id: staffMember.user_id || '',
-              // Optional fields with safe access
-              email: staffMember.email,
-              phone: staffMember.phone,
-              role_id: staffMember.role_id,
-              avatar_url: staffMember.avatar_url,
-              salary: staffMember.salary,
-              commissionRate: staffMember.commissionRate,
-              paymentType: staffMember.paymentType
+              // Add optional properties if they exist in the data
+              ...(staffMember.email ? { email: staffMember.email } : {}),
+              ...(staffMember.phone ? { phone: staffMember.phone } : {}),
+              ...(staffMember.role_id ? { role_id: staffMember.role_id } : {}),
+              ...(staffMember.avatar_url ? { avatar_url: staffMember.avatar_url } : {}),
+              ...(staffMember.salary ? { salary: staffMember.salary } : {}),
+              ...(staffMember.commissionRate ? { commissionRate: staffMember.commissionRate } : {}),
+              ...(staffMember.paymentType ? { paymentType: staffMember.paymentType } : {})
             };
           });
           
