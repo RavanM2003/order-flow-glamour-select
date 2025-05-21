@@ -1,6 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { Customer } from '@/models/customer.model';
-import { OrderContextType } from './OrderContext.d';
+import { OrderContextType, CustomerInfo } from './OrderContext.d';
+import { Service } from '@/models/service.model';
+import { Staff } from '@/models/staff.model';
+import { Product } from '@/models/product.model';
 
 type OrderProviderProps = {
   children: ReactNode;
@@ -12,11 +16,14 @@ export const OrderContext = createContext<OrderContextType | undefined>(undefine
 export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialCustomer }) => {
   const [currentStep, setCurrentStep] = useState(1);
   
-  const [customer, setCustomer] = useState<Customer>({
+  const [customer, setCustomer] = useState<Customer>(initialCustomer || {
+    id: "",
     name: "",
     email: "",
     phone: "",
-    gender: "female"
+    gender: "female",
+    lastVisit: "",
+    totalSpent: 0
   });
   
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
@@ -75,11 +82,14 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
 
   const resetOrder = useCallback(() => {
     setCurrentStep(1);
-    setCustomer({
+    setCustomer(initialCustomer || {
+      id: "",
       name: "",
       email: "",
       phone: "",
       gender: "female",
+      lastVisit: "",
+      totalSpent: 0
     });
     setCustomerInfo(null);
     setSelectedService(null);
@@ -91,7 +101,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     setServiceProviders(null);
     setOrderId(null);
     setSelectedServices([]);
-  }, []);
+  }, [initialCustomer]);
 
   const completeOrder = useCallback((id: string) => {
     setOrderId(id);

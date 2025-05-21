@@ -1,4 +1,3 @@
-
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours, DefaultStaff } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -319,7 +318,7 @@ export class StaffService extends ApiService {
           id: Number(existingStaff.id || 0),
           name: data.name || String(existingStaff.name || `Staff #${existingStaff.id || 0}`),
           position: data.position || String(existingStaff.position || 'Staff Member'),
-          specializations: (data.specializations || (existingStaff.specializations as string[] || [])).map(String),
+          specializations: (data.specializations || (Array.isArray(existingStaff.specializations) ? existingStaff.specializations : [])).map(String),
           updated_at: new Date().toISOString(),
           created_at: String(existingStaff.created_at || new Date().toISOString()),
           user_id: String(existingStaff.user_id || ''),
