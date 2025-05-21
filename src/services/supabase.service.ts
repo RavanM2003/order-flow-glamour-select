@@ -264,7 +264,10 @@ class SupabaseService {
   // Customer methods
   getCustomers = async () => {
     try {
-      const { data, error } = await this.supabase.from("customers").select("*");
+      const { data, error } = await this.supabase
+        .from("users")
+        .select("*")
+        .eq("role", "customer");
 
       if (error) throw error;
 
