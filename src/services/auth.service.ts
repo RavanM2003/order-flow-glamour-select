@@ -54,7 +54,9 @@ export class AuthService extends ApiService {
       // Check user in custom users table
       const { data: userData, error: userError } = await supabase
         .from("users")
-        .select("*")
+        .select(
+          "avatar_url,created_at,email,first_name,id,last_name,role,updated_at, staff!staff_user_id_fkey(*)"
+        )
         .eq("email", credentials.email)
         .single();
 
@@ -63,8 +65,19 @@ export class AuthService extends ApiService {
         return { error: "Invalid credentials" };
       }
 
+      // Get hashed password separately for verification
+      const { data: passwordData, error: passwordError } = await supabase
+        .from("users")
+        .select("hashed_password")
+        .eq("email", credentials.email)
+        .single();
+
+      if (passwordError || !passwordData) {
+        return { error: "Invalid credentials" };
+      }
+
       // Simple password check (in production, use proper password hashing)
-      if (userData.hashed_password !== credentials.password) {
+      if (passwordData.hashed_password !== credentials.password) {
         return { error: "Invalid credentials" };
       }
 
@@ -113,7 +126,9 @@ export class AuthService extends ApiService {
       // Check if the user exists in the custom users table
       const { data: userData, error: userError } = await supabase
         .from("users")
-        .select("*, staff(*)")
+        .select(
+          "avatar_url,created_at,email,first_name,id,last_name,role,updated_at, staff!staff_user_id_fkey(*)"
+        )
         .eq("email", credentials.email)
         .single();
 
