@@ -175,7 +175,7 @@ export class StaffService extends ApiService {
           created_at: s.created_at || new Date().toISOString(),
           updated_at: s.updated_at || new Date().toISOString(),
           user_id: s.user_id || '',
-          // Add optional fields with defaults if present
+          // Add optional fields if present
           ...(s.email !== undefined ? { email: s.email } : {}),
           ...(s.phone !== undefined ? { phone: s.phone } : {}),
           ...(s.role_id !== undefined ? { role_id: s.role_id } : {}),
@@ -241,13 +241,14 @@ export class StaffService extends ApiService {
         specializations: data.specializations,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-        user_id: '',
+        user_id: data.user_id || '',
         email: data.email,
         phone: data.phone,
         salary: data.salary,
         commissionRate: data.commissionRate,
         paymentType: data.paymentType,
-        role_id: data.role_id
+        role_id: data.role_id,
+        avatar_url: data.avatar_url
       };
       
       mockStaff.push(newStaff);

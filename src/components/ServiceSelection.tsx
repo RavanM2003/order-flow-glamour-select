@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -123,6 +122,7 @@ const ServiceSelection = () => {
               created_at: staffMember.created_at || new Date().toISOString(),
               updated_at: staffMember.updated_at || new Date().toISOString(),
               user_id: staffMember.user_id || '',
+              // Optional fields with safe access
               email: staffMember.email,
               phone: staffMember.phone,
               role_id: staffMember.role_id,
