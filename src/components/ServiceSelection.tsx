@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -109,20 +108,28 @@ const ServiceSelection = () => {
         if (data) {
           // Create a valid Staff array with proper type checking
           const processedStaff: Staff[] = data.map(staffMember => {
-            // Ensure the name property exists
-            const name = staffMember.name || `Staff #${staffMember.id}`;
+            // Extract name with a type safety check
+            const staffName = typeof staffMember.name === 'string' 
+              ? staffMember.name 
+              : `Staff #${staffMember.id}`;
             
             // Create a base staff object with required properties
             const staffObject: Staff = {
               id: staffMember.id,
-              name: name,
-              position: staffMember.position || 'Staff Member',
+              name: staffName,
+              position: typeof staffMember.position === 'string' ? staffMember.position : 'Staff Member',
               specializations: Array.isArray(staffMember.specializations) 
                 ? staffMember.specializations.map(String)
                 : [],
-              created_at: staffMember.created_at || new Date().toISOString(),
-              updated_at: staffMember.updated_at || new Date().toISOString(),
-              user_id: staffMember.user_id || '',
+              created_at: typeof staffMember.created_at === 'string' 
+                ? staffMember.created_at 
+                : new Date().toISOString(),
+              updated_at: typeof staffMember.updated_at === 'string'
+                ? staffMember.updated_at
+                : new Date().toISOString(),
+              user_id: typeof staffMember.user_id === 'string'
+                ? staffMember.user_id
+                : '',
             };
             
             // Add optional properties only if they exist in the data

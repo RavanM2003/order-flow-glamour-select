@@ -11,5 +11,5 @@ export interface DetailDrawerProps {
   position?: "left" | "right";
   showCloseButton?: boolean;
   description?: string;
-  initialCustomer?: Customer;
+  initialCustomer?: Customer | null;
 }
