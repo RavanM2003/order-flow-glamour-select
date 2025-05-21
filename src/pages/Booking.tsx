@@ -1,15 +1,16 @@
+
 import React, { useState } from "react";
 import { OrderProvider } from "@/context/OrderContext";
 import CheckoutFlow, { BookingMode } from "@/components/CheckoutFlow";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/context/LanguageContext";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 const Booking = () => {
   const { t } = useLanguage();
-  const [bookingMode, setBookingMode] = useState<BookingMode>("customer");
+  const [bookingMode] = useState<BookingMode>("customer");
+  const [isOpen, setIsOpen] = useState(true);
 
   return (
     <div className="min-h-screen bg-background">
@@ -21,9 +22,21 @@ const Booking = () => {
             {t("booking.title")}
           </h1>
 
-          <OrderProvider>
-            <CheckoutFlow bookingMode={bookingMode} />
-          </OrderProvider>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogContent className="sm:max-w-[800px] p-0">
+              <div className="p-6">
+                <OrderProvider>
+                  <CheckoutFlow bookingMode={bookingMode} />
+                </OrderProvider>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <div className="hidden">
+            <OrderProvider>
+              <CheckoutFlow bookingMode={bookingMode} />
+            </OrderProvider>
+          </div>
         </div>
       </main>
 

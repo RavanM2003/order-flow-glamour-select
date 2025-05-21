@@ -20,7 +20,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = React.memo(({
   const { currentStep } = orderState;
   const { t } = useLanguage();
 
-  // Determine the title based on the booking mode
+  // Simplified step titles
   const getStepTitle = (step: number) => {
     switch (step) {
       case 1:
