@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -107,10 +106,10 @@ const ServiceSelection = () => {
         }
         
         if (data) {
-          // Create valid staff objects with proper type checking
+          // Create a valid Staff array with proper type checking
           const processedStaff: Staff[] = data.map(staffMember => {
-            // Start with the required properties
-            const staff: Staff = {
+            // We need to create a proper Staff object from the data
+            return {
               id: staffMember.id,
               name: staffMember.name || `Staff #${staffMember.id}`,
               position: staffMember.position || 'Staff Member',
@@ -120,17 +119,15 @@ const ServiceSelection = () => {
               created_at: staffMember.created_at || new Date().toISOString(),
               updated_at: staffMember.updated_at || new Date().toISOString(),
               user_id: staffMember.user_id || '',
-              // Optional properties
-              email: staffMember.email,
-              phone: staffMember.phone,
-              role_id: staffMember.role_id,
-              avatar_url: staffMember.avatar_url,
-              salary: staffMember.salary,
-              commissionRate: staffMember.commissionRate,
-              paymentType: staffMember.paymentType
+              // Handle optional properties safely
+              ...(staffMember.email !== undefined && { email: staffMember.email }),
+              ...(staffMember.phone !== undefined && { phone: staffMember.phone }),
+              ...(staffMember.role_id !== undefined && { role_id: staffMember.role_id }),
+              ...(staffMember.avatar_url !== undefined && { avatar_url: staffMember.avatar_url }),
+              ...(staffMember.salary !== undefined && { salary: staffMember.salary }),
+              ...(staffMember.commissionRate !== undefined && { commissionRate: staffMember.commissionRate }),
+              ...(staffMember.paymentType !== undefined && { paymentType: staffMember.paymentType })
             };
-            
-            return staff;
           });
           
           setStaffMembers(processedStaff);
