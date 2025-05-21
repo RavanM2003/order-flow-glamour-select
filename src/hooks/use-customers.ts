@@ -65,7 +65,9 @@ export function useCustomers() {
           })
           .then(async (data) => {
             if (data && data.length > 0) {
-              const transformedData = data.map(transformCustomer);
+              // Need to cast to DatabaseCustomer[] to make TypeScript happy
+              const dbCustomers = data as unknown as DatabaseCustomer[];
+              const transformedData = dbCustomers.map(transformCustomer);
               setCustomers(transformedData);
               fetchedRef.current = true;
               return transformedData;

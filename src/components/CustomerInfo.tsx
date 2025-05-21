@@ -45,7 +45,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
     initialData.customerEmail || ""
   );
   const [notes, setNotes] = useState(initialData.notes || "");
-  const { orderState, updateOrderDetails } = useOrder();
+  const { orderState, setNextStep, setCustomer } = useOrder();
 
   // Update form when selectedCustomer changes
   useEffect(() => {
@@ -69,17 +69,16 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
       onSubmit(data);
     } else {
       // If no onSubmit prop is provided, use the OrderContext
-      updateOrderDetails({
-        currentStep: 2,
-        customer: {
-          id: selectedCustomer?.id || "",
-          name: customerName,
-          phone: customerPhone,
-          email: customerEmail,
-          gender: selectedCustomer?.gender || "other",
-        },
-        notes
+      setCustomer({
+        id: selectedCustomer?.id || "",
+        name: customerName,
+        phone: customerPhone,
+        email: customerEmail,
+        gender: selectedCustomer?.gender || "other",
+        lastVisit: selectedCustomer?.lastVisit || "",
+        totalSpent: selectedCustomer?.totalSpent || 0
       });
+      setNextStep(); // Move to next step in checkout flow
     }
   };
 

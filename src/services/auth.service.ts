@@ -1,4 +1,3 @@
-
 import {
   User,
   UserCredentials,
@@ -369,7 +368,7 @@ export class AuthService extends ApiService {
           first_name: userData.firstName || "",
           last_name: userData.lastName || "",
           role: userData.role || "customer",
-          number: Math.random().toString().slice(2, 12), // Generate random number
+          phone: Math.random().toString().slice(2, 12), // Generate random phone number
           hashed_password: userData.password, // Not secure, but just for demo
           avatar_url: null,
         })
@@ -421,7 +420,7 @@ export class AuthService extends ApiService {
           first_name: customerData.firstName || "",
           last_name: customerData.lastName || "",
           role: "customer",
-          number: customerData.phone || Math.random().toString().slice(2, 12),
+          phone: customerData.phone || Math.random().toString().slice(2, 12),
           hashed_password: "default-password", // Not secure, but just for demo
           avatar_url: null,
         })
@@ -433,57 +432,70 @@ export class AuthService extends ApiService {
         return { error: userError.message };
       }
 
-      // Then create customer record
-      const customer = {
-        user_id: userData.id,
-        full_name: `${customerData.firstName || ""} ${
-          customerData.lastName || ""
-        }`.trim(),
-        email: customerData.email,
-        phone: customerData.phone,
+      // Then create customer fields in the users table since there's no separate customers table
+      const customerUpdate = {
+        full_name: `${customerData.firstName || ""} ${customerData.lastName || ""}`.trim(),
         gender: (customerData.gender || "other") as "male" | "female" | "other",
         birth_date: customerData.birthDate || null,
         note: customerData.note || "",
       };
 
-      // Create the customer
-      const { data: customerResult, error: customerError } = await supabase
-        .from("customers")
-        .insert(customer)
+      // Update the user with additional customer fields
+      const { error: updateError } = await supabase
+        .from("users")
+        .update(customerUpdate)
+        .eq("id", userData.id);
+
+      if (updateError) {
+        return { error: updateError.message };
+      }
+
+      // Get the updated user data
+      const { data: updatedUser, error: fetchError } = await supabase
+        .from("users")
         .select()
+        .eq("id", userData.id)
         .single();
 
-      if (customerError) {
-        return { error: customerError.message };
+      if (fetchError || !updatedUser) {
+        return { error: fetchError?.message || "Failed to fetch updated customer data" };
       }
 
       // Create user object
       const user: User = {
-        id: userData.id,
-        email: userData.email,
-        firstName: userData.first_name || "",
-        lastName: userData.last_name || "",
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.first_name || "",
+        lastName: updatedUser.last_name || "",
         role: "customer",
         staffId: null,
-        profileImage: userData.avatar_url || null,
+        profileImage: updatedUser.avatar_url || null,
         lastLogin: new Date().toISOString(),
         isActive: true,
         roleId: null,
       };
 
+      // Create customer object from user data
+      const customer: Customer = {
+        id: updatedUser.id,
+        name: updatedUser.full_name || `${updatedUser.first_name || ""} ${updatedUser.last_name || ""}`.trim(),
+        email: updatedUser.email,
+        phone: updatedUser.phone || "",
+        gender: updatedUser.gender || "other",
+        lastVisit: updatedUser.created_at || new Date().toISOString(),
+        totalSpent: 0,
+      };
+
       return {
         data: {
           user,
-          customer: customerResult as Customer,
+          customer,
         },
         message: "Müştəri hesabı uğurla yaradıldı",
       };
     } catch (error) {
       return {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to create customer with user account",
+        error: error instanceof Error ? error.message : "Failed to create customer with user account",
       };
     }
   }
