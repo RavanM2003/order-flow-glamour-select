@@ -7,5 +7,8 @@ export interface DetailDrawerProps {
   title: string;
   children: ReactNode;
   className?: string;
-  initialCustomer?: any; // Add this property to fix the CustomersTab.tsx error
+  initialCustomer?: any; // Support for CustomersTab.tsx
+  position?: 'left' | 'right';
+  showCloseButton?: boolean;
+  description?: string;
 }

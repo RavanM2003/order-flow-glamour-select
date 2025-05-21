@@ -316,7 +316,7 @@ export class StaffService extends ApiService {
         
         // Create a valid Staff object with updated fields
         const updatedStaff: Staff = { 
-          id: existingStaff.id || 0,
+          id: Number(existingStaff.id) || 0,
           name: data.name || existingStaff.name || `Staff #${existingStaff.id || 0}`,
           position: data.position || existingStaff.position || 'Staff Member',
           specializations: (data.specializations || existingStaff.specializations || []).map(String),
@@ -326,25 +326,25 @@ export class StaffService extends ApiService {
         };
         
         // Handle optional properties
-        if (existingStaff && ('email' in existingStaff || data.email !== undefined)) 
+        if ('email' in existingStaff || data.email !== undefined) 
           updatedStaff.email = data.email || existingStaff.email;
         
-        if (existingStaff && ('phone' in existingStaff || data.phone !== undefined)) 
+        if ('phone' in existingStaff || data.phone !== undefined) 
           updatedStaff.phone = data.phone || existingStaff.phone;
         
-        if (existingStaff && ('role_id' in existingStaff || data.role_id !== undefined)) 
+        if ('role_id' in existingStaff || data.role_id !== undefined) 
           updatedStaff.role_id = data.role_id || existingStaff.role_id;
         
-        if (existingStaff && ('avatar_url' in existingStaff || data.avatar_url !== undefined)) 
+        if ('avatar_url' in existingStaff || data.avatar_url !== undefined) 
           updatedStaff.avatar_url = data.avatar_url || existingStaff.avatar_url;
         
-        if (existingStaff && ('salary' in existingStaff || data.salary !== undefined)) 
+        if ('salary' in existingStaff || data.salary !== undefined) 
           updatedStaff.salary = data.salary || existingStaff.salary;
         
-        if (existingStaff && ('commissionRate' in existingStaff || data.commissionRate !== undefined)) 
+        if ('commissionRate' in existingStaff || data.commissionRate !== undefined) 
           updatedStaff.commissionRate = data.commissionRate || existingStaff.commissionRate;
         
-        if (existingStaff && ('paymentType' in existingStaff || data.paymentType !== undefined)) 
+        if ('paymentType' in existingStaff || data.paymentType !== undefined) 
           updatedStaff.paymentType = data.paymentType || existingStaff.paymentType;
         
         mockStaff[index] = updatedStaff;
