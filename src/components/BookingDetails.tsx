@@ -1,353 +1,298 @@
-import React, { useState, useEffect } from 'react';
-import { useOrder } from '@/context/OrderContext';
-import { Card, CardContent } from "@/components/ui/card";
-import { Receipt, Calendar, Clock, User, Phone, Mail } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { QRCodeSVG } from 'qrcode.react';
-import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
-import { useLanguage } from '@/context/LanguageContext';
 
-const BookingDetails = () => {
-  const { orderState } = useOrder();
-  const { orderId } = useParams<{ orderId: string }>();
-  const [appointmentData, setAppointmentData] = useState<any | null>(null);
+import React, { useEffect, useState } from "react";
+import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+
+interface BookingDetailsProps {
+  appointmentId: number;
+}
+
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+}
+
+interface AppointmentWithDetails {
+  id: number;
+  appointment_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  total: number;
+  customer: Customer;
+  services: Array<{
+    id: number;
+    name: string;
+    price: number;
+    duration: number;
+    staffName: string;
+  }>;
+  products: Array<{
+    id: number;
+    name: string;
+    price: number;
+    quantity: number;
+  }>;
+}
+
+const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
+  const [appointment, setAppointment] = useState<AppointmentWithDetails | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
-  const [localStatus, setLocalStatus] = useState("Gözləmədə");
-  const [cancelMsg, setCancelMsg] = useState("");
-  const { t } = useLanguage();
-
-  // Demo data for when no real data is available
-  const demoData = {
-    orderId: "GS-123456-789",
-    customerInfo: {
-      name: "Aysel Məmmədova",
-      gender: "Qadın",
-      phone: "+994501234567",
-      email: "aysel@example.com",
-      date: "2024-06-10",
-      time: "15:00",
-      notes: "Zəhmət olmasa vaxtında gəlin.",
-    },
-    selectedServices: [1, 3],
-    selectedProducts: [2],
-    services: [
-      { id: 1, name: "Facial Treatment", price: 150, duration: "60 min" },
-      { id: 3, name: "Manicure", price: 50, duration: "30 min" },
-    ],
-    products: [
-      { id: 2, name: "Anti-Aging Serum", price: 75 }
-    ],
-    paymentMethod: "Nəğd",
-    serviceProviders: [
-      { serviceId: 1, name: "Elvin Əliyev" },
-      { serviceId: 3, name: "Aygün Qasımova" }
-    ],
-    status: "Gözləmədə"
-  };
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAppointmentData = async () => {
-      if (orderId) {
-        try {
-          // Parse orderId to ensure it's a number (if your IDs are numbers)
-          const appointmentId = parseInt(orderId, 10);
-          
-          if (isNaN(appointmentId)) {
-            throw new Error("Invalid appointment ID");
-          }
-          
-          const { data, error } = await supabase
-            .from('appointments')
-            .select(`
-              *,
-              appointment_services(*,
-                service:services(*),
-                staff:staff(*)
-              ),
-              appointment_products(*,
-                product:products(*),
-                staff:staff(*)
-              )
-            `)
-            .eq('id', appointmentId)
+    const fetchAppointmentDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch appointment basic info
+        const { data: appointmentData, error: appointmentError } =
+          await supabase
+            .from("appointments")
+            .select("*")
+            .eq("id", appointmentId)
             .single();
 
-          if (error) {
-            console.error("Error fetching appointment:", error);
-            throw error;
-          }
-          
-          if (data) {
-            // Get customer data separately from users table with role='customer'
-            let customerData = null;
-            if (data.customer_user_id) {
-              const { data: customer, error: customerError } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', data.customer_user_id)
-                .eq('role', 'customer')
-                .single();
-                
-              if (!customerError) {
-                customerData = customer;
-              }
-            }
-            
-            // Extract notes from data or default to empty string
-            const notes = data.cancel_reason || '';
-            
-            // Extract payment method or default to cash
-            const paymentMethod = 'Nəğd'; // Default value since it doesn't exist in the database structure
-            
-            setAppointmentData({
-              orderId: data.id,
-              status: data.status,
-              customerInfo: customerData ? {
-                name: customerData.full_name || `${customerData.first_name || ''} ${customerData.last_name || ''}`.trim(),
-                gender: customerData.gender || 'N/A',
-                phone: customerData.phone,
-                email: customerData.email,
-                date: data.appointment_date,
-                time: data.start_time,
-                notes: notes,
-              } : {
-                name: "Customer info not found",
-                gender: "N/A",
-                phone: "N/A",
-                email: "N/A",
-                date: data.appointment_date,
-                time: data.start_time,
-                notes: notes,
-              },
-              services: data.appointment_services?.map((as: any) => ({
-                id: as.service?.id,
-                name: as.service?.name || 'Unknown Service',
-                price: as.price || 0,
-                duration: `${as.service?.duration || 0} min`,
-              })) || [],
-              selectedServices: data.appointment_services?.map((as: any) => as.service?.id) || [],
-              products: data.appointment_products?.map((ap: any) => ({
-                id: ap.product?.id,
-                name: ap.product?.name || 'Unknown Product',
-                price: ap.price || 0,
-              })) || [],
-              selectedProducts: data.appointment_products?.map((ap: any) => ap.product?.id) || [],
-              paymentMethod: paymentMethod,
-              serviceProviders: data.appointment_services?.map((as: any) => ({
-                serviceId: as.service?.id,
-                name: as.staff?.name || 'Unknown Staff',
-              })) || [],
-            });
-            setLocalStatus(data.status);
-          } else {
-            throw new Error("No data found");
-          }
-        } catch (error) {
-          console.error("Error fetching appointment:", error);
-          // Fall back to demo data
-          setAppointmentData(demoData);
-          setLocalStatus(demoData.status);
-          toast({
-            title: "Demo mode",
-            description: "Showing sample booking data",
-            variant: "default"
-          });
-        } finally {
-          setLoading(false);
+        if (appointmentError) throw appointmentError;
+        if (!appointmentData) {
+          throw new Error("Appointment not found");
         }
-      } else {
-        // If no orderId, use demo data
-        setAppointmentData(demoData);
-        setLocalStatus(demoData.status);
-        toast({
-          title: "Demo mode",
-          description: "Showing sample booking data",
-          variant: "default"
-        });
+
+        // Fetch the customer (user with role='customer')
+        const { data: userData, error: userError } = await supabase
+          .from("users")
+          .select("id, full_name, email, phone")
+          .eq("id", appointmentData.customer_user_id)
+          .eq("role", "customer")
+          .single();
+
+        if (userError) throw userError;
+
+        // Convert customer data to our model
+        const customer: Customer = {
+          id: userData.id,
+          name: userData.full_name || "",
+          email: userData.email || "",
+          phone: userData.phone || "",
+        };
+
+        // Fetch appointment services
+        const { data: serviceEntries, error: serviceError } = await supabase
+          .from("appointment_services")
+          .select(`
+            id, 
+            service_id,
+            price,
+            quantity,
+            staff_id,
+            duration,
+            services:service_id(name)
+          `)
+          .eq("appointment_id", appointmentId);
+
+        if (serviceError) throw serviceError;
+
+        // Fetch staff names
+        const staffIds = serviceEntries.map((entry) => entry.staff_id);
+        const { data: staffData, error: staffError } = await supabase
+          .from("users")
+          .select("id, full_name")
+          .in("id", staffIds);
+
+        if (staffError) throw staffError;
+
+        // Map staff data
+        const staffMap = staffData.reduce(
+          (acc, staff) => ({
+            ...acc,
+            [staff.id]: staff.full_name,
+          }),
+          {}
+        );
+
+        // Format services data
+        const services = serviceEntries.map((entry) => ({
+          id: entry.service_id,
+          name: entry.services?.name || "Unknown Service",
+          price: entry.price || 0,
+          duration: entry.duration || 0,
+          staffName: staffMap[entry.staff_id] || "Unknown Staff",
+        }));
+
+        // Fetch appointment products
+        const { data: productEntries, error: productError } = await supabase
+          .from("appointment_products")
+          .select(`
+            id,
+            product_id,
+            price,
+            quantity,
+            products:product_id(name)
+          `)
+          .eq("appointment_id", appointmentId);
+
+        if (productError) throw productError;
+
+        // Format products data
+        const products = productEntries.map((entry) => ({
+          id: entry.product_id,
+          name: entry.products?.name || "Unknown Product",
+          price: entry.price || 0,
+          quantity: entry.quantity || 1,
+        }));
+
+        // Construct the full appointment object
+        const fullAppointment: AppointmentWithDetails = {
+          ...appointmentData,
+          customer,
+          services,
+          products,
+        };
+
+        setAppointment(fullAppointment);
+      } catch (err) {
+        console.error("Error fetching appointment details:", err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "An error occurred while loading appointment details"
+        );
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchAppointmentData();
-  }, [orderId]);
+    if (appointmentId) {
+      fetchAppointmentDetails();
+    }
+  }, [appointmentId]);
 
   if (loading) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">{t('common.loading')}</p>
-      </div>
-    );
+    return <p>Loading appointment details...</p>;
   }
 
-  if (!appointmentData) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-600">No booking details found.</p>
-      </div>
-    );
+  if (error) {
+    return <p className="text-red-500">Error: {error}</p>;
   }
 
-  // Use the fetched data or demo data
-  const data = appointmentData;
-  const bookingUrl = `${window.location.origin}/booking-details/${data.orderId}`;
+  if (!appointment) {
+    return <p>No appointment data found</p>;
+  }
 
-  // Calculate total duration in minutes
-  const totalDuration = data.services.reduce((sum: number, service: any) => {
-    const match = service.duration.match(/(\d+)/);
-    return sum + (match ? parseInt(match[1], 10) : 0);
-  }, 0);
-
-  // Calculate total
-  const total = data.services.reduce((sum: number, service: any) => sum + service.price, 0) +
-               (data.products ? data.products.reduce((sum: number, product: any) => sum + product.price, 0) : 0);
-
-  // Calculate inTime and outTime
-  const inTime = data.customerInfo.time || "00:00";
-  const [inHour, inMinute] = inTime.split(":").map(Number);
-  const extraMinutes = 10;
-  const outTotalMinutes = inHour * 60 + inMinute + totalDuration + extraMinutes;
-  const outHour = Math.floor(outTotalMinutes / 60) % 24;
-  const outMinute = outTotalMinutes % 60;
-  const outTime = `${outHour.toString().padStart(2, '0')}:${outMinute.toString().padStart(2, '0')}`;
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "PPP");
+    } catch (e) {
+      return dateString;
+    }
+  };
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-6">
-              <Receipt className="h-6 w-6 text-glamour-700" />
-              <h2 className="text-2xl font-bold text-glamour-800">{t('booking.bookingDetails')}</h2>
-            </div>
+    <div className="p-4 space-y-6 max-w-2xl mx-auto">
+      <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          Təyinat #{appointment.id}
+        </h2>
 
-            <div className="space-y-6">
-              <div className="bg-glamour-50 p-4 rounded-lg">
-                <Badge variant="secondary" className="text-lg font-mono bg-white text-glamour-700 mb-2">
-                  {data.orderId}
-                </Badge>
-                <p className="text-sm text-gray-600">Booking Reference</p>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="font-semibold text-glamour-800">Selected Services</h3>
-                {data.services && data.services.map((service: any) => {
-                  const provider = data.serviceProviders && data.serviceProviders.find((p: any) => p.serviceId === service.id);
-                  return (
-                    <div key={service.id} className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{service.name}</p>
-                        <p className="text-sm text-gray-600">{service.duration}</p>
-                        {provider && (
-                          <p className="text-xs text-gray-500">Xidmət göstərən: {provider.name}</p>
-                        )}
-                      </div>
-                      <p className="font-medium">${service.price}</p>
-                    </div>
-                  );
-                })}
-                <div className="text-sm text-glamour-700 font-medium mt-2">
-                  Selected Services Total duration: {totalDuration} min
-                </div>
-
-                {data.products && data.products.length > 0 && (
-                  <>
-                    <h3 className="font-semibold text-glamour-800 mt-6">Selected Products</h3>
-                    {data.products.map((product: any) => (
-                      <div key={product.id} className="flex justify-between items-center">
-                        <p className="font-medium">{product.name}</p>
-                        <p className="font-medium">${product.price}</p>
-                      </div>
-                    ))}
-                  </>
-                )}
-
-                <div className="border-t pt-4 mt-4">
-                  <div className="flex justify-between items-center">
-                    <p className="font-semibold">{t('booking.total')}</p>
-                    <p className="font-bold text-lg">${total}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="md:w-64 flex flex-col items-center">
-            <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
-              <QRCodeSVG 
-                value={bookingUrl}
-                size={200}
-                level="H"
-                includeMargin={true}
-              />
-            </div>
-            <p className="text-sm text-gray-600 text-center mb-4">
-              Scan to view booking details
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div>
+            <p className="text-sm text-gray-500">Status</p>
+            <p className="font-medium">
+              {appointment.status === "completed"
+                ? "Tamamlanıb"
+                : appointment.status === "scheduled"
+                ? "Planlaşdırılıb"
+                : "Ləğv edilib"}
             </p>
-            <div className="w-full bg-glamour-50 rounded-lg p-4 space-y-2 text-glamour-800 text-sm">
-              <div>
-                <span className="font-semibold">{t('booking.paymentMethod')}</span><br />
-                {data.paymentMethod}
-              </div>
-              <div>
-                <span className="font-semibold">{t('booking.status')}</span><br />
-                {localStatus}
-              </div>
-              <div>
-                <span className="font-semibold">{t('booking.inTime')}</span><br />
-                {inTime}
-              </div>
-              <div>
-                <span className="font-semibold">{t('booking.outTime')}</span><br />
-                {outTime}
-              </div>
-              <div>
-                <span className="font-semibold">{data.customerInfo.name}</span>
-              </div>
-              <div>{data.customerInfo.gender}</div>
-              <div>{data.customerInfo.phone}</div>
-              <div>{data.customerInfo.email}</div>
-              <div>{data.customerInfo.date}</div>
-              <div>{data.customerInfo.time}</div>
-              {/* Cancel button */}
-              {localStatus !== "Ləğv edildi" ? (
-                <button
-                  className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded transition-colors"
-                  onClick={async () => {
-                    if (orderId) {
-                      try {
-                        const numericId = parseInt(orderId, 10);
-                        if (!isNaN(numericId)) {
-                          const { error } = await supabase
-                            .from('appointments')
-                            .update({ status: 'cancelled' })
-                            .eq('id', numericId);
-                            
-                          if (error) throw error;
-                        }
-                      } catch (error) {
-                        console.error("Error cancelling appointment:", error);
-                      }
-                    }
-                    setLocalStatus("Ləğv edildi");
-                    setCancelMsg(t('booking.successCancel'));
-                  }}
-                >
-                  {t('booking.cancel')}
-                </button>
-              ) : (
-                <div className="mt-4 text-center text-red-600 font-semibold">{t('booking.canceled')}</div>
-              )}
-              {cancelMsg && (
-                <div className="mt-2 text-green-700 text-center">{cancelMsg}</div>
-              )}
-            </div>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Tarix</p>
+            <p className="font-medium">
+              {formatDate(appointment.appointment_date)}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Vaxt</p>
+            <p className="font-medium">
+              {appointment.start_time} - {appointment.end_time}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Ümumi məbləğ</p>
+            <p className="font-bold text-xl">{appointment.total} AZN</p>
           </div>
         </div>
-      </CardContent>
-    </Card>
+
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-2">Müştəri məlumatları</h3>
+          <div className="bg-gray-50 p-3 rounded">
+            <p>
+              <span className="font-medium">Ad:</span> {appointment.customer.name}
+            </p>
+            <p>
+              <span className="font-medium">Email:</span>{" "}
+              {appointment.customer.email}
+            </p>
+            <p>
+              <span className="font-medium">Telefon:</span>{" "}
+              {appointment.customer.phone}
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-2">Xidmətlər</h3>
+          {appointment.services.length > 0 ? (
+            <div className="divide-y border rounded overflow-hidden">
+              {appointment.services.map((service) => (
+                <div key={service.id} className="p-3 bg-white">
+                  <div className="flex justify-between">
+                    <div>
+                      <p className="font-medium">{service.name}</p>
+                      <p className="text-gray-500 text-sm">
+                        {service.duration} dəqiqə | {service.staffName}
+                      </p>
+                    </div>
+                    <p className="font-semibold">{service.price} AZN</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">No services found</p>
+          )}
+        </div>
+
+        {appointment.products.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Məhsullar</h3>
+            <div className="divide-y border rounded overflow-hidden">
+              {appointment.products.map((product) => (
+                <div key={product.id} className="p-3 bg-white">
+                  <div className="flex justify-between">
+                    <div>
+                      <p className="font-medium">{product.name}</p>
+                      <p className="text-gray-500 text-sm">
+                        {product.quantity} ədəd
+                      </p>
+                    </div>
+                    <p className="font-semibold">
+                      {product.price * product.quantity} AZN
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
-export default React.memo(BookingDetails);
+export default BookingDetails;

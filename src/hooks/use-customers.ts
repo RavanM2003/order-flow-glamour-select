@@ -2,43 +2,46 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useApi } from "./use-api";
 import { customerService } from "@/services";
-import { Customer, CustomerFormData } from "@/models/customer.model";
+import { Customer } from "@/models/customer.model";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
-interface DatabaseCustomer {
+interface DatabaseUser {
   id: string;
-  birth_date: string;
-  created_at: string;
+  birth_date: string | null;
+  created_at: string | null;
   email: string;
-  full_name: string;
-  gender: "male" | "female" | "other";
-  note: string;
+  first_name: string | null;
+  last_name: string | null;
+  full_name: string | null;
+  gender: "male" | "female" | "other" | null;
+  note: string | null;
   phone: string;
-  updated_at: string;
-  user_id: string;
+  updated_at: string | null;
+  role: string;
+  avatar_url: string | null;
 }
 
-// Transform database customer to our Customer model
-const transformCustomer = (dbCustomer: DatabaseCustomer): Customer => {
+// Transform database user to our Customer model
+const transformUser = (dbUser: DatabaseUser): Customer => {
   return {
-    id: dbCustomer.id,
-    name: dbCustomer.full_name,
-    email: dbCustomer.email,
-    phone: dbCustomer.phone,
-    gender: dbCustomer.gender,
-    lastVisit: dbCustomer.created_at, // Using created_at as lastVisit since it's not in the database
+    id: dbUser.id,
+    name: dbUser.full_name || `${dbUser.first_name || ''} ${dbUser.last_name || ''}`.trim(),
+    email: dbUser.email,
+    phone: dbUser.phone,
+    gender: dbUser.gender || 'other',
+    lastVisit: dbUser.created_at || '',
     totalSpent: 0, // This would need to be calculated from appointments
-    birth_date: dbCustomer.birth_date,
-    note: dbCustomer.note,
-    user_id: dbCustomer.user_id,
-    created_at: dbCustomer.created_at,
-    updated_at: dbCustomer.updated_at,
+    birth_date: dbUser.birth_date || '',
+    note: dbUser.note || '',
+    user_id: dbUser.id, // Same as id since we're working with users table
+    created_at: dbUser.created_at || '',
+    updated_at: dbUser.updated_at || '',
   };
 };
 
 export function useCustomers() {
-  const api = useApi<DatabaseCustomer[]>();
+  const api = useApi<DatabaseUser[]>();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const fetchedRef = useRef(false);
   const fetchPromiseRef = useRef<Promise<Customer[] | null> | null>(null);
@@ -55,7 +58,6 @@ export function useCustomers() {
 
       console.log("Fetching customers...");
 
-      // Try to get data from Supabase directly if service doesn't work
       try {
         // Start a new fetch and store the promise
         fetchPromiseRef.current = api
@@ -65,9 +67,7 @@ export function useCustomers() {
           })
           .then(async (data) => {
             if (data && data.length > 0) {
-              // Need to cast to DatabaseCustomer[] to make TypeScript happy
-              const dbCustomers = data as unknown as DatabaseCustomer[];
-              const transformedData = dbCustomers.map(transformCustomer);
+              const transformedData = data.map(user => transformUser(user as unknown as DatabaseUser));
               setCustomers(transformedData);
               fetchedRef.current = true;
               return transformedData;
@@ -76,7 +76,7 @@ export function useCustomers() {
             // If no data from service, try direct Supabase query
             console.log("Trying to fetch customers directly from Supabase...");
             
-            // Since customers are stored in the users table with role='customer'
+            // Get users with role='customer'
             const { data: supabaseData, error } = await supabase
               .from("users")
               .select("*")
@@ -94,20 +94,7 @@ export function useCustomers() {
 
             if (supabaseData && supabaseData.length > 0) {
               // Map users table data to our customer structure
-              const transformedData = supabaseData.map(user => ({
-                id: user.id,
-                name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim(),
-                email: user.email || '',
-                phone: user.phone || '',
-                gender: user.gender || 'other',
-                lastVisit: user.created_at || '',
-                totalSpent: 0,
-                birth_date: user.birth_date || '',
-                note: user.note || '',
-                user_id: user.id,
-                created_at: user.created_at || '',
-                updated_at: user.updated_at || '',
-              }));
+              const transformedData = supabaseData.map(user => transformUser(user as DatabaseUser));
               
               // Sort by most recently updated first
               transformedData.sort((a, b) => 
@@ -163,7 +150,7 @@ export function useCustomers() {
   }, []);
 
   const createCustomer = useCallback(
-    async (data: CustomerFormData) => {
+    async (data: Partial<Customer>) => {
       try {
         const result = await api.execute(() => customerService.create(data), {
           showSuccessToast: true,
@@ -186,7 +173,7 @@ export function useCustomers() {
   );
 
   const updateCustomer = useCallback(
-    async (id: number | string, data: CustomerFormData) => {
+    async (id: number | string, data: Partial<Customer>) => {
       const result = await api.execute(() => customerService.update(id, data), {
         showSuccessToast: true,
         successMessage: "Customer updated successfully",

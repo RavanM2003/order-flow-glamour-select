@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -60,14 +61,14 @@ const BookingConfirmation = () => {
       // Format the date
       const formattedDate = format(appointmentDate, "yyyy-MM-dd");
 
-      // 1. First create user in users table
+      // 1. First check if the user already exists by email
       let userId;
 
-      // Check if the user already exists by email
       const { data: existingUser, error: userCheckError } = await supabase
         .from("users")
         .select("id")
         .eq("email", customer.email)
+        .eq("role", "customer")
         .limit(1);
 
       if (userCheckError) {
@@ -83,6 +84,7 @@ const BookingConfirmation = () => {
           .update({
             first_name: customer.name.split(" ")[0] || "",
             last_name: customer.name.split(" ").slice(1).join(" ") || "",
+            full_name: customer.name,
             phone: customer.phone,
           })
           .eq("id", userId);
@@ -94,6 +96,7 @@ const BookingConfirmation = () => {
             email: customer.email,
             first_name: customer.name.split(" ")[0] || "",
             last_name: customer.name.split(" ").slice(1).join(" ") || "",
+            full_name: customer.name,
             phone: customer.phone,
             role: "customer",
             hashed_password: "default-password", // In production, generate a random password or handle this differently
@@ -109,7 +112,7 @@ const BookingConfirmation = () => {
         userId = newUser.id;
       }
 
-      // 2. We don't use a separate customers table anymore. Instead, we work with 'users' with role='customer'
+      // 2. Now the customer is represented by a user with role='customer'
       const customerId = userId;
 
       // 3. Create appointment
@@ -118,7 +121,7 @@ const BookingConfirmation = () => {
         .insert([
           {
             customer_user_id: customerId,
-            user_id: userId,
+            user_id: userId, // Same as customer_user_id since the customer is creating the appointment
             appointment_date: formattedDate,
             start_time: startTime,
             end_time: endTime,
@@ -161,6 +164,7 @@ const BookingConfirmation = () => {
           staff_id: selectedStaff.id.toString(),
           price: product.price,
           quantity: 1,
+          amount: product.price * 1, // price * quantity
         }));
 
         for (const product of appointmentProducts) {

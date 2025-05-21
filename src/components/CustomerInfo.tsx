@@ -1,193 +1,161 @@
 
-import React, { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Customer } from "@/models/customer.model";
-import { Phone, Mail, UserCircle } from "lucide-react";
+import React, { useState, useEffect } from "react";
 import { useOrder } from "@/context/OrderContext";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-interface CustomerInfoProps {
-  initialData?: {
-    customerName?: string;
-    customerPhone?: string;
-    customerEmail?: string;
-    notes?: string;
-  };
-  onSubmit?: (data: {
-    customerName: string;
-    customerPhone: string;
-    customerEmail: string;
-    notes: string;
-  }) => void;
-  onCancel?: () => void;
-  selectedCustomer?: Customer | null;
-  disabled?: boolean;
-  bookingMode?: "customer" | "staff";
+// Define props for the component
+export interface CustomerInfoProps {
+  bookingMode: "salon" | "home";
+  onSubmit: () => void;
 }
 
-const CustomerInfo: React.FC<CustomerInfoProps> = ({
-  initialData = {},
-  onSubmit,
-  onCancel,
-  selectedCustomer,
-  disabled = false,
-  bookingMode,
-}) => {
-  const [customerName, setCustomerName] = useState(
-    initialData.customerName || ""
-  );
-  const [customerPhone, setCustomerPhone] = useState(
-    initialData.customerPhone || ""
-  );
-  const [customerEmail, setCustomerEmail] = useState(
-    initialData.customerEmail || ""
-  );
-  const [notes, setNotes] = useState(initialData.notes || "");
-  const { orderState, setNextStep, setCustomer } = useOrder();
+// Define the schema for form validation
+const customerSchema = z.object({
+  name: z.string().min(3, { message: "Adınız ən azı 3 simvol olmalıdır" }),
+  email: z.string().email({ message: "Etibarlı e-poçt daxil edin" }),
+  phone: z
+    .string()
+    .min(9, { message: "Telefon nömrəsi ən azı 9 rəqəm olmalıdır" }),
+  address: z.string().optional(),
+});
 
-  // Update form when selectedCustomer changes
-  useEffect(() => {
-    if (selectedCustomer) {
-      setCustomerName(selectedCustomer.name || "");
-      setCustomerPhone(selectedCustomer.phone || "");
-      setCustomerEmail(selectedCustomer.email || "");
-    }
-  }, [selectedCustomer]);
+// Define the type for the customer form
+type CustomerFormValues = z.infer<typeof customerSchema>;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const data = {
-      customerName,
-      customerPhone,
-      customerEmail,
-      notes,
-    };
-    
-    if (onSubmit) {
-      onSubmit(data);
-    } else {
-      // If no onSubmit prop is provided, use the OrderContext
+const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode, onSubmit }) => {
+  const { orderState, setCustomer, setNextStep } = useOrder();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Initialize form with react-hook-form
+  const form = useForm<CustomerFormValues>({
+    resolver: zodResolver(customerSchema),
+    defaultValues: {
+      name: orderState.customer.name || "",
+      email: orderState.customer.email || "",
+      phone: orderState.customer.phone || "",
+      address: orderState.customer.address || "",
+    },
+  });
+
+  // Submit handler
+  const handleSubmit = async (values: CustomerFormValues) => {
+    setIsLoading(true);
+
+    try {
+      // Update customer data in order context
       setCustomer({
-        id: selectedCustomer?.id || "",
-        name: customerName,
-        phone: customerPhone,
-        email: customerEmail,
-        gender: selectedCustomer?.gender || "other",
-        lastVisit: selectedCustomer?.lastVisit || "",
-        totalSpent: selectedCustomer?.totalSpent || 0
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        address: values.address || "",
       });
-      setNextStep(); // Move to next step in checkout flow
-    }
-  };
 
-  // Determine if customer fields should be disabled
-  // They should be disabled if 'disabled' prop is true OR if we have a selectedCustomer
-  const customerFieldsDisabled = disabled || !!selectedCustomer;
-
-  // Get gender-based icon color
-  const getGenderColor = () => {
-    if (!selectedCustomer) return "text-gray-500";
-    
-    switch(selectedCustomer.gender) {
-      case "female": return "text-pink-500";
-      case "male": return "text-blue-500";
-      default: return "text-gray-500";
+      // Move to next step in checkout flow
+      setNextStep();
+      
+      // Call the onSubmit prop to notify parent component
+      onSubmit();
+    } catch (error) {
+      console.error("Error submitting customer information:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {selectedCustomer ? (
-        // Compact display for selected customer
-        <div className="p-4 bg-gray-50 rounded-md border mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <UserCircle className={`h-5 w-5 ${getGenderColor()}`} />
-            <h3 className="font-medium">{customerName}</h3>
-          </div>
-          <div className="grid grid-cols-1 gap-2 text-sm">
-            <div className="flex items-center">
-              <Phone className="h-4 w-4 mr-2 text-gray-500" />
-              <span>{customerPhone}</span>
-            </div>
-            {customerEmail && (
-              <div className="flex items-center">
-                <Mail className="h-4 w-4 mr-2 text-gray-500" />
-                <span>{customerEmail}</span>
-              </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Müştəri məlumatları</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ad və Soyad</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Ad və Soyad" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Telefon</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Telefon" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {bookingMode === "home" && (
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ünvan</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ünvan" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
-            {selectedCustomer.id && (
-              <div className="text-xs text-gray-500 mt-1">
-                <span className="font-medium">ID:</span> {selectedCustomer.id}
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        // Standard form for new customer entry
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="customerName">Customer Name</Label>
-            <Input
-              id="customerName"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="Enter customer name"
-              required
-              disabled={customerFieldsDisabled}
-              className={customerFieldsDisabled ? "bg-gray-50" : ""}
-            />
-          </div>
 
-          <div>
-            <Label htmlFor="customerPhone">Phone Number</Label>
-            <Input
-              id="customerPhone"
-              value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
-              placeholder="Enter phone number"
-              required
-              disabled={customerFieldsDisabled}
-              className={customerFieldsDisabled ? "bg-gray-50" : ""}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="customerEmail">Email</Label>
-            <Input
-              id="customerEmail"
-              type="email"
-              value={customerEmail}
-              onChange={(e) => setCustomerEmail(e.target.value)}
-              placeholder="Enter email address"
-              required
-              disabled={customerFieldsDisabled}
-              className={customerFieldsDisabled ? "bg-gray-50" : ""}
-            />
-          </div>
-        </div>
-      )}
-
-      <div>
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Add any additional notes..."
-        />
-      </div>
-
-      <div className="flex justify-end space-x-2 mt-6">
-        {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
-        )}
-        <Button type="submit">Continue</Button>
-      </div>
-    </form>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Gözləyin..." : "Davam et"}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 };
 
