@@ -39,11 +39,18 @@ export class CustomerService extends ApiService {
       if (customerData.email && (customerData as any).createUser) {
         const userData = {
           email: customerData.email,
-          password: 'default-password',
+          password: "default-password",
           role: 'guest'
         };
         
-        const result = await authService.createCustomerWithUser(customerData, userData);
+        const result = await authService.createCustomerWithUser({
+          email: customerData.email,
+          password: "default-password",
+          firstName: customerData.name,
+          lastName: "",
+          phone: customerData.phone,
+          gender: customerData.gender,
+        }, userData);
         if (result.error) {
           return { error: result.error };
         }
@@ -73,7 +80,14 @@ export class CustomerService extends ApiService {
   async createCustomerWithUser(formData: CustomerWithUserFormData): Promise<ApiResponse<any>> {
     try {
       // Create user and customer in one operation
-      const result = await authService.createCustomerWithUser(formData, {
+      const result = await authService.createCustomerWithUser({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.name,
+        lastName: "",
+        phone: formData.phone,
+        gender: formData.gender,
+      }, {
         email: formData.email,
         password: formData.password
       });

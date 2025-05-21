@@ -1,3 +1,4 @@
+
 import {
   User,
   UserCredentials,
@@ -69,7 +70,7 @@ export class AuthService extends ApiService {
       const { data: passwordData, error: passwordError } = await supabase
         .from("users")
         .select("hashed_password")
-        .eq("email", credentials.email)
+        .eq("id", userData.id)
         .single();
 
       if (passwordError || !passwordData) {
@@ -136,10 +137,21 @@ export class AuthService extends ApiService {
         return { error: "İstifadəçi adı və ya şifrə səhvdir" };
       }
 
+      // Get password separately for verification
+      const { data: passwordData, error: passwordError } = await supabase
+        .from("users")
+        .select("hashed_password")
+        .eq("id", userData.id)
+        .single();
+
+      if (passwordError || !passwordData) {
+        return { error: "İstifadəçi adı və ya şifrə səhvdir" };
+      }
+
       // For now, we're simulating password validation since we can't securely check hashed passwords
       // In a real implementation, you would use a secure method to verify passwords
       const isPasswordValid =
-        userData.hashed_password === credentials.password ||
+        passwordData.hashed_password === credentials.password ||
         credentials.password === "admin123"; // Hardcoded for demo purposes
 
       if (!isPasswordValid) {

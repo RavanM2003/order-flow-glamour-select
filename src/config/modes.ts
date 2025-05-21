@@ -17,7 +17,7 @@ interface AppConfig {
 }
 
 // Get environment variables
-const appMode = (import.meta.env.VITE_APP_MODE || 'local') as AppMode;
+const appMode = (import.meta.env.VITE_APP_MODE || 'prod') as AppMode; // Changed default to 'prod'
 const prodApiUrl = import.meta.env.VITE_PROD_API_URL || null;
 const forceMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
@@ -49,20 +49,20 @@ const getConfig = (): AppConfig => {
       
       return {
         mode: 'prod',
-        usesMockData: false,
+        usesMockData: false, // Ensure we're not using mock data in prod
         usesSupabase: false,
         usesCustomApi: true,
         apiUrl: prodApiUrl
       };
     
     default:
-      console.warn(`Unknown app mode: ${appMode}, defaulting to local`);
+      console.warn(`Unknown app mode: ${appMode}, defaulting to prod`); // Changed default to prod
       return {
-        mode: 'local',
-        usesMockData: true,
+        mode: 'prod', // Changed default to prod
+        usesMockData: false, // Don't use mock data by default in prod
         usesSupabase: false,
-        usesCustomApi: false,
-        apiUrl: null
+        usesCustomApi: true,
+        apiUrl: prodApiUrl
       };
   }
 };
