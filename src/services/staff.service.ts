@@ -1,4 +1,3 @@
-
 import { ApiService } from './api.service';
 import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
@@ -175,18 +174,18 @@ export class StaffService extends ApiService {
           id: s.id,
           name: s.name || `Staff #${s.id}`, // Ensure name is set
           position: s.position || 'Staff Member', // Default position if not set
-          specializations: (s.specializations || []).map(String), // Convert to string[]
+          specializations: Array.isArray(s.specializations) ? s.specializations.map(String) : [], // Convert to string[]
           created_at: s.created_at || new Date().toISOString(),
           updated_at: s.updated_at || new Date().toISOString(),
           user_id: s.user_id || '',
-          // Add optional fields if present
-          ...(typeof s.email !== 'undefined' ? { email: String(s.email) } : {}),
-          ...(typeof s.phone !== 'undefined' ? { phone: String(s.phone) } : {}),
-          ...(typeof s.role_id !== 'undefined' ? { role_id: Number(s.role_id) } : {}),
-          ...(typeof s.avatar_url !== 'undefined' ? { avatar_url: String(s.avatar_url) } : {}),
-          ...(typeof s.salary !== 'undefined' ? { salary: Number(s.salary) } : {}),
-          ...(typeof s.commissionRate !== 'undefined' ? { commissionRate: Number(s.commissionRate) } : {}),
-          ...(typeof s.paymentType !== 'undefined' ? { paymentType: String(s.paymentType) } : {})
+          // Add optional fields if they exist
+          ...(s.email !== undefined ? { email: String(s.email) } : {}),
+          ...(s.phone !== undefined ? { phone: String(s.phone) } : {}),
+          ...(s.role_id !== undefined ? { role_id: Number(s.role_id) } : {}),
+          ...(s.avatar_url !== undefined ? { avatar_url: String(s.avatar_url) } : {}),
+          ...(s.salary !== undefined ? { salary: Number(s.salary) } : {}),
+          ...(s.commissionRate !== undefined ? { commissionRate: Number(s.commissionRate) } : {}),
+          ...(s.paymentType !== undefined ? { paymentType: String(s.paymentType) } : {})
         };
         return staffMember;
       });
@@ -211,18 +210,18 @@ export class StaffService extends ApiService {
         id: staff.id,
         name: staff.name || `Staff #${staff.id}`,
         position: staff.position || 'Staff Member',
-        specializations: (staff.specializations || []).map(String), // Convert to string[]
+        specializations: Array.isArray(staff.specializations) ? staff.specializations.map(String) : [],
         created_at: staff.created_at || new Date().toISOString(),
         updated_at: staff.updated_at || new Date().toISOString(),
         user_id: staff.user_id || '',
-        // Add optional fields if present
-        ...(typeof staff.email !== 'undefined' ? { email: String(staff.email) } : {}),
-        ...(typeof staff.phone !== 'undefined' ? { phone: String(staff.phone) } : {}),
-        ...(typeof staff.role_id !== 'undefined' ? { role_id: Number(staff.role_id) } : {}),
-        ...(typeof staff.avatar_url !== 'undefined' ? { avatar_url: String(staff.avatar_url) } : {}),
-        ...(typeof staff.salary !== 'undefined' ? { salary: Number(staff.salary) } : {}),
-        ...(typeof staff.commissionRate !== 'undefined' ? { commissionRate: Number(staff.commissionRate) } : {}),
-        ...(typeof staff.paymentType !== 'undefined' ? { paymentType: String(staff.paymentType) } : {})
+        // Add optional fields if they exist
+        ...(staff.email !== undefined ? { email: String(staff.email) } : {}),
+        ...(staff.phone !== undefined ? { phone: String(staff.phone) } : {}),
+        ...(staff.role_id !== undefined ? { role_id: Number(staff.role_id) } : {}),
+        ...(staff.avatar_url !== undefined ? { avatar_url: String(staff.avatar_url) } : {}),
+        ...(staff.salary !== undefined ? { salary: Number(staff.salary) } : {}),
+        ...(staff.commissionRate !== undefined ? { commissionRate: Number(staff.commissionRate) } : {}),
+        ...(staff.paymentType !== undefined ? { paymentType: String(staff.paymentType) } : {})
       };
       
       return { data: staffMember };
@@ -400,7 +399,7 @@ export class StaffService extends ApiService {
     return this.get(`/staff/${id}/earnings?month=${month}&year=${year}`);
   }
 
-  // NEW FUNCTIONS FOR WORKING HOURS
+  // WORKING HOURS METHODS
 
   // Get working hours for a staff member
   async getWorkingHours(id: number | string): Promise<ApiResponse<StaffWorkingHours[]>> {

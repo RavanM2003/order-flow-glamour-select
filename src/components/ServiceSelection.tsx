@@ -112,7 +112,7 @@ const ServiceSelection = () => {
             // Start with the required properties
             const staff: Staff = {
               id: staffMember.id,
-              name: staffMember.name || `Staff #${staffMember.id}`,
+              name: staffMember.id ? `Staff #${staffMember.id}` : `Staff #${staffMember.id}`,
               position: staffMember.position || 'Staff Member',
               specializations: Array.isArray(staffMember.specializations) 
                 ? staffMember.specializations.map(String)
@@ -121,15 +121,6 @@ const ServiceSelection = () => {
               updated_at: staffMember.updated_at || new Date().toISOString(),
               user_id: staffMember.user_id || ''
             };
-            
-            // Add optional properties if they exist
-            if (staffMember.email !== undefined) staff.email = String(staffMember.email);
-            if (staffMember.phone !== undefined) staff.phone = String(staffMember.phone);
-            if (staffMember.role_id !== undefined) staff.role_id = Number(staffMember.role_id);
-            if (staffMember.avatar_url !== undefined) staff.avatar_url = String(staffMember.avatar_url);
-            if (staffMember.salary !== undefined) staff.salary = Number(staffMember.salary);
-            if (staffMember.commissionRate !== undefined) staff.commissionRate = Number(staffMember.commissionRate);
-            if (staffMember.paymentType !== undefined) staff.paymentType = String(staffMember.paymentType);
             
             return staff;
           });

@@ -1,15 +1,7 @@
 
 import { ReactNode } from 'react';
-import { Customer } from '@/models/customer.model';
 
 export interface DetailDrawerProps {
   children: ReactNode;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  title?: string;
-  className?: string;
-  position?: 'left' | 'right';
-  showCloseButton?: boolean;
-  description?: string;
-  initialCustomer?: Customer;
+  initialCustomer?: any; // Make initialCustomer optional
 }
