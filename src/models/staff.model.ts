@@ -1,4 +1,3 @@
-
 // Staff model and related types
 export interface Staff {
   id: number;
@@ -15,6 +14,17 @@ export interface Staff {
   salary?: number;
   commissionRate?: number;
   paymentType?: string;
+}
+
+// Default Staff interface to ensure all required fields are present
+export interface DefaultStaff {
+  id: number;
+  name: string;
+  position: string;
+  specializations: string[];
+  created_at: string;
+  updated_at: string;
+  user_id: string;
 }
 
 export interface StaffPayment {

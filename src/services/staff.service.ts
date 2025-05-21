@@ -1,6 +1,6 @@
 
 import { ApiService } from './api.service';
-import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours } from '@/models/staff.model';
+import { Staff, StaffPayment, StaffServiceRecord, StaffFormData, StaffWorkingHours, DefaultStaff } from '@/models/staff.model';
 import { ApiResponse } from '@/models/types';
 import { config } from '@/config/env';
 import { mockStaff } from '@/lib/mock-data';
@@ -184,25 +184,25 @@ export class StaffService extends ApiService {
         };
         
         // Add optional properties only if they exist in the source object
-        if ('email' in s && s.email !== undefined) 
+        if (s && 'email' in s && s.email !== undefined) 
           staffMember.email = String(s.email);
         
-        if ('phone' in s && s.phone !== undefined) 
+        if (s && 'phone' in s && s.phone !== undefined) 
           staffMember.phone = String(s.phone);
         
-        if ('role_id' in s && s.role_id !== undefined) 
+        if (s && 'role_id' in s && s.role_id !== undefined) 
           staffMember.role_id = Number(s.role_id);
         
-        if ('avatar_url' in s && s.avatar_url !== undefined) 
+        if (s && 'avatar_url' in s && s.avatar_url !== undefined) 
           staffMember.avatar_url = String(s.avatar_url);
         
-        if ('salary' in s && s.salary !== undefined) 
+        if (s && 'salary' in s && s.salary !== undefined) 
           staffMember.salary = Number(s.salary);
         
-        if ('commissionRate' in s && s.commissionRate !== undefined) 
+        if (s && 'commissionRate' in s && s.commissionRate !== undefined) 
           staffMember.commissionRate = Number(s.commissionRate);
         
-        if ('paymentType' in s && s.paymentType !== undefined) 
+        if (s && 'paymentType' in s && s.paymentType !== undefined) 
           staffMember.paymentType = String(s.paymentType);
         
         return staffMember;
@@ -237,25 +237,25 @@ export class StaffService extends ApiService {
       };
       
       // Add optional properties only if they exist in the source object
-      if ('email' in staffData && staffData.email !== undefined) 
+      if (staffData && 'email' in staffData && staffData.email !== undefined) 
         staffMember.email = String(staffData.email);
       
-      if ('phone' in staffData && staffData.phone !== undefined) 
+      if (staffData && 'phone' in staffData && staffData.phone !== undefined) 
         staffMember.phone = String(staffData.phone);
       
-      if ('role_id' in staffData && staffData.role_id !== undefined) 
+      if (staffData && 'role_id' in staffData && staffData.role_id !== undefined) 
         staffMember.role_id = Number(staffData.role_id);
       
-      if ('avatar_url' in staffData && staffData.avatar_url !== undefined) 
+      if (staffData && 'avatar_url' in staffData && staffData.avatar_url !== undefined) 
         staffMember.avatar_url = String(staffData.avatar_url);
       
-      if ('salary' in staffData && staffData.salary !== undefined) 
+      if (staffData && 'salary' in staffData && staffData.salary !== undefined) 
         staffMember.salary = Number(staffData.salary);
       
-      if ('commissionRate' in staffData && staffData.commissionRate !== undefined) 
+      if (staffData && 'commissionRate' in staffData && staffData.commissionRate !== undefined) 
         staffMember.commissionRate = Number(staffData.commissionRate);
       
-      if ('paymentType' in staffData && staffData.paymentType !== undefined) 
+      if (staffData && 'paymentType' in staffData && staffData.paymentType !== undefined) 
         staffMember.paymentType = String(staffData.paymentType);
       
       return { data: staffMember };
@@ -268,7 +268,13 @@ export class StaffService extends ApiService {
   async create(data: StaffFormData): Promise<ApiResponse<Staff>> {
     if (config.usesMockData) {
       await new Promise(resolve => setTimeout(resolve, 400));
-      const newId = Math.max(...mockStaff.filter(s => s?.id !== undefined).map(s => s.id as number), 0) + 1;
+      
+      // Find the highest existing ID to create a new unique ID
+      const existingIds = mockStaff
+        .filter(s => s?.id !== undefined)
+        .map(s => s ? s.id as number : 0);
+        
+      const newId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
       
       // Create a new valid Staff object
       const newStaff: Staff = { 
@@ -320,25 +326,25 @@ export class StaffService extends ApiService {
         };
         
         // Handle optional properties
-        if ('email' in existingStaff || data.email !== undefined) 
+        if (existingStaff && ('email' in existingStaff || data.email !== undefined)) 
           updatedStaff.email = data.email || existingStaff.email;
         
-        if ('phone' in existingStaff || data.phone !== undefined) 
+        if (existingStaff && ('phone' in existingStaff || data.phone !== undefined)) 
           updatedStaff.phone = data.phone || existingStaff.phone;
         
-        if ('role_id' in existingStaff || data.role_id !== undefined) 
+        if (existingStaff && ('role_id' in existingStaff || data.role_id !== undefined)) 
           updatedStaff.role_id = data.role_id || existingStaff.role_id;
         
-        if ('avatar_url' in existingStaff || data.avatar_url !== undefined) 
+        if (existingStaff && ('avatar_url' in existingStaff || data.avatar_url !== undefined)) 
           updatedStaff.avatar_url = data.avatar_url || existingStaff.avatar_url;
         
-        if ('salary' in existingStaff || data.salary !== undefined) 
+        if (existingStaff && ('salary' in existingStaff || data.salary !== undefined)) 
           updatedStaff.salary = data.salary || existingStaff.salary;
         
-        if ('commissionRate' in existingStaff || data.commissionRate !== undefined) 
+        if (existingStaff && ('commissionRate' in existingStaff || data.commissionRate !== undefined)) 
           updatedStaff.commissionRate = data.commissionRate || existingStaff.commissionRate;
         
-        if ('paymentType' in existingStaff || data.paymentType !== undefined) 
+        if (existingStaff && ('paymentType' in existingStaff || data.paymentType !== undefined)) 
           updatedStaff.paymentType = data.paymentType || existingStaff.paymentType;
         
         mockStaff[index] = updatedStaff;

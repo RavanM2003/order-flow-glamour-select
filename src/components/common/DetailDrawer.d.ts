@@ -1,15 +1,11 @@
 
 import { ReactNode } from "react";
-import { Customer } from "@/models/customer.model";
 
 export interface DetailDrawerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
   children: ReactNode;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  title?: string;
   className?: string;
-  position?: "left" | "right";
-  showCloseButton?: boolean;
-  description?: string;
-  initialCustomer?: Customer | null;
+  initialCustomer?: any; // Add this property to fix the CustomersTab.tsx error
 }
