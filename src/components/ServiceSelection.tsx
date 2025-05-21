@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
@@ -108,10 +109,13 @@ const ServiceSelection = () => {
         if (data) {
           // Create a valid Staff array with proper type checking
           const processedStaff: Staff[] = data.map(staffMember => {
+            // Ensure the name property exists
+            const name = staffMember.name || `Staff #${staffMember.id}`;
+            
             // Create a base staff object with required properties
             const staffObject: Staff = {
               id: staffMember.id,
-              name: staffMember.name || `Staff #${staffMember.id}`,
+              name: name,
               position: staffMember.position || 'Staff Member',
               specializations: Array.isArray(staffMember.specializations) 
                 ? staffMember.specializations.map(String)
