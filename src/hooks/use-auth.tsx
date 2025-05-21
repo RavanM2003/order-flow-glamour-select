@@ -199,7 +199,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           first_name: email.split('@')[0],
           last_name: 'Istifadəçi',
           role: 'customer',
-          number: Math.random().toString().slice(2, 12), // Generate random number
+          phone: Math.random().toString().slice(2, 12), // Generate random number
           hashed_password: password, // Not secure, but just for demo
           avatar_url: null
         })

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useOrder } from '@/context/OrderContext';
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,13 +80,14 @@ const BookingDetails = () => {
           }
           
           if (data) {
-            // Get customer data separately if needed
+            // Get customer data separately from users table with role='customer'
             let customerData = null;
             if (data.customer_user_id) {
               const { data: customer, error: customerError } = await supabase
-                .from('customers')
+                .from('users')
                 .select('*')
                 .eq('id', data.customer_user_id)
+                .eq('role', 'customer')
                 .single();
                 
               if (!customerError) {
@@ -105,7 +105,7 @@ const BookingDetails = () => {
               orderId: data.id,
               status: data.status,
               customerInfo: customerData ? {
-                name: customerData.full_name,
+                name: customerData.full_name || `${customerData.first_name || ''} ${customerData.last_name || ''}`.trim(),
                 gender: customerData.gender || 'N/A',
                 phone: customerData.phone,
                 email: customerData.email,

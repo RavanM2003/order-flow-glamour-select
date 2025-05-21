@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Customer } from "@/models/customer.model";
 import { Phone, Mail, UserCircle } from "lucide-react";
+import { useOrder } from "@/context/OrderContext";
 
 interface CustomerInfoProps {
   initialData?: {
@@ -14,7 +15,7 @@ interface CustomerInfoProps {
     customerEmail?: string;
     notes?: string;
   };
-  onSubmit: (data: {
+  onSubmit?: (data: {
     customerName: string;
     customerPhone: string;
     customerEmail: string;
@@ -44,6 +45,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
     initialData.customerEmail || ""
   );
   const [notes, setNotes] = useState(initialData.notes || "");
+  const { orderState, updateOrderDetails } = useOrder();
 
   // Update form when selectedCustomer changes
   useEffect(() => {
@@ -56,12 +58,29 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({
+    const data = {
       customerName,
       customerPhone,
       customerEmail,
       notes,
-    });
+    };
+    
+    if (onSubmit) {
+      onSubmit(data);
+    } else {
+      // If no onSubmit prop is provided, use the OrderContext
+      updateOrderDetails({
+        currentStep: 2,
+        customer: {
+          id: selectedCustomer?.id || "",
+          name: customerName,
+          phone: customerPhone,
+          email: customerEmail,
+          gender: selectedCustomer?.gender || "other",
+        },
+        notes
+      });
+    }
   };
 
   // Determine if customer fields should be disabled

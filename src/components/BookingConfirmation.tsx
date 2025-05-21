@@ -67,23 +67,21 @@ const BookingConfirmation = () => {
           .update({
             first_name: customer.name.split(' ')[0] || '',
             last_name: customer.name.split(' ').slice(1).join(' ') || '',
-            number: customer.phone
+            phone: customer.phone
           })
           .eq('id', userId);
       } else {
         // Create new user
         const { data: newUser, error: createUserError } = await supabase
           .from('users')
-          .insert([
-            {
-              email: customer.email,
-              first_name: customer.name.split(' ')[0] || '',
-              last_name: customer.name.split(' ').slice(1).join(' ') || '',
-              number: customer.phone,
-              role: 'customer',
-              hashed_password: 'default-password' // In production, generate a random password or handle this differently
-            }
-          ])
+          .insert({
+            email: customer.email,
+            first_name: customer.name.split(' ')[0] || '',
+            last_name: customer.name.split(' ').slice(1).join(' ') || '',
+            phone: customer.phone,
+            role: 'customer',
+            hashed_password: 'default-password' // In production, generate a random password or handle this differently
+          })
           .select('id')
           .single();
           
@@ -95,54 +93,8 @@ const BookingConfirmation = () => {
         userId = newUser.id;
       }
       
-      // 2. Check if customer with this email exists
-      const { data: existingCustomers, error: customerError } = await supabase
-        .from('customers')
-        .select('id')
-        .eq('email', customer.email)
-        .limit(1);
-      
-      if (customerError) {
-        console.error("Error checking existing customer:", customerError);
-      }
-      
-      if (existingCustomers && existingCustomers.length > 0) {
-        customerId = existingCustomers[0].id;
-        
-        // Update customer information
-        await supabase
-          .from('customers')
-          .update({
-            full_name: customer.name,
-            phone: customer.phone,
-            user_id: userId // Link to user if not already linked
-          })
-          .eq('id', customerId);
-      } else {
-        // Create new customer with proper gender typing
-        const genderValue = (customer.gender === 'male' || customer.gender === 'female' || customer.gender === 'other') 
-          ? customer.gender 
-          : 'female'; // Default to female if not a valid value
-
-        const { data: newCustomer, error: createError } = await supabase
-          .from('customers')
-          .insert({
-            full_name: customer.name,
-            email: customer.email,
-            phone: customer.phone,
-            gender: genderValue,
-            user_id: userId // Link to the user we just created
-          })
-          .select('id')
-          .single();
-        
-        if (createError) {
-          console.error("Error creating customer:", createError);
-          throw createError;
-        }
-        
-        customerId = newCustomer.id;
-      }
+      // 2. We don't use a separate customers table anymore. Instead, we work with 'users' with role='customer'
+      customerId = userId;
       
       // 3. Create appointment
       const { data: appointment, error: appointmentError } = await supabase
@@ -150,7 +102,7 @@ const BookingConfirmation = () => {
         .insert([
           {
             customer_user_id: customerId,
-            user_id: userId, // Link appointment directly to user
+            user_id: userId,
             appointment_date: formattedDate,
             start_time: startTime,
             end_time: endTime,
