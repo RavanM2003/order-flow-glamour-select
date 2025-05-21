@@ -417,7 +417,7 @@ export class StaffService extends ApiService {
       await new Promise(resolve => setTimeout(resolve, 300));
       
       // Get staff data
-      const staff = mockStaff.find(s => s.id === Number(id));
+      const staff = mockStaff.find(s => s?.id === Number(id));
       if (!staff) {
         return { error: 'Staff not found' };
       }
