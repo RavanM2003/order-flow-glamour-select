@@ -36,11 +36,22 @@ export async function getAppointmentById(id: number) {
  */
 export async function createAppointment(appointmentData: AppointmentFormData) {
   // Convert the appointment data to match the database schema
+  // Ensure appointment_date is a string
+  const appointmentDate = typeof appointmentData.appointment_date === 'string' 
+    ? appointmentData.appointment_date 
+    : appointmentData.appointment_date.toISOString().split('T')[0];
+    
+  // Convert confirmed status to scheduled if needed for database compatibility
+  let dbStatus = appointmentData.status || 'scheduled';
+  if (dbStatus === 'confirmed') {
+    dbStatus = 'scheduled';
+  }
+  
   const appointmentRecord = {
-    appointment_date: appointmentData.appointment_date,
+    appointment_date: appointmentDate,
     start_time: appointmentData.start_time,
     end_time: appointmentData.end_time,
-    status: appointmentData.status || 'scheduled',
+    status: dbStatus,
     total: appointmentData.total,
     customer_user_id: appointmentData.customer_user_id,
     user_id: appointmentData.user_id
@@ -63,10 +74,15 @@ export async function updateAppointment(id: number, appointmentData: Partial<App
   // Ensure id is a number
   const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
   
+  // Convert date if it's a Date object
+  if (appointmentData.appointment_date && appointmentData.appointment_date instanceof Date) {
+    appointmentData.appointment_date = appointmentData.appointment_date.toISOString().split('T')[0];
+  }
+  
   // Convert confirmed status to scheduled if needed for database compatibility
   let dbStatus = appointmentData.status;
   if (dbStatus === 'confirmed') {
-    dbStatus = 'scheduled' as AppointmentStatus;
+    dbStatus = 'scheduled';
   }
   
   const { data, error } = await supabase
@@ -110,7 +126,7 @@ export async function cancelAppointment(id: number, reason: string) {
   const { data, error } = await supabase
     .from('appointments')
     .update({
-      status: 'cancelled' as AppointmentStatus,
+      status: 'cancelled',
       cancel_reason: reason,
       updated_at: new Date().toISOString()
     })
@@ -132,7 +148,7 @@ export async function completeAppointment(id: number) {
   const { data, error } = await supabase
     .from('appointments')
     .update({
-      status: 'completed' as AppointmentStatus,
+      status: 'completed',
       updated_at: new Date().toISOString()
     })
     .eq('id', numericId)

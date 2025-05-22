@@ -17,7 +17,7 @@ export interface Appointment {
 }
 
 export interface AppointmentFormData {
-  appointment_date: string | Date;
+  appointment_date: string;
   start_time: string;
   end_time: string;
   status?: AppointmentStatus;

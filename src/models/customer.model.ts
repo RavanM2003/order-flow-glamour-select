@@ -2,26 +2,24 @@
 export interface Customer {
   id: string;
   name: string;
-  full_name?: string;
   email: string;
   phone: string;
   gender?: string;
   birth_date?: string;
   note?: string;
-  created_at?: string;
-  updated_at?: string;
+  user_id?: string;
   lastVisit?: string;
   totalSpent?: number;
-  user_id?: string;
+  full_name?: string;
+  address?: string; // Added address field
 }
 
-export interface CustomerFormData {
+export type CustomerFormData = {
   name: string;
-  full_name?: string;
   email: string;
   phone: string;
   gender?: string;
   birth_date?: string;
   note?: string;
-  user_id?: string;
-}
+  address?: string; // Added address field
+};

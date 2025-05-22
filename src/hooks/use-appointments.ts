@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { AppointmentFormData, Appointment, AppointmentStatus } from '@/models/appointment.model';
+import { Appointment, AppointmentStatus } from '@/models/appointment.model';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 
@@ -23,15 +23,24 @@ export const useAppointments = () => {
     return '';
   };
 
-  const createAppointment = useCallback(async (appointmentData: AppointmentFormData) => {
+  const createAppointment = useCallback(async (appointmentData: {
+    appointment_date: Date | string;
+    start_time: string;
+    end_time: string;
+    status?: AppointmentStatus;
+    total?: number;
+    customer_user_id?: string;
+    user_id?: string;
+    cancel_reason?: string;
+  }) => {
     setIsLoading(true);
     try {
       // Ensure appointment_date is a string, not a Date object
       const formattedData = {
         ...appointmentData,
-        appointment_date: appointmentData.appointment_date ? 
-          formatAppointmentDate(appointmentData.appointment_date) 
-          : new Date().toISOString().split('T')[0]
+        appointment_date: formatAppointmentDate(appointmentData.appointment_date),
+        // Convert confirmed status to scheduled if needed for database compatibility
+        status: appointmentData.status === 'confirmed' ? 'scheduled' : appointmentData.status
       };
       
       const { data, error } = await supabase
@@ -50,7 +59,7 @@ export const useAppointments = () => {
       });
 
       return data as Appointment;
-    } catch (error) {
+    } catch (error: any) {
       const errorMessage = error.message || 'Failed to create appointment';
       setError(errorMessage);
       toast({
@@ -71,9 +80,9 @@ export const useAppointments = () => {
       // Make sure we're using a valid status for the database
       const dbStatus = status === 'confirmed' ? 'scheduled' : status;
       
-      const updateData: Partial<Appointment> = { 
-        status: dbStatus as AppointmentStatus 
-      };
+      const updateData = { 
+        status: dbStatus
+      } as Record<string, any>;
       
       if (reason && status === 'cancelled') {
         updateData.cancel_reason = reason;
@@ -124,9 +133,7 @@ export const useAppointments = () => {
     setError(null);
     try {
       // Format date if it's a Date object
-      const formattedDate = typeof newDate === 'object' 
-        ? newDate.toISOString().split('T')[0] 
-        : newDate;
+      const formattedDate = formatAppointmentDate(newDate);
 
       const { data, error } = await supabase
         .from('appointments')

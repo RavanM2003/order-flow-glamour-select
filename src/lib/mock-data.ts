@@ -1,3 +1,4 @@
+
 // Mock data for users
 import { User, UserRole } from "@/models/user.model";
 import { Appointment, AppointmentStatus } from "@/models/appointment.model";
@@ -111,7 +112,7 @@ const mockAppointments = [
     appointment_date: "2023-06-01",
     start_time: "10:00:00",
     end_time: "11:00:00",
-    status: "scheduled",
+    status: "scheduled" as AppointmentStatus,
     total: 50.0,
     user_id: "2",
     cancel_reason: "",
@@ -125,7 +126,7 @@ const mockAppointments = [
     appointment_date: "2023-06-02",
     start_time: "14:00:00",
     end_time: "15:00:00",
-    status: "completed",
+    status: "completed" as AppointmentStatus,
     total: 75.0,
     user_id: "2",
     cancel_reason: "",
@@ -139,7 +140,7 @@ const mockAppointments = [
     appointment_date: "2023-06-03",
     start_time: "11:00:00",
     end_time: "12:00:00",
-    status: "cancelled",
+    status: "cancelled" as AppointmentStatus,
     total: 60.0,
     user_id: "2",
     cancel_reason: "Customer requested cancellation",

@@ -20,7 +20,10 @@ import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BookingMode, Customer } from "@/context/OrderContext.d";
+import { Customer } from "@/models/customer.model";
+
+// Define the type for booking mode
+export type BookingMode = 'salon' | 'home';
 
 // Define props for the component
 export interface CustomerInfoProps {
@@ -49,10 +52,10 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode, onSubmit }) =>
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerSchema),
     defaultValues: {
-      name: orderState.customer.name || "",
-      email: orderState.customer.email || "",
-      phone: orderState.customer.phone || "",
-      address: orderState.customer.address || "",
+      name: orderState.customer?.name || "",
+      email: orderState.customer?.email || "",
+      phone: orderState.customer?.phone || "",
+      address: "",  // Default to empty string
     },
   });
 
@@ -66,12 +69,11 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode, onSubmit }) =>
         name: values.name,
         email: values.email,
         phone: values.phone,
-        address: values.address || "",
         // Add required fields with default values
-        id: orderState.customer.id || 'temp-id',
-        gender: orderState.customer.gender || 'other',
-        lastVisit: orderState.customer.lastVisit || new Date().toISOString(),
-        totalSpent: orderState.customer.totalSpent || 0
+        id: orderState.customer?.id || 'temp-id',
+        gender: orderState.customer?.gender || 'other',
+        lastVisit: orderState.customer?.lastVisit || new Date().toISOString(),
+        totalSpent: orderState.customer?.totalSpent || 0
       };
 
       // Update customer data in order context

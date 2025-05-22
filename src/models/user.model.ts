@@ -58,3 +58,14 @@ export interface CustomerWithUserFormData {
   firstName?: string;
   lastName?: string;
 }
+
+export interface UserFormData {
+  email: string;
+  password?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: UserRole;
+  phone?: string;
+  gender?: 'male' | 'female' | 'other';
+  birthDate?: string;
+}
