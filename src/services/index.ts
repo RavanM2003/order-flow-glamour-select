@@ -1,11 +1,5 @@
-
-// Re-export all services
-export * from './api.service';
-export * from './auth.service';
-export * from './customer.service';
-export * from './product.service';
-export * from './service.service';
-export * from './staff.service';
-export * from './appointment.service';
-export * from './supabase.service';
-export * from './role.service';
+// Re-export services
+export { productService } from './product.service';
+export { serviceService } from './service.service';
+export { staffService } from './staff.service';
+// Add other exports as needed

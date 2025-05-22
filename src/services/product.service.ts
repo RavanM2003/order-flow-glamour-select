@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductFormData } from '@/models/product.model';
 
@@ -129,3 +130,15 @@ export async function getFeaturedProducts(limit: number = 6) {
   if (error) throw error;
   return data || [];
 }
+
+// Export all functions as productService object
+export const productService = {
+  getAll: getProducts,
+  getById: getProductById,
+  getByCategory: getProductsByCategory,
+  getByServiceId: (serviceId: number) => [], // Placeholder implementation
+  create: createProduct,
+  update: updateProduct,
+  delete: deleteProduct,
+  getFeatured: getFeaturedProducts
+};

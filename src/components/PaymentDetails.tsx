@@ -7,7 +7,8 @@ import { useAppointments } from '@/hooks/use-appointments';
 import { formatDate } from '@/utils/format';
 
 const PaymentDetails = () => {
-  const { orderState: { customer, staff, appointmentDate: date, appointmentTime: startTime, totalAmount }, selectedService: service } = useOrder();
+  const { orderState, setSelectedService } = useOrder();
+  const { customer, selectedStaff: staff, appointmentDate: date, appointmentTime: startTime, totalAmount, selectedService: service } = orderState;
   const navigate = useNavigate();
   const { createAppointment } = useAppointments();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,7 +31,7 @@ const PaymentDetails = () => {
       // Ensure we're using correct types for the appointment
       const appointmentData = {
         customer_user_id: customer.id,
-        appointment_date: date,
+        appointment_date: typeof date === 'object' ? formatDate(date) : date,
         start_time: startTime || '',
         end_time: endTime, 
         // Use the correct status enum value that matches backend expectations
@@ -75,7 +76,7 @@ const PaymentDetails = () => {
       <div className="mb-4">
         <h3 className="text-lg font-medium">Order Summary</h3>
         <p>Service: {service?.name}</p>
-        <p>Date: {formatDate(date)}</p>
+        <p>Date: {date ? formatDate(date) : 'Not selected'}</p>
         <p>Time: {startTime} - {endTime}</p>
         <p>Total: ${service?.price?.toFixed(2)}</p>
       </div>
@@ -83,7 +84,7 @@ const PaymentDetails = () => {
       {/* Display Customer Details */}
       <div className="mb-4">
         <h3 className="text-lg font-medium">Customer Information</h3>
-        <p>Name: {customer?.full_name}</p>
+        <p>Name: {customer?.name || customer?.full_name}</p>
         <p>Email: {customer?.email}</p>
         <p>Phone: {customer?.phone}</p>
       </div>

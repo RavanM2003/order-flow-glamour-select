@@ -24,6 +24,8 @@ export interface User {
   role?: UserRole;
   phone?: string;
   note?: string;
+  staffId?: string; // Add for compatibility with auth.service
+  token?: string; // Add for compatibility with AuthResponse
 
   // These are mappings for compatibility with the existing User type
   firstName?: string;
@@ -42,6 +44,7 @@ export interface AuthResponse {
   user: User | null;
   session: any;
   error: string | null;
+  token?: string; // Add for compatibility with auth.service
 }
 
 export interface CustomerWithUserFormData {
@@ -52,4 +55,6 @@ export interface CustomerWithUserFormData {
   birth_date?: string;
   note?: string;
   password?: string;
+  firstName?: string; // Add for compatibility
+  lastName?: string;  // Add for compatibility
 }

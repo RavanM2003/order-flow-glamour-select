@@ -83,7 +83,7 @@ const CustomersTab = () => {
               ) : (
                 filteredCustomers.map((customer: Customer) => (
                   <TableRow key={customer.id}>
-                    <TableCell>{customer.full_name || 'N/A'}</TableCell>
+                    <TableCell>{customer.full_name || customer.name || 'N/A'}</TableCell>
                     <TableCell>{customer.email || 'N/A'}</TableCell>
                     <TableCell>{customer.phone || 'N/A'}</TableCell>
                     <TableCell className="capitalize">{customer.gender || 'N/A'}</TableCell>

@@ -10,6 +10,9 @@ export interface Customer {
   note?: string;
   created_at?: string;
   updated_at?: string;
+  user_id?: string;
+  lastVisit?: string;
+  totalSpent?: number;
 }
 
 export interface CustomerFormData {
