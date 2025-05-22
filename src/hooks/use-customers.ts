@@ -33,6 +33,7 @@ export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
   const { toast } = useToast();
 
   // Map database customer to frontend customer model
@@ -54,6 +55,8 @@ export function useCustomers() {
 
   // Fetch all customers
   const fetchCustomers = useCallback(async () => {
+    if (loading) return; // Prevent concurrent fetch operations
+    
     setLoading(true);
     setError(null);
     try {
@@ -68,6 +71,7 @@ export function useCustomers() {
         const mappedCustomers = data.map(mapDbCustomerToCustomer);
         setCustomers(mappedCustomers);
       }
+      setIsInitialized(true);
     } catch (err: any) {
       setError(err);
       toast({
@@ -78,7 +82,7 @@ export function useCustomers() {
     } finally {
       setLoading(false);
     }
-  }, [mapDbCustomerToCustomer, toast]);
+  }, [mapDbCustomerToCustomer, toast, loading]);
 
   // Create a new customer
   const createCustomer = useCallback(async (customerData: CustomerFormData) => {
@@ -100,7 +104,7 @@ export function useCustomers() {
 
       const { data, error } = await supabase
         .from('users')
-        .insert([dbCustomer])
+        .insert(dbCustomer)
         .select();
 
       if (error) throw new Error(error.message);
@@ -239,15 +243,18 @@ export function useCustomers() {
     }
   }, [mapDbCustomerToCustomer, toast]);
 
-  // Load customers on component mount
+  // Load customers on component mount, but only once
   useEffect(() => {
-    fetchCustomers();
-  }, [fetchCustomers]);
+    if (!isInitialized) {
+      fetchCustomers();
+    }
+  }, [fetchCustomers, isInitialized]);
 
   return {
     customers,
     loading,
     error,
+    isInitialized,
     fetchCustomers,
     createCustomer,
     updateCustomer,

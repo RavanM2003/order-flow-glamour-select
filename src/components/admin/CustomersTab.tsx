@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+
+import React, { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,20 @@ const CustomersTab = () => {
     gender: "female" as "female" | "male" | "other",
   });
 
+  // Helper functions for customer display and icons
+  const getDisplayId = (index: number) => {
+    return ((currentPage - 1) * pageSize + index + 1).toString().padStart(2, '0');
+  };
+
+  const getGenderIcon = (gender?: string) => {
+    if (gender === 'female') {
+      return <UserCircle className="h-4 w-4 mr-2 text-pink-500" />;
+    } else if (gender === 'male') {
+      return <UserCircle className="h-4 w-4 mr-2 text-blue-500" />;
+    }
+    return <UserCircle className="h-4 w-4 mr-2 text-gray-500" />;
+  };
+
   // Filter customers based on search term
   const filteredCustomers = customers.filter(
     (customer) =>
@@ -92,9 +107,6 @@ const CustomersTab = () => {
         setAddCustomerOpen(false);
         setNewCustomer({ name: "", email: "", phone: "", gender: "female" });
         
-        // Refresh the customers list
-        await fetchCustomers();
-
         // Automatically open appointment drawer for the new customer if we have customer data
         if (result) {
           setSelectedCustomerForAppointment(result);
@@ -117,23 +129,17 @@ const CustomersTab = () => {
   };
 
   // Helper function to convert model customer to order customer
-  const convertToOrderCustomer = (customer: ModelCustomer): OrderCustomer => {
+  const convertToOrderCustomer = useCallback((customer: ModelCustomer): OrderCustomer => {
     return {
       id: typeof customer.id === 'number' ? customer.id.toString() : customer.id,
       name: customer.name || '',
       email: customer.email || '',
       phone: customer.phone || '',
-      address: customer.address || '',
       gender: customer.gender || 'other',
       lastVisit: customer.lastVisit || new Date().toISOString(),
       totalSpent: customer.totalSpent || 0
     };
-  };
-
-  useEffect(() => {
-    // Ensure we have the latest data
-    fetchCustomers();
-  }, [fetchCustomers]);
+  }, []);
 
   return (
     <>
