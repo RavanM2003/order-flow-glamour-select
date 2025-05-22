@@ -1,10 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
-import { Customer } from '@/models/customer.model';
-import { OrderContextType, OrderState, BookingMode } from './OrderContext.d';
-import { Service } from '@/models/service.model';
-import { Staff } from '@/models/staff.model';
-import { Product } from '@/models/product.model';
+import { OrderContextType, OrderState, BookingMode, Customer, Service, Staff, Product } from './OrderContext.d';
 
 type OrderProviderProps = {
   children: ReactNode;
@@ -17,7 +13,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingMode, setBookingMode] = useState<BookingMode>('salon');
   
-  const [customer, setCustomer] = useState<Customer>(initialCustomer || {
+  const [customer, setCustomerState] = useState<Customer>(initialCustomer || {
     id: "",
     name: "",
     email: "",
@@ -27,9 +23,9 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
     totalSpent: 0
   });
   
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedService, setSelectedServiceState] = useState<Service | null>(null);
   const [selectedServices, setSelectedServices] = useState<number[]>([]);
-  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
+  const [selectedStaff, setSelectedStaffState] = useState<Staff | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [appointmentDate, setAppointmentDate] = useState<Date | null>(null);
   const [appointmentTime, setAppointmentTime] = useState<string | null>(null);
@@ -52,7 +48,6 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
   }, [selectedService, selectedProducts]);
 
   const addProduct = useCallback((productId: number) => {
-    // This should be modified to handle productId instead of product object
     setSelectedProducts((prev) => {
       // Check if product already exists to avoid duplicates
       if (prev.some(p => p.id === productId)) {
@@ -105,7 +100,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
 
   const resetOrder = useCallback(() => {
     setCurrentStep(1);
-    setCustomer(initialCustomer || {
+    setCustomerState(initialCustomer || {
       id: "",
       name: "",
       email: "",
@@ -114,8 +109,8 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
       lastVisit: "",
       totalSpent: 0
     });
-    setSelectedService(null);
-    setSelectedStaff(null);
+    setSelectedServiceState(null);
+    setSelectedStaffState(null);
     setSelectedProducts([]);
     setAppointmentDate(null);
     setAppointmentTime(null);
@@ -155,6 +150,19 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({ children, initialC
 
   const unselectService = useCallback((serviceId: number) => {
     setSelectedServices(prev => prev.filter(id => id !== serviceId));
+  }, []);
+
+  // Wrapper functions to handle type conversions
+  const setCustomer = useCallback((customerData: Customer) => {
+    setCustomerState(customerData);
+  }, []);
+
+  const setSelectedService = useCallback((service: Service | null) => {
+    setSelectedServiceState(service);
+  }, []);
+
+  const setSelectedStaff = useCallback((staff: Staff | null) => {
+    setSelectedStaffState(staff);
   }, []);
 
   const value: OrderContextType = {

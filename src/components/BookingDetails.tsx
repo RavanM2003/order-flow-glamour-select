@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
 interface BookingDetailsProps {
-  appointmentId: number;
+  appointmentId: string;
 }
 
 interface Customer {
@@ -50,12 +50,19 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
         setLoading(true);
         setError(null);
 
+        // Convert appointmentId to number for the database query
+        const appointmentIdNumber = parseInt(appointmentId);
+        
+        if (isNaN(appointmentIdNumber)) {
+          throw new Error("Invalid appointment ID");
+        }
+
         // Fetch appointment basic info
         const { data: appointmentData, error: appointmentError } =
           await supabase
             .from("appointments")
             .select("*")
-            .eq("id", appointmentId)
+            .eq("id", appointmentIdNumber)
             .single();
 
         if (appointmentError) throw appointmentError;
@@ -93,7 +100,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
             duration,
             services:service_id(name)
           `)
-          .eq("appointment_id", appointmentId);
+          .eq("appointment_id", appointmentIdNumber);
 
         if (serviceError) throw serviceError;
 
@@ -134,7 +141,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
             quantity,
             products:product_id(name)
           `)
-          .eq("appointment_id", appointmentId);
+          .eq("appointment_id", appointmentIdNumber);
 
         if (productError) throw productError;
 

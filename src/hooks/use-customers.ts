@@ -95,6 +95,7 @@ export function useCustomers() {
         birth_date: customerData.birth_date,
         note: customerData.note,
         role: 'customer',
+        hashed_password: 'temp_password_hash' // Required field in the database
       };
 
       const { data, error } = await supabase

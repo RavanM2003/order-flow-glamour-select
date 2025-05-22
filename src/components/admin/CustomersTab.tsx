@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -35,7 +34,7 @@ import CustomerInfo from "@/components/CustomerInfo";
 
 const CustomersTab = () => {
   const { toast } = useToast();
-  const { customers, isLoading, fetchCustomers, createCustomer } = useCustomers();
+  const { customers, loading, fetchCustomers, createCustomer } = useCustomers();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [viewCustomer, setViewCustomer] = useState<Customer | null>(null);
@@ -92,8 +91,8 @@ const CustomersTab = () => {
         setAddCustomerOpen(false);
         setNewCustomer({ name: "", email: "", phone: "", gender: "female" });
         
-        // Refresh the customers list with force refresh
-        await fetchCustomers(true);
+        // Refresh the customers list
+        await fetchCustomers();
 
         // Automatically open appointment drawer for the new customer if we have customer data
         if (result) {
@@ -135,7 +134,7 @@ const CustomersTab = () => {
 
   useEffect(() => {
     // Ensure we have the latest data
-    fetchCustomers(true);
+    fetchCustomers();
   }, [fetchCustomers]);
 
   return (
@@ -163,7 +162,7 @@ const CustomersTab = () => {
             </div>
           </div>
 
-          {isLoading ? (
+          {loading ? (
             <div className="text-center py-8">Loading customers...</div>
           ) : (
             <div className="border rounded-md overflow-hidden">

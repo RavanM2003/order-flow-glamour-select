@@ -1,25 +1,36 @@
 
 // Product model and related types
 export interface Product {
-  id?: number;
+  id: number; // Make sure id is required and a number
   name: string;
   price: number;
   description?: string;
-  image_url?: string | null;
-  stock_quantity?: number;
-  is_active?: boolean;
+  stock?: number;
+  // Additional fields matching database schema
+  user_id?: string;
+  details?: string;
+  how_to_use?: string;
+  ingredients?: string;
   created_at?: string;
   updated_at?: string;
-  isServiceRelated?: boolean; // Client-side flag to identify service-related products
-  quantity?: number; // For use in cart/orders
 }
 
 export interface ProductFormData {
   name: string;
   price: number;
+  stock: number;
   description?: string;
-  stock_quantity?: number;
-  category?: string;
-  image_url?: string | null;
-  isServiceRelated?: boolean;
+  details?: string;
+  how_to_use?: string;
+  ingredients?: string;
+}
+
+// Product filters
+export interface ProductFilters {
+  search?: string;
+  category?: number;
+  minPrice?: number;
+  maxPrice?: number;
+  sortBy?: "name" | "price" | "stock";
+  sortOrder?: "asc" | "desc";
 }

@@ -1,561 +1,258 @@
-
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import { useOrder } from "@/context/OrderContext";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import {
-  CreditCard,
-  DollarSign,
-  Building,
-  ChevronDown,
-  ChevronUp,
-  Wallet,
-  Clock,
-  Sparkles,
-  Package,
-  User,
-  Calendar,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { config } from "@/config/env";
+import { Check, CreditCard, Wallet } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Input } from "@/components/ui/input";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { API } from "@/lib/api";
-import { useServices } from "@/hooks/use-services";
-import { useProducts } from "@/hooks/use-products";
+import { supabase } from "@/integrations/supabase/client";
 
-const PaymentDetails = React.memo(() => {
+const PaymentDetails = () => {
   const { orderState, setPaymentMethod, goToStep, completeOrder } = useOrder();
+  const { customer, selectedService, selectedProducts, selectedServices, appointmentDate, appointmentTime } = orderState;
   const { toast } = useToast();
-  const [paymentMethodState, setPaymentMethodState] = useState(
-    orderState.paymentMethod || "cash"
-  );
-  const [loading, setLoading] = useState(false);
-  const [showBankDetails, setShowBankDetails] = useState(false);
-  const [servicesData, setServicesData] = useState<any[]>([]);
-  const [productsData, setProductsData] = useState<any[]>([]);
-  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [paymentType, setPaymentType] = useState<string | null>(orderState.paymentMethod || "cash");
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const { services, isLoading: servicesLoading } = useServices();
-  const { products, isLoading: productsLoading } = useProducts();
-  
-  // Credit card form
-  const [cardDetails, setCardDetails] = useState({
-    cardNumber: '',
-    cardName: '',
-    expiry: '',
-    cvv: ''
-  });
-
-  const handlePaymentMethodChange = useCallback((value: string) => {
-    setPaymentMethodState(value);
-  }, []);
-  
-  const handleCardDetailsChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+  // Calculate total amount
+  const calculateTotal = () => {
+    let total = 0;
     
-    // Format card number with spaces after every 4 digits
-    if (name === 'cardNumber') {
-      const formatted = value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim();
-      setCardDetails(prev => ({ ...prev, [name]: formatted }));
+    // Add service price if a single service is selected
+    if (selectedService) {
+      total += selectedService.price;
+    }
+    
+    // Add prices for multiple selected services
+    // This would need to be implemented based on your service data structure
+    
+    // Add product prices
+    if (selectedProducts && selectedProducts.length > 0) {
+      total += selectedProducts.reduce((sum, product) => sum + product.price, 0);
+    }
+    
+    return total;
+  };
+
+  const handlePaymentTypeChange = (value: string) => {
+    setPaymentType(value);
+    setPaymentMethod(value);
+  };
+
+  const handleBack = () => {
+    goToStep(2);
+  };
+
+  const handleSubmit = async () => {
+    if (!appointmentDate || !appointmentTime) {
+      toast({
+        title: "Missing Information",
+        description: "Please select appointment date and time",
+        variant: "destructive",
+      });
       return;
     }
-    
-    // Format expiry date as MM/YY
-    if (name === 'expiry') {
-      const sanitized = value.replace(/[^\d]/g, '');
-      if (sanitized.length <= 2) {
-        setCardDetails(prev => ({ ...prev, [name]: sanitized }));
-      } else {
-        setCardDetails(prev => ({ 
-          ...prev, 
-          [name]: `${sanitized.substring(0, 2)}/${sanitized.substring(2, 4)}`
-        }));
-      }
+
+    if (!paymentType) {
+      toast({
+        title: "Payment Method Required",
+        description: "Please select a payment method",
+        variant: "destructive",
+      });
       return;
     }
-    
-    setCardDetails(prev => ({ ...prev, [name]: value }));
-  }, []);
 
-  const bankAccounts = [
-    {
-      bankName: "AzerTurk Bank",
-      accountName: "Glamour Studio LLC",
-      accountNumber: "AZ12ATBZ12345678901234567890",
-      swift: "ATBZAZ22",
-    },
-    {
-      bankName: "Kapital Bank",
-      accountName: "Glamour Studio LLC",
-      accountNumber: "AZ34KAPI98765432109876543210",
-      swift: "KAPIAZ22",
-    },
-  ];
-  
-  // Fetch services and products data
-  useEffect(() => {
-    if (!servicesLoading && services.length > 0) {
-      setServicesData(services);
-    }
-    
-    if (!productsLoading && products.length > 0) {
-      setProductsData(products);
-    }
-    
-    setIsLoadingData(servicesLoading || productsLoading);
-  }, [services, servicesLoading, products, productsLoading]);
+    setIsProcessing(true);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate card details if card payment method is selected
-    if (paymentMethodState === 'card') {
-      if (cardDetails.cardNumber.replace(/\s/g, '').length < 16) {
-        toast({
-          title: "Invalid card number",
-          description: "Please enter a valid card number",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      if (!cardDetails.cardName) {
-        toast({
-          title: "Missing name",
-          description: "Please enter the name on card",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      if (!cardDetails.expiry || cardDetails.expiry.length < 5) {
-        toast({
-          title: "Invalid expiry date",
-          description: "Please enter a valid expiry date (MM/YY)",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      if (!cardDetails.cvv || cardDetails.cvv.length < 3) {
-        toast({
-          title: "Invalid CVV",
-          description: "Please enter a valid CVV code",
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-    
     try {
-      setLoading(true);
-      
-      // Save the payment method to the order context
-      setPaymentMethod(paymentMethodState);
-      
-      // Generate order ID (this would be done by the backend in production)
-      const orderId = config.usesMockData
-        ? `ORD-${Math.floor(Math.random() * 10000)}`
-        : null;
-      
-      // Simulate API call for order creation
-      if (config.usesMockData) {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        completeOrder(orderId as string);
+      // Create a new appointment in the database
+      const appointmentData = {
+        customer_user_id: customer.id || null,
+        appointment_date: appointmentDate.toISOString().split('T')[0],
+        start_time: appointmentTime,
+        end_time: calculateEndTime(appointmentTime, 60), // Assuming 60 min duration
+        status: "scheduled",
+        payment_method: paymentType,
+        total: calculateTotal(),
+        notes: "",
+      };
+
+      const { data: appointmentResult, error: appointmentError } = await supabase
+        .from("appointments")
+        .insert(appointmentData)
+        .select()
+        .single();
+
+      if (appointmentError) throw appointmentError;
+
+      // Process successful booking
+      if (appointmentResult) {
+        // Complete the order with the appointment ID
+        completeOrder(appointmentResult.id);
+        
+        // Move to confirmation step
+        goToStep(4);
         
         toast({
-          title: "Order Completed",
-          description: "Your booking has been successfully created!"
+          title: "Booking Confirmed!",
+          description: "Your appointment has been successfully scheduled.",
+          variant: "default",
         });
-      } else {
-        // Real API call would happen here
-        // const response = await createOrder({...orderState, paymentMethod});
-        // completeOrder(response.orderId);
       }
-      
-      // Move to next step (confirmation)
-      goToStep(4);
     } catch (error) {
-      console.error("Error processing payment:", error);
+      console.error("Error creating appointment:", error);
       toast({
-        title: "Error",
-        description: "There was a problem creating your booking. Please try again.",
-        variant: "destructive"
+        title: "Booking Failed",
+        description: "There was an error processing your booking. Please try again.",
+        variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsProcessing(false);
     }
-  }, [paymentMethodState, cardDetails, toast, setPaymentMethod, completeOrder, goToStep, config.usesMockData]);
-
-  const handleBack = useCallback(() => {
-    goToStep(2);
-  }, [goToStep]);
-
-  // Get selected services and products details
-  const selectedServicesDetails = servicesData
-    .filter(service => orderState.selectedService && service.id === orderState.selectedService.id) || [];
-  
-  const selectedProductsDetails = productsData
-    .filter(product => orderState.selectedProducts.some(p => p.id === product.id)) || [];
-  
-  // Find staff assigned to each service
-  const getServiceProvider = (serviceId: number) => {
-    return orderState.serviceProviders?.find(sp => sp.serviceId === serviceId)?.name || 'No staff assigned';
   };
-  
-  // Calculate the order subtotal
-  const total = orderState.totalAmount || 0;
+
+  // Helper function to calculate end time
+  const calculateEndTime = (startTime: string, durationMinutes: number) => {
+    const [hours, minutes] = startTime.split(":").map(Number);
+    const startDate = new Date();
+    startDate.setHours(hours, minutes, 0, 0);
+    
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
+    return `${endDate.getHours().toString().padStart(2, "0")}:${endDate.getMinutes().toString().padStart(2, "0")}`;
+  };
 
   return (
-    <div className="mt-6">
+    <div className="space-y-6">
       <Card>
-        <CardContent className="pt-6">
-          <h2 className="text-2xl font-bold mb-6 text-glamour-800">Payment Details</h2>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Order Summary */}
-            <div className="bg-gray-50 p-4 rounded-lg mb-6">
-              <Accordion type="single" collapsible>
-                <AccordionItem value="services" className="border-none">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-semibold text-lg">Order Summary</h3>
-                    <AccordionTrigger className="py-0">
-                      <span className="text-sm text-glamour-700">View Details</span>
-                    </AccordionTrigger>
+        <CardHeader>
+          <CardTitle>Payment Details</CardTitle>
+          <CardDescription>
+            Choose your preferred payment method
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup
+            value={paymentType || ""}
+            onValueChange={handlePaymentTypeChange}
+            className="space-y-4"
+          >
+            <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
+              <RadioGroupItem value="cash" id="cash" />
+              <Label htmlFor="cash" className="flex items-center cursor-pointer flex-1">
+                <Wallet className="h-5 w-5 mr-2 text-muted-foreground" />
+                <div>
+                  <div className="font-medium">Cash</div>
+                  <div className="text-sm text-muted-foreground">
+                    Pay in cash at the salon
                   </div>
-                  <AccordionContent>
-                    <div className="space-y-4 mt-2">
-                      {/* Services */}
-                      {orderState.selectedService && (
-                        <div>
-                          <h4 className="text-sm font-semibold mb-2 flex items-center">
-                            <Sparkles className="h-4 w-4 mr-1" /> Services
-                          </h4>
-                          <ul className="space-y-2">
-                            {isLoadingData ? (
-                              <li>Loading services...</li>
-                            ) : (
-                              selectedServicesDetails.map(service => (
-                                <li key={service.id} className="bg-white p-2 rounded border">
-                                  <div className="flex justify-between">
-                                    <span>{service.name}</span>
-                                    <span>${service.price}</span>
-                                  </div>
-                                  <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                    <div className="flex items-center">
-                                      <Clock className="h-3 w-3 mr-1" /> {service.duration} min
-                                    </div>
-                                    <div className="flex items-center">
-                                      <User className="h-3 w-3 mr-1" /> 
-                                      {getServiceProvider(service.id)}
-                                    </div>
-                                  </div>
-                                </li>
-                              ))
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {/* Products */}
-                      {orderState.selectedProducts.length > 0 && (
-                        <div>
-                          <h4 className="text-sm font-semibold mb-2 flex items-center">
-                            <Package className="h-4 w-4 mr-1" /> Products
-                          </h4>
-                          <ul className="space-y-2">
-                            {isLoadingData ? (
-                              <li>Loading products...</li>
-                            ) : (
-                              selectedProductsDetails.map(product => (
-                                <li key={product.id} className="bg-white p-2 rounded border">
-                                  <div className="flex justify-between">
-                                    <span>{product.name}</span>
-                                    <span>${product.price}</span>
-                                  </div>
-                                </li>
-                              ))
-                            )}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {/* Appointment Details */}
-                      <div>
-                        <h4 className="text-sm font-semibold mb-2 flex items-center">
-                          <Calendar className="h-4 w-4 mr-1" /> Appointment Details
-                        </h4>
-                        <div className="bg-white p-2 rounded border">
-                          <div className="grid grid-cols-2 gap-2 text-sm">
-                            <div>Date: {orderState.appointmentDate ? orderState.appointmentDate.toLocaleDateString() : 'Not set'}</div>
-                            <div>Time: {orderState.appointmentTime || 'Not set'}</div>
-                            <div className="col-span-2 text-xs text-gray-500 mt-1">
-                              {orderState.customer?.address && (
-                                <div>Address: {orderState.customer.address}</div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-
-              <div className="space-y-1 pt-2">
-                <div className="flex justify-between">
-                  <span>Services:</span>
-                  <Badge variant="outline" className="font-normal">
-                    {orderState.selectedService ? 1 : 0} selected
-                  </Badge>
                 </div>
-                <div className="flex justify-between">
-                  <span>Products:</span>
-                  <Badge variant="outline" className="font-normal">
-                    {orderState.selectedProducts.length} selected
-                  </Badge>
-                </div>
-              </div>
-              <Separator className="my-3" />
-              <div className="flex justify-between font-semibold text-lg">
-                <span>Total:</span>
-                <span>${total}</span>
-              </div>
+              </Label>
             </div>
 
-            {/* Payment Method Selection */}
-            <div>
-              <h3 className="font-semibold mb-4 text-lg">Select Payment Method</h3>
-              <RadioGroup
-                value={paymentMethodState}
-                onValueChange={handlePaymentMethodChange}
-                className="space-y-3"
-              >
-                {/* Cash Payment */}
-                <div className="flex items-center space-x-3 border rounded-md p-4 hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value="cash" id="payment-cash" />
-                  <Label
-                    htmlFor="payment-cash"
-                    className="flex items-center cursor-pointer flex-1"
-                  >
-                    <DollarSign className="h-5 w-5 mr-3 text-gray-600" />
-                    <div>
-                      <div className="font-medium">Cash on Arrival</div>
-                      <div className="text-sm text-muted-foreground">
-                        Pay when you arrive for your appointment
-                      </div>
-                    </div>
-                  </Label>
-                </div>
-
-                {/* Credit Card Payment */}
-                <div className="border rounded-md transition-colors">
-                  <div className="flex items-center space-x-3 p-4 hover:bg-gray-50">
-                    <RadioGroupItem value="card" id="payment-card" />
-                    <Label
-                      htmlFor="payment-card"
-                      className="flex items-center cursor-pointer flex-1"
-                    >
-                      <CreditCard className="h-5 w-5 mr-3 text-gray-600" />
-                      <div>
-                        <div className="font-medium">Credit/Debit Card</div>
-                        <div className="text-sm text-muted-foreground">
-                          Pay securely with your card
-                        </div>
-                      </div>
-                    </Label>
+            <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
+              <RadioGroupItem value="card" id="card" />
+              <Label htmlFor="card" className="flex items-center cursor-pointer flex-1">
+                <CreditCard className="h-5 w-5 mr-2 text-muted-foreground" />
+                <div>
+                  <div className="font-medium">Card Payment</div>
+                  <div className="text-sm text-muted-foreground">
+                    Pay with credit or debit card at the salon
                   </div>
-                  
-                  {paymentMethodState === 'card' && (
-                    <div className="border-t p-4 bg-gray-50">
-                      <div className="space-y-3">
-                        <div>
-                          <Label htmlFor="cardNumber">Card Number</Label>
-                          <Input
-                            id="cardNumber"
-                            name="cardNumber"
-                            value={cardDetails.cardNumber}
-                            onChange={handleCardDetailsChange}
-                            placeholder="1234 5678 9012 3456"
-                            maxLength={19}
-                            className="font-mono"
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="cardName">Name on Card</Label>
-                          <Input
-                            id="cardName"
-                            name="cardName"
-                            value={cardDetails.cardName}
-                            onChange={handleCardDetailsChange}
-                            placeholder="JOHN SMITH"
-                          />
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <Label htmlFor="expiry">Expiry Date</Label>
-                            <Input
-                              id="expiry"
-                              name="expiry"
-                              value={cardDetails.expiry}
-                              onChange={handleCardDetailsChange}
-                              placeholder="MM/YY"
-                              maxLength={5}
-                              className="font-mono"
-                            />
-                          </div>
-                          
-                          <div>
-                            <Label htmlFor="cvv">CVV</Label>
-                            <Input
-                              id="cvv"
-                              name="cvv"
-                              value={cardDetails.cvv}
-                              onChange={handleCardDetailsChange}
-                              placeholder="123"
-                              maxLength={4}
-                              className="font-mono"
-                              type="password"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center mt-3 text-xs text-muted-foreground">
-                        <Wallet className="h-3 w-3 mr-1" />
-                        Your card information is securely processed
-                      </div>
-                    </div>
-                  )}
                 </div>
-
-                {/* POS Terminal Payment */}
-                <div className="flex items-center space-x-3 border rounded-md p-4 hover:bg-gray-50 transition-colors">
-                  <RadioGroupItem value="pos" id="payment-pos" />
-                  <Label
-                    htmlFor="payment-pos"
-                    className="flex items-center cursor-pointer flex-1"
-                  >
-                    <Wallet className="h-5 w-5 mr-3 text-gray-600" />
-                    <div>
-                      <div className="font-medium">POS Terminal</div>
-                      <div className="text-sm text-muted-foreground">
-                        Pay using POS terminal on arrival
-                      </div>
-                    </div>
-                  </Label>
-                </div>
-
-                {/* Bank Transfer */}
-                <div className="border rounded-md transition-colors">
-                  <div className="flex items-center space-x-3 p-4 hover:bg-gray-50">
-                    <RadioGroupItem value="bank" id="payment-bank" />
-                    <Label
-                      htmlFor="payment-bank"
-                      className="flex items-center cursor-pointer flex-1"
-                    >
-                      <Building className="h-5 w-5 mr-3 text-gray-600" />
-                      <div>
-                        <div className="font-medium">Bank Transfer</div>
-                        <div className="text-sm text-muted-foreground">
-                          Pay via bank transfer
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setShowBankDetails(!showBankDetails)}
-                        className="ml-auto text-gray-400 hover:text-gray-600"
-                      >
-                        {showBankDetails ? (
-                          <ChevronUp className="h-5 w-5" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5" />
-                        )}
-                      </button>
-                    </Label>
-                  </div>
-                  {showBankDetails && (
-                    <div className="border-t p-4 bg-gray-50">
-                      <h4 className="font-medium mb-2 text-sm">Bank Account Details</h4>
-                      <div className="space-y-4">
-                        {bankAccounts.map((account, index) => (
-                          <div key={index} className="rounded-md border bg-white p-3">
-                            <div className="text-sm font-medium">{account.bankName}</div>
-                            <div className="text-sm">Account: {account.accountName}</div>
-                            <div className="text-sm mt-1">
-                              <span className="font-medium">IBAN:</span> {account.accountNumber}
-                            </div>
-                            <div className="text-sm">
-                              <span className="font-medium">SWIFT:</span> {account.swift}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-3">
-                        Please include your name and appointment date in the transfer description
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </RadioGroup>
+              </Label>
             </div>
-
-            <div className="flex justify-between mt-6">
-              <Button type="button" variant="outline" onClick={handleBack}>
-                Back
-              </Button>
-              <Button
-                type="submit"
-                className="bg-glamour-700 hover:bg-glamour-800"
-                disabled={loading}
-              >
-                {loading ? (
-                  <span className="flex items-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8H4z"
-                      ></path>
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  "Confirm Booking"
-                )}
-              </Button>
-            </div>
-          </form>
+          </RadioGroup>
         </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Summary</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Customer</span>
+              <span className="font-medium">{customer.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Date</span>
+              <span className="font-medium">
+                {appointmentDate ? appointmentDate.toLocaleDateString() : "Not selected"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Time</span>
+              <span className="font-medium">{appointmentTime || "Not selected"}</span>
+            </div>
+          </div>
+
+          <Separator />
+
+          {selectedService && (
+            <div className="flex justify-between items-center">
+              <div>
+                <p className="font-medium">{selectedService.name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedService.duration} min
+                </p>
+              </div>
+              <p className="font-medium">${selectedService.price}</p>
+            </div>
+          )}
+
+          {selectedProducts &&
+            selectedProducts.length > 0 &&
+            selectedProducts.map((product) => (
+              <div
+                key={product.id}
+                className="flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-medium">{product.name}</p>
+                  <p className="text-sm text-muted-foreground">Product</p>
+                </div>
+                <p className="font-medium">${product.price}</p>
+              </div>
+            ))}
+
+          <Separator />
+
+          <div className="flex justify-between items-center">
+            <p className="font-bold">Total</p>
+            <p className="font-bold">${calculateTotal()}</p>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button variant="outline" onClick={handleBack}>
+            Back
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isProcessing}
+            className="bg-glamour-700 hover:bg-glamour-800 text-white"
+          >
+            {isProcessing ? (
+              "Processing..."
+            ) : (
+              <>
+                <Check className="mr-2 h-4 w-4" /> Confirm Booking
+              </>
+            )}
+          </Button>
+        </CardFooter>
       </Card>
     </div>
   );
-});
+};
 
-export default React.memo(PaymentDetails);
+export default PaymentDetails;

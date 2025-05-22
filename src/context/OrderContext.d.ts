@@ -2,10 +2,14 @@
 import { ReactNode } from 'react';
 
 export interface Customer {
+  id: string;
   name: string;
   email: string;
   phone: string;
   address?: string;
+  gender: string;
+  lastVisit: string;
+  totalSpent: number;
 }
 
 export interface Service {
@@ -24,6 +28,9 @@ export interface Staff {
   position?: string;
   specializations?: number[];
   avatar_url?: string;
+  created_at?: string;
+  updated_at?: string;
+  user_id?: string;
 }
 
 export interface Product {
