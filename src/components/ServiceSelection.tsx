@@ -2,24 +2,14 @@
 import React, { useContext } from 'react';
 import { useServices } from '@/hooks/use-services';
 import { OrderContext } from '@/context/OrderContext';
+import { useOrder } from '@/context/OrderContext';
 
 const ServiceSelection = () => {
   const { services, isLoading, error } = useServices();
-  const orderContext = useContext(OrderContext);
-
-  if (!orderContext) {
-    return <div>OrderContext is not available</div>;
-  }
-
-  const { state, dispatch } = orderContext;
+  const { selectedService, selectService } = useOrder();
 
   const handleServiceSelect = (serviceId: number) => {
-    if (dispatch) {
-      dispatch({
-        type: 'SELECT_SERVICE',
-        payload: serviceId
-      });
-    }
+    selectService(serviceId);
   };
 
   if (isLoading) return <div>Loading services...</div>;
@@ -31,7 +21,7 @@ const ServiceSelection = () => {
         <div 
           key={service.id}
           className={`p-4 border rounded-lg cursor-pointer ${
-            state?.selectedService === service.id ? 'bg-primary text-primary-foreground' : 'bg-card'
+            selectedService === service.id ? 'bg-primary text-primary-foreground' : 'bg-card'
           }`}
           onClick={() => handleServiceSelect(service.id)}
         >

@@ -1,137 +1,84 @@
-
-import React, { useState } from "react";
-import { useOrder } from "@/context/OrderContext";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Check, CreditCard, Wallet } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useCurrentUserId } from "@/hooks/use-current-user-id";
+import React, { useState, useEffect } from 'react';
+import { useOrder } from '@/context/OrderContext';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { useAppointments } from '@/hooks/use-appointments';
+import { useNavigate } from 'react-router-dom';
+import { useCurrentUserId } from '@/hooks/use-current-user-id';
+import { withUserId } from '@/utils/withUserId';
+import { toast } from '@/components/ui/use-toast';
 
 const PaymentDetails = () => {
-  const { orderState, setPaymentMethod, goToStep, completeOrder } = useOrder();
-  const { customer, selectedService, selectedProducts, appointmentDate, appointmentTime } = orderState;
-  const { toast } = useToast();
-  const { withUserId } = useCurrentUserId();
-  const [paymentType, setPaymentType] = useState<string | null>(orderState.paymentMethod || "cash");
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  // Calculate total amount
-  const calculateTotal = () => {
-    let total = 0;
-    
-    // Add service price if a single service is selected
-    if (selectedService) {
-      total += selectedService.price;
-    }
-    
-    // Add product prices
-    if (selectedProducts && selectedProducts.length > 0) {
-      total += selectedProducts.reduce((sum, product) => sum + product.price, 0);
-    }
-    
-    return total;
-  };
-
-  const handlePaymentTypeChange = (value: string) => {
-    setPaymentType(value);
-    setPaymentMethod(value);
-  };
-
-  const handleBack = () => {
-    goToStep(2);
-  };
+  const { orderState, setPaymentMethod, nextStep, prevStep } = useOrder();
+  const { createAppointment } = useAppointments();
+  const navigate = useNavigate();
+  const currentUserId = useCurrentUserId();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    if (!appointmentDate || !appointmentTime) {
+    if (!orderState.paymentMethod) {
       toast({
-        title: "Missing Information",
-        description: "Please select appointment date and time",
         variant: "destructive",
+        title: "Payment method required",
+        description: "Please select a payment method to continue",
       });
       return;
     }
 
-    if (!paymentType) {
-      toast({
-        title: "Payment Method Required",
-        description: "Please select a payment method",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessing(true);
+    setIsSubmitting(true);
 
     try {
-      // Create a new appointment in the database with the correct status type
-      const appointmentData = {
-        customer_user_id: customer.id || null,
-        appointment_date: appointmentDate.toISOString().split('T')[0],
-        start_time: appointmentTime,
-        end_time: calculateEndTime(appointmentTime, 60), // Assuming 60 min duration
-        status: "scheduled" as "scheduled" | "completed" | "cancelled", // Explicitly type as the expected enum
-        payment_method: paymentType,
-        total: calculateTotal(),
-        notes: "",
+      // Prepare appointment data
+      const paymentData = {
+        customer_user_id: orderState.customer?.id || '',
+        appointment_date: orderState.appointmentDate?.toISOString().split('T')[0] || '',
+        start_time: orderState.appointmentTime || '',
+        end_time: calculateEndTime(orderState.appointmentTime || '', orderState.selectedService?.duration || 0),
+        status: 'scheduled',
+        total: orderState.totalAmount,
+        notes: `Payment method: ${orderState.paymentMethod}`,
       };
 
-      // Add the current user ID to the appointment data
-      const dataWithUserId = withUserId(appointmentData);
+      // Add user ID to the data
+      const appointmentWithUserId = withUserId(paymentData);
 
-      // Insert the appointment data with user_id
-      const { data: appointmentResult, error: appointmentError } = await supabase
-        .from("appointments")
-        .insert(dataWithUserId)
-        .select()
-        .single();
+      // Create the appointment
+      const result = await createAppointment({
+        ...appointmentWithUserId,
+        customerId: orderState.customer?.id || '',
+        date: appointmentWithUserId.appointment_date,
+        startTime: appointmentWithUserId.start_time,
+        service: orderState.selectedService?.name || '',
+      });
 
-      if (appointmentError) throw appointmentError;
-
-      // Process successful booking
-      if (appointmentResult) {
-        // Complete the order with the appointment ID
-        completeOrder(appointmentResult.id.toString());
-        
-        // Move to confirmation step
-        goToStep(4);
-        
-        toast({
-          title: "Booking Confirmed!",
-          description: "Your appointment has been successfully scheduled.",
-          variant: "default",
-        });
+      if (result) {
+        nextStep();
+      } else {
+        throw new Error('Failed to create appointment');
       }
     } catch (error) {
-      console.error("Error creating appointment:", error);
+      console.error('Error creating appointment:', error);
       toast({
-        title: "Booking Failed",
-        description: "There was an error processing your booking. Please try again.",
         variant: "destructive",
+        title: "Booking failed",
+        description: error instanceof Error ? error.message : "An error occurred while booking your appointment",
       });
     } finally {
-      setIsProcessing(false);
+      setIsSubmitting(false);
     }
   };
 
-  // Helper function to calculate end time
-  const calculateEndTime = (startTime: string, durationMinutes: number) => {
-    const [hours, minutes] = startTime.split(":").map(Number);
+  const calculateEndTime = (startTime: string, durationMinutes: number): string => {
+    if (!startTime) return '';
+    
+    const [hours, minutes] = startTime.split(':').map(Number);
     const startDate = new Date();
     startDate.setHours(hours, minutes, 0, 0);
     
     const endDate = new Date(startDate.getTime() + durationMinutes * 60000);
-    return `${endDate.getHours().toString().padStart(2, "0")}:${endDate.getMinutes().toString().padStart(2, "0")}`;
+    return `${endDate.getHours().toString().padStart(2, '0')}:${endDate.getMinutes().toString().padStart(2, '0')}`;
   };
 
   return (
@@ -139,119 +86,59 @@ const PaymentDetails = () => {
       <Card>
         <CardHeader>
           <CardTitle>Payment Details</CardTitle>
-          <CardDescription>
-            Choose your preferred payment method
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <RadioGroup
-            value={paymentType || ""}
-            onValueChange={handlePaymentTypeChange}
-            className="space-y-4"
-          >
-            <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
-              <RadioGroupItem value="cash" id="cash" />
-              <Label htmlFor="cash" className="flex items-center cursor-pointer flex-1">
-                <Wallet className="h-5 w-5 mr-2 text-muted-foreground" />
-                <div>
-                  <div className="font-medium">Cash</div>
-                  <div className="text-sm text-muted-foreground">
-                    Pay in cash at the salon
-                  </div>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium">Order Summary</h3>
+              <div className="mt-2 space-y-2">
+                <div className="flex justify-between">
+                  <span>Service:</span>
+                  <span>{orderState.selectedService?.name}</span>
                 </div>
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2 border rounded-lg p-4 cursor-pointer hover:bg-muted/50">
-              <RadioGroupItem value="card" id="card" />
-              <Label htmlFor="card" className="flex items-center cursor-pointer flex-1">
-                <CreditCard className="h-5 w-5 mr-2 text-muted-foreground" />
-                <div>
-                  <div className="font-medium">Card Payment</div>
-                  <div className="text-sm text-muted-foreground">
-                    Pay with credit or debit card at the salon
-                  </div>
+                <div className="flex justify-between">
+                  <span>Date:</span>
+                  <span>{orderState.appointmentDate?.toLocaleDateString()}</span>
                 </div>
-              </Label>
-            </div>
-          </RadioGroup>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Order Summary</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Customer</span>
-              <span className="font-medium">{customer.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Date</span>
-              <span className="font-medium">
-                {appointmentDate ? appointmentDate.toLocaleDateString() : "Not selected"}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Time</span>
-              <span className="font-medium">{appointmentTime || "Not selected"}</span>
-            </div>
-          </div>
-
-          <Separator />
-
-          {selectedService && (
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="font-medium">{selectedService.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {selectedService.duration} min
-                </p>
+                <div className="flex justify-between">
+                  <span>Time:</span>
+                  <span>{orderState.appointmentTime}</span>
+                </div>
+                <div className="flex justify-between font-bold">
+                  <span>Total:</span>
+                  <span>${orderState.totalAmount.toFixed(2)}</span>
+                </div>
               </div>
-              <p className="font-medium">${selectedService.price}</p>
             </div>
-          )}
 
-          {selectedProducts &&
-            selectedProducts.length > 0 &&
-            selectedProducts.map((product) => (
-              <div
-                key={product.id}
-                className="flex justify-between items-center"
+            <div className="pt-4">
+              <h3 className="text-lg font-medium mb-2">Select Payment Method</h3>
+              <RadioGroup 
+                value={orderState.paymentMethod || ''} 
+                onValueChange={setPaymentMethod}
               >
-                <div>
-                  <p className="font-medium">{product.name}</p>
-                  <p className="text-sm text-muted-foreground">Product</p>
+                <div className="flex items-center space-x-2 mb-2">
+                  <RadioGroupItem value="cash" id="cash" />
+                  <Label htmlFor="cash">Cash (Pay at salon)</Label>
                 </div>
-                <p className="font-medium">${product.price}</p>
-              </div>
-            ))}
-
-          <Separator />
-
-          <div className="flex justify-between items-center">
-            <p className="font-bold">Total</p>
-            <p className="font-bold">${calculateTotal()}</p>
+                <div className="flex items-center space-x-2 mb-2">
+                  <RadioGroupItem value="card" id="card" />
+                  <Label htmlFor="card">Credit/Debit Card</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="online" id="online" />
+                  <Label htmlFor="online">Online Payment</Label>
+                </div>
+              </RadioGroup>
+            </div>
           </div>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={handleBack}>
+          <Button variant="outline" onClick={prevStep}>
             Back
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isProcessing}
-            className="bg-glamour-700 hover:bg-glamour-800 text-white"
-          >
-            {isProcessing ? (
-              "Processing..."
-            ) : (
-              <>
-                <Check className="mr-2 h-4 w-4" /> Confirm Booking
-              </>
-            )}
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Processing...' : 'Confirm Booking'}
           </Button>
         </CardFooter>
       </Card>

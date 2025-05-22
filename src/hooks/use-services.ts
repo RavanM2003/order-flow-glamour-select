@@ -7,20 +7,23 @@ import { Service, ServiceFormData } from "@/models/service.model";
 export function useServices() {
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
-  const api = useApi<Service[]>();
+  const api = useApi();
   const { toast } = useToast();
 
   const fetchServices = useCallback(async () => {
     try {
-      const result = await api.execute(async () => {
-        const response = await serviceService.getServices();
+      const response = await serviceService.getServices();
+      
+      if (response.data) {
+        setServices(response.data);
         return response.data;
-      });
-
-      if (result) {
-        setServices(result);
       }
-      return result;
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      return [];
     } catch (error) {
       console.error("Failed to fetch services:", error);
       toast({
@@ -28,8 +31,9 @@ export function useServices() {
         title: "Error",
         description: "Failed to load services",
       });
+      return [];
     }
-  }, [api, toast]);
+  }, [toast]);
 
   const getServiceById = useCallback(
     async (id: string | number) => {
@@ -38,6 +42,7 @@ export function useServices() {
         const existingService = services.find(
           (service) => service.id.toString() === id.toString()
         );
+        
         if (existingService) {
           setSelectedService(existingService);
           return existingService;
@@ -69,23 +74,19 @@ export function useServices() {
   const createService = useCallback(
     async (data: ServiceFormData) => {
       try {
-        const result = await api.execute(async () => {
-          const response = await serviceService.createService(data);
-          if (!response.data) {
-            throw new Error(response.error || "Failed to create service");
-          }
-          return response.data;
-        });
-
-        if (result) {
+        const response = await serviceService.createService(data);
+        
+        if (response.data) {
           // Add the new service to the list
-          setServices((prev) => [...prev, result]);
+          setServices(prev => [...prev, response.data]);
           toast({
             title: "Success",
             description: "Service created successfully",
           });
+          return response.data;
+        } else {
+          throw new Error(response.error || "Failed to create service");
         }
-        return result;
       } catch (error) {
         console.error("Failed to create service:", error);
         toast({
@@ -96,37 +97,33 @@ export function useServices() {
         return null;
       }
     },
-    [api, toast]
+    [toast]
   );
 
   const updateService = useCallback(
     async (id: string, data: Partial<Service>) => {
       try {
-        const result = await api.execute(async () => {
-          const response = await serviceService.updateService(id, data);
-          if (!response.data) {
-            throw new Error(response.error || "Failed to update service");
-          }
-          return response.data;
-        });
-
-        if (result) {
+        const response = await serviceService.updateService(id, data);
+        
+        if (response.data) {
           // Update the service in the list
-          setServices((prev) =>
-            prev.map((s) => (s.id.toString() === id ? { ...s, ...result } : s))
+          setServices(prev =>
+            prev.map(s => (s.id.toString() === id ? { ...s, ...response.data } : s))
           );
           
           // Update selected service if it matches
           if (selectedService && selectedService.id.toString() === id) {
-            setSelectedService({ ...selectedService, ...result });
+            setSelectedService({ ...selectedService, ...response.data });
           }
           
           toast({
             title: "Success",
             description: "Service updated successfully",
           });
+          return response.data;
+        } else {
+          throw new Error(response.error || "Failed to update service");
         }
-        return result;
       } catch (error) {
         console.error(`Failed to update service ${id}:`, error);
         toast({
@@ -137,23 +134,17 @@ export function useServices() {
         return null;
       }
     },
-    [api, toast, selectedService]
+    [toast, selectedService]
   );
 
   const deleteService = useCallback(
     async (id: string) => {
       try {
-        const result = await api.execute(async () => {
-          const response = await serviceService.deleteService(id);
-          if (!response.data) {
-            throw new Error(response.error || "Failed to delete service");
-          }
-          return true;
-        });
-
-        if (result) {
+        const response = await serviceService.deleteService(id);
+        
+        if (response.data) {
           // Remove the service from the list
-          setServices((prev) => prev.filter((s) => s.id.toString() !== id));
+          setServices(prev => prev.filter(s => s.id.toString() !== id));
           
           // Clear selected service if it matches
           if (selectedService && selectedService.id.toString() === id) {
@@ -164,8 +155,10 @@ export function useServices() {
             title: "Success",
             description: "Service deleted successfully",
           });
+          return true;
+        } else {
+          throw new Error(response.error || "Failed to delete service");
         }
-        return result;
       } catch (error) {
         console.error(`Failed to delete service ${id}:`, error);
         toast({
@@ -176,7 +169,7 @@ export function useServices() {
         return false;
       }
     },
-    [api, toast, selectedService]
+    [toast, selectedService]
   );
 
   return {

@@ -79,14 +79,13 @@ export class AppointmentService extends ApiService {
     appointment: AppointmentCreate
   ): Promise<ApiResponse<Appointment>> {
     try {
+      // Fix: Make sure we're inserting a single object, not an array
       const { data, error } = await supabase
         .from("appointments")
-        .insert([
-          {
-            ...appointment,
-            status: appointment.status || "scheduled",
-          },
-        ])
+        .insert({
+          ...appointment,
+          status: appointment.status || "scheduled",
+        })
         .select()
         .single();
 
@@ -105,10 +104,17 @@ export class AppointmentService extends ApiService {
     appointment: AppointmentUpdate
   ): Promise<ApiResponse<Appointment>> {
     try {
+      // Convert the AppointmentStatus if needed for database enum compatibility
+      const statusValue = appointment.status && 
+        ["scheduled", "completed", "cancelled", "confirmed", "pending", "rejected"].includes(appointment.status) 
+        ? appointment.status 
+        : undefined;
+      
       const { data, error } = await supabase
         .from("appointments")
         .update({
           ...appointment,
+          status: statusValue,
           updated_at: new Date().toISOString(),
         })
         .eq("id", parseInt(id))
@@ -215,10 +221,7 @@ export class AppointmentService extends ApiService {
     // Here you would implement the logic to mark the appointment as paid
     // For now, we just return the appointment updated with a note
     return this.updateAppointment(id, { 
-      notes: (appointment) => {
-        const currentNotes = appointment.notes || "";
-        return currentNotes + " [PAID]";
-      }
+      notes: "Payment received" 
     });
   }
 }

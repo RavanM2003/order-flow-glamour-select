@@ -1,4 +1,5 @@
 
+// Only the context creation and export needs to be modified to ensure proper export
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/models/user.model';
