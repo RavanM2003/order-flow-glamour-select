@@ -16,7 +16,8 @@ interface UserContextProps {
   userId: string | null;
 }
 
-const UserContext = createContext<UserContextProps>({
+// Export the UserContext so it can be imported elsewhere
+export const UserContext = createContext<UserContextProps>({
   user: null,
   loading: true,
   error: null,
