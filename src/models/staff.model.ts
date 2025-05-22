@@ -1,7 +1,7 @@
 
 // Staff model and related types
 export interface Staff {
-  id: string;
+  id: string | number;
   name: string;
   position?: string;
   specializations?: number[];

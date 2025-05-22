@@ -1,9 +1,10 @@
+
 // Appointment model and related types
 import { Customer } from "./customer.model";
 import { Service } from "./service.model";
 import { Product } from "./product.model";
 
-export type AppointmentStatus = "scheduled" | "completed" | "cancelled";
+export type AppointmentStatus = "scheduled" | "completed" | "cancelled" | "confirmed" | "pending" | "rejected";
 
 export interface ServiceProvider {
   id: number;
@@ -25,6 +26,26 @@ export interface Appointment {
   cancel_reason?: string;
   appointment_date: string;
   user_id?: string;
+  
+  // Additional properties for UI compatibility
+  orderReference?: string;
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  time?: string;
+  duration?: string | number;
+  totalAmount?: number;
+  amountPaid?: number;
+  remainingBalance?: number;
+  service?: string;
+  servicePrice?: number;
+  price?: number;
+  paymentMethod?: string;
+  staff?: string[];
+  services?: Service[];
+  products?: Product[] | string[];
+  selectedProducts?: Product[] | string[];
+  serviceProviders?: ServiceProvider[];
 }
 
 export interface AppointmentCreate {
@@ -50,7 +71,7 @@ export interface AppointmentUpdate {
 }
 
 export interface AppointmentFormData {
-  customerId: number;
+  customerId: string | number;
   date: string;
   startTime: string;
   endTime?: string;
@@ -60,6 +81,10 @@ export interface AppointmentFormData {
   totalAmount?: number;
   amountPaid?: number;
   status?: AppointmentStatus;
+  customer_user_id?: string;
+  start_time?: string;
+  end_time?: string;
+  appointment_date?: string;
 }
 
 export interface AppointmentFilters {

@@ -1,306 +1,193 @@
-
-import { useState, useCallback, useEffect } from 'react';
-import { useApi } from './use-api';
-import { serviceService } from '@/services';
-import { Service, ServiceFormData } from '@/models/service.model';
-import { useToast } from './use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useCallback } from "react";
+import { useApi } from "./use-api";
+import { serviceService } from "@/services";
+import { useToast } from "./use-toast";
+import { Service, ServiceFormData } from "@/models/service.model";
 
 export function useServices() {
-  const api = useApi<Service[]>();
   const [services, setServices] = useState<Service[]>([]);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const api = useApi<Service[]>();
   const { toast } = useToast();
-  
+
   const fetchServices = useCallback(async () => {
     try {
-      // First try using the service abstraction
-      const data = await api.execute(
-        () => serviceService.getAll(),
-        {
-          showErrorToast: false, // We'll handle errors ourselves
-        }
-      );
-      
-      if (data && data.length > 0) {
-        setServices(data);
-        return;
+      const result = await api.execute(async () => {
+        const response = await serviceService.getServices();
+        return response.data;
+      });
+
+      if (result) {
+        setServices(result);
       }
-      
-      // If that fails or returns empty, try direct Supabase query
-      console.log('Fetching services directly from Supabase...');
-      const { data: supabaseData, error } = await supabase
-        .from('services')
-        .select('*');
-      
-      if (error) {
-        console.error('Error fetching services from Supabase:', error);
-        toast({
-          variant: "destructive",
-          title: "Xidmətlər yüklənmədi",
-          description: error.message
-        });
-        return;
-      }
-      
-      if (supabaseData && supabaseData.length > 0) {
-        const formattedData = supabaseData.map(item => ({
-          ...item,
-          duration: typeof item.duration === 'string' ? parseInt(item.duration, 10) : item.duration
-        })) as Service[];
-        
-        setServices(formattedData);
-        console.log('Services loaded directly from Supabase:', formattedData.length);
-      } else {
-        console.log('No services found in Supabase');
-      }
+      return result;
     } catch (error) {
-      console.error('Error in fetchServices:', error);
+      console.error("Failed to fetch services:", error);
       toast({
         variant: "destructive",
-        title: "Xidmətlər yüklənmədi",
-        description: "Xidmətlər yüklənərkən xəta baş verdi."
+        title: "Error",
+        description: "Failed to load services",
       });
     }
   }, [api, toast]);
-  
-  useEffect(() => {
-    fetchServices();
-  }, [fetchServices]);
-  
-  const getService = useCallback(async (id: number | string) => {
-    try {
-      // Convert string id to number for consistency
-      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-      
-      // First try using the service abstraction
-      const response = await serviceService.getById(numericId);
-      
-      if (response.data) {
-        return response.data;
-      }
-      
-      // If that fails, try direct Supabase query
-      console.log(`Fetching service ${id} directly from Supabase...`);
-      const { data, error } = await supabase
-        .from('services')
-        .select('*')
-        .eq('id', numericId)
-        .single();
-      
-      if (error) {
-        console.error(`Error fetching service ${id} from Supabase:`, error);
-        throw new Error(error.message);
-      }
-      
-      if (data) {
-        // Ensure duration is a number
-        return {
-          ...data,
-          duration: typeof data.duration === 'string' ? parseInt(data.duration, 10) : data.duration
-        } as Service;
-      }
-      
-      throw new Error(`Service with ID ${id} not found`);
-    } catch (error) {
-      console.error(`Error in getService(${id}):`, error);
-      throw error;
-    }
-  }, []);
 
-  const createService = useCallback(async (data: ServiceFormData) => {
-    try {
-      // Try using the service abstraction first
-      const result = await api.execute(
-        () => serviceService.create(data),
-        {
-          showSuccessToast: true,
-          successMessage: 'Xidmət uğurla yaradıldı',
-          errorPrefix: 'Xidmət yaradıla bilmədi',
-          onSuccess: () => {
-            fetchServices();
-          }
+  const getServiceById = useCallback(
+    async (id: string | number) => {
+      try {
+        // If service is already loaded in state, use it
+        const existingService = services.find(
+          (service) => service.id.toString() === id.toString()
+        );
+        if (existingService) {
+          setSelectedService(existingService);
+          return existingService;
         }
-      );
-      
-      if (result) {
-        return result;
-      }
-      
-      // If that fails, try direct Supabase insert
-      console.log('Creating service directly in Supabase...');
-      const { data: createdData, error } = await supabase
-        .from('services')
-        .insert({
-          name: data.name,
-          description: data.description || null,
-          price: data.price,
-          duration: data.duration,
-          image_urls: data.image_urls || null,
-          is_active: true
-        })
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Error creating service in Supabase:', error);
+
+        // Otherwise fetch from API
+        const idString = typeof id === "number" ? id.toString() : id;
+        const response = await serviceService.getServiceById(idString);
+        
+        if (response.data) {
+          setSelectedService(response.data);
+          return response.data;
+        } else {
+          throw new Error(response.error || "Service not found");
+        }
+      } catch (error) {
+        console.error(`Failed to get service ${id}:`, error);
         toast({
           variant: "destructive",
-          title: "Xidmət yaradıla bilmədi",
-          description: error.message
+          title: "Error",
+          description: `Failed to load service ${id}`,
         });
-        throw new Error(error.message);
+        return null;
       }
-      
-      if (createdData) {
-        toast({
-          title: "Xidmət yaradıldı", 
-          description: "Xidmət uğurla yaradıldı"
-        });
-        
-        fetchServices();
-        
-        return {
-          ...createdData,
-          duration: typeof createdData.duration === 'string' ? parseInt(createdData.duration, 10) : createdData.duration
-        } as Service;
-      }
-      
-      throw new Error('Service creation failed');
-    } catch (error) {
-      console.error('Error in createService:', error);
-      throw error;
-    }
-  }, [api, fetchServices, toast]);
-  
-  const updateService = useCallback(async (id: number | string, data: Partial<ServiceFormData>) => {
-    try {
-      // Convert string id to number for consistency
-      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-      
-      // Try using the service abstraction first
-      const result = await api.execute(
-        () => serviceService.update(numericId, data),
-        {
-          showSuccessToast: true,
-          successMessage: 'Xidmət yeniləndi',
-          errorPrefix: 'Xidmət yenilənə bilmədi',
-          onSuccess: () => {
-            fetchServices();
+    },
+    [services, toast]
+  );
+
+  const createService = useCallback(
+    async (data: ServiceFormData) => {
+      try {
+        const result = await api.execute(async () => {
+          const response = await serviceService.createService(data);
+          if (!response.data) {
+            throw new Error(response.error || "Failed to create service");
           }
+          return response.data;
+        });
+
+        if (result) {
+          // Add the new service to the list
+          setServices((prev) => [...prev, result]);
+          toast({
+            title: "Success",
+            description: "Service created successfully",
+          });
         }
-      );
-      
-      if (result) {
         return result;
-      }
-      
-      // If that fails, try direct Supabase update
-      console.log(`Updating service ${id} directly in Supabase...`);
-      const { data: updatedData, error } = await supabase
-        .from('services')
-        .update({
-          name: data.name,
-          description: data.description,
-          price: data.price,
-          duration: data.duration,
-          image_urls: data.image_urls
-        })
-        .eq('id', numericId)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error(`Error updating service ${id} in Supabase:`, error);
+      } catch (error) {
+        console.error("Failed to create service:", error);
         toast({
           variant: "destructive",
-          title: "Xidmət yenilənə bilmədi",
-          description: error.message
+          title: "Error",
+          description: "Failed to create service",
         });
-        throw new Error(error.message);
+        return null;
       }
-      
-      if (updatedData) {
-        toast({
-          title: "Xidmət yeniləndi", 
-          description: "Xidmət uğurla yeniləndi"
-        });
-        
-        fetchServices();
-        
-        return {
-          ...updatedData,
-          duration: typeof updatedData.duration === 'string' ? parseInt(updatedData.duration, 10) : updatedData.duration
-        } as Service;
-      }
-      
-      throw new Error('Service update failed');
-    } catch (error) {
-      console.error(`Error in updateService(${id}):`, error);
-      throw error;
-    }
-  }, [api, fetchServices, toast]);
-  
-  const deleteService = useCallback(async (id: number | string) => {
-    try {
-      // Convert string id to number for consistency
-      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-      
-      // Try using the service abstraction first
-      const result = await api.execute(
-        () => serviceService.delete(numericId),
-        {
-          showSuccessToast: true,
-          successMessage: 'Xidmət silindi',
-          errorPrefix: 'Xidmət silinə bilmədi',
-          onSuccess: () => {
-            fetchServices();
+    },
+    [api, toast]
+  );
+
+  const updateService = useCallback(
+    async (id: string, data: Partial<Service>) => {
+      try {
+        const result = await api.execute(async () => {
+          const response = await serviceService.updateService(id, data);
+          if (!response.data) {
+            throw new Error(response.error || "Failed to update service");
           }
+          return response.data;
+        });
+
+        if (result) {
+          // Update the service in the list
+          setServices((prev) =>
+            prev.map((s) => (s.id.toString() === id ? { ...s, ...result } : s))
+          );
+          
+          // Update selected service if it matches
+          if (selectedService && selectedService.id.toString() === id) {
+            setSelectedService({ ...selectedService, ...result });
+          }
+          
+          toast({
+            title: "Success",
+            description: "Service updated successfully",
+          });
         }
-      );
-      
-      if (result) {
         return result;
-      }
-      
-      // If that fails, try direct Supabase delete
-      console.log(`Deleting service ${id} directly from Supabase...`);
-      const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', numericId);
-      
-      if (error) {
-        console.error(`Error deleting service ${id} from Supabase:`, error);
+      } catch (error) {
+        console.error(`Failed to update service ${id}:`, error);
         toast({
           variant: "destructive",
-          title: "Xidmət silinə bilmədi",
-          description: error.message
+          title: "Error",
+          description: "Failed to update service",
         });
-        throw new Error(error.message);
+        return null;
       }
-      
-      toast({
-        title: "Xidmət silindi", 
-        description: "Xidmət uğurla silindi"
-      });
-      
-      fetchServices();
-      
-      return true;
-    } catch (error) {
-      console.error(`Error in deleteService(${id}):`, error);
-      throw error;
-    }
-  }, [api, fetchServices, toast]);
-  
+    },
+    [api, toast, selectedService]
+  );
+
+  const deleteService = useCallback(
+    async (id: string) => {
+      try {
+        const result = await api.execute(async () => {
+          const response = await serviceService.deleteService(id);
+          if (!response.data) {
+            throw new Error(response.error || "Failed to delete service");
+          }
+          return true;
+        });
+
+        if (result) {
+          // Remove the service from the list
+          setServices((prev) => prev.filter((s) => s.id.toString() !== id));
+          
+          // Clear selected service if it matches
+          if (selectedService && selectedService.id.toString() === id) {
+            setSelectedService(null);
+          }
+          
+          toast({
+            title: "Success",
+            description: "Service deleted successfully",
+          });
+        }
+        return result;
+      } catch (error) {
+        console.error(`Failed to delete service ${id}:`, error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to delete service",
+        });
+        return false;
+      }
+    },
+    [api, toast, selectedService]
+  );
+
   return {
     services,
+    selectedService,
     isLoading: api.isLoading,
     error: api.error,
     fetchServices,
-    getService,
+    getServiceById,
     createService,
     updateService,
-    deleteService
+    deleteService,
   };
 }

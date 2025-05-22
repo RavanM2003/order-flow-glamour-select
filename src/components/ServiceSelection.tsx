@@ -1,163 +1,136 @@
+
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { useOrder } from '@/context/OrderContext';
-import { Service as ServiceType } from '@/models/service.model';
-import { Staff } from '@/models/staff.model';
-import { useQuery } from '@tanstack/react-query';
-import { serviceService } from '@/services/service.service';
-import { staffService } from '@/services/staff.service';
-import { Skeleton } from '@/components/ui/skeleton';
+import { useServices } from '@/hooks/use-services';
+import { useOrder } from "@/context/OrderContext";
+import { useStaff } from '@/hooks/use-staff';
 
 const ServiceSelection = () => {
-  const { 
-    orderState, 
-    setSelectedService, 
-    setSelectedStaff,
-    selectService,
-    unselectService,
-    setStaff,
-    nextStep
-  } = useOrder();
+  const { orderState, dispatch } = useOrder();
+  const { services, fetchServices, isLoading, error } = useServices();
+  const { staff, fetchStaff, isLoading: staffLoading } = useStaff();
+  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
+  const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
 
-  const [services, setServices] = useState<ServiceType[]>([]);
-  const [staffMembers, setStaffMembers] = useState<Staff[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // Fetch services
   useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const response = await serviceService.getServices();
-        if (response.data) {
-          setServices(response.data);
-        }
-      } catch (error) {
-        setError('Failed to load services');
-        console.error(error);
-      }
-    };
-
-    const fetchStaff = async () => {
-      try {
-        const response = await staffService.getStaffMembers();
-        if (response.data) {
-          setStaffMembers(response.data);
-        }
-      } catch (error) {
-        setError('Failed to load staff');
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchServices();
     fetchStaff();
-  }, []);
+  }, [fetchServices, fetchStaff]);
 
-  const handleSelectService = (service: ServiceType) => {
-    setSelectedService(service);
-    selectService(service.id);
+  const handleServiceSelect = (serviceId: number) => {
+    setSelectedServiceId(serviceId);
+    const service = services.find(s => s.id === serviceId);
+    
+    if (service) {
+      dispatch({
+        type: 'ADD_SERVICE',
+        payload: {
+          id: service.id,
+          name: service.name,
+          price: service.price,
+          duration: service.duration
+        }
+      });
+    }
   };
 
-  const handleUnselectService = (serviceId: number) => {
-    unselectService(serviceId);
+  const handleStaffSelect = (staffId: string) => {
+    if (selectedStaff.includes(staffId)) {
+      setSelectedStaff(selectedStaff.filter(id => id !== staffId));
+    } else {
+      setSelectedStaff([...selectedStaff, staffId]);
+    }
   };
 
-  const handleSelectStaff = (staff: Staff) => {
-    setSelectedStaff(staff);
-    setStaff(staff);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (selectedStaff.length > 0) {
+      dispatch({
+        type: 'SELECT_STAFF',
+        payload: selectedStaff
+      });
+    }
+    
+    dispatch({
+      type: 'NEXT_STEP'
+    });
   };
 
-  const isServiceSelected = (serviceId: number) => {
-    if (orderState.selectedService?.id === serviceId) return true;
-    return orderState.selectedServices.includes(serviceId);
-  };
-
-  if (loading) {
-    return (
-      <div className="grid gap-4">
-        <h2 className="text-2xl font-bold">Xidmət seçin</h2>
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="border rounded-lg p-5">
-              <Skeleton className="h-6 w-2/3 mb-2" />
-              <Skeleton className="h-4 w-1/4 mb-4" />
-              <Skeleton className="h-4 w-full" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+  if (isLoading || staffLoading) {
+    return <div className="p-4 text-center">Loading services...</div>;
   }
 
   if (error) {
-    return <div className="p-4 text-red-500">{error}</div>;
+    return <div className="p-4 text-center text-red-500">Error loading services: {error}</div>;
   }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Xidmət seçin</h2>
-
-      <div className="grid grid-cols-1 gap-4">
-        {services.map((service) => (
-          <div 
-            key={service.id} 
-            className={`border rounded-lg p-5 ${isServiceSelected(service.id) ? 'bg-blue-50 border-blue-300' : 'hover:border-blue-200'}`}
-          >
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <h3 className="font-semibold">{service.name}</h3>
-                <div className="text-sm text-gray-600">
-                  <span>{service.duration} dəq</span>
-                  <span className="mx-2">•</span>
-                  <span>{service.price} AZN</span>
-                </div>
-                <p className="text-sm text-gray-600">{service.description}</p>
-              </div>
-              <Button 
-                variant={isServiceSelected(service.id) ? "destructive" : "outline"} 
-                size="sm"
-                onClick={() => isServiceSelected(service.id) 
-                  ? handleUnselectService(service.id) 
-                  : handleSelectService(service)
-                }
+      <form onSubmit={handleSubmit}>
+        <div className="mb-6">
+          <h3 className="text-lg font-medium mb-3">Select a Service</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {services.map(service => (
+              <div
+                key={service.id}
+                className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                  selectedServiceId === service.id
+                    ? 'border-purple-500 bg-purple-50'
+                    : 'hover:border-gray-400'
+                }`}
+                onClick={() => handleServiceSelect(service.id as number)}
               >
-                {isServiceSelected(service.id) ? 'Ləğv et' : 'Seç'}
-              </Button>
-            </div>
-
-            {isServiceSelected(service.id) && (
-              <div className="mt-4 border-t pt-4">
-                <div className="mb-2 text-sm font-medium">Əməkdaş seçin:</div>
-                <div className="flex flex-wrap gap-2">
-                  {staffMembers.map((staff) => (
-                    <Button 
-                      key={staff.id} 
-                      variant={orderState.selectedStaff?.id === staff.id ? "default" : "outline"} 
-                      size="sm"
-                      onClick={() => handleSelectStaff(staff)}
-                    >
-                      {staff.name}
-                    </Button>
-                  ))}
-                </div>
+                <h4 className="font-medium">{service.name}</h4>
+                <p className="text-sm text-gray-500 mb-2">Duration: {service.duration} min</p>
+                <p className="font-semibold">${service.price}</p>
               </div>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
+        </div>
 
-      <div className="flex justify-end">
-        <Button
-          disabled={!orderState.selectedService && orderState.selectedServices.length === 0}
-          onClick={nextStep}
-          className="mt-4"
-        >
-          Növbəti
-        </Button>
-      </div>
+        {selectedServiceId && (
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-3">Select Staff (Optional)</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {staff.map(staffMember => (
+                <div
+                  key={staffMember.id}
+                  className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                    selectedStaff.includes(staffMember.id.toString())
+                      ? 'border-purple-500 bg-purple-50'
+                      : 'hover:border-gray-400'
+                  }`}
+                  onClick={() => handleStaffSelect(staffMember.id.toString())}
+                >
+                  <h4 className="font-medium">{staffMember.name}</h4>
+                  <p className="text-sm text-gray-500">{staffMember.position || 'Staff Member'}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex justify-between mt-8">
+          <button
+            type="button"
+            onClick={() => dispatch({ type: 'PREV_STEP' })}
+            className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+          >
+            Back
+          </button>
+          <button
+            type="submit"
+            disabled={!selectedServiceId}
+            className={`px-4 py-2 rounded-md ${
+              selectedServiceId
+                ? 'bg-purple-600 text-white hover:bg-purple-700'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            Continue
+          </button>
+        </div>
+      </form>
     </div>
   );
 };

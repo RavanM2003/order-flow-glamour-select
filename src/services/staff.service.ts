@@ -100,14 +100,17 @@ export class StaffService extends ApiService {
   }
 
   async updateStaffMember(
-    id: string,
+    id: string | number,
     updates: Partial<StaffFormData>
   ): Promise<ApiResponse<Staff>> {
+    // Convert ID to string if it's a number
+    const staffId = typeof id === 'number' ? id.toString() : id;
+    
     try {
       const { data, error } = await supabase
         .from("staff")
         .update(updates)
-        .eq("id", id)
+        .eq("id", staffId)
         .select()
         .single();
 

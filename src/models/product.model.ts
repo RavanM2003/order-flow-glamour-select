@@ -17,6 +17,7 @@ export interface Product {
   how_to_use?: string;
   // For type compatibility
   stock_quantity?: number; // Alias for stock
+  quantity?: number; // For UI display
 }
 
 export interface ProductFormData {

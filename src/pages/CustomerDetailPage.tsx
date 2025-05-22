@@ -68,7 +68,7 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
 
         // Fetch appointments for this customer
         try {
-          const response = await appointmentService.getByCustomerId(customerProp.id);
+          const response = await appointmentService.getByCustomerId(customerProp.id.toString());
           if (response.data) {
             setAppointments(response.data);
           }
@@ -165,10 +165,10 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
   };
 
   const getPaymentStatusText = (app: Appointment) => {
-    if (!app.totalAmount) return "N/A";
+    if (!app.total) return "N/A";
 
-    if (app.amountPaid >= app.totalAmount) return "Fully Paid";
-    if (app.amountPaid > 0) return "Partially Paid";
+    if (app.amountPaid && app.amountPaid >= (app.total || 0)) return "Fully Paid";
+    if (app.amountPaid && app.amountPaid > 0) return "Partially Paid";
     return "Unpaid";
   };
 
@@ -195,8 +195,8 @@ const CustomerDetailPage: React.FC<CustomerDetailPageProps> = ({
 
   // Filter appointments based on search term (order reference)
   const filteredAppointments = appointments.filter(app => 
-    app.orderReference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (`ORD-${app.id}`).toLowerCase().includes(searchTerm.toLowerCase())
+    (app.orderReference?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+    ((`ORD-${app.id}`).toLowerCase().includes(searchTerm.toLowerCase()) || false)
   );
 
   if (loading) {

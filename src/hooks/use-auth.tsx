@@ -1,10 +1,11 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 import { config } from '@/config/env';
 import { UserRole } from '@/models/user.model';
 import { ROLE_PERMISSIONS } from '@/models/role.model';
-import { useUser } from '@/context/UserContext';
+import { User } from '@/models/user.model';
 
 // Interface for our session state
 interface UserSession {
@@ -15,7 +16,7 @@ interface UserSession {
     firstName: string | null;
     lastName: string | null;
     profileImage: string | null;
-    staffId: number | null;
+    staffId: string | null;
     roleId: number | null;
   } | null;
   profile: {
@@ -36,6 +37,7 @@ interface AuthContextType {
   isLoading: boolean;
   checkAccess: (requiredRoles: string[]) => boolean;
   hasPermission: (permission: string) => boolean;
+  user: User | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,8 +52,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isAuthenticated: false
   });
   
-  // Get access to our user context
-  const { setCurrentUser } = useUser();
+  const [user, setUser] = useState<User | null>(null);
 
   // Check for existing session in localStorage
   useEffect(() => {
@@ -74,8 +75,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             isAuthenticated: true
           });
           
-          // Set the current user in our user context
-          setCurrentUser(user);
+          // Set the current user
+          setUser(user);
         } else {
           // Clear expired data
           localStorage.removeItem('auth_user');
@@ -87,7 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     setIsLoading(false);
-  }, [setCurrentUser]);
+  }, []);
 
   // Login function using public.users table
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -172,7 +173,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
       
       // Update user context
-      setCurrentUser(user);
+      setUser(user);
       
       toast({
         title: "Giriş uğurlu",
@@ -258,8 +259,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: false
       });
       
-      // Clear current user in user context
-      setCurrentUser(null);
+      // Clear current user
+      setUser(null);
       
       toast({
         title: "Çıxış edildi",
@@ -315,7 +316,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout, 
       isLoading, 
       checkAccess,
-      hasPermission
+      hasPermission,
+      user
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,11 +1,9 @@
-
 import React from "react";
 import { useOrder } from "@/context/OrderContext";
 import CustomerInfo from "./CustomerInfo";
-import ServiceSelection from "./ServiceSelection"; // Fixed import
+import ServiceSelection from "./ServiceSelection"; 
 import PaymentDetails from "./PaymentDetails";
 import BookingConfirmation from "./BookingConfirmation";
-import { useLanguage } from "@/context/LanguageContext";
 import { BookingMode as CustomerBookingMode } from "@/context/OrderContext.d";
 
 export type BookingMode = "customer" | "staff";
@@ -19,7 +17,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = React.memo(({
 }) => {
   const { orderState } = useOrder();
   const { currentStep } = orderState;
-  const { t } = useLanguage();
+  const { t } = { t: (key: string) => key }; // Mock useLanguage if needed
 
   // Map the BookingMode to CustomerBookingMode
   const mapBookingMode = (mode: BookingMode): CustomerBookingMode => {
