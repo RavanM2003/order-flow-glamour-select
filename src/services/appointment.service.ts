@@ -35,18 +35,18 @@ export async function getAppointmentById(id: number) {
  * Create a new appointment
  */
 export async function createAppointment(appointmentData: AppointmentFormData) {
-  // Convert the appointment data to match the database schema
-  // Ensure appointment_date is a string
+  // Convert the appointment date to a string if it's a Date object
   const appointmentDate = 
     typeof appointmentData.appointment_date === 'string' 
       ? appointmentData.appointment_date 
       : appointmentData.appointment_date.toISOString().split('T')[0];
   
+  // Cast status to string to resolve type issues with Supabase
   const appointmentRecord = {
     appointment_date: appointmentDate,
     start_time: appointmentData.start_time,
     end_time: appointmentData.end_time,
-    status: appointmentData.status || 'scheduled',
+    status: (appointmentData.status || 'scheduled') as string,
     total: appointmentData.total,
     customer_user_id: appointmentData.customer_user_id,
     user_id: appointmentData.user_id,
@@ -76,12 +76,18 @@ export async function updateAppointment(id: number, appointmentData: Partial<App
     appointment_date = appointment_date.toISOString().split('T')[0];
   }
   
-  const updateData = {
+  // Cast status to string for Supabase compatibility
+  const updateData: any = {
     ...appointmentData,
     appointment_date,
     updated_at: new Date().toISOString()
   };
   
+  // If status is included, cast it to string
+  if (updateData.status) {
+    updateData.status = updateData.status as string;
+  }
+
   const { data, error } = await supabase
     .from('appointments')
     .update(updateData)
@@ -119,7 +125,7 @@ export async function cancelAppointment(id: number, reason: string) {
   const { data, error } = await supabase
     .from('appointments')
     .update({
-      status: 'cancelled' as AppointmentStatus,
+      status: 'cancelled' as string,
       cancel_reason: reason,
       updated_at: new Date().toISOString()
     })
@@ -141,7 +147,7 @@ export async function completeAppointment(id: number) {
   const { data, error } = await supabase
     .from('appointments')
     .update({
-      status: 'completed' as AppointmentStatus,
+      status: 'completed' as string,
       updated_at: new Date().toISOString()
     })
     .eq('id', numericId)

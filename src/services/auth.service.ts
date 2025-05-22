@@ -37,8 +37,8 @@ export const signInWithEmail = async (email: string, password: string) => {
         user = {
           id: data.user.id,
           email: data.user.email || '',
-          firstName: userData.first_name || '',
-          lastName: userData.last_name || '',
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
           full_name: userData.full_name || '',
           avatar_url: userData.avatar_url || '',
           role: userData.role as UserRole,
@@ -46,6 +46,9 @@ export const signInWithEmail = async (email: string, password: string) => {
           phone: userData.phone || '',
           note: userData.note || '',
           token: data.session?.access_token || '',
+          // Add aliases for backward compatibility
+          firstName: userData.first_name || '',
+          lastName: userData.last_name || ''
         };
       } else {
         // If no user profile found, use basic auth data
@@ -107,8 +110,8 @@ export const signUp = async (
       password,
       options: {
         data: {
-          first_name: userData.firstName || '',
-          last_name: userData.lastName || '',
+          first_name: userData.first_name || userData.firstName || '',
+          last_name: userData.last_name || userData.lastName || '',
         }
       }
     });
@@ -124,9 +127,9 @@ export const signUp = async (
       const userProfile = {
         id: data.user.id,
         email: data.user.email || '',
-        first_name: userData.firstName || '',
-        last_name: userData.lastName || '',
-        full_name: `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+        first_name: userData.first_name || userData.firstName || '',
+        last_name: userData.last_name || userData.lastName || '',
+        full_name: `${userData.first_name || userData.firstName || ''} ${userData.last_name || userData.lastName || ''}`.trim(),
         role: userData.role || 'customer',
         gender: userData.gender || 'other',
         phone: userData.phone || '',
@@ -150,8 +153,8 @@ export const signUp = async (
       user = {
         id: data.user.id,
         email: data.user.email || '',
-        firstName: userData.firstName || '',
-        lastName: userData.lastName || '',
+        first_name: userData.first_name || userData.firstName || '',
+        last_name: userData.last_name || userData.lastName || '',
         role: userData.role || 'customer' as UserRole,
         phone: userData.phone || '',
         gender: userData.gender || 'other',
@@ -293,8 +296,8 @@ export const createStaffUser = async (userData: Record<string, any>) => {
       password,
       options: {
         data: {
-          first_name: userData.firstName || '',
-          last_name: userData.lastName || '',
+          first_name: userData.first_name || userData.firstName || '',
+          last_name: userData.last_name || userData.lastName || '',
         }
       }
     });
@@ -310,9 +313,9 @@ export const createStaffUser = async (userData: Record<string, any>) => {
       const userProfile = {
         id: data.user.id,
         email: userData.email,
-        first_name: userData.firstName || '',
-        last_name: userData.lastName || '',
-        full_name: `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+        first_name: userData.first_name || userData.firstName || '',
+        last_name: userData.last_name || userData.lastName || '',
+        full_name: `${userData.first_name || userData.firstName || ''} ${userData.last_name || userData.lastName || ''}`.trim(),
         role: 'staff' as UserRole,
         gender: userData.gender || 'other',
         phone: userData.phone || '',
@@ -336,7 +339,7 @@ export const createStaffUser = async (userData: Record<string, any>) => {
       const staffRecord = {
         user_id: data.user.id,
         position: 'Staff Member', // Default position
-        name: `${userData.firstName || ''} ${userData.lastName || ''}`.trim(),
+        name: `${userData.first_name || userData.firstName || ''} ${userData.last_name || userData.lastName || ''}`.trim(),
       };
       
       const { error: staffError } = await supabase
@@ -351,8 +354,8 @@ export const createStaffUser = async (userData: Record<string, any>) => {
       user = {
         id: data.user.id,
         email: userData.email,
-        firstName: userData.firstName || '',
-        lastName: userData.lastName || '',
+        first_name: userData.first_name || userData.firstName || '',
+        last_name: userData.last_name || userData.lastName || '',
         role: 'staff',
       };
     }
@@ -379,14 +382,29 @@ export const updateUserProfile = async (userId: string, updates: Partial<User>) 
     // Map our User interface to database fields
     const dbUpdates: Record<string, any> = {};
     
-    if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName;
-    if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName;
-    if (updates.full_name !== undefined) dbUpdates.full_name = updates.full_name;
-    if (updates.avatar_url !== undefined) dbUpdates.avatar_url = updates.avatar_url;
-    if (updates.gender !== undefined) dbUpdates.gender = updates.gender;
-    if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
-    if (updates.note !== undefined) dbUpdates.note = updates.note;
-    if (updates.role !== undefined) dbUpdates.role = updates.role;
+    if (updates.first_name !== undefined || updates.firstName !== undefined) 
+      dbUpdates.first_name = updates.first_name || updates.firstName;
+    
+    if (updates.last_name !== undefined || updates.lastName !== undefined) 
+      dbUpdates.last_name = updates.last_name || updates.lastName;
+    
+    if (updates.full_name !== undefined) 
+      dbUpdates.full_name = updates.full_name;
+    
+    if (updates.avatar_url !== undefined) 
+      dbUpdates.avatar_url = updates.avatar_url;
+    
+    if (updates.gender !== undefined) 
+      dbUpdates.gender = updates.gender;
+    
+    if (updates.phone !== undefined) 
+      dbUpdates.phone = updates.phone;
+    
+    if (updates.note !== undefined) 
+      dbUpdates.note = updates.note;
+    
+    if (updates.role !== undefined) 
+      dbUpdates.role = updates.role;
     
     const { data, error } = await supabase
       .from('users')
@@ -403,15 +421,17 @@ export const updateUserProfile = async (userId: string, updates: Partial<User>) 
     const user: User = {
       id: data.id,
       email: data.email,
-      firstName: data.first_name || '',
-      lastName: data.last_name || '',
+      first_name: data.first_name || '',
+      last_name: data.last_name || '',
       full_name: data.full_name || '',
       avatar_url: data.avatar_url || '',
       role: data.role as UserRole,
       gender: data.gender,
       phone: data.phone || '',
       note: data.note || '',
-      roleId: data.role_id?.toString() || '',
+      // Add aliases for backward compatibility
+      firstName: data.first_name || '',
+      lastName: data.last_name || ''
     };
     
     return {

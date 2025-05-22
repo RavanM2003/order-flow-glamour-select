@@ -1,42 +1,69 @@
+// Environment Configuration
 
-import { appConfig, apiSchema } from './modes';
-
-// Export the application environment configuration
-export const config = {
-  ...appConfig,
-  
-  // API configuration
+interface Config {
+  title: string;
   api: {
-    url: appConfig.apiUrl || import.meta.env.VITE_API_URL,
-    key: import.meta.env.VITE_API_KEY,
-    schema: apiSchema
-  },
-  
-  // API Base URL (derived from API URL or environment variable)
-  apiBaseUrl: appConfig.apiUrl || import.meta.env.VITE_API_URL,
-  
-  // Supabase configuration
-  supabase: {
-    url: import.meta.env.VITE_SUPABASE_URL,
-    key: import.meta.env.VITE_SUPABASE_KEY
-  },
-  
-  // Feature flags
+    url: any;
+    key: any;
+    schema: {
+      auth: {
+        login: string;
+        register: string;
+        logout: string;
+        resetPassword: string;
+        profile: string;
+      };
+      staff: {
+        getAll: string;
+        getById: (id: string | number) => string;
+        create: string;
+        update: (id: string | number) => string;
+        delete: (id: string | number) => string;
+        getAppointments: (id: string | number) => string;
+        getAvailability: (id: string | number) => string;
+        setAvailability: (id: string | number) => string;
+        getWorkingHours: (id: string | number) => string;
+        setWorkingHours: (id: string | number) => string;
+        checkAvailability: (id: string | number, date: Date) => string;
+      };
+      // Other schema definitions here
+    };
+  };
   features: {
-    enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true',
-    debugMode: import.meta.env.VITE_DEBUG_MODE === 'true'
+    debugMode: boolean;
+  };
+}
+
+export const config: Config = {
+  title: "Beauty Salon",
+  api: {
+    url: process.env.API_URL || "",
+    key: process.env.API_KEY || "",
+    schema: {
+      auth: {
+        login: "/auth/login",
+        register: "/auth/register",
+        logout: "/auth/logout",
+        resetPassword: "/auth/reset-password",
+        profile: "/auth/profile",
+      },
+      staff: {
+        getAll: "/staff",
+        getById: (id) => `/staff/${id}`,
+        create: "/staff",
+        update: (id) => `/staff/${id}`,
+        delete: (id) => `/staff/${id}`,
+        getAppointments: (id) => `/staff/${id}/appointments`,
+        getAvailability: (id) => `/staff/${id}/availability`,
+        setAvailability: (id) => `/staff/${id}/availability`,
+        getWorkingHours: (id) => `/staff/${id}/working-hours`,
+        setWorkingHours: (id) => `/staff/${id}/working-hours`,
+        checkAvailability: (id, date) => `/staff/${id}/check-availability?date=${date.toISOString()}`,
+      },
+      // Other schemas configuration would go here
+    }
   },
-  
-  // Environment info
-  usesMockData: appConfig.usesMockData,
-  usesSupabase: appConfig.usesSupabase,
-  usesCustomApi: appConfig.usesCustomApi,
-  
-  // Feature flags for debug display
-  featureFlags: {
-    showDebugInfo: import.meta.env.VITE_DEBUG_MODE === 'true'
+  features: {
+    debugMode: process.env.NODE_ENV !== "production"
   }
 };
-
-// Export current environment for convenience
-export const currentEnv = appConfig.mode;

@@ -69,7 +69,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 gender: profileData.gender,
                 birth_date: profileData.birth_date,
                 full_name: profileData.full_name,
-                avatar_url: profileData.avatar_url
+                avatar_url: profileData.avatar_url,
+                // Add aliases for backward compatibility
+                firstName: profileData.first_name || '',
+                lastName: profileData.last_name || ''
               });
             } else {
               // Basic user data from auth
@@ -79,7 +82,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 role: 'customer' as UserRole,
                 first_name: '',
                 last_name: '',
-                phone: ''
+                phone: '',
+                // Add aliases for backward compatibility
+                firstName: '',
+                lastName: ''
               });
             }
           }
@@ -124,7 +130,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   gender: profileData.gender,
                   birth_date: profileData.birth_date,
                   full_name: profileData.full_name,
-                  avatar_url: profileData.avatar_url
+                  avatar_url: profileData.avatar_url,
+                  // Add aliases for backward compatibility
+                  firstName: profileData.first_name || '',
+                  lastName: profileData.last_name || ''
                 });
               }
             }
@@ -174,7 +183,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             gender: profileData.gender,
             birth_date: profileData.birth_date,
             full_name: profileData.full_name,
-            avatar_url: profileData.avatar_url
+            avatar_url: profileData.avatar_url,
+            // Add aliases for backward compatibility
+            firstName: profileData.first_name || '',
+            lastName: profileData.last_name || ''
           });
         }
       }
@@ -212,8 +224,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         password,
         options: {
           data: {
-            first_name: userData?.first_name || '',
-            last_name: userData?.last_name || '',
+            first_name: userData?.first_name || userData?.firstName || '',
+            last_name: userData?.last_name || userData?.lastName || '',
           }
         }
       });
@@ -225,16 +237,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const userProfile = {
           id: data.user.id,
           email,
-          first_name: userData?.first_name || '',
-          last_name: userData?.last_name || '',
+          first_name: userData?.first_name || userData?.firstName || '',
+          last_name: userData?.last_name || userData?.lastName || '',
           role: userData?.role || 'customer',
           hashed_password: '',  // Required field for users table
           phone: userData?.phone || '' // Required field for users table
         };
         
         await supabase.from('users').insert([userProfile]);
-        
-        // Don't set user here as the onAuthStateChange will handle it
       }
 
       return;
@@ -256,8 +266,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       // Map to database field names
       const dbUpdates: any = {
-        first_name: updates.first_name,
-        last_name: updates.last_name,
+        first_name: updates.first_name || updates.firstName,
+        last_name: updates.last_name || updates.lastName,
         avatar_url: updates.avatar_url,
         // Add other fields as needed
       };
@@ -280,7 +290,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (user) {
         setUser({
           ...user,
-          ...updates
+          ...updates,
+          // Ensure aliases are updated too
+          firstName: updates.first_name || updates.firstName || user.first_name || user.firstName,
+          lastName: updates.last_name || updates.lastName || user.last_name || user.lastName
         });
       }
       
@@ -318,5 +331,3 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-export { AuthProvider };

@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Calendar,
@@ -21,7 +20,7 @@ import { useLanguage } from '@/context/LanguageContext';
 
 interface AdminVerticalNavProps {
   activeTab: string;
-  setActiveTab: (tab: string) => void;
+  onTabChange: (tab: string) => void;
   notifications?: number;
 }
 
@@ -48,7 +47,7 @@ const tabToUrl: Record<string, string> = {
   profile: '/admin/profile',
 };
 
-const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminVerticalNavProps) => {
+const AdminVerticalNav = ({ activeTab, onTabChange, notifications = 0 }: AdminVerticalNavProps) => {
   const { user, session, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -65,6 +64,12 @@ const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminV
     await logout();
     navigate('/login');
   };
+  
+  useEffect(() => {
+    if (session) {
+      console.log('User is authenticated with session:', session);
+    }
+  }, [session]);
   
   return (
     <div className="w-64 bg-white border-r h-screen flex flex-col">
@@ -90,7 +95,7 @@ const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminV
                   ? "bg-glamour-700 text-white"
                   : "text-gray-700 hover:bg-gray-100"
               )}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => onTabChange(item.id)}
             >
               {IconComponent && <IconComponent className="h-5 w-5 mr-3" />}
               {t(`admin.${item.id}`)}

@@ -24,6 +24,10 @@ export interface User {
   role?: UserRole;
   phone?: string;
   note?: string;
+  
+  // Aliases for backward compatibility
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface UserFormData {
@@ -35,6 +39,10 @@ export interface UserFormData {
   phone?: string;
   gender?: 'male' | 'female' | 'other';
   birth_date?: string;
+  
+  // Aliases for backward compatibility
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface UserCredentials {
@@ -60,4 +68,10 @@ export interface CustomerWithUserFormData {
   password?: string;
   first_name?: string;
   last_name?: string;
+  full_name?: string;
+  user_id?: string; // Added this field to fix the error
+  
+  // Aliases for backward compatibility
+  firstName?: string;
+  lastName?: string;
 }

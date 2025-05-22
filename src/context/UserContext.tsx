@@ -1,4 +1,3 @@
-
 // Only the context creation and export needs to be modified to ensure proper export
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -114,11 +113,9 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         // Map to User interface for compatibility
         const userProfile: User = {
           ...data,
-          // Map properties for backward compatibility
+          // Add aliases for backward compatibility
           firstName: data.first_name,
           lastName: data.last_name,
-          isActive: true,
-          lastLogin: data.updated_at,
           // Ensure role is properly typed
           role: data.role as UserRole
         };
@@ -207,7 +204,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
           data: {
             first_name: userData?.first_name || userData?.firstName,
             last_name: userData?.last_name || userData?.lastName,
-            full_name: userData?.full_name || `${userData?.first_name || ''} ${userData?.last_name || ''}`.trim(),
+            full_name: userData?.full_name || `${userData?.first_name || userData?.firstName || ''} ${userData?.last_name || userData?.lastName || ''}`.trim(),
             // Add any other user data here
           }
         }
