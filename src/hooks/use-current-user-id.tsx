@@ -8,8 +8,8 @@ import { UserContext } from '@/context/UserContext';
  * @returns The current user ID or null if no user is logged in
  */
 export function useCurrentUserId() {
-  const { userId } = useContext(UserContext);
-  return userId;
+  const userContext = useContext(UserContext);
+  return userContext?.userId || null;
 }
 
 export const getCurrentUserId = (): string | null => {

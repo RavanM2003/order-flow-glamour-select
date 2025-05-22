@@ -1,5 +1,8 @@
+
 import { config } from '@/config/env';
-import { mockCustomers, mockAppointments, mockServices, mockProducts, mockStaff } from './mock-data';
+import mockData from './mock-data';
+
+const { customers: mockCustomers, appointments: mockAppointments, services: mockServices, products: mockProducts, staff: mockStaff } = mockData;
 
 // Define API endpoints with environment awareness
 export const API = {
