@@ -1,67 +1,22 @@
 
-
-// User model and related types
-export type UserRole = "super_admin" | "admin" | "staff" | "cash" | "appointment" | "service" | "product" | "customer" | "reception";
-
 export interface User {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  role: UserRole;
-  staffId?: number; // Reference to staff member if role is staff
-  profileImage?: string;
-  lastLogin: string;
-  isActive: boolean;
-  roleId?: number;
-}
+  first_name?: string;
+  last_name?: string;
+  full_name?: string;
+  avatar_url?: string;
+  birth_date?: string;
+  created_at?: string;
+  updated_at?: string;
+  gender?: 'male' | 'female' | 'other';
+  role?: 'admin' | 'customer' | 'staff';
+  phone?: string;
+  note?: string;
 
-export interface UserFormData {
-  email: string;
-  password?: string; // Optional for updates
+  // These are mappings for compatibility with the existing User type
   firstName?: string;
   lastName?: string;
-  role: UserRole;
-  staffId?: number;
+  lastLogin?: string;
   isActive?: boolean;
-  roleId?: number;
-}
-
-export interface AuthFormData {
-  email: string;
-  password: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  token: string;
-  expiresAt: number;
-}
-
-export interface UserSession {
-  user: User | null;
-  token: string | null;
-  isAuthenticated: boolean;
-  expiresAt: number | null;
-}
-
-// User credentials for login
-export interface UserCredentials {
-  email: string;
-  password: string;
-}
-
-// Customer creation with user account
-export interface CustomerWithUserFormData {
-  // User data
-  email: string;
-  password: string;
-  
-  // Customer data
-  firstName: string;
-  lastName: string;
-  phone: string;
-  gender?: string;
-  birthDate?: string;
-  note?: string;
 }

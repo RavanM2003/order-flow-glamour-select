@@ -1,3 +1,4 @@
+
 import {
   Appointment,
   AppointmentCreate,
@@ -27,44 +28,6 @@ const convertToDatabaseAppointment = (
   id: parseInt(appointment.id),
 });
 
-// Mock data for development
-const mockAppointment: Appointment = {
-  id: "1",
-  customer_user_id: "1",
-  start_time: "2024-02-20T10:00:00",
-  end_time: "2024-02-20T11:00:00",
-  notes: "Test appointment",
-  status: "scheduled",
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  appointment_date: "2024-02-20",
-};
-
-const mockAppointments: Appointment[] = [
-  {
-    id: "1",
-    customer_user_id: "1",
-    start_time: "2024-02-20T10:00:00",
-    end_time: "2024-02-20T11:00:00",
-    notes: "Test appointment 1",
-    status: "scheduled",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    appointment_date: "2024-02-20",
-  },
-  {
-    id: "2",
-    customer_user_id: "2",
-    start_time: "2024-02-20T14:00:00",
-    end_time: "2024-02-20T15:00:00",
-    notes: "Test appointment 2",
-    status: "scheduled",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    appointment_date: "2024-02-20",
-  },
-];
-
 export class AppointmentService extends ApiService {
   constructor() {
     super();
@@ -75,172 +38,145 @@ export class AppointmentService extends ApiService {
   ): Promise<ApiResponse<Appointment[]>> {
     if (config.usesMockData) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      return { data: mockAppointments };
+      return { data: [] }; // Return empty array instead of mock data to use real data
     }
 
-    const { data, error } = await supabase.from("appointments").select("*");
+    try {
+      const { data, error } = await supabase.from("appointments").select("*");
 
-    if (error) throw error;
-    return { data: data.map(convertToAppointment) };
+      if (error) throw error;
+      return { data: data.map(convertToAppointment) };
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+      return { 
+        error: error instanceof Error ? error.message : "Failed to fetch appointments"
+      };
+    }
   }
 
   async getAppointmentById(
     id: string,
     config: { usesMockData?: boolean } = {}
   ): Promise<ApiResponse<Appointment>> {
-    if (config.usesMockData) {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      return { data: mockAppointment };
+    try {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("*")
+        .eq("id", parseInt(id))
+        .single();
+
+      if (error) throw error;
+      return { data: convertToAppointment(data) };
+    } catch (error) {
+      console.error("Error fetching appointment:", error);
+      return { 
+        error: error instanceof Error ? error.message : "Failed to fetch appointment"
+      };
     }
-
-    const { data, error } = await supabase
-      .from("appointments")
-      .select("*")
-      .eq("id", parseInt(id))
-      .single();
-
-    if (error) throw error;
-    return { data: convertToAppointment(data) };
   }
 
   async createAppointment(
-    appointment: AppointmentCreate,
-    config: { usesMockData?: boolean } = {}
+    appointment: AppointmentCreate
   ): Promise<ApiResponse<Appointment>> {
-    if (config.usesMockData) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return {
-        data: {
-          ...mockAppointment,
-          ...appointment,
-          id: (mockAppointments.length + 1).toString(),
-          status: appointment.status || "scheduled",
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
+    try {
+      const { data, error } = await supabase
+        .from("appointments")
+        .insert([
+          {
+            ...appointment,
+            status: appointment.status || "scheduled",
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: convertToAppointment(data) };
+    } catch (error) {
+      console.error("Error creating appointment:", error);
+      return { 
+        error: error instanceof Error ? error.message : "Failed to create appointment"
       };
     }
-
-    const { data, error } = await supabase
-      .from("appointments")
-      .insert([
-        {
-          ...appointment,
-          status: appointment.status || "scheduled",
-        },
-      ])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return { data: convertToAppointment(data) };
   }
 
   async updateAppointment(
     id: string,
-    appointment: AppointmentUpdate,
-    config: { usesMockData?: boolean } = {}
+    appointment: AppointmentUpdate
   ): Promise<ApiResponse<Appointment>> {
-    if (config.usesMockData) {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      return {
-        data: {
-          ...mockAppointment,
+    try {
+      const { data, error } = await supabase
+        .from("appointments")
+        .update({
           ...appointment,
-          id,
           updated_at: new Date().toISOString(),
-        },
+        })
+        .eq("id", parseInt(id))
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { data: convertToAppointment(data) };
+    } catch (error) {
+      console.error("Error updating appointment:", error);
+      return { 
+        error: error instanceof Error ? error.message : "Failed to update appointment"
       };
     }
-
-    const { data, error } = await supabase
-      .from("appointments")
-      .update({
-        ...appointment,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", parseInt(id))
-      .select()
-      .single();
-
-    if (error) throw error;
-    return { data: convertToAppointment(data) };
   }
 
   async deleteAppointment(
-    id: string,
-    config: { usesMockData?: boolean } = {}
+    id: string
   ): Promise<ApiResponse<void>> {
-    if (config.usesMockData) {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      const { error } = await supabase
+        .from("appointments")
+        .delete()
+        .eq("id", parseInt(id));
+
+      if (error) throw error;
       return { data: undefined };
+    } catch (error) {
+      console.error("Error deleting appointment:", error);
+      return { 
+        error: error instanceof Error ? error.message : "Failed to delete appointment"
+      };
     }
-
-    const { error } = await supabase
-      .from("appointments")
-      .delete()
-      .eq("id", parseInt(id));
-
-    if (error) throw error;
-    return { data: undefined };
   }
 
   async confirmAppointment(
-    id: string,
-    config: { usesMockData?: boolean } = {}
+    id: string
   ): Promise<ApiResponse<Appointment>> {
-    return this.updateAppointment(id, { status: "scheduled" }, config);
+    return this.updateAppointment(id, { status: "scheduled" });
   }
 
   async rejectAppointment(
     id: string,
-    reason: string,
-    config: { usesMockData?: boolean } = {}
+    reason: string
   ): Promise<ApiResponse<Appointment>> {
     return this.updateAppointment(
       id,
       {
         status: "cancelled",
         cancel_reason: reason,
-      },
-      config
+      }
     );
   }
 
   async completeAppointment(
-    id: string,
-    config: { usesMockData?: boolean } = {}
+    id: string
   ): Promise<ApiResponse<Appointment>> {
-    return this.updateAppointment(id, { status: "completed" }, config);
+    return this.updateAppointment(id, { status: "completed" });
   }
 
+  // Add missing methods for compatibility with hooks
   async getAll(): Promise<ApiResponse<Appointment[]>> {
-    return this.getAppointments();
+    return this.getAppointments({ usesMockData: false });
   }
 
   async getByCustomerId(
     customerId: string
   ): Promise<ApiResponse<Appointment[]>> {
-    if (config.usesMockData) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      const mockAppointments: Appointment[] = [
-        {
-          id: "1",
-          customer_user_id: customerId,
-          start_time: new Date().toISOString(),
-          end_time: new Date(Date.now() + 3600000).toISOString(),
-          notes: "Mock appointment 1",
-          status: "scheduled" as AppointmentStatus,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          appointment_date: new Date().toISOString(),
-        },
-      ];
-
-      return { data: mockAppointments };
-    }
-
     try {
       const { data, error } = await supabase
         .from("appointments")
@@ -271,6 +207,19 @@ export class AppointmentService extends ApiService {
     appointmentData: AppointmentUpdate
   ): Promise<ApiResponse<Appointment>> {
     return this.updateAppointment(id, appointmentData);
+  }
+
+  async markAsPaid(
+    id: string
+  ): Promise<ApiResponse<Appointment>> {
+    // Here you would implement the logic to mark the appointment as paid
+    // For now, we just return the appointment updated with a note
+    return this.updateAppointment(id, { 
+      notes: (appointment) => {
+        const currentNotes = appointment.notes || "";
+        return currentNotes + " [PAID]";
+      }
+    });
   }
 }
 

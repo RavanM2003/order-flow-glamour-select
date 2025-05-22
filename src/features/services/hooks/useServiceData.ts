@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Service, ServiceFilters } from '../types';
 import { serviceService } from '../services/service.service';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/use-toast';
 export function useServiceData(initialFilters?: ServiceFilters) {
   const [filters, setFilters] = useState<ServiceFilters>(initialFilters || {});
   const [service, setService] = useState<Service | null>(null);
+  const fetchedRef = useRef(false);
 
   // Fetch all services with current filters
   const {
@@ -19,11 +20,23 @@ export function useServiceData(initialFilters?: ServiceFilters) {
   } = useQuery({
     queryKey: ['services', filters],
     queryFn: async () => {
+      // Skip fetching if we've already fetched and just want to modify filters
+      if (fetchedRef.current && Object.keys(filters).length > 0) {
+        return services.filter(service => {
+          if (filters.search && !service.name.toLowerCase().includes(filters.search.toLowerCase())) {
+            return false;
+          }
+          // Add more filter logic as needed
+          return true;
+        });
+      }
+
       try {
         // First try using the service abstraction
         const response = await serviceService.getAll();
         
         if (response.data && response.data.length > 0) {
+          fetchedRef.current = true;
           return response.data;
         }
         
@@ -36,6 +49,7 @@ export function useServiceData(initialFilters?: ServiceFilters) {
         if (error) throw error;
         
         if (supabaseData) {
+          fetchedRef.current = true;
           return supabaseData.map(item => ({
             ...item,
             relatedProducts: []
@@ -52,7 +66,10 @@ export function useServiceData(initialFilters?: ServiceFilters) {
         });
         return [];
       }
-    }
+    },
+    // Disable automatic refetching
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Fetch single service

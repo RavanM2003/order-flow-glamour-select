@@ -1,367 +1,161 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { useApi } from "./use-api";
-import { staffService } from "@/services";
-import {
-  Staff,
-  StaffPayment,
-  StaffServiceRecord,
-  StaffFormData,
-  StaffWorkingHours,
-} from "@/models/staff.model";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
 
-interface DatabaseStaff {
-  id: number;
-  created_at: string;
-  position: string;
-  specializations: number[];
-  updated_at: string;
-  user_id: string;
-  name?: string;
-  email?: string;
-  phone?: string;
-  avatar?: string;
-  bio?: string;
-  services?: number[];
-  rating?: number;
-  role_id?: number;
-  salary?: number;
-  commissionRate?: number;
-  paymentType?: string;
-  avatar_url?: string;
-}
-
-// Transform database staff to our Staff model
-const transformStaff = (dbStaff: DatabaseStaff): Staff => {
-  return {
-    id: dbStaff.id,
-    name: dbStaff.name || "",
-    position: dbStaff.position,
-    specializations: dbStaff.specializations.map(String),
-    email: dbStaff.email,
-    phone: dbStaff.phone,
-    avatar: dbStaff.avatar,
-    bio: dbStaff.bio,
-    services: dbStaff.services,
-    rating: dbStaff.rating,
-    role_id: dbStaff.role_id,
-    salary: dbStaff.salary,
-    commissionRate: dbStaff.commissionRate,
-    paymentType: dbStaff.paymentType,
-    avatar_url: dbStaff.avatar_url,
-    created_at: dbStaff.created_at,
-    updated_at: dbStaff.updated_at,
-    user_id: dbStaff.user_id,
-  };
-};
+import { useState, useCallback, useEffect } from 'react';
+import { Staff, StaffFormData } from '@/models/staff.model';
+import { staffService } from '@/services';
+import { toast } from '@/components/ui/use-toast';
 
 export function useStaff() {
-  const api = useApi<DatabaseStaff[]>();
   const [staff, setStaff] = useState<Staff[]>([]);
-  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
-  const [staffPayments, setStaffPayments] = useState<StaffPayment[]>([]);
-  const [serviceRecords, setServiceRecords] = useState<StaffServiceRecord[]>(
-    []
-  );
-  const [workingHours, setWorkingHours] = useState<StaffWorkingHours[]>([]);
-  const [earnings, setEarnings] = useState<{
-    salary: number;
-    commission: number;
-    expenses: number;
-    total: number;
-  } | null>(null);
-  const fetchedRef = useRef(false);
-  const fetchPromiseRef = useRef<Promise<Staff[] | null> | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStaff = useCallback(async () => {
-    // Skip fetching if we've already fetched or have a fetch in progress
-    if (fetchedRef.current) return staff;
-    if (fetchPromiseRef.current) return fetchPromiseRef.current;
-
-    console.log("Fetching staff...");
+    setIsLoading(true);
+    setError(null);
 
     try {
-      // Start a new fetch and store the promise
-      fetchPromiseRef.current = api
-        .execute(() => staffService.getAll(), {
-          showErrorToast: false,
-          errorPrefix: "Failed to load staff",
-        })
-        .then(async (data) => {
-          if (data && data.length > 0) {
-            const transformedData = (data as unknown as DatabaseStaff[]).map(
-              transformStaff
-            );
-            setStaff(transformedData);
-            fetchedRef.current = true;
-            return transformedData;
-          }
-
-          // If no data from service, try direct Supabase query
-          console.log("Trying to fetch staff directly from Supabase...");
-          const { data: supabaseData, error } = await supabase
-            .from("staff")
-            .select("*");
-
-          if (error) {
-            console.error("Error fetching staff from Supabase:", error);
-            toast({
-              variant: "destructive",
-              title: "Failed to load staff",
-              description: error.message,
-            });
-            return null;
-          }
-
-          if (supabaseData && supabaseData.length > 0) {
-            const transformedData = (supabaseData as DatabaseStaff[]).map(
-              transformStaff
-            );
-            setStaff(transformedData);
-            fetchedRef.current = true;
-            return transformedData;
-          }
-
-          // Return original mock data if nothing found in Supabase
-          return null;
-        })
-        .catch((error) => {
-          console.error("Error in fetchStaff:", error);
-          toast({
-            variant: "destructive",
-            title: "Failed to load staff",
-            description: "Could not load staff data",
-          });
-          return null;
-        })
-        .finally(() => {
-          // Clear the promise reference when done
-          fetchPromiseRef.current = null;
+      const response = await staffService.getAll();
+      
+      if (response.error) {
+        setError(response.error);
+        toast({
+          variant: "destructive",
+          title: "Xəta",
+          description: response.error,
         });
-
-      return fetchPromiseRef.current;
-    } catch (error) {
-      console.error("Unexpected error in fetchStaff:", error);
-      fetchPromiseRef.current = null;
-      return null;
+        return;
+      }
+      
+      if (response.data) {
+        setStaff(response.data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch staff:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Staff yüklənə bilmədi';
+      setError(errorMessage);
+      toast({
+        variant: "destructive",
+        title: "Xəta",
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
     }
-  }, [api, staff]);
+  }, []);
 
-  // Only fetch on component mount, not on every render
   useEffect(() => {
-    if (!fetchedRef.current && !fetchPromiseRef.current) {
-      fetchStaff();
-    }
-    // We intentionally omit fetchStaff from dependencies
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    fetchStaff();
+  }, [fetchStaff]);
 
-  const getStaffMember = useCallback(async (id: number | string) => {
+  const createStaffMember = useCallback(async (staffData: StaffFormData) => {
+    setIsLoading(true);
     try {
-      const response = await staffService.getById(id);
-      if (response.data) {
-        setSelectedStaff(response.data);
-      }
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching staff member ${id}:`, error);
-      return null;
-    }
-  }, []);
-
-  const clearSelectedStaff = useCallback(() => {
-    setSelectedStaff(null);
-    setStaffPayments([]);
-    setServiceRecords([]);
-    setWorkingHours([]);
-    setEarnings(null);
-  }, []);
-
-  const fetchStaffPayments = useCallback(async (staffId: number | string) => {
-    try {
-      const response = await staffService.getPayments(staffId);
-      if (response.data) {
-        setStaffPayments(response.data);
-      }
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching payments for staff ${staffId}:`, error);
-      return [];
-    }
-  }, []);
-
-  const fetchServiceRecords = useCallback(async (staffId: number | string) => {
-    try {
-      const response = await staffService.getServiceRecords(staffId);
-      if (response.data) {
-        setServiceRecords(response.data);
-      }
-      return response.data;
-    } catch (error) {
-      console.error(
-        `Error fetching service records for staff ${staffId}:`,
-        error
-      );
-      return [];
-    }
-  }, []);
-
-  const calculateEarnings = useCallback(
-    async (staffId: number | string, month: number, year: number) => {
-      try {
-        const response = await staffService.calculateEarnings(
-          staffId,
-          month,
-          year
-        );
-        if (response.data) {
-          setEarnings(response.data);
-        }
-        return response.data;
-      } catch (error) {
-        console.error(
-          `Error calculating earnings for staff ${staffId}:`,
-          error
-        );
+      const response = await staffService.createStaffMember(staffData);
+      
+      if (response.error) {
+        toast({
+          variant: "destructive",
+          title: "Xəta",
+          description: response.error,
+        });
         return null;
       }
-    },
-    []
-  );
-
-  // Working hours functions
-  const fetchWorkingHours = useCallback(async (staffId: number | string) => {
-    try {
-      const response = await staffService.getWorkingHours(staffId);
-      if (response.data) {
-        setWorkingHours(response.data);
-      }
+      
+      toast({
+        title: "Uğurlu",
+        description: response.message || "İşçi əlavə edildi",
+      });
+      
+      await fetchStaff();
       return response.data;
-    } catch (error) {
-      console.error(
-        `Error fetching working hours for staff ${staffId}:`,
-        error
-      );
-      return [];
+    } catch (err) {
+      console.error('Failed to create staff member:', err);
+      toast({
+        variant: "destructive",
+        title: "Xəta",
+        description: err instanceof Error ? err.message : "İşçi əlavə edilə bilmədi",
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  }, [fetchStaff]);
 
-  const updateWorkingHours = useCallback(
-    async (
-      staffId: number | string,
-      dayOfWeek: number,
-      hours: Partial<StaffWorkingHours>
-    ) => {
-      const result = await api.execute(
-        () => staffService.updateWorkingHours(staffId, dayOfWeek, hours),
-        {
-          showSuccessToast: true,
-          successMessage: "Working hours updated successfully",
-          errorPrefix: "Failed to update working hours",
-          onSuccess: () => {
-            fetchWorkingHours(staffId);
-          },
-        }
-      );
+  const updateStaffMember = useCallback(async (id: string, updates: Partial<StaffFormData>) => {
+    setIsLoading(true);
+    try {
+      const response = await staffService.updateStaffMember(id, updates);
+      
+      if (response.error) {
+        toast({
+          variant: "destructive",
+          title: "Xəta",
+          description: response.error,
+        });
+        return null;
+      }
+      
+      toast({
+        title: "Uğurlu",
+        description: response.message || "İşçi məlumatları yeniləndi",
+      });
+      
+      await fetchStaff();
+      return response.data;
+    } catch (err) {
+      console.error('Failed to update staff member:', err);
+      toast({
+        variant: "destructive",
+        title: "Xəta",
+        description: err instanceof Error ? err.message : "İşçi məlumatları yenilənə bilmədi",
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchStaff]);
 
-      return result;
-    },
-    [api, fetchWorkingHours]
-  );
-
-  const checkAvailability = useCallback(
-    async (staffId: number | string, date: Date) => {
-      try {
-        const response = await staffService.checkAvailability(staffId, date);
-        return response.data;
-      } catch (error) {
-        console.error(
-          `Error checking availability for staff ${staffId}:`,
-          error
-        );
+  const deleteStaffMember = useCallback(async (id: string) => {
+    setIsLoading(true);
+    try {
+      const response = await staffService.deleteStaffMember(id);
+      
+      if (response.error) {
+        toast({
+          variant: "destructive",
+          title: "Xəta",
+          description: response.error,
+        });
         return false;
       }
-    },
-    []
-  );
-
-  // Create, update and delete staff functions
-  const createStaffMember = useCallback(
-    async (data: StaffFormData) => {
-      const result = await api.execute(() => staffService.create(data), {
-        showSuccessToast: true,
-        successMessage: "Staff member created successfully",
-        errorPrefix: "Failed to create staff member",
-        onSuccess: () => {
-          fetchStaff();
-        },
+      
+      toast({
+        title: "Uğurlu",
+        description: response.message || "İşçi silindi",
       });
-
-      return result;
-    },
-    [api, fetchStaff]
-  );
-
-  const updateStaffMember = useCallback(
-    async (id: number | string, data: Partial<StaffFormData>) => {
-      const result = await api.execute(() => staffService.update(id, data), {
-        showSuccessToast: true,
-        successMessage: "Staff member updated successfully",
-        errorPrefix: "Failed to update staff member",
-        onSuccess: () => {
-          fetchStaff();
-          if (selectedStaff && selectedStaff.id === Number(id)) {
-            getStaffMember(id);
-          }
-        },
+      
+      await fetchStaff();
+      return true;
+    } catch (err) {
+      console.error('Failed to delete staff member:', err);
+      toast({
+        variant: "destructive",
+        title: "Xəta",
+        description: err instanceof Error ? err.message : "İşçi silinə bilmədi",
       });
-
-      return result;
-    },
-    [api, fetchStaff, selectedStaff, getStaffMember]
-  );
-
-  const deleteStaffMember = useCallback(
-    async (id: number | string) => {
-      const result = await api.execute(() => staffService.delete(id), {
-        showSuccessToast: true,
-        successMessage: "Staff member deleted successfully",
-        errorPrefix: "Failed to delete staff member",
-        onSuccess: () => {
-          fetchStaff();
-          if (selectedStaff && selectedStaff.id === Number(id)) {
-            clearSelectedStaff();
-          }
-        },
-      });
-
-      return result;
-    },
-    [api, fetchStaff, selectedStaff, clearSelectedStaff]
-  );
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchStaff]);
 
   return {
     staff,
-    selectedStaff,
-    staffPayments,
-    serviceRecords,
-    earnings,
-    isLoading: api.isLoading,
-    error: api.error,
+    isLoading,
+    error,
     fetchStaff,
-    getStaffMember,
-    clearSelectedStaff,
     createStaffMember,
     updateStaffMember,
-    deleteStaffMember,
-    fetchStaffPayments,
-    fetchServiceRecords,
-    calculateEarnings,
-    // Working hours functions
-    workingHours,
-    fetchWorkingHours,
-    updateWorkingHours,
-    checkAvailability,
+    deleteStaffMember
   };
 }

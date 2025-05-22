@@ -1,3 +1,4 @@
+
 import { ReactNode } from "react";
 
 export interface Customer {
@@ -30,6 +31,12 @@ export interface Staff {
   created_at?: string;
   updated_at?: string;
   user_id?: string;
+  email?: string;
+  phone?: string;
+  role_id?: number;
+  salary?: number;
+  commissionRate?: number;
+  paymentType?: "salary" | "commission" | "hybrid";
 }
 
 export interface Product {

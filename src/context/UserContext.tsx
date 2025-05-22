@@ -1,149 +1,298 @@
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '@/models/user.model';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { User } from '@/models/user.model';
+import { toast } from '@/components/ui/use-toast';
 
-// Context interface
-interface UserContextType {
-  currentUser: User | null;
-  isLoading: boolean;
+interface UserContextProps {
+  user: User | null;
+  loading: boolean;
   error: string | null;
-  setCurrentUser: (user: User | null) => void;
-  refreshUser: () => Promise<void>;
-  getUserId: () => string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (email: string, password: string, userData?: Partial<User>) => Promise<void>;
+  updateProfile: (updates: Partial<User>) => Promise<void>;
+  fetchUserProfile: () => Promise<User | null>;
+  userId: string | null;
 }
 
-// Default context value
-const defaultContextValue: UserContextType = {
-  currentUser: null,
-  isLoading: true,
+const UserContext = createContext<UserContextProps>({
+  user: null,
+  loading: true,
   error: null,
-  setCurrentUser: () => {},
-  refreshUser: async () => {},
-  getUserId: () => null,
-};
+  login: async () => {},
+  logout: async () => {},
+  register: async () => {},
+  updateProfile: async () => {},
+  fetchUserProfile: async () => null,
+  userId: null
+});
 
-// Create context
-const UserContext = createContext<UserContextType>(defaultContextValue);
+export const useUser = () => useContext(UserContext);
 
-// Provider props
 interface UserProviderProps {
   children: ReactNode;
 }
 
-export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+export const UserProvider = ({ children }: UserProviderProps) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Load user from localStorage on initial mount
+  // Check for existing session on mount
   useEffect(() => {
-    const loadUserFromStorage = () => {
-      const storedData = localStorage.getItem('auth_user');
-      if (storedData) {
-        try {
-          const { user } = JSON.parse(storedData);
+    const checkSession = async () => {
+      setLoading(true);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
+        
+        if (session?.user) {
+          const user = await fetchUserProfile(session.user.id);
           if (user) {
-            setCurrentUser(user);
+            setUser(user);
+            setUserId(user.id);
           }
-        } catch (err) {
-          console.error('Failed to parse stored user data', err);
-          setError('Failed to load user data');
         }
+      } catch (error) {
+        console.error('Error checking session:', error);
+        setError(error instanceof Error ? error.message : 'An error occurred');
+      } finally {
+        setLoading(false);
       }
-      setIsLoading(false);
     };
+    
+    checkSession();
+  }, []);
 
-    loadUserFromStorage();
-
-    // Subscribe to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        // Fetch complete user data from our users table
-        const getUserData = async () => {
-          const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (error) {
-            console.error('Error fetching user data:', error);
-            return;
-          }
-
-          if (data) {
-            setCurrentUser(data as User);
-            localStorage.setItem('auth_user', JSON.stringify({ user: data }));
-          }
-        };
-
-        // Use setTimeout to avoid potential deadlocks
-        setTimeout(() => {
-          getUserData();
-        }, 0);
+  // Listen for auth state changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        const user = await fetchUserProfile(session.user.id);
+        if (user) {
+          setUser(user);
+          setUserId(user.id);
+        }
       } else if (event === 'SIGNED_OUT') {
-        setCurrentUser(null);
-        localStorage.removeItem('auth_user');
+        setUser(null);
+        setUserId(null);
       }
     });
 
     return () => {
-      authListener?.subscription.unsubscribe();
+      subscription.unsubscribe();
     };
   }, []);
 
-  // Get fresh user data from the database
-  const refreshUser = async () => {
-    if (!currentUser) return;
-
+  // Fetch user profile data
+  const fetchUserProfile = async (userId?: string): Promise<User | null> => {
+    if (!userId) {
+      const { data } = await supabase.auth.getUser();
+      userId = data.user?.id;
+      
+      if (!userId) return null;
+    }
+    
     try {
-      setIsLoading(true);
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('id', currentUser.id)
+        .eq('id', userId)
         .single();
-
+        
       if (error) {
-        throw error;
+        console.error('Error fetching user profile:', error);
+        return null;
       }
-
+      
       if (data) {
-        setCurrentUser(data as User);
-        localStorage.setItem('auth_user', JSON.stringify({ user: data }));
+        // Map to User interface for compatibility
+        const userProfile: User = {
+          ...data,
+          // Map properties for backward compatibility
+          firstName: data.first_name,
+          lastName: data.last_name,
+          isActive: true,
+          lastLogin: data.updated_at
+        };
+        return userProfile;
       }
-    } catch (err) {
-      console.error('Error refreshing user data', err);
-      setError('Failed to refresh user data');
-    } finally {
-      setIsLoading(false);
+      
+      return null;
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
     }
   };
 
-  // Helper function to get user ID
-  const getUserId = () => {
-    return currentUser?.id || null;
+  // Login function
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        const userProfile = await fetchUserProfile(data.user.id);
+        
+        if (userProfile) {
+          setUser(userProfile);
+          setUserId(userProfile.id);
+          toast({
+            title: "Uğurla daxil oldunuz",
+            description: `Xoş gəldin, ${userProfile.full_name || userProfile.email}!`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error instanceof Error ? error.message : 'Login failed');
+      toast({
+        variant: "destructive",
+        title: "Daxil ola bilmədi",
+        description: error instanceof Error ? error.message : 'Xəta baş verdi',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Context value
-  const value = {
-    currentUser,
-    isLoading,
-    error,
-    setCurrentUser,
-    refreshUser,
-    getUserId,
+  // Logout function
+  const logout = async () => {
+    setLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      setUserId(null);
+      toast({
+        title: "Çıxış edildi",
+        description: "Uğurla hesabdan çıxış etdiniz.",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      setError(error instanceof Error ? error.message : 'Logout failed');
+      toast({
+        variant: "destructive",
+        title: "Çıxış edilə bilmədi",
+        description: error instanceof Error ? error.message : 'Xəta baş verdi',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
-};
+  // Register function
+  const register = async (email: string, password: string, userData?: Partial<User>) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            first_name: userData?.first_name || userData?.firstName,
+            last_name: userData?.last_name || userData?.lastName,
+            full_name: userData?.full_name || `${userData?.first_name || ''} ${userData?.last_name || ''}`.trim(),
+            // Add any other user data here
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        // Optionally create or update the user profile in the users table
+        // This might be needed if you have additional user fields not in auth.users
+        if (userData && Object.keys(userData).length > 0) {
+          await updateProfile(userData);
+        }
+        
+        toast({
+          title: "Qeydiyyat uğurlu oldu",
+          description: "Hesabınız uğurla yaradıldı.",
+        });
+      }
+    } catch (error) {
+      console.error('Register error:', error);
+      setError(error instanceof Error ? error.message : 'Registration failed');
+      toast({
+        variant: "destructive",
+        title: "Qeydiyyat uğursuz oldu",
+        description: error instanceof Error ? error.message : 'Xəta baş verdi',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-// Custom hook to use the user context
-export const useUser = () => {
-  const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
-  }
-  return context;
+  // Update user profile
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!user) return;
+    
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      if (data) {
+        // Update the local user state
+        setUser({
+          ...user,
+          ...data
+        });
+        
+        toast({
+          title: "Profil yeniləndi",
+          description: "Profiliniz uğurla yeniləndi.",
+        });
+      }
+    } catch (error) {
+      console.error('Update profile error:', error);
+      setError(error instanceof Error ? error.message : 'Profile update failed');
+      toast({
+        variant: "destructive",
+        title: "Profil yenilənə bilmədi",
+        description: error instanceof Error ? error.message : 'Xəta baş verdi',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <UserContext.Provider value={{
+      user,
+      loading,
+      error,
+      login,
+      logout,
+      register,
+      updateProfile,
+      fetchUserProfile,
+      userId
+    }}>
+      {children}
+    </UserContext.Provider>
+  );
 };

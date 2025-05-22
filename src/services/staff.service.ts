@@ -1,3 +1,4 @@
+
 import { Staff, StaffFormData } from "@/models/staff.model";
 import { ApiService } from "./api.service";
 import { ApiResponse } from "@/models/types";
@@ -10,7 +11,7 @@ export class StaffService extends ApiService {
     super();
   }
 
-  async getStaffMembers(): Promise<ApiResponse<Staff[]>> {
+  async getAll(): Promise<ApiResponse<Staff[]>> {
     try {
       const { data, error } = await supabase.from("staff").select("*");
 
@@ -23,6 +24,10 @@ export class StaffService extends ApiService {
         error: error instanceof Error ? error.message : "Failed to fetch staff members",
       };
     }
+  }
+
+  async getStaffMembers(): Promise<ApiResponse<Staff[]>> {
+    return this.getAll();
   }
 
   async getStaffMemberById(id: string): Promise<ApiResponse<Staff>> {
@@ -48,12 +53,18 @@ export class StaffService extends ApiService {
     if (config.usesMockData) {
       const mockStaff: Staff = {
         id: Date.now().toString(),
-        name: staffData.user_id,
+        name: staffData.name, // Use name instead of user_id
         position: staffData.position,
         specializations: staffData.specializations,
         user_id: getCurrentUserId() || 'mocked_user',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        email: staffData.email,
+        phone: staffData.phone,
+        role_id: staffData.role_id,
+        salary: staffData.salary,
+        commissionRate: staffData.commissionRate,
+        paymentType: staffData.paymentType,
       };
       
       return { data: mockStaff, message: "Mock staff member created successfully" };
@@ -61,12 +72,13 @@ export class StaffService extends ApiService {
 
     try {
       // Add the current user_id for tracking purposes
-      // Note: For staff, the user_id in the staff table refers to the connected user account
-      // So we don't override that with the current user
-      
+      const staffWithUserId = withUserId({
+        ...staffData,
+      });
+
       const { data, error } = await supabase
         .from("staff")
-        .insert([staffData])
+        .insert([staffWithUserId])
         .select()
         .single();
 
@@ -110,9 +122,11 @@ export class StaffService extends ApiService {
     }
   }
 
-  async deleteStaffMember(id: string): Promise<ApiResponse<boolean>> {
+  async deleteStaffMember(id: string | number): Promise<ApiResponse<boolean>> {
+    const staffId = typeof id === 'number' ? id.toString() : id;
+    
     try {
-      const { error } = await supabase.from("staff").delete().eq("id", id);
+      const { error } = await supabase.from("staff").delete().eq("id", staffId);
 
       if (error) throw error;
 

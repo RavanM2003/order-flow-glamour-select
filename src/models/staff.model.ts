@@ -1,3 +1,4 @@
+
 // Staff model and related types
 export interface Staff {
   id: string;
@@ -56,6 +57,7 @@ export interface StaffFormData {
   commissionRate?: number;
   paymentType?: "salary" | "commission" | "hybrid";
   specializations?: number[];
+  user_id?: string;
 }
 
 // Staff filters

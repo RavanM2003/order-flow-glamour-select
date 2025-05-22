@@ -2,6 +2,7 @@
 import { Product, ProductFormData } from '@/models/product.model';
 import { ApiService } from './api.service';
 import { ApiResponse } from '@/models/types';
+import { config } from '@/config/env';
 import { supabase } from '@/integrations/supabase/client';
 import { withUserId } from '@/utils/withUserId';
 
@@ -84,7 +85,7 @@ export class ProductService extends ApiService {
         name: productData.name,
         description: productData.description,
         price: productData.price,
-        stock: productData.stock, // Use stock instead of stock_quantity
+        stock: productData.stock_quantity || productData.stock, // Use stock_quantity if available, otherwise stock
         // Add optional fields if present
         ...(productData.category && { category: productData.category }),
         ...(productData.image_url && { image_url: productData.image_url }),
@@ -146,7 +147,7 @@ export class ProductService extends ApiService {
     }
   }
 
-  // Override the delete method from ApiService
+  // Delete product
   async delete(id: string | number): Promise<ApiResponse<boolean>> {
     try {
       const { error } = await supabase
