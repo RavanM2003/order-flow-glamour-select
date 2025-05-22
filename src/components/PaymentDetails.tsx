@@ -28,10 +28,13 @@ const PaymentDetails = () => {
     setIsSubmitting(true);
     
     try {
+      // Format date to string for appointment
+      const formattedDate = typeof date === 'object' ? formatDate(date) : date;
+      
       // Ensure we're using correct types for the appointment
       const appointmentData = {
         customer_user_id: customer.id,
-        appointment_date: typeof date === 'object' ? formatDate(date) : date,
+        appointment_date: formattedDate,
         start_time: startTime || '',
         end_time: endTime, 
         // Use the correct status enum value that matches backend expectations
@@ -84,7 +87,7 @@ const PaymentDetails = () => {
       {/* Display Customer Details */}
       <div className="mb-4">
         <h3 className="text-lg font-medium">Customer Information</h3>
-        <p>Name: {customer?.name || customer?.full_name}</p>
+        <p>Name: {customer?.name || (customer?.full_name ?? "Unknown")}</p>
         <p>Email: {customer?.email}</p>
         <p>Phone: {customer?.phone}</p>
       </div>
@@ -92,7 +95,7 @@ const PaymentDetails = () => {
       {/* Display Staff Details */}
       <div className="mb-4">
         <h3 className="text-lg font-medium">Staff</h3>
-        <p>Name: {staff?.full_name || 'Any'}</p>
+        <p>Name: {staff?.name || (staff?.full_name ?? 'Any')}</p>
       </div>
       
       {/* Payment Form */}

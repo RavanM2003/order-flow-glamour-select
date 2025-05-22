@@ -2,10 +2,17 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductFormData } from '@/models/product.model';
 
+// Define the ApiResponse interface for consistent return types
+export interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
 /**
  * Get all products
  */
-export async function getProducts() {
+export async function getProducts(): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
     .select('*');
@@ -17,7 +24,7 @@ export async function getProducts() {
 /**
  * Get products by category ID
  */
-export async function getProductsByCategory(categoryId: number | string) {
+export async function getProductsByCategory(categoryId: number | string): Promise<Product[]> {
   // Convert string to number if needed
   const numericId = typeof categoryId === 'string' 
     ? parseInt(categoryId, 10) 
@@ -47,7 +54,7 @@ export async function getProductsByCategory(categoryId: number | string) {
 /**
  * Get product by ID
  */
-export async function getProductById(id: number | string) {
+export async function getProductById(id: number | string): Promise<Product> {
   // Convert string to number if needed
   const numericId = typeof id === 'string' 
     ? parseInt(id, 10) 
@@ -66,7 +73,7 @@ export async function getProductById(id: number | string) {
 /**
  * Create a new product
  */
-export async function createProduct(productData: ProductFormData) {
+export async function createProduct(productData: ProductFormData): Promise<Product> {
   const { data, error } = await supabase
     .from('products')
     .insert(productData)
@@ -80,7 +87,7 @@ export async function createProduct(productData: ProductFormData) {
 /**
  * Update an existing product
  */
-export async function updateProduct(id: number | string, productData: Partial<Product>) {
+export async function updateProduct(id: number | string, productData: Partial<Product>): Promise<Product> {
   // Convert string to number if needed
   const numericId = typeof id === 'string' 
     ? parseInt(id, 10) 
@@ -103,7 +110,7 @@ export async function updateProduct(id: number | string, productData: Partial<Pr
 /**
  * Delete a product by ID
  */
-export async function deleteProduct(id: number | string) {
+export async function deleteProduct(id: number | string): Promise<boolean> {
   // Convert string to number if needed
   const numericId = typeof id === 'string' 
     ? parseInt(id, 10) 
@@ -121,7 +128,7 @@ export async function deleteProduct(id: number | string) {
 /**
  * Get featured products (limited number for display)
  */
-export async function getFeaturedProducts(limit: number = 6) {
+export async function getFeaturedProducts(limit: number = 6): Promise<Product[]> {
   const { data, error } = await supabase
     .from('products')
     .select('*')
@@ -131,14 +138,70 @@ export async function getFeaturedProducts(limit: number = 6) {
   return data || [];
 }
 
-// Export all functions as productService object
+// Export all functions as productService object with ApiResponse wrapper
 export const productService = {
-  getAll: getProducts,
-  getById: getProductById,
-  getByCategory: getProductsByCategory,
-  getByServiceId: (serviceId: number) => [], // Placeholder implementation
-  create: createProduct,
-  update: updateProduct,
-  delete: deleteProduct,
-  getFeatured: getFeaturedProducts
+  getAll: async (): Promise<ApiResponse<Product[]>> => {
+    try {
+      const data = await getProducts();
+      return { data };
+    } catch (error) {
+      return { error: String(error) };
+    }
+  },
+  getById: async (id: number | string): Promise<ApiResponse<Product>> => {
+    try {
+      const data = await getProductById(id);
+      return { data };
+    } catch (error) {
+      return { error: String(error) };
+    }
+  },
+  getByCategory: async (categoryId: number | string): Promise<ApiResponse<Product[]>> => {
+    try {
+      const data = await getProductsByCategory(categoryId);
+      return { data };
+    } catch (error) {
+      return { error: String(error) };
+    }
+  },
+  getByServiceId: async (serviceId: number | string): Promise<ApiResponse<Product[]>> => {
+    try {
+      // Placeholder implementation
+      return { data: [] };
+    } catch (error) {
+      return { error: String(error) };
+    }
+  },
+  create: async (product: ProductFormData): Promise<ApiResponse<Product>> => {
+    try {
+      const data = await createProduct(product);
+      return { data };
+    } catch (error) {
+      return { error: String(error) };
+    }
+  },
+  update: async (id: number | string, product: Partial<Product>): Promise<ApiResponse<Product>> => {
+    try {
+      const data = await updateProduct(id, product);
+      return { data };
+    } catch (error) {
+      return { error: String(error) };
+    }
+  },
+  delete: async (id: number | string): Promise<ApiResponse<boolean>> => {
+    try {
+      const data = await deleteProduct(id);
+      return { data };
+    } catch (error) {
+      return { error: String(error) };
+    }
+  },
+  getFeatured: async (limit: number = 6): Promise<ApiResponse<Product[]>> => {
+    try {
+      const data = await getFeaturedProducts(limit);
+      return { data };
+    } catch (error) {
+      return { error: String(error) };
+    }
+  }
 };

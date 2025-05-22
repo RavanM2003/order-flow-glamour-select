@@ -3,6 +3,7 @@
 export interface Staff {
   id: string | number;
   name: string;
+  full_name?: string;
   position?: string;
   specializations?: number[];
   avatar_url?: string;

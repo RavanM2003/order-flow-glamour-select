@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useApi } from '@/hooks/use-api';
-import { productService } from '@/services/product.service';
+import { productService } from '@/services';
 import { Product } from '@/models/product.model';
 
 export function useProductData() {
@@ -9,7 +9,7 @@ export function useProductData() {
   const [products, setProducts] = useState<Product[]>([]);
   
   const fetchProducts = useCallback(async () => {
-    const data = await api.execute(
+    const response = await api.execute(
       () => productService.getAll(),
       {
         showErrorToast: true,
@@ -17,8 +17,8 @@ export function useProductData() {
       }
     );
     
-    if (data) {
-      setProducts(data);
+    if (response?.data) {
+      setProducts(response.data);
     }
   }, [api]);
   
@@ -27,13 +27,23 @@ export function useProductData() {
   }, [fetchProducts]);
   
   const getProduct = useCallback(async (id: number | string) => {
-    const response = await productService.getById(id);
-    return response.data;
+    try {
+      const response = await productService.getById(id);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching product:", error);
+      return null;
+    }
   }, []);
   
   const getProductsByService = useCallback(async (serviceId: number | string) => {
-    const response = await productService.getByServiceId(serviceId);
-    return response.data || [];
+    try {
+      const response = await productService.getByServiceId(serviceId);
+      return response.data || [];
+    } catch (error) {
+      console.error("Error fetching products by service:", error);
+      return [];
+    }
   }, []);
 
   return {

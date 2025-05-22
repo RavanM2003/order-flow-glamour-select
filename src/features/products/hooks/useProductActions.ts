@@ -1,9 +1,8 @@
 
 import { useCallback, useState } from 'react';
 import { useApi } from '@/hooks/use-api';
-import { productService } from '@/services/product.service';
+import { productService } from '@/services';
 import { ProductFormData, Product } from '@/models/product.model';
-import { toast } from '@/components/ui/use-toast';
 
 export function useProductActions(onSuccess?: () => void) {
   const api = useApi<Product>();
@@ -13,7 +12,7 @@ export function useProductActions(onSuccess?: () => void) {
   const createProduct = useCallback(async (data: ProductFormData) => {
     setIsCreating(true);
     try {
-      const result = await api.execute(
+      const response = await api.execute(
         () => productService.create(data),
         {
           showSuccessToast: true,
@@ -25,7 +24,7 @@ export function useProductActions(onSuccess?: () => void) {
         }
       );
       setIsCreating(false);
-      return result;
+      return response?.data;
     } catch (error) {
       setIsCreating(false);
       throw error;
@@ -35,7 +34,7 @@ export function useProductActions(onSuccess?: () => void) {
   const updateProduct = useCallback(async (id: number | string, data: Partial<ProductFormData>) => {
     setIsUpdating(true);
     try {
-      const result = await api.execute(
+      const response = await api.execute(
         () => productService.update(id, data),
         {
           showSuccessToast: true,
@@ -47,7 +46,7 @@ export function useProductActions(onSuccess?: () => void) {
         }
       );
       setIsUpdating(false);
-      return result;
+      return response?.data;
     } catch (error) {
       setIsUpdating(false);
       throw error;

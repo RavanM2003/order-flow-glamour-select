@@ -10,10 +10,15 @@ export interface Appointment {
   status: AppointmentStatus;
   total?: number;
   user_id?: string | null;
+  cancel_reason?: string;
   created_at?: string;
   updated_at?: string;
-  cancel_reason?: string;
   is_no_show?: boolean;
+  
+  // Calculated or joined fields
+  customer?: any;
+  service?: any;
+  staff?: any;
 }
 
 export interface AppointmentFormData {
@@ -24,14 +29,25 @@ export interface AppointmentFormData {
   status: AppointmentStatus;
   total?: number;
   user_id?: string | null;
+  cancel_reason?: string;
 }
 
-export interface AppointmentCreate {
-  customer_user_id: string;
-  appointment_date: string;
-  start_time: string;
-  end_time: string;
-  status: AppointmentStatus;
-  total?: number;
-  user_id?: string | null;
+export interface AppointmentService {
+  id?: number;
+  appointment_id?: number;
+  service_id: number;
+  quantity?: number;
+  duration?: number;
+  price?: number;
+  staff_id?: string;
+}
+
+export interface AppointmentProduct {
+  id?: number;
+  appointment_id?: number;
+  product_id: number;
+  quantity: number;
+  price?: number;
+  amount?: number;
+  staff_id?: string;
 }
