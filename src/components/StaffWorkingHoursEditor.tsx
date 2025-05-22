@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from "@/components/ui/switch";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Clock, Save } from 'lucide-react';
 import { StaffWorkingHours } from '@/models/staff.model';
 import { useStaff } from '@/hooks/use-staff';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 
 interface StaffWorkingHoursEditorProps {
   staffId: number | string;
@@ -25,7 +24,7 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
     if (staffId) {
       // Create default hours since we don't have the fetchWorkingHours function yet
       const defaultHours: StaffWorkingHours[] = dayNames.map((_, index) => ({
-        id: `wh-${staffId}-${index}`, // Add id property
+        id: index, // Use number for id
         staff_id: staffId,
         day_of_week: index,
         start_time: "09:00",

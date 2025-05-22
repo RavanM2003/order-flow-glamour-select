@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from 'react';
-import { Appointment, AppointmentStatus } from '@/models/appointment.model';
+import { Appointment, AppointmentStatus, AppointmentFormData } from '@/models/appointment.model';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 
@@ -37,10 +37,15 @@ export const useAppointments = () => {
     try {
       // Ensure appointment_date is a string, not a Date object
       const formattedData = {
-        ...appointmentData,
         appointment_date: formatAppointmentDate(appointmentData.appointment_date),
-        // Convert confirmed status to scheduled if needed for database compatibility
-        status: appointmentData.status === 'confirmed' ? 'scheduled' : appointmentData.status
+        start_time: appointmentData.start_time,
+        end_time: appointmentData.end_time,
+        // Handle status appropriately
+        status: appointmentData.status || 'scheduled',
+        total: appointmentData.total,
+        customer_user_id: appointmentData.customer_user_id,
+        user_id: appointmentData.user_id,
+        cancel_reason: appointmentData.cancel_reason
       };
       
       const { data, error } = await supabase
@@ -77,15 +82,18 @@ export const useAppointments = () => {
     setIsLoading(true);
     setError(null);
     try {
-      // Make sure we're using a valid status for the database
-      const dbStatus = status === 'confirmed' ? 'scheduled' : status;
-      
-      const updateData = { 
-        status: dbStatus
-      } as Record<string, any>;
+      // Make sure we're using a valid status
+      const updateData: Record<string, any> = { 
+        status: status
+      };
       
       if (reason && status === 'cancelled') {
         updateData.cancel_reason = reason;
+      }
+      
+      // For no_show status, set the is_no_show flag
+      if (status === 'no_show') {
+        updateData.is_no_show = true;
       }
 
       const { data, error } = await supabase

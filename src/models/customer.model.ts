@@ -11,7 +11,9 @@ export interface Customer {
   lastVisit?: string;
   totalSpent?: number;
   full_name?: string;
-  address?: string; // Added address field
+  address?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export type CustomerFormData = {
@@ -21,5 +23,5 @@ export type CustomerFormData = {
   gender?: string;
   birth_date?: string;
   note?: string;
-  address?: string; // Added address field
+  address?: string;
 };

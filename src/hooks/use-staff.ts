@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { Staff, StaffFormData, StaffWorkingHours, StaffPayment, StaffServiceRecord } from "@/models/staff.model";
 import { staffService } from "@/services/staff.service";
@@ -199,13 +198,14 @@ export function useStaff() {
   };
 
   // Added functions for staff working hours, payments, service records, and earnings
+  // Updated to use number IDs to fix type issues
 
   const fetchWorkingHours = async (staffId: string | number) => {
     setIsLoading(true);
     try {
       // For now, using mock data - would normally fetch from API
       const mockHours: StaffWorkingHours[] = Array.from({ length: 7 }, (_, i) => ({
-        id: `wh-${staffId}-${i}`,
+        id: i, // Use number for id
         staff_id: staffId,
         day_of_week: i,
         start_time: "09:00",
@@ -265,10 +265,10 @@ export function useStaff() {
       // Using mock data
       const mockPayments: StaffPayment[] = [
         {
-          id: "pay1",
+          id: 1, // Use number for id
           staff_id: typeof staffId === 'number' ? staffId.toString() : staffId,
-          amount: 1200,
           payment_type: "salary",
+          amount: 1200,
           payment_date: "2023-05-01",
           created_at: "2023-05-01",
           updated_at: "2023-05-01",
@@ -277,10 +277,10 @@ export function useStaff() {
           description: "Monthly salary"
         },
         {
-          id: "pay2",
+          id: 2, // Use number for id
           staff_id: typeof staffId === 'number' ? staffId.toString() : staffId,
-          amount: 350,
           payment_type: "commission",
+          amount: 350,
           payment_date: "2023-05-15",
           created_at: "2023-05-15",
           updated_at: "2023-05-15",
@@ -305,28 +305,28 @@ export function useStaff() {
       // Using mock data
       const mockRecords: StaffServiceRecord[] = [
         {
-          id: "sr1",
+          id: 1, // Use number for id
           staff_id: typeof staffId === 'number' ? staffId.toString() : staffId,
           service_id: 1,
+          service_name: "Haircut",
           commission_rate: 0.1,
           created_at: "2023-05-10",
           updated_at: "2023-05-10",
           date: "2023-05-10",
           customer_name: "Jane Doe",
-          service_name: "Haircut",
           price: 50,
           commission: 5
         },
         {
-          id: "sr2",
+          id: 2, // Use number for id
           staff_id: typeof staffId === 'number' ? staffId.toString() : staffId,
           service_id: 2,
+          service_name: "Hair coloring",
           commission_rate: 0.15,
           created_at: "2023-05-12",
           updated_at: "2023-05-12",
           date: "2023-05-12",
           customer_name: "John Smith",
-          service_name: "Hair coloring",
           price: 120,
           commission: 18
         }

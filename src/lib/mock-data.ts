@@ -1,6 +1,6 @@
 
 // Mock data for users
-import { User, UserRole } from "@/models/user.model";
+import { User } from "@/models/user.model";
 import { Appointment, AppointmentStatus } from "@/models/appointment.model";
 import { Service } from "@/models/service.model";
 import { Staff } from "@/models/staff.model";

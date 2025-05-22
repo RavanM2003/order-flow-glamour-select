@@ -3,9 +3,11 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/models/user.model';
 import { toast } from '@/components/ui/use-toast';
+import { Session } from '@supabase/supabase-js';
 
 interface AuthContextProps {
   user: User | null;
+  session: Session | null; // Added session property
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
@@ -30,6 +32,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +45,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const { data } = await supabase.auth.getSession();
         
         if (data.session) {
+          setSession(data.session);
           const { data: userData } = await supabase.auth.getUser();
           
           if (userData.user) {
@@ -53,16 +57,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               .single();
             
             if (profileData) {
-              // Fix the roleId type in the user setter
+              // Set user with proper type handling
               setUser({
                 id: userData.user.id,
                 email: userData.user.email || '',
                 firstName: profileData.first_name || '',
                 lastName: profileData.last_name || '',
                 role: profileData.role as UserRole,
-                staffId: profileData.staffId || '',
+                staffId: profileData.staff_id || '',
                 profileImage: profileData.avatar_url || '',
-                roleId: profileData.roleId?.toString() || ''
+                roleId: profileData.role_id?.toString() || ''
               });
             } else {
               // Basic user data from auth
@@ -93,6 +97,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
+          setSession(session);
           setIsLoading(true);
           
           try {
@@ -113,9 +118,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                   firstName: profileData.first_name || '',
                   lastName: profileData.last_name || '',
                   role: profileData.role as UserRole,
-                  staffId: profileData.staffId || '',
+                  staffId: profileData.staff_id || '',
                   profileImage: profileData.avatar_url || '',
-                  roleId: profileData.roleId?.toString() || ''
+                  roleId: profileData.role_id?.toString() || ''
                 });
               }
             }
@@ -125,6 +130,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             setIsLoading(false);
           }
         } else if (event === 'SIGNED_OUT') {
+          setSession(null);
           setUser(null);
         }
       }
@@ -145,6 +151,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) throw error;
       
       if (data.user) {
+        setSession(data.session);
         const { data: profileData } = await supabase
           .from('users')
           .select('*')
@@ -158,9 +165,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             firstName: profileData.first_name || '',
             lastName: profileData.last_name || '',
             role: profileData.role as UserRole,
-            staffId: profileData.staffId || '',
+            staffId: profileData.staff_id || '',
             profileImage: profileData.avatar_url || '',
-            roleId: profileData.roleId?.toString() || ''
+            roleId: profileData.role_id?.toString() || ''
           });
         }
       }
@@ -175,6 +182,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async () => {
     try {
       await supabase.auth.signOut();
+      setSession(null);
       setUser(null);
     } catch (err) {
       console.error("Logout error:", err);
@@ -208,6 +216,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           first_name: userData?.firstName || '',
           last_name: userData?.lastName || '',
           role: userData?.role || 'customer',
+          hashed_password: '', // Required field for users table
+          phone: userData?.phone || '' // Required field for users table
         };
         
         await supabase.from('users').insert([userProfile]);
@@ -280,6 +290,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const value = {
     user,
+    session,
     isLoading,
     error,
     login,

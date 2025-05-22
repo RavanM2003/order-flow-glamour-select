@@ -40,18 +40,12 @@ export async function createAppointment(appointmentData: AppointmentFormData) {
   const appointmentDate = typeof appointmentData.appointment_date === 'string' 
     ? appointmentData.appointment_date 
     : appointmentData.appointment_date.toISOString().split('T')[0];
-    
-  // Convert confirmed status to scheduled if needed for database compatibility
-  let dbStatus = appointmentData.status || 'scheduled';
-  if (dbStatus === 'confirmed') {
-    dbStatus = 'scheduled';
-  }
   
   const appointmentRecord = {
     appointment_date: appointmentDate,
     start_time: appointmentData.start_time,
     end_time: appointmentData.end_time,
-    status: dbStatus,
+    status: appointmentData.status || 'scheduled',
     total: appointmentData.total,
     customer_user_id: appointmentData.customer_user_id,
     user_id: appointmentData.user_id
@@ -79,17 +73,10 @@ export async function updateAppointment(id: number, appointmentData: Partial<App
     appointmentData.appointment_date = appointmentData.appointment_date.toISOString().split('T')[0];
   }
   
-  // Convert confirmed status to scheduled if needed for database compatibility
-  let dbStatus = appointmentData.status;
-  if (dbStatus === 'confirmed') {
-    dbStatus = 'scheduled';
-  }
-  
   const { data, error } = await supabase
     .from('appointments')
     .update({
       ...appointmentData,
-      status: dbStatus,
       updated_at: new Date().toISOString()
     })
     .eq('id', numericId)
@@ -126,7 +113,7 @@ export async function cancelAppointment(id: number, reason: string) {
   const { data, error } = await supabase
     .from('appointments')
     .update({
-      status: 'cancelled',
+      status: 'cancelled' as AppointmentStatus,
       cancel_reason: reason,
       updated_at: new Date().toISOString()
     })
@@ -148,7 +135,7 @@ export async function completeAppointment(id: number) {
   const { data, error } = await supabase
     .from('appointments')
     .update({
-      status: 'completed',
+      status: 'completed' as AppointmentStatus,
       updated_at: new Date().toISOString()
     })
     .eq('id', numericId)

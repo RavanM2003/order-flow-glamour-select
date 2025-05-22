@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { User, UserRole, UserFormData } from '@/models/user.model';
+import { User, UserRole } from '@/models/user.model';
 import { v4 as uuidv4 } from 'uuid';
 
 interface AuthError {
@@ -40,7 +40,7 @@ export const signInWithEmail = async (email: string, password: string) => {
           firstName: userData.first_name || '',
           lastName: userData.last_name || '',
           full_name: userData.full_name || '',
-          avatarUrl: userData.avatar_url || '',
+          avatar_url: userData.avatar_url || '',
           role: userData.role as UserRole,
           gender: userData.gender,
           phone: userData.phone || '',
@@ -98,7 +98,7 @@ export const signOut = async () => {
 export const signUp = async (
   email: string,
   password: string,
-  userData: Partial<UserFormData> = {}
+  userData: Record<string, any> = {}
 ) => {
   try {
     // First create the auth user
@@ -130,7 +130,7 @@ export const signUp = async (
         role: userData.role || 'customer',
         gender: userData.gender || 'other',
         phone: userData.phone || '',
-        hashed_password: '', // Password is handled by auth, this is just for schema compatibility
+        hashed_password: '' // Password is handled by auth, this is just for schema compatibility
       };
       
       const { error: profileError } = await supabase
@@ -253,7 +253,7 @@ export const getAllStaff = async () => {
       return { staff: [], error: error.message };
     }
     
-    // Cast the data to Staff[] - ensure proper mapping
+    // Cast the data to Staff[]
     const staff = data.map(user => ({
       id: user.id,
       name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
@@ -261,7 +261,8 @@ export const getAllStaff = async () => {
       user_id: user.id,
       email: user.email,
       phone: user.phone || '',
-      specializations: []
+      specializations: [],
+      avatar_url: user.avatar_url
     }));
     
     return {
@@ -281,7 +282,7 @@ export const getAllStaff = async () => {
 /**
  * Create a new staff user
  */
-export const createStaffUser = async (userData: UserFormData) => {
+export const createStaffUser = async (userData: Record<string, any>) => {
   try {
     // Generate a random password if not provided
     const password = userData.password || uuidv4().substring(0, 12);
@@ -381,7 +382,7 @@ export const updateUserProfile = async (userId: string, updates: Partial<User>) 
     if (updates.firstName !== undefined) dbUpdates.first_name = updates.firstName;
     if (updates.lastName !== undefined) dbUpdates.last_name = updates.lastName;
     if (updates.full_name !== undefined) dbUpdates.full_name = updates.full_name;
-    if (updates.avatarUrl !== undefined) dbUpdates.avatar_url = updates.avatarUrl;
+    if (updates.avatar_url !== undefined) dbUpdates.avatar_url = updates.avatar_url;
     if (updates.gender !== undefined) dbUpdates.gender = updates.gender;
     if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
     if (updates.note !== undefined) dbUpdates.note = updates.note;
