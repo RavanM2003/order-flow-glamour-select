@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Product, ProductFormData } from '@/models/product.model';
-import { productService } from '@/services/product.service';
+import { productService } from '@/services';
 import { useToast } from '@/hooks/use-toast';
 
 export const useProductActions = () => {

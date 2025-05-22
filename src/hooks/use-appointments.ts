@@ -7,6 +7,21 @@ export const useAppointments = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Fix the toISOString issue in the appointment hook
+  const formatAppointmentDate = (date: Date | string | null): string => {
+    if (!date) return '';
+    
+    if (typeof date === 'string') {
+      return date;
+    }
+    
+    if (date instanceof Date) {
+      return date.toISOString().split('T')[0];
+    }
+    
+    return '';
+  };
+
   const createAppointment = useCallback(async (appointmentData: AppointmentFormData) => {
     setIsLoading(true);
     try {
@@ -14,9 +29,7 @@ export const useAppointments = () => {
       const formattedData = {
         ...appointmentData,
         appointment_date: appointmentData.appointment_date ? 
-          (typeof appointmentData.appointment_date === 'string' ? 
-           appointmentData.appointment_date : 
-           appointmentData.appointment_date.toISOString().split('T')[0])
+          formatAppointmentDate(appointmentData.appointment_date) 
           : new Date().toISOString().split('T')[0]
       };
       

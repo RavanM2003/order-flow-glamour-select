@@ -1,246 +1,179 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { Customer, CustomerFormData } from '@/models/customer.model';
 import { CustomerWithUserFormData } from '@/models/user.model';
-import { ApiResponse } from '@/models/types';
+import { ApiResponse } from './staff.service';
+import { supabase } from '@/integrations/supabase/client';
 
 export const customerService = {
-  getAll: async (): Promise<Customer[]> => {
+  create: async (data: CustomerFormData | CustomerWithUserFormData): Promise<ApiResponse<Customer>> => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('role', 'customer');
-
-      if (error) throw error;
-      return data.map((item: any) => ({
-        id: item.id,
-        name: item.full_name || `${item.first_name || ''} ${item.last_name || ''}`.trim(),
-        full_name: item.full_name,
-        email: item.email,
-        phone: item.phone,
-        gender: item.gender,
-        birth_date: item.birth_date,
-        note: item.note,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        lastVisit: item.created_at,
-        totalSpent: 0,
-      }));
+      // Check if user_id is provided
+      if (data.user_id) {
+        // Create customer with existing user_id
+        const { data: customer, error } = await supabase
+          .from('customers')
+          .insert({
+            name: data.name,
+            full_name: data.full_name || data.name,
+            email: data.email,
+            phone: data.phone,
+            gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : 'other',
+            birth_date: data.birth_date,
+            note: data.note,
+            user_id: data.user_id,
+          })
+          .select('*')
+          .single();
+        
+        if (error) {
+          return { error: error.message };
+        }
+        
+        return { data: customer as Customer };
+      } else {
+        // Create new user if this is a CustomerWithUserFormData
+        if ('password' in data) {
+          // Handle user creation for CustomerWithUserFormData
+          // This would typically involve auth service to create a user account
+          // For now, create a placeholder implementation
+          const userData = {
+            email: data.email,
+            first_name: data.firstName || '',
+            last_name: data.lastName || '',
+            phone: data.phone,
+            gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : 'other',
+            birth_date: data.birth_date,
+            note: data.note,
+          };
+          
+          // Create customer without user_id for now
+          const { data: customer, error } = await supabase
+            .from('customers')
+            .insert({
+              name: data.name,
+              full_name: data.full_name || data.name,
+              email: data.email,
+              phone: data.phone,
+              gender: userData.gender,
+              birth_date: data.birth_date,
+              note: data.note,
+            })
+            .select('*')
+            .single();
+            
+          if (error) {
+            return { error: error.message };
+          }
+          
+          return { data: customer as Customer };
+        } else {
+          // Regular customer without user account
+          const { data: customer, error } = await supabase
+            .from('customers')
+            .insert({
+              name: data.name,
+              full_name: data.full_name || data.name,
+              email: data.email,
+              phone: data.phone,
+              gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : 'other',
+              birth_date: data.birth_date,
+              note: data.note,
+            })
+            .select('*')
+            .single();
+            
+          if (error) {
+            return { error: error.message };
+          }
+          
+          return { data: customer as Customer };
+        }
+      }
     } catch (error) {
-      console.error('Error fetching customers:', error);
-      return [];
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { error: errorMessage };
     }
   },
-
-  getById: async (id: string): Promise<Customer | null> => {
+  
+  getAll: async (): Promise<ApiResponse<Customer[]>> => {
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('customers')
+        .select('*');
+        
+      if (error) {
+        return { error: error.message };
+      }
+      
+      return { data: data as Customer[] };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { error: errorMessage };
+    }
+  },
+  
+  getById: async (id: string): Promise<ApiResponse<Customer>> => {
+    try {
+      const { data, error } = await supabase
+        .from('customers')
         .select('*')
         .eq('id', id)
         .single();
-
-      if (error) throw error;
-      return {
-        id: data.id,
-        name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim(),
-        full_name: data.full_name,
-        email: data.email,
-        phone: data.phone,
-        gender: data.gender,
-        birth_date: data.birth_date,
-        note: data.note,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        lastVisit: data.created_at,
-        totalSpent: 0,
-      };
-    } catch (error) {
-      console.error('Error fetching customer:', error);
-      return null;
-    }
-  },
-
-  create: async (customerData: CustomerFormData): Promise<Customer | null> => {
-    try {
-      // When creating a customer, we're actually creating a user with the role 'customer'
-      const { data, error } = await supabase
-        .from('users')
-        .insert({
-          email: customerData.email,
-          phone: customerData.phone,
-          full_name: customerData.full_name || customerData.name,
-          gender: customerData.gender,
-          birth_date: customerData.birth_date,
-          note: customerData.note,
-          role: 'customer',
-          hashed_password: 'default-password' // In a real app, use a proper password hashing mechanism
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+        
+      if (error) {
+        return { error: error.message };
+      }
       
-      return {
-        id: data.id,
-        name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim(),
-        full_name: data.full_name,
-        email: data.email,
-        phone: data.phone,
-        gender: data.gender,
-        birth_date: data.birth_date,
-        note: data.note,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        lastVisit: data.created_at,
-        totalSpent: 0,
-      };
+      return { data: data as Customer };
     } catch (error) {
-      console.error('Error creating customer:', error);
-      return null;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { error: errorMessage };
     }
   },
-
-  update: async (id: string, customerData: Partial<CustomerFormData>): Promise<Customer | null> => {
+  
+  update: async (id: string, data: Partial<CustomerFormData>): Promise<ApiResponse<Customer>> => {
     try {
-      const { data, error } = await supabase
-        .from('users')
+      const { data: customer, error } = await supabase
+        .from('customers')
         .update({
-          email: customerData.email,
-          phone: customerData.phone,
-          full_name: customerData.full_name || customerData.name,
-          gender: customerData.gender,
-          birth_date: customerData.birth_date,
-          note: customerData.note,
-          updated_at: new Date().toISOString()
+          name: data.name,
+          full_name: data.full_name,
+          email: data.email,
+          phone: data.phone,
+          gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : undefined,
+          birth_date: data.birth_date,
+          note: data.note,
         })
         .eq('id', id)
-        .select()
+        .select('*')
         .single();
-
-      if (error) throw error;
+        
+      if (error) {
+        return { error: error.message };
+      }
       
-      return {
-        id: data.id,
-        name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim(),
-        full_name: data.full_name,
-        email: data.email,
-        phone: data.phone,
-        gender: data.gender,
-        birth_date: data.birth_date,
-        note: data.note,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        lastVisit: data.created_at,
-        totalSpent: 0,
-      };
+      return { data: customer as Customer };
     } catch (error) {
-      console.error('Error updating customer:', error);
-      return null;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { error: errorMessage };
     }
   },
-
-  delete: async (id: string): Promise<boolean> => {
+  
+  delete: async (id: string): Promise<ApiResponse<boolean>> => {
     try {
       const { error } = await supabase
-        .from('users')
+        .from('customers')
         .delete()
         .eq('id', id);
-
-      if (error) throw error;
-      return true;
+        
+      if (error) {
+        return { error: error.message };
+      }
+      
+      return { data: true };
     } catch (error) {
-      console.error('Error deleting customer:', error);
-      return false;
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return { error: errorMessage };
     }
   },
-
-  createCustomer: async (data: CustomerFormData): Promise<ApiResponse<Customer>> => {
-    try {
-      const customer = await customerService.create(data);
-      return { data: customer || undefined };
-    } catch (error: any) {
-      return { error: error.message };
-    }
-  },
-
-  getCustomers: async (): Promise<ApiResponse<Customer[]>> => {
-    try {
-      const customers = await customerService.getAll();
-      return { data: customers };
-    } catch (error: any) {
-      return { error: error.message };
-    }
-  },
-
-  getCustomerById: async (id: string): Promise<ApiResponse<Customer>> => {
-    try {
-      const customer = await customerService.getById(id);
-      return { data: customer || undefined };
-    } catch (error: any) {
-      return { error: error.message };
-    }
-  },
-
-  updateCustomer: async (id: string, data: Partial<CustomerFormData>): Promise<ApiResponse<Customer>> => {
-    try {
-      const customer = await customerService.update(id, data);
-      return { data: customer || undefined };
-    } catch (error: any) {
-      return { error: error.message };
-    }
-  },
-
-  deleteCustomer: async (id: string): Promise<ApiResponse<boolean>> => {
-    try {
-      const result = await customerService.delete(id);
-      return { data: result };
-    } catch (error: any) {
-      return { error: error.message };
-    }
-  },
-
-  createBulkCustomers: async (customers: CustomerFormData[]): Promise<ApiResponse<Customer[]>> => {
-    try {
-      const insertData = customers.map(customer => ({
-        email: customer.email,
-        phone: customer.phone,
-        full_name: customer.full_name || customer.name,
-        gender: customer.gender,
-        birth_date: customer.birth_date,
-        note: customer.note,
-        role: 'customer',
-        hashed_password: 'default-password' // In a real app, use a proper password hashing mechanism
-      }));
-
-      const { data, error } = await supabase
-        .from('users')
-        .insert(insertData)
-        .select();
-
-      if (error) throw error;
-
-      const createdCustomers = data.map((item: any) => ({
-        id: item.id,
-        name: item.full_name || `${item.first_name || ''} ${item.last_name || ''}`.trim(),
-        full_name: item.full_name,
-        email: item.email,
-        phone: item.phone,
-        gender: item.gender,
-        birth_date: item.birth_date,
-        note: item.note,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        lastVisit: item.created_at,
-        totalSpent: 0,
-      }));
-
-      return { data: createdCustomers };
-    } catch (error: any) {
-      return { error: error.message };
-    }
-  }
 };
-
-export * from './auth.service';

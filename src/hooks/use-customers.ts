@@ -12,7 +12,7 @@ export const useCustomers = () => {
   const createCustomer = useCallback(async (customerData: CustomerFormData & { createUser?: boolean }) => {
     try {
       // Type-safe gender handling
-      let gender: "male" | "female" | "other" | null = null;
+      let gender: "male" | "female" | "other" | undefined = undefined;
       if (customerData.gender === "male" || customerData.gender === "female" || customerData.gender === "other") {
         gender = customerData.gender;
       }
@@ -23,7 +23,7 @@ export const useCustomers = () => {
       });
       
       if (response.data) {
-        setCustomers((prev) => [...prev, response.data!]);
+        setCustomers((prev) => [...prev, response.data as Customer]);
         toast({
           title: "Customer created",
           description: "New customer has been added successfully",
@@ -49,7 +49,7 @@ export const useCustomers = () => {
     try {
       const response = await customerService.getAll();
       if (response.data) {
-        setCustomers(response.data);
+        setCustomers(response.data as Customer[]);
       } else if (response.error) {
         setError(response.error);
       }

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Product } from '@/models/product.model';
-import { productService } from '@/services/product.service';
+import { productService } from '@/services';
 
 export const useProductData = (productId?: string | number) => {
   const [products, setProducts] = useState<Product[]>([]);

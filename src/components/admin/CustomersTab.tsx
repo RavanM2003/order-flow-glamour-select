@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useCustomers } from '@/hooks/use-customers';
 import { Button } from '@/components/ui/button';
@@ -29,6 +28,16 @@ const CustomersTab = () => {
       customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.phone?.includes(searchTerm)
   );
+
+  const handleEdit = (customer: Customer) => {
+    const customerId = customer.id;
+    navigate(`/admin/customers/${customerId}`);
+  };
+
+  const handleView = (customer: Customer) => {
+    const customerId = customer.id;
+    navigate(`/admin/customers/${customerId}`);
+  };
 
   const handleViewCustomer = (customerId: string) => {
     navigate(`/admin/customers/${customerId}`);

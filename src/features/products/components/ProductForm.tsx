@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -204,7 +203,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </Button>
             <Button
               type="submit"
-              disabled={isCreating || isUpdating}
+              disabled={productActions.loading}
             >
               {isEditMode ? 'Update' : 'Create'}
             </Button>

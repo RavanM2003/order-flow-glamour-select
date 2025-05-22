@@ -1,207 +1,161 @@
 
-import { supabase } from '@/integrations/supabase/client';
 import { Product, ProductFormData } from '@/models/product.model';
+import { supabase } from '@/integrations/supabase/client';
+import { ApiResponse } from './staff.service';
 
-// Define the ApiResponse interface for consistent return types
-export interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-  message?: string;
-}
-
-/**
- * Get all products
- */
-export async function getProducts(): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*');
-
-  if (error) throw error;
-  return data || [];
-}
-
-/**
- * Get products by category ID
- */
-export async function getProductsByCategory(categoryId: number | string): Promise<Product[]> {
-  // Convert string to number if needed
-  const numericId = typeof categoryId === 'string' 
-    ? parseInt(categoryId, 10) 
-    : categoryId;
-  
-  const { data, error } = await supabase
-    .from('product_categories')
-    .select('product_id')
-    .eq('category_id', numericId);
-
-  if (error) throw error;
-
-  if (data && data.length > 0) {
-    const productIds = data.map(item => item.product_id);
-    const { data: products, error: productsError } = await supabase
-      .from('products')
-      .select('*')
-      .in('id', productIds);
-
-    if (productsError) throw productsError;
-    return products || [];
-  }
-  
-  return [];
-}
-
-/**
- * Get product by ID
- */
-export async function getProductById(id: number | string): Promise<Product> {
-  // Convert string to number if needed
-  const numericId = typeof id === 'string' 
-    ? parseInt(id, 10) 
-    : id;
-  
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .eq('id', numericId)
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Create a new product
- */
-export async function createProduct(productData: ProductFormData): Promise<Product> {
-  const { data, error } = await supabase
-    .from('products')
-    .insert(productData)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Update an existing product
- */
-export async function updateProduct(id: number | string, productData: Partial<Product>): Promise<Product> {
-  // Convert string to number if needed
-  const numericId = typeof id === 'string' 
-    ? parseInt(id, 10) 
-    : id;
-  
-  const { data, error } = await supabase
-    .from('products')
-    .update({
-      ...productData,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', numericId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}
-
-/**
- * Delete a product by ID
- */
-export async function deleteProduct(id: number | string): Promise<boolean> {
-  // Convert string to number if needed
-  const numericId = typeof id === 'string' 
-    ? parseInt(id, 10) 
-    : id;
-  
-  const { error } = await supabase
-    .from('products')
-    .delete()
-    .eq('id', numericId);
-
-  if (error) throw error;
-  return true;
-}
-
-/**
- * Get featured products (limited number for display)
- */
-export async function getFeaturedProducts(limit: number = 6): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from('products')
-    .select('*')
-    .limit(limit);
-
-  if (error) throw error;
-  return data || [];
-}
-
-// Export all functions as productService object with ApiResponse wrapper
 export const productService = {
+  // Basic CRUD methods
   getAll: async (): Promise<ApiResponse<Product[]>> => {
     try {
-      const data = await getProducts();
+      const { data, error } = await supabase.from('products').select('*');
+      
+      if (error) {
+        return { error: error.message };
+      }
+      
       return { data };
-    } catch (error) {
-      return { error: String(error) };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
     }
   },
-  getById: async (id: number | string): Promise<ApiResponse<Product>> => {
+  
+  getById: async (id: string | number): Promise<ApiResponse<Product>> => {
     try {
-      const data = await getProductById(id);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        return { error: error.message };
+      }
+      
       return { data };
-    } catch (error) {
-      return { error: String(error) };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
     }
   },
-  getByCategory: async (categoryId: number | string): Promise<ApiResponse<Product[]>> => {
+  
+  create: async (productData: ProductFormData): Promise<ApiResponse<Product>> => {
     try {
-      const data = await getProductsByCategory(categoryId);
+      const { data, error } = await supabase
+        .from('products')
+        .insert([productData])
+        .select()
+        .single();
+      
+      if (error) {
+        return { error: error.message };
+      }
+      
       return { data };
-    } catch (error) {
-      return { error: String(error) };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
     }
   },
-  getByServiceId: async (serviceId: number | string): Promise<ApiResponse<Product[]>> => {
+  
+  update: async (id: string | number, productData: Partial<ProductFormData>): Promise<ApiResponse<Product>> => {
     try {
-      // Placeholder implementation
-      return { data: [] };
-    } catch (error) {
-      return { error: String(error) };
+      const { data, error } = await supabase
+        .from('products')
+        .update(productData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) {
+        return { error: error.message };
+      }
+      
+      return { data };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
     }
   },
-  create: async (product: ProductFormData): Promise<ApiResponse<Product>> => {
+  
+  delete: async (id: string | number): Promise<ApiResponse<boolean>> => {
     try {
-      const data = await createProduct(product);
-      return { data };
-    } catch (error) {
-      return { error: String(error) };
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      
+      if (error) {
+        return { error: error.message };
+      }
+      
+      return { data: true };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
     }
   },
-  update: async (id: number | string, product: Partial<Product>): Promise<ApiResponse<Product>> => {
+  
+  // Additional methods used in the app
+  getProducts: async (): Promise<ApiResponse<Product[]>> => {
+    return productService.getAll();
+  },
+  
+  getProductById: async (id: string | number): Promise<ApiResponse<Product>> => {
+    return productService.getById(id);
+  },
+  
+  createProduct: async (productData: ProductFormData): Promise<ApiResponse<Product>> => {
+    return productService.create(productData);
+  },
+  
+  updateProduct: async (id: string | number, productData: Partial<ProductFormData>): Promise<ApiResponse<Product>> => {
+    return productService.update(id, productData);
+  },
+  
+  deleteProduct: async (id: string | number): Promise<ApiResponse<boolean>> => {
+    return productService.delete(id);
+  },
+  
+  getByServiceId: async (serviceId: string | number): Promise<ApiResponse<Product[]>> => {
     try {
-      const data = await updateProduct(id, product);
-      return { data };
-    } catch (error) {
-      return { error: String(error) };
+      const { data, error } = await supabase
+        .from('service_products')
+        .select('product_id')
+        .eq('service_id', serviceId);
+      
+      if (error) {
+        return { error: error.message };
+      }
+      
+      if (!data || data.length === 0) {
+        return { data: [] };
+      }
+      
+      const productIds = data.map(item => item.product_id);
+      
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('*')
+        .in('id', productIds);
+      
+      if (productsError) {
+        return { error: productsError.message };
+      }
+      
+      return { data: products };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
     }
   },
-  delete: async (id: number | string): Promise<ApiResponse<boolean>> => {
+  
+  getFeatured: async (limit = 4): Promise<ApiResponse<Product[]>> => {
     try {
-      const data = await deleteProduct(id);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (error) {
+        return { error: error.message };
+      }
+      
       return { data };
-    } catch (error) {
-      return { error: String(error) };
+    } catch (err) {
+      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
     }
   },
-  getFeatured: async (limit: number = 6): Promise<ApiResponse<Product[]>> => {
-    try {
-      const data = await getFeaturedProducts(limit);
-      return { data };
-    } catch (error) {
-      return { error: String(error) };
-    }
-  }
 };

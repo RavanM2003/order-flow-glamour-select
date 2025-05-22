@@ -1,16 +1,18 @@
-import React, { useContext } from 'react';
+
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OrderContext } from '@/context/OrderContext';
+import { useOrder } from '@/context/OrderContext';
 import { useToast } from '@/hooks/use-toast';
 
 const PaymentDetails = () => {
-  const { order, selectedService, selectedStaff, selectedTime, selectedCustomer } = useContext(OrderContext);
+  const { orderState, calculateTotal } = useOrder();
+  const { selectedService, selectedStaff, appointmentDate, appointmentTime, customer } = orderState;
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const totalPrice = selectedService ? selectedService.price : 0;
-  const formattedDate = selectedTime ? new Date(selectedTime).toLocaleDateString() : 'N/A';
-  const formattedTime = selectedTime ? new Date(selectedTime).toLocaleTimeString() : 'N/A';
+  const totalPrice = calculateTotal();
+  const formattedDate = appointmentDate ? appointmentDate.toLocaleDateString() : 'N/A';
+  const formattedTime = appointmentTime || 'N/A';
 
   const handleConfirmPayment = () => {
     toast({
@@ -31,9 +33,9 @@ const PaymentDetails = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="space-y-2">
           <h3 className="text-lg font-medium">Müştəri Məlumatı</h3>
-          <p><span className="font-medium">Ad:</span> {selectedCustomer?.name}</p>
-          <p><span className="font-medium">Email:</span> {selectedCustomer?.email}</p>
-          <p><span className="font-medium">Telefon:</span> {selectedCustomer?.phone}</p>
+          <p><span className="font-medium">Ad:</span> {customer?.name}</p>
+          <p><span className="font-medium">Email:</span> {customer?.email}</p>
+          <p><span className="font-medium">Telefon:</span> {customer?.phone}</p>
         </div>
         
         <div className="space-y-2">

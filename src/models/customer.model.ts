@@ -12,6 +12,7 @@ export interface Customer {
   updated_at?: string;
   lastVisit?: string;
   totalSpent?: number;
+  user_id?: string;
 }
 
 export interface CustomerFormData {
@@ -22,4 +23,5 @@ export interface CustomerFormData {
   gender?: string;
   birth_date?: string;
   note?: string;
+  user_id?: string;
 }

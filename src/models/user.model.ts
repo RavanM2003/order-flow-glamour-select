@@ -31,7 +31,7 @@ export interface User {
   lastName?: string;
   lastLogin?: string;
   isActive?: boolean;
-  roleId?: number;
+  roleId?: string;
 }
 
 export interface UserCredentials {
