@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import {
@@ -15,11 +16,13 @@ import { Separator } from "@/components/ui/separator";
 import { Check, CreditCard, Wallet } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useCurrentUserId } from "@/hooks/use-current-user-id";
 
 const PaymentDetails = () => {
   const { orderState, setPaymentMethod, goToStep, completeOrder } = useOrder();
-  const { customer, selectedService, selectedProducts, selectedServices, appointmentDate, appointmentTime } = orderState;
+  const { customer, selectedService, selectedProducts, appointmentDate, appointmentTime } = orderState;
   const { toast } = useToast();
+  const { withUserId } = useCurrentUserId();
   const [paymentType, setPaymentType] = useState<string | null>(orderState.paymentMethod || "cash");
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -31,9 +34,6 @@ const PaymentDetails = () => {
     if (selectedService) {
       total += selectedService.price;
     }
-    
-    // Add prices for multiple selected services
-    // This would need to be implemented based on your service data structure
     
     // Add product prices
     if (selectedProducts && selectedProducts.length > 0) {
@@ -74,21 +74,25 @@ const PaymentDetails = () => {
     setIsProcessing(true);
 
     try {
-      // Create a new appointment in the database
+      // Create a new appointment in the database with the correct status type
       const appointmentData = {
         customer_user_id: customer.id || null,
         appointment_date: appointmentDate.toISOString().split('T')[0],
         start_time: appointmentTime,
         end_time: calculateEndTime(appointmentTime, 60), // Assuming 60 min duration
-        status: "scheduled",
+        status: "scheduled" as "scheduled" | "completed" | "cancelled", // Explicitly type as the expected enum
         payment_method: paymentType,
         total: calculateTotal(),
         notes: "",
       };
 
+      // Add the current user ID to the appointment data
+      const dataWithUserId = withUserId(appointmentData);
+
+      // Insert the appointment data with user_id
       const { data: appointmentResult, error: appointmentError } = await supabase
         .from("appointments")
-        .insert(appointmentData)
+        .insert(dataWithUserId)
         .select()
         .single();
 
@@ -97,7 +101,7 @@ const PaymentDetails = () => {
       // Process successful booking
       if (appointmentResult) {
         // Complete the order with the appointment ID
-        completeOrder(appointmentResult.id);
+        completeOrder(appointmentResult.id.toString());
         
         // Move to confirmation step
         goToStep(4);

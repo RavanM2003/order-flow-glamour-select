@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BookingMode } from "@/context/OrderContext.d";
+import { BookingMode, Customer } from "@/context/OrderContext.d";
 
 // Define props for the component
 export interface CustomerInfoProps {
@@ -61,13 +61,21 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode, onSubmit }) =>
     setIsLoading(true);
 
     try {
-      // Update customer data in order context
-      setCustomer({
+      // Update customer data in order context with necessary default values
+      const customerData: Partial<Customer> = {
         name: values.name,
         email: values.email,
         phone: values.phone,
         address: values.address || "",
-      });
+        // Add required fields with default values
+        id: orderState.customer.id || 'temp-id',
+        gender: orderState.customer.gender || 'other',
+        lastVisit: orderState.customer.lastVisit || new Date().toISOString(),
+        totalSpent: orderState.customer.totalSpent || 0
+      };
+
+      // Update customer data in order context
+      setCustomer(customerData as Customer);
 
       // Move to next step in checkout flow
       setNextStep();

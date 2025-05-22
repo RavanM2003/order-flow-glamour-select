@@ -28,7 +28,8 @@ import { OrderProvider } from "@/context/OrderContext";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
-import { Customer } from "@/models/customer.model";
+import { Customer as ModelCustomer } from "@/models/customer.model";
+import { Customer as OrderCustomer } from "@/context/OrderContext.d";
 import { useCustomers } from "@/hooks/use-customers";
 import CustomerInfo from "@/components/CustomerInfo";
 
@@ -37,12 +38,12 @@ const CustomersTab = () => {
   const { customers, loading, fetchCustomers, createCustomer } = useCustomers();
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewCustomer, setViewCustomer] = useState<Customer | null>(null);
+  const [viewCustomer, setViewCustomer] = useState<ModelCustomer | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [addCustomerOpen, setAddCustomerOpen] = useState(false);
   const [addAppointmentOpen, setAddAppointmentOpen] = useState(false);
   const [selectedCustomerForAppointment, setSelectedCustomerForAppointment] =
-    useState<Customer | null>(null);
+    useState<ModelCustomer | null>(null);
   const pageSize = 10;
 
   // New customer form state
@@ -67,7 +68,7 @@ const CustomersTab = () => {
     currentPage * pageSize
   );
 
-  const handleViewCustomer = (customer: Customer) => {
+  const handleViewCustomer = (customer: ModelCustomer) => {
     setViewCustomer(customer);
     setDrawerOpen(true);
   };
@@ -110,26 +111,23 @@ const CustomersTab = () => {
     }
   };
 
-  const handleAddAppointment = (customer: Customer) => {
+  const handleAddAppointment = (customer: ModelCustomer) => {
     setSelectedCustomerForAppointment(customer);
     setAddAppointmentOpen(true);
   };
 
-  // Display a serial number for customers in the table
-  const getDisplayId = (index: number) => {
-    return ((currentPage - 1) * pageSize) + index + 1;
-  };
-
-  // Get icon color based on gender
-  const getGenderIcon = (gender: string) => {
-    switch(gender) {
-      case "female":
-        return <UserCircle className="h-4 w-4 mr-2 text-pink-500" />;
-      case "male":
-        return <UserCircle className="h-4 w-4 mr-2 text-blue-500" />;
-      default:
-        return <UserCircle className="h-4 w-4 mr-2 text-gray-500" />;
-    }
+  // Helper function to convert model customer to order customer
+  const convertToOrderCustomer = (customer: ModelCustomer): OrderCustomer => {
+    return {
+      id: typeof customer.id === 'number' ? customer.id.toString() : customer.id,
+      name: customer.name || '',
+      email: customer.email || '',
+      phone: customer.phone || '',
+      address: customer.address || '',
+      gender: customer.gender || 'other',
+      lastVisit: customer.lastVisit || new Date().toISOString(),
+      totalSpent: customer.totalSpent || 0
+    };
   };
 
   useEffect(() => {
@@ -425,9 +423,13 @@ const CustomersTab = () => {
           title="Book Appointment"
           className="w-full max-w-2xl"
         >
-          <OrderProvider initialCustomer={selectedCustomerForAppointment}>
-            <CheckoutFlow bookingMode="staff" />
-          </OrderProvider>
+          {selectedCustomerForAppointment && (
+            <OrderProvider 
+              initialCustomer={convertToOrderCustomer(selectedCustomerForAppointment)}
+            >
+              <CheckoutFlow bookingMode="staff" />
+            </OrderProvider>
+          )}
         </DetailDrawer>
       </div>
     </>

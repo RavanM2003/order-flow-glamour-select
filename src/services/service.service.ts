@@ -1,9 +1,11 @@
+
 import { Service, ServiceFormData } from "@/models/service.model";
 import { ApiService } from "./api.service";
 import { ApiResponse } from "@/models/types";
 import { config } from "@/config/env";
 import { supabase } from "@/integrations/supabase/client";
 import { withUserId } from "@/utils/withUserId";
+import { useCurrentUserId } from "@/hooks/use-current-user-id";
 
 export class ServiceService extends ApiService {
   constructor() {

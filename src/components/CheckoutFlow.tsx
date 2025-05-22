@@ -2,7 +2,7 @@
 import React from "react";
 import { useOrder } from "@/context/OrderContext";
 import CustomerInfo from "./CustomerInfo";
-import ServiceSelection from "./ServiceSelection";
+import { ServiceSelection } from "./ServiceSelection";
 import PaymentDetails from "./PaymentDetails";
 import BookingConfirmation from "./BookingConfirmation";
 import { useLanguage } from "@/context/LanguageContext";
