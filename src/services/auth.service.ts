@@ -1,319 +1,351 @@
-import { AuthResponse, CustomerWithUserFormData, User, UserCredentials } from "@/models/user.model";
+import { supabase } from '@/integrations/supabase/client';
+import { User, UserFormData, UserRole } from '@/models/user.model';
+import { Staff } from '@/models/staff.model';
 import { v4 as uuidv4 } from 'uuid';
-import { supabase } from "@/integrations/supabase/client";
+
+export interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+const getUserFromSupabaseUser = (supabaseUser: any): User => {
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email || '',
+    firstName: supabaseUser.user_metadata?.first_name || '',
+    lastName: supabaseUser.user_metadata?.last_name || '',
+    role: supabaseUser.user_metadata?.role || 'customer',
+    staffId: supabaseUser.user_metadata?.staff_id || '',
+    profileImage: supabaseUser.user_metadata?.avatar_url || '',
+    roleId: supabaseUser.user_metadata?.role_id?.toString() || ''
+  };
+};
 
 export const authService = {
-  login: async (credentials: UserCredentials): Promise<AuthResponse> => {
+  // Get all users
+  getAllUsers: async (): Promise<ApiResponse<User[]>> => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword(credentials);
-      
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('*');
+
       if (error) {
-        console.error('Login error:', error);
-        return { user: null, session: null, error: error.message };
+        console.error("Error fetching users:", error);
+        return { error: error.message };
       }
-      
-      const { user: supabaseUser, session } = data;
-      
-      if (!supabaseUser || !session) {
-        return { user: null, session: null, error: 'Failed to retrieve user session after login.' };
-      }
-      
-      // Convert Supabase user to our User type
-      const user: User = {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        // ... other properties as needed
-      };
-      
-      const token = session.access_token;
-      const expiresAt = session.expires_at;
-      
-      return {
-        user,
-        session,
-        error: null,
-        token,
-        expiresAt
-      };
-    } catch (err) {
-      console.error('Login failed:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      return { user: null, session: null, error: errorMessage };
+
+      return { data: users as User[] };
+    } catch (err: any) {
+      console.error("Unexpected error fetching users:", err);
+      return { error: err.message };
     }
   },
 
-  logout: async (): Promise<AuthResponse> => {
+  // Get user by ID
+  getUserById: async (id: string): Promise<ApiResponse<User>> => {
     try {
-      const { error } = await supabase.auth.signOut();
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', id)
+        .single();
+
       if (error) {
-        console.error('Logout error:', error);
-        return { user: null, session: null, error: error.message };
+        console.error(`Error fetching user with ID ${id}:`, error);
+        return { error: error.message };
       }
-      return { user: null, session: null, error: null };
-    } catch (err) {
-      console.error('Logout failed:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      return { user: null, session: null, error: errorMessage };
+
+      return { data: user as User };
+    } catch (err: any) {
+      console.error(`Unexpected error fetching user with ID ${id}:`, err);
+      return { error: err.message };
     }
   },
 
-  register: async (credentials: UserCredentials): Promise<AuthResponse> => {
+  // Create a new user
+  createUser: async (user: UserFormData): Promise<ApiResponse<User>> => {
     try {
-      const { data, error } = await supabase.auth.signUp(credentials);
-  
+      const { data, error } = await supabase
+        .from('users')
+        .insert([
+          {
+            ...user,
+            id: uuidv4(), // Generate a UUID for the new user
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        ])
+        .select()
+        .single();
+
       if (error) {
-        console.error('Registration error:', error);
-        return { user: null, session: null, error: error.message };
+        console.error("Error creating user:", error);
+        return { error: error.message };
       }
-  
-      const { user: supabaseUser, session } = data;
-  
-      if (!supabaseUser) {
-        return { user: null, session: null, error: 'Failed to retrieve user after registration.' };
-      }
-      
-      // Convert Supabase user to our User type
-      const user: User = {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        // ... other properties as needed
-      };
-  
-      return { user, session, error: null };
-    } catch (err) {
-      console.error('Registration failed:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      return { user: null, session: null, error: errorMessage };
+
+      return { data: data as User };
+    } catch (err: any) {
+      console.error("Unexpected error creating user:", err);
+      return { error: err.message };
     }
   },
 
-  getSession: async (): Promise<AuthResponse> => {
+  // Update an existing user
+  updateUser: async (id: string, user: Partial<UserFormData>): Promise<ApiResponse<User>> => {
     try {
-      const { data, error } = await supabase.auth.getSession();
-      
+      const { data, error } = await supabase
+        .from('users')
+        .update({
+          ...user,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
       if (error) {
-        console.error('Get session error:', error);
-        return { user: null, session: null, error: error.message };
+        console.error(`Error updating user with ID ${id}:`, error);
+        return { error: error.message };
       }
-      
-      const { session } = data;
-      
-      if (!session) {
-        return { user: null, session: null, error: 'No active session found.' };
-      }
-      
-      // Convert Supabase user to our User type
-      const supabaseUser = session.user;
-      const user: User = {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        // ... other properties as needed
-      };
-      
-      const token = session.access_token;
-      const expiresAt = session.expires_at;
-      
-      return {
-        user,
-        session,
-        error: null,
-        token,
-        expiresAt
-      };
-    } catch (err) {
-      console.error('Failed to get session:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      return { user: null, session: null, error: errorMessage };
+
+      return { data: data as User };
+    } catch (err: any) {
+      console.error(`Unexpected error updating user with ID ${id}:`, err);
+      return { error: err.message };
     }
   },
 
-  updateUser: async (updates: Partial<User>): Promise<AuthResponse> => {
+  // Delete a user
+  deleteUser: async (id: string): Promise<ApiResponse<boolean>> => {
     try {
-      const { data, error } = await supabase.auth.updateUser(updates);
-      
+      const { error } = await supabase
+        .from('users')
+        .delete()
+        .eq('id', id);
+
       if (error) {
-        console.error('Update user error:', error);
-        return { user: null, session: null, error: error.message };
+        console.error(`Error deleting user with ID ${id}:`, error);
+        return { error: error.message };
       }
-      
-      const supabaseUser = data.user;
-      
-      if (!supabaseUser) {
-        return { user: null, session: null, error: 'Failed to retrieve updated user.' };
-      }
-      
-      // Convert Supabase user to our User type
-      const user: User = {
-        id: supabaseUser.id,
-        email: supabaseUser.email || '',
-        // ... other properties as needed
-      };
-      
-      return { user, session: null, error: null };
-    } catch (err) {
-      console.error('Failed to update user:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      return { user: null, session: null, error: errorMessage };
+
+      return { data: true };
+    } catch (err: any) {
+      console.error(`Unexpected error deleting user with ID ${id}:`, err);
+      return { error: err.message };
     }
   },
 
-  resetPassword: async (email: string): Promise<AuthResponse> => {
+  // Get user by email
+  getUserByEmail: async (email: string): Promise<ApiResponse<User>> => {
     try {
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (error) {
+        console.error(`Error fetching user with email ${email}:`, error);
+        return { error: error.message };
+      }
+
+      return { data: data as User };
+    } catch (err: any) {
+      console.error(`Unexpected error fetching user with email ${email}:`, err);
+      return { error: err.message };
+    }
+  },
+
+  // Get staff members
+  getStaffMembers: async (): Promise<ApiResponse<Staff[]>> => {
+    try {
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('role', 'staff');
+
+      if (error) {
+        console.error("Error fetching staff members:", error);
+        return { error: error.message };
+      }
+
+      return { data: users as Staff[] };
+    } catch (err: any) {
+      console.error("Unexpected error fetching staff members:", err);
+      return { error: err.message };
+    }
+  },
+
+  // Sign up a new user
+  signUp: async (email: string, password: string, formData: UserFormData): Promise<ApiResponse<User>> => {
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            full_name: `${formData.firstName} ${formData.lastName}`,
+            role: formData.role,
+            staffId: formData.staffId,
+            avatar_url: formData.profileImage,
+            roleId: formData.roleId
+          }
+        }
+      });
+
+      if (authError) {
+        console.error("Error signing up:", authError);
+        return { error: authError.message };
+      }
+
+      if (!authData.user) {
+        console.error("No user data returned from signup");
+        return { error: "Signup failed: No user data returned" };
+      }
+
+      const user: User = getUserFromSupabaseUser(authData.user);
+      return { data: user };
+    } catch (err: any) {
+      console.error("Unexpected error signing up:", err);
+      return { error: err.message };
+    }
+  },
+
+  // Sign in an existing user
+  signIn: async (email: string, password: string): Promise<ApiResponse<User>> => {
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (authError) {
+        console.error("Error signing in:", authError);
+        return { error: authError.message };
+      }
+
+      if (!authData.user) {
+        console.error("No user data returned from signin");
+        return { error: "Signin failed: No user data returned" };
+      }
+
+      const user: User = getUserFromSupabaseUser(authData.user);
+      return { data: user };
+    } catch (err: any) {
+      console.error("Unexpected error signing in:", err);
+      return { error: err.message };
+    }
+  },
+
+  // Sign out the current user
+  signOut: async (): Promise<ApiResponse<boolean>> => {
+    try {
+      const { error: authError } = await supabase.auth.signOut();
+
+      if (authError) {
+        console.error("Error signing out:", authError);
+        return { error: authError.message };
+      }
+
+      return { data: true };
+    } catch (err: any) {
+      console.error("Unexpected error signing out:", err);
+      return { error: err.message };
+    }
+  },
+
+  // Reset user password
+  resetPassword: async (email: string): Promise<ApiResponse<boolean>> => {
+    try {
+      const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/update-password`,
       });
-      
-      if (error) {
-        console.error('Reset password error:', error);
-        return { user: null, session: null, error: error.message };
-      }
-      
-      // Password reset link sent
-      return { user: null, session: null, error: null };
-    } catch (err) {
-      console.error('Failed to reset password:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      return { user: null, session: null, error: errorMessage };
-    }
-  },
 
-  updatePassword: async (password: string): Promise<AuthResponse> => {
-    try {
-      const { data, error } = await supabase.auth.updateUser({ password });
-      
-      if (error) {
-        console.error('Update password error:', error);
-        return { user: null, session: null, error: error.message };
-      }
-      
-      const { user } = data;
-      
-      if (!user) {
-        return { user: null, session: null, error: 'Failed to retrieve updated user.' };
-      }
-      
-      return { user, session: null, error: null };
-    } catch (err) {
-      console.error('Failed to update password:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      return { user: null, session: null, error: errorMessage };
-    }
-  },
-
-  createCustomerWithUser: async (data: CustomerWithUserFormData): Promise<AuthResponse> => {
-    try {
-      // Create user in auth.users table
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password || ""
-      });
-  
       if (authError) {
-        console.error('Error creating user:', authError);
-        return { user: null, session: null, error: authError.message };
+        console.error("Error resetting password:", authError);
+        return { error: authError.message };
       }
-  
-      const { user: supabaseUser, session } = authData;
-      if (!supabaseUser) {
-        return { user: null, session: null, error: 'Failed to retrieve user after registration.' };
+
+      return { data: true };
+    } catch (err: any) {
+      console.error("Unexpected error resetting password:", err);
+      return { error: err.message };
+    }
+  },
+
+  // Update user password
+  updatePassword: async (password: string): Promise<ApiResponse<boolean>> => {
+    try {
+      const { data: authData, error: authError } = await supabase.auth.updateUser({
+        password: password,
+      });
+
+      if (authError) {
+        console.error("Error updating password:", authError);
+        return { error: authError.message };
       }
-  
-      // Create user in public.users table
-      const staffId = uuidv4();
+
+      return { data: true };
+    } catch (err: any) {
+      console.error("Unexpected error updating password:", err);
+      return { error: err.message };
+    }
+  },
+
+  // Create initial user if none exists
+  createInitialUser: async (user: UserFormData): Promise<ApiResponse<User>> => {
+    try {
+      // Check if any users exist
+      const { data: existingUsers, error: selectError } = await supabase
+        .from('users')
+        .select('*')
+        .limit(1);
+
+      if (selectError) {
+        console.error("Error checking existing users:", selectError);
+        return { error: selectError.message };
+      }
+
+      if (existingUsers && existingUsers.length > 0) {
+        console.log("Initial user already exists.");
+        return { data: existingUsers[0] as User };
+      }
+
+      // If no users exist, create the initial user
       const userData = {
         id: uuidv4(),
-        email: data.email,
-        first_name: data.firstName || '',
-        last_name: data.lastName || '',
-        full_name: `${data.firstName || ''} ${data.lastName || ''}`.trim(),
-        gender: data.gender,
-        birth_date: data.birth_date,
-        phone: data.phone,
-        note: data.note,
-        role: 'customer',
-        staffId: staffId?.toString() || '',
+        email: user.email,
+        first_name: user.firstName,
+        last_name: user.lastName,
+        full_name: user.firstName + ' ' + user.lastName,
+        gender: user.gender,
+        birth_date: user.birthDate,
+        phone: user.phone,
+        note: user.note,
+        role: user.role,
+        hashed_password: 'default-password',  // This should be set properly in a real app
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-      
-      try {
-        const { error: userError } = await supabase
-          .from('users')
-          .insert([userData]);
-    
-        if (userError) {
-          console.error('Error creating user details:', userError);
-          return { user: null, session: null, error: userError.message };
-        }
-      } catch (err) {
-        console.error('Database error:', err);
-        return { user: null, session: null, error: 'Database error occurred' };
+
+      const { data, error } = await supabase
+        .from('users')
+        .insert(userData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error creating initial user:", error);
+        return { error: error.message };
       }
-  
-      const user: User = {
-        id: userData.id,
-        email: userData.email,
-        first_name: userData.first_name,
-        last_name: userData.last_name,
-        full_name: userData.full_name,
-        gender: userData.gender as 'male' | 'female' | 'other',
-        birth_date: userData.birth_date,
-        phone: userData.phone,
-        note: userData.note,
-        role: 'customer',
-        staffId: staffId.toString(),
-        created_at: userData.created_at,
-        updated_at: userData.updated_at
-      };
-      
-      return {
-        user,
-        session,
-        error: null,
-        token: session?.access_token || '',
-        expiresAt: session?.expires_at || 0
-      };
-    } catch (err) {
-      console.error('Failed to create customer with user:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      return { user: null, session: null, error: errorMessage };
+
+      return { data: data as User };
+    } catch (err: any) {
+      console.error("Unexpected error creating initial user:", err);
+      return { error: err.message };
     }
   },
-
-  createUser: async (email: string, role: string, staffId?: string, roleId?: string): Promise<AuthResponse> => {
-    try {
-      // Create user in public.users table
-      const uuid = uuidv4();
-      const user = {
-        id: uuid,
-        email,
-        role,
-        staffId: staffId?.toString() || '',
-        roleId: roleId?.toString() || '',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      const { error: userError } = await supabase
-        .from('users')
-        .insert([user]);
-
-      if (userError) {
-        console.error('Error creating user details:', userError);
-        return { user: null, session: null, error: userError.message };
-      }
-
-      return {
-        user: user as User,
-        session: null,
-        error: null,
-        token: '',
-        expiresAt: 0
-      };
-    } catch (err) {
-      console.error('Failed to create user:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      return { user: null, session: null, error: errorMessage };
-    }
-  }
 };

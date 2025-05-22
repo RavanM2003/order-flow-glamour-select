@@ -40,7 +40,7 @@ export async function createAppointment(appointmentData: AppointmentFormData) {
     appointment_date: appointmentData.appointment_date,
     start_time: appointmentData.start_time,
     end_time: appointmentData.end_time,
-    status: appointmentData.status,
+    status: appointmentData.status || 'scheduled',
     total: appointmentData.total,
     customer_user_id: appointmentData.customer_user_id,
     user_id: appointmentData.user_id
@@ -63,16 +63,17 @@ export async function updateAppointment(id: number, appointmentData: Partial<App
   // Ensure id is a number
   const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
   
-  // Ensure status is one of the allowed values
-  if (appointmentData.status && 
-      !['scheduled', 'completed', 'cancelled'].includes(appointmentData.status)) {
-    throw new Error('Invalid appointment status');
+  // Convert confirmed status to scheduled if needed for database compatibility
+  let dbStatus = appointmentData.status;
+  if (dbStatus === 'confirmed') {
+    dbStatus = 'scheduled' as AppointmentStatus;
   }
   
   const { data, error } = await supabase
     .from('appointments')
     .update({
       ...appointmentData,
+      status: dbStatus,
       updated_at: new Date().toISOString()
     })
     .eq('id', numericId)

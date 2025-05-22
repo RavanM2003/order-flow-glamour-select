@@ -1,28 +1,63 @@
+
 import { Customer } from "@/models/customer.model";
 import { Service } from "@/models/service.model";
 import { Staff } from "@/models/staff.model";
 
-export interface OrderContextType {
-  order: Order;
-  setOrder: React.Dispatch<React.SetStateAction<Order>>;
+export type BookingMode = 'salon' | 'home';
+
+export interface Product {
+  id: number;
+  name: string;
+  price?: number;
+  description?: string;
+  image?: string;
+}
+
+export interface OrderState {
+  currentStep: number;
+  bookingMode: BookingMode;
+  customer: Customer;
   selectedService: Service | null;
-  setSelectedService: React.Dispatch<React.SetStateAction<Service | null>>;
   selectedStaff: Staff | null;
-  setSelectedStaff: React.Dispatch<React.SetStateAction<Staff | null>>;
-  selectedTime: { date: Date; time: string } | null;
-  setSelectedTime: React.Dispatch<React.SetStateAction<{ date: Date; time: string } | null>>;
-  selectedCustomer: Customer | null;
-  setSelectedCustomer: React.Dispatch<React.SetStateAction<Customer | null>>;
+  selectedProducts: Product[];
+  selectedServices: number[];
+  appointmentDate: Date | null;
+  appointmentTime: string | null;
+  totalAmount: number;
+  paymentMethod: string | null;
+  serviceProviders: Array<{
+    serviceId: number;
+    name: string;
+  }> | null;
+}
+
+export interface OrderContextType {
+  orderState: OrderState;
+  setCustomer: (customer: Customer) => void;
+  setSelectedService: (service: Service | null) => void;
+  setSelectedStaff: (staff: Staff | null) => void;
+  addProduct: (productId: number) => void;
+  removeProduct: (productId: number) => void;
+  setAppointmentDate: (date: Date | null) => void; 
+  setAppointmentTime: (time: string | null) => void;
+  setNextStep: () => void;
+  setPrevStep: () => void;
+  goToStep: (step: number) => void;
+  resetOrder: () => void;
+  setPaymentMethod: (method: string | null) => void;
+  completeOrder: (id: string) => void;
+  addServiceProvider: (serviceId: number, staffName: string) => void;
+  selectService: (serviceId: number) => void;
+  unselectService: (serviceId: number) => void;
+  setBookingMode: (mode: BookingMode) => void;
+  calculateTotal: () => number;
+  nextStep: () => void;
+  prevStep: () => void;
+  setStep: (step: number) => void;
   addService: (service: Service) => void;
   removeService: (serviceId: number) => void;
-  clearOrder: () => void;
-  calculateTotal: () => number;
-  isOrderValid: () => boolean;
-  submitOrder: () => Promise<boolean>;
-  isSubmitting: boolean;
-  orderError: string | null;
-  orderSuccess: boolean;
-  resetOrderStatus: () => void;
+  setStaff: (staff: Staff | null) => void;
+  order?: Order;
 }
 
 export interface Order {
@@ -40,3 +75,5 @@ export interface Order {
   payment_status?: 'unpaid' | 'paid' | 'partial';
   payment_method?: 'cash' | 'card' | 'transfer';
 }
+
+export { Customer, Service, Staff };

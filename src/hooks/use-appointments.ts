@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { AppointmentFormData, Appointment, AppointmentStatus } from '@/models/appointment.model';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,7 +68,12 @@ export const useAppointments = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const updateData: Partial<Appointment> = { status };
+      // Make sure we're using a valid status for the database
+      const dbStatus = status === 'confirmed' ? 'scheduled' : status;
+      
+      const updateData: Partial<Appointment> = { 
+        status: dbStatus as AppointmentStatus 
+      };
       
       if (reason && status === 'cancelled') {
         updateData.cancel_reason = reason;

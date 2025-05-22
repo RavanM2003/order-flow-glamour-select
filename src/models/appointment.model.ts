@@ -15,3 +15,14 @@ export interface Appointment {
   updated_at: string;
   is_no_show: boolean;
 }
+
+export interface AppointmentFormData {
+  appointment_date: string | Date;
+  start_time: string;
+  end_time: string;
+  status?: AppointmentStatus;
+  total?: number;
+  customer_user_id?: string;
+  user_id?: string;
+  cancel_reason?: string;
+}
