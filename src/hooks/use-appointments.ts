@@ -1,29 +1,28 @@
-
 import { useState, useCallback } from 'react';
 import { AppointmentFormData, Appointment, AppointmentStatus } from '@/models/appointment.model';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 
-export function useAppointments() {
+export const useAppointments = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const createAppointment = useCallback(async (appointmentData: AppointmentFormData) => {
     setIsLoading(true);
-    setError(null);
     try {
-      // Ensure we're working with a string date
-      const formattedAppointmentDate = 
-        typeof appointmentData.appointment_date === 'object'
-          ? appointmentData.appointment_date.toISOString().split('T')[0]
-          : appointmentData.appointment_date;
-
+      // Ensure appointment_date is a string, not a Date object
+      const formattedData = {
+        ...appointmentData,
+        appointment_date: appointmentData.appointment_date ? 
+          (typeof appointmentData.appointment_date === 'string' ? 
+           appointmentData.appointment_date : 
+           appointmentData.appointment_date.toISOString().split('T')[0])
+          : new Date().toISOString().split('T')[0]
+      };
+      
       const { data, error } = await supabase
         .from('appointments')
-        .insert([{
-          ...appointmentData,
-          appointment_date: formattedAppointmentDate
-        }])
+        .insert([formattedData])
         .select()
         .single();
 
@@ -37,8 +36,8 @@ export function useAppointments() {
       });
 
       return data as Appointment;
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to create appointment';
+    } catch (error) {
+      const errorMessage = error.message || 'Failed to create appointment';
       setError(errorMessage);
       toast({
         variant: "destructive",
@@ -154,4 +153,4 @@ export function useAppointments() {
     isLoading,
     error
   };
-}
+};

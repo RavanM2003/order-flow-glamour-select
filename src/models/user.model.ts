@@ -24,17 +24,16 @@ export interface User {
   role?: UserRole;
   phone?: string;
   note?: string;
-  staffId?: string; // Added for compatibility with auth.service
-  token?: string; // Added for compatibility with AuthResponse
-
-  // These are mappings for compatibility with the existing User type
+  staffId?: string;
+  token?: string;
+  profileImage?: string;
   firstName?: string;
   lastName?: string;
   lastLogin?: string;
   isActive?: boolean;
+  roleId?: number;
 }
 
-// Add missing types
 export interface UserCredentials {
   email: string;
   password: string;
@@ -44,7 +43,8 @@ export interface AuthResponse {
   user: User | null;
   session: any;
   error: string | null;
-  token?: string; // Added for compatibility with auth.service
+  token?: string;
+  expiresAt?: number;
 }
 
 export interface CustomerWithUserFormData {
@@ -55,6 +55,6 @@ export interface CustomerWithUserFormData {
   birth_date?: string;
   note?: string;
   password?: string;
-  firstName?: string; // Added for compatibility
-  lastName?: string;  // Added for compatibility
+  firstName?: string;
+  lastName?: string;
 }

@@ -15,6 +15,10 @@ import * as productService from '@/services/product.service';
 const Index = () => {
   const { t } = useLanguage();
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingServices, setLoadingServices] = useState(true);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [services, setServices] = useState([]);
+  const [products, setProducts] = useState([]);
 
   // Pre-fetch services and products for faster navigation
   const { data: servicesData } = useQuery({
@@ -36,6 +40,38 @@ const Index = () => {
     }, 300);
 
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        setLoadingServices(true);
+        // Use the serviceService.getAll method instead of listServices
+        const services = await serviceService.getAll();
+        setServices(services.slice(0, 6)); // Show just the first 6 services
+        setLoadingServices(false);
+      } catch (error) {
+        console.error('Error loading services:', error);
+        setLoadingServices(false);
+      }
+    };
+
+    // Modify the product fetching to use the correct method
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        // Use the productService.getAll method 
+        const products = await productService.getAll();
+        setProducts(products.slice(0, 6)); // Show just the first 6 products
+        setLoadingProducts(false);
+      } catch (error) {
+        console.error('Error loading products:', error);
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchServices();
+    fetchProducts();
   }, []);
 
   return (
@@ -130,4 +166,4 @@ const Index = () => {
   );
 };
 
-export default React.memo(Index);
+export default Index;

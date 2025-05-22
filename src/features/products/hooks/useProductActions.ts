@@ -1,79 +1,112 @@
 
-import { useCallback, useState } from 'react';
-import { useApi } from '@/hooks/use-api';
-import { productService } from '@/services';
-import { ProductFormData, Product } from '@/models/product.model';
+import { useState } from 'react';
+import { Product, ProductFormData } from '@/models/product.model';
+import { productService } from '@/services/product.service';
+import { useToast } from '@/hooks/use-toast';
 
-export function useProductActions(onSuccess?: () => void) {
-  const api = useApi<Product>();
-  const [isCreating, setIsCreating] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-  
-  const createProduct = useCallback(async (data: ProductFormData) => {
-    setIsCreating(true);
+export const useProductActions = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const createProduct = async (productData: ProductFormData): Promise<Product | null> => {
+    setLoading(true);
+    setError(null);
+    
     try {
-      const response = await api.execute(
-        () => productService.create(data),
-        {
-          showSuccessToast: true,
-          successMessage: 'Product created successfully',
-          errorPrefix: 'Failed to create product',
-          onSuccess: () => {
-            onSuccess?.();
-          }
-        }
-      );
-      setIsCreating(false);
-      return response?.data;
-    } catch (error) {
-      setIsCreating(false);
-      throw error;
-    }
-  }, [api, onSuccess]);
-  
-  const updateProduct = useCallback(async (id: number | string, data: Partial<ProductFormData>) => {
-    setIsUpdating(true);
-    try {
-      const response = await api.execute(
-        () => productService.update(id, data),
-        {
-          showSuccessToast: true,
-          successMessage: 'Product updated successfully',
-          errorPrefix: 'Failed to update product',
-          onSuccess: () => {
-            onSuccess?.();
-          }
-        }
-      );
-      setIsUpdating(false);
-      return response?.data;
-    } catch (error) {
-      setIsUpdating(false);
-      throw error;
-    }
-  }, [api, onSuccess]);
-  
-  const deleteProduct = useCallback(async (id: number | string) => {
-    return await api.execute(
-      () => productService.delete(id),
-      {
-        showSuccessToast: true,
-        successMessage: 'Product deleted successfully',
-        errorPrefix: 'Failed to delete product',
-        onSuccess: () => {
-          onSuccess?.();
-        }
+      const response = await productService.createProduct(productData);
+      
+      if (response.error) {
+        throw new Error(response.error);
       }
-    );
-  }, [api, onSuccess]);
+      
+      toast({
+        title: "Məhsul yaradıldı",
+        description: "Məhsul uğurla əlavə edildi"
+      });
+      
+      return response.data || null;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Məhsul yaradılarkən xəta baş verdi';
+      setError(errorMsg);
+      toast({
+        variant: "destructive",
+        title: "Xəta",
+        description: errorMsg
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateProduct = async (id: string | number, productData: Partial<ProductFormData>): Promise<Product | null> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await productService.updateProduct(id, productData);
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      toast({
+        title: "Məhsul yeniləndi",
+        description: "Məhsul uğurla yeniləndi"
+      });
+      
+      return response.data || null;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Məhsul yenilərkən xəta baş verdi';
+      setError(errorMsg);
+      toast({
+        variant: "destructive",
+        title: "Xəta",
+        description: errorMsg
+      });
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteProduct = async (id: string | number): Promise<boolean> => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await productService.deleteProduct(id);
+      
+      if (response.error) {
+        throw new Error(response.error);
+      }
+      
+      toast({
+        title: "Məhsul silindi",
+        description: "Məhsul uğurla silindi"
+      });
+      
+      return true;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Məhsul silinərkən xəta baş verdi';
+      setError(errorMsg);
+      toast({
+        variant: "destructive",
+        title: "Xəta",
+        description: errorMsg
+      });
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return {
+    loading,
+    error,
     createProduct,
     updateProduct,
-    deleteProduct,
-    isLoading: api.isLoading,
-    isCreating,
-    isUpdating,
-    error: api.error
+    deleteProduct
   };
-}
+};
