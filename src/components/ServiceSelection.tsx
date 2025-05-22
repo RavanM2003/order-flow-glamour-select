@@ -1,7 +1,6 @@
 
-import React, { useContext } from 'react';
+import React from 'react';
 import { useServices } from '@/hooks/use-services';
-import { OrderContext } from '@/context/OrderContext';
 import { useOrder } from '@/context/OrderContext';
 
 const ServiceSelection = () => {

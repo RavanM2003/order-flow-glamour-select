@@ -1,9 +1,9 @@
+
 import React, { useEffect, useState } from 'react';
 import { useCustomers } from '@/hooks/use-customers';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Customer } from '@/models/customer.model';
 import { formatDate } from '@/utils/format';
 import { PlusIcon, SearchIcon } from 'lucide-react';
 import CustomerForm from '@/components/admin/CustomerForm';
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
+import { Customer } from '@/models/customer.model';
 
 const CustomersTab = () => {
   const { customers, isLoading, error, fetchCustomers } = useCustomers();
@@ -80,25 +81,25 @@ const CustomersTab = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredCustomers.map((customer) => (
+                filteredCustomers.map((customer: Customer) => (
                   <TableRow key={customer.id}>
                     <TableCell>{customer.full_name || 'N/A'}</TableCell>
                     <TableCell>{customer.email || 'N/A'}</TableCell>
                     <TableCell>{customer.phone || 'N/A'}</TableCell>
                     <TableCell className="capitalize">{customer.gender || 'N/A'}</TableCell>
                     <TableCell>
-                      {customer.last_visit ? formatDate(customer.last_visit) : 'Never'}
+                      {customer.lastVisit ? formatDate(customer.lastVisit) : 'Never'}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={customer.is_active ? 'default' : 'outline'}>
-                        {customer.is_active ? 'Active' : 'Inactive'}
+                      <Badge variant={customer.user_id ? 'default' : 'outline'}>
+                        {customer.user_id ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleViewCustomer(customer.id)}
+                        onClick={() => handleViewCustomer(customer.id.toString())}
                       >
                         View
                       </Button>
