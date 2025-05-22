@@ -1,5 +1,4 @@
-
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
 export interface Customer {
   id: string;
@@ -41,7 +40,7 @@ export interface Product {
   stock?: number;
 }
 
-export type BookingMode = 'salon' | 'home';
+export type BookingMode = "salon" | "home";
 
 export interface OrderState {
   currentStep: number;
@@ -55,7 +54,7 @@ export interface OrderState {
   appointmentTime: string | null;
   totalAmount: number;
   paymentMethod: string | null;
-  serviceProviders: Array<{serviceId: number, name: string}> | null;
+  serviceProviders: Array<{ serviceId: number; name: string }> | null;
 }
 
 export interface OrderContextType {
@@ -81,6 +80,9 @@ export interface OrderContextType {
   nextStep: () => void;
   prevStep: () => void;
   setStep: (step: number) => void;
+  addService: (service: Service) => void;
+  removeService: (serviceId: number) => void;
+  setStaff: (staff: Staff | null) => void;
 }
 
 export interface OrderProviderProps {

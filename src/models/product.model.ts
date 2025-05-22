@@ -1,4 +1,3 @@
-
 export interface Product {
   id: number;
   name: string;
@@ -23,7 +22,8 @@ export interface ProductFormData {
   name: string;
   description: string;
   price: number;
-  stock: number; // Changed from stock_quantity to match database
+  stock: number;
+  stock_quantity: number; // Added to match the form field name
   category?: string;
   image_url?: string;
   isServiceRelated?: boolean;
