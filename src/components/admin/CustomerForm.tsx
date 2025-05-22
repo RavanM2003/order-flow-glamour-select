@@ -42,8 +42,16 @@ const CustomerForm: React.FC<CustomerFormProps> = ({ onSuccess }) => {
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Only pass fields that match the expected schema
-      await createCustomer(data);
+      // Adjust data to match CustomerFormData type expected by createCustomer
+      const customerData = {
+        name: data.full_name, // Map full_name to name
+        full_name: data.full_name,
+        email: data.email,
+        phone: data.phone,
+        gender: data.gender
+      };
+      
+      await createCustomer(customerData);
       form.reset();
       onSuccess();
     } catch (error) {

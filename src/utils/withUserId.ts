@@ -41,7 +41,12 @@ export function withUserId<T extends Record<string, any>>(data: T): T & { user_i
  * @param data The data to insert
  * @returns The Supabase query builder
  */
-export function insertWithUserId<T extends Record<string, any>>(tableName: string, data: T) {
+export function insertWithUserId<T extends Record<string, any>>(
+  tableName: "appointments" | "products" | "users" | "services" | "service_categories" | "staff" | 
+  "appointment_products" | "appointment_services" | "histories" | "invoices" | "payments" | 
+  "product_categories" | "promo_codes" | "service_products" | "staff_availability", 
+  data: T
+) {
   const dataWithUserId = withUserId(data);
   return supabase.from(tableName).insert(dataWithUserId);
 }
@@ -56,7 +61,9 @@ export function insertWithUserId<T extends Record<string, any>>(tableName: strin
  * @returns The Supabase query builder
  */
 export function updateWithUserId<T extends Record<string, any>>(
-  tableName: string, 
+  tableName: "appointments" | "products" | "users" | "services" | "service_categories" | "staff" | 
+  "appointment_products" | "appointment_services" | "histories" | "invoices" | "payments" | 
+  "product_categories" | "promo_codes" | "service_products" | "staff_availability",
   data: T, 
   matchColumn: string,
   matchValue: string | number

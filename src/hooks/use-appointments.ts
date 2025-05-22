@@ -1,20 +1,8 @@
 
 import { useState, useCallback } from 'react';
-import { Appointment } from '@/models/appointment.model';
+import { Appointment, AppointmentFormData, AppointmentStatus } from '@/models/appointment.model';
 import { useToast } from '@/hooks/use-toast';
-import { getAppointmentById, updateRecord, mapAppointment } from '@/lib/api';
 import * as appointmentService from '@/services/appointment.service';
-
-// Define the appointment types needed
-type AppointmentFormData = {
-  customer_user_id: string;
-  appointment_date: string;
-  start_time: string;
-  end_time: string;
-  status: 'scheduled' | 'completed' | 'cancelled'; // Use the values expected by the backend
-  total?: number;
-  user_id?: string | null;
-};
 
 export function useAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -28,12 +16,12 @@ export function useAppointments() {
     
     try {
       const response = await appointmentService.getAppointments();
-      // Ensure each appointment is properly mapped to the expected shape
-      const mappedAppointments = response.map((apt: any) => mapAppointment(apt));
-      setAppointments(mappedAppointments);
-    } catch (err) {
+      setAppointments(response || []);
+      return response;
+    } catch (err: any) {
       console.error('Error fetching appointments:', err);
-      setError('Failed to fetch appointments');
+      setError(err.message || 'Failed to fetch appointments');
+      return [];
     } finally {
       setIsLoading(false);
     }
@@ -51,9 +39,14 @@ export function useAppointments() {
         description: "Your appointment has been successfully created.",
       });
       return created;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating appointment:', err);
-      setError('Failed to create appointment');
+      setError(err.message || 'Failed to create appointment');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create appointment."
+      });
       return null;
     } finally {
       setIsLoading(false);
@@ -72,9 +65,14 @@ export function useAppointments() {
         description: "The appointment has been successfully updated.",
       });
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error updating appointment:', err);
-      setError('Failed to update appointment');
+      setError(err.message || 'Failed to update appointment');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update appointment."
+      });
       return false;
     } finally {
       setIsLoading(false);
@@ -93,9 +91,66 @@ export function useAppointments() {
         description: "The appointment has been successfully deleted.",
       });
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error deleting appointment:', err);
-      setError('Failed to delete appointment');
+      setError(err.message || 'Failed to delete appointment');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete appointment."
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchAppointments, toast]);
+
+  const cancelAppointment = useCallback(async (id: number, reason: string) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      await appointmentService.cancelAppointment(id, reason);
+      await fetchAppointments();
+      toast({
+        title: "Appointment cancelled",
+        description: "The appointment has been successfully cancelled.",
+      });
+      return true;
+    } catch (err: any) {
+      console.error('Error cancelling appointment:', err);
+      setError(err.message || 'Failed to cancel appointment');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to cancel appointment."
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchAppointments, toast]);
+
+  const completeAppointment = useCallback(async (id: number) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      await appointmentService.completeAppointment(id);
+      await fetchAppointments();
+      toast({
+        title: "Appointment completed",
+        description: "The appointment has been marked as completed.",
+      });
+      return true;
+    } catch (err: any) {
+      console.error('Error completing appointment:', err);
+      setError(err.message || 'Failed to complete appointment');
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to mark appointment as completed."
+      });
       return false;
     } finally {
       setIsLoading(false);
@@ -110,5 +165,7 @@ export function useAppointments() {
     createAppointment,
     updateAppointment,
     deleteAppointment,
+    cancelAppointment,
+    completeAppointment,
   };
 }

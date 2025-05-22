@@ -1,4 +1,4 @@
-// Fix imports and type issues with appointment status
+
 import React, { useState } from 'react';
 import { useOrder } from '@/context/OrderContext';
 import { Button } from '@/components/ui/button';
@@ -7,14 +7,19 @@ import { useAppointments } from '@/hooks/use-appointments';
 import { formatDate } from '@/utils/format';
 
 const PaymentDetails = () => {
-  const { order, customer, staff, service } = useOrder();
+  const { orderState: { customer, staff, appointmentDate: date, appointmentTime: startTime, totalAmount }, selectedService: service } = useOrder();
   const navigate = useNavigate();
   const { createAppointment } = useAppointments();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Calculate end time based on service duration
+  const endTime = startTime && service?.duration 
+    ? calculateEndTime(startTime, service.duration)
+    : '';
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!order || !customer || !service) {
+    if (!date || !customer || !service) {
       // Handle validation
       return;
     }
@@ -25,13 +30,12 @@ const PaymentDetails = () => {
       // Ensure we're using correct types for the appointment
       const appointmentData = {
         customer_user_id: customer.id,
-        appointment_date: order.date,
-        start_time: order.startTime,
-        end_time: order.endTime || '', // Make sure we have an end time
+        appointment_date: date,
+        start_time: startTime || '',
+        end_time: endTime, 
         // Use the correct status enum value that matches backend expectations
-        status: 'scheduled', // Use the enum value expected by the backend
+        status: 'scheduled' as const, // Type assertion to ensure it's a valid appointment status
         total: service.price,
-        // Don't include notes if it's not part of the expected shape
         user_id: staff?.id || null
       };
       
@@ -52,6 +56,17 @@ const PaymentDetails = () => {
     }
   };
 
+  // Helper function to calculate end time
+  function calculateEndTime(start: string, durationMinutes: number): string {
+    const [hours, minutes] = start.split(':').map(Number);
+    
+    let totalMinutes = hours * 60 + minutes + durationMinutes;
+    const newHours = Math.floor(totalMinutes / 60) % 24;
+    const newMinutes = totalMinutes % 60;
+    
+    return `${newHours.toString().padStart(2, '0')}:${newMinutes.toString().padStart(2, '0')}`;
+  }
+
   return (
     <div className="container mx-auto mt-8">
       <h2 className="text-2xl font-semibold mb-4">Payment Details</h2>
@@ -60,8 +75,8 @@ const PaymentDetails = () => {
       <div className="mb-4">
         <h3 className="text-lg font-medium">Order Summary</h3>
         <p>Service: {service?.name}</p>
-        <p>Date: {formatDate(order?.date)}</p>
-        <p>Time: {order?.startTime} - {order?.endTime}</p>
+        <p>Date: {formatDate(date)}</p>
+        <p>Time: {startTime} - {endTime}</p>
         <p>Total: ${service?.price?.toFixed(2)}</p>
       </div>
       

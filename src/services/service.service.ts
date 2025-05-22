@@ -1,123 +1,134 @@
 
-import { Service, ServiceFormData } from "@/models/service.model";
-import { ApiService } from "./api.service";
-import { ApiResponse } from "@/models/types";
-import { config } from "@/config/env";
-import { supabase } from "@/integrations/supabase/client";
-import { withUserId } from "@/utils/withUserId";
-import { useCurrentUserId } from "@/hooks/use-current-user-id";
+import { supabase } from '@/integrations/supabase/client';
+import { Service, ServiceFormData } from '@/models/service.model';
 
-export class ServiceService extends ApiService {
-  constructor() {
-    super();
-  }
-  
-  async getServices(): Promise<ApiResponse<Service[]>> {
-    try {
-      const { data, error } = await supabase.from("services").select("*");
+/**
+ * Get all services
+ */
+export async function getServices() {
+  const { data, error } = await supabase
+    .from('services')
+    .select('*');
 
-      if (error) throw error;
-
-      return { data: data as Service[] };
-    } catch (error) {
-      console.error("Error fetching services:", error);
-      return { error: String(error) };
-    }
-  }
-
-  async getServiceById(id: string): Promise<ApiResponse<Service>> {
-    try {
-      const { data, error } = await supabase
-        .from("services")
-        .select("*")
-        .eq("id", id)
-        .single();
-
-      if (error) throw error;
-
-      return { data: data as Service };
-    } catch (error) {
-      console.error("Error fetching service:", error);
-      return { error: String(error) };
-    }
-  }
-  
-  async createService(serviceData: ServiceFormData): Promise<ApiResponse<Service>> {
-    if (config.usesMockData) {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      const mockService: Service = {
-        id: String(Date.now()),
-        name: serviceData.name,
-        price: serviceData.price,
-        duration: serviceData.duration,
-        description: serviceData.description,
-        benefits: serviceData.benefits,
-        category_id: serviceData.category_id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      return { data: mockService, message: "Xidmət uğurla yaradıldı" };
-    }
-
-    try {
-      // Add the current user_id to the service data
-      const serviceWithUserId = withUserId(serviceData);
-      
-      const { data, error } = await supabase
-        .from("services")
-        .insert([serviceWithUserId])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return { 
-        data: data as Service,
-        message: "Xidmət uğurla yaradıldı" 
-      };
-    } catch (error) {
-      console.error("Error creating service:", error);
-      return {
-        error: error instanceof Error ? error.message : "Failed to create service",
-      };
-    }
-  }
-
-  async updateService(
-    id: string,
-    updates: Partial<Service>
-  ): Promise<ApiResponse<Service>> {
-    try {
-      const { data, error } = await supabase
-        .from("services")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      return { data: data as Service };
-    } catch (error) {
-      console.error("Error updating service:", error);
-      return { error: String(error) };
-    }
-  }
-
-  async deleteService(id: string): Promise<ApiResponse<boolean>> {
-    try {
-      const { error } = await supabase.from("services").delete().eq("id", id);
-
-      if (error) throw error;
-
-      return { data: true, message: "Xidmət uğurla silindi" };
-    } catch (error) {
-      console.error("Error deleting service:", error);
-      return { error: String(error) };
-    }
-  }
+  if (error) throw error;
+  return data || [];
 }
 
-export const serviceService = new ServiceService();
+/**
+ * Get services by category ID
+ */
+export async function getServicesByCategory(categoryId: number | string) {
+  // Convert string to number if needed
+  const numericId = typeof categoryId === 'string' 
+    ? parseInt(categoryId, 10) 
+    : categoryId;
+
+  const { data, error } = await supabase
+    .from('services')
+    .select('*')
+    .eq('category_id', numericId);
+
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Get service by ID
+ */
+export async function getServiceById(serviceId: number | string) {
+  // Convert string to number if needed
+  const numericId = typeof serviceId === 'string' 
+    ? parseInt(serviceId, 10) 
+    : serviceId;
+  
+  const { data, error } = await supabase
+    .from('services')
+    .select('*')
+    .eq('id', numericId)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Create a new service
+ */
+export async function createService(serviceData: ServiceFormData) {
+  // Convert category_id to number if it's a string
+  const categoryId = serviceData.category_id && typeof serviceData.category_id === 'string'
+    ? parseInt(serviceData.category_id, 10)
+    : serviceData.category_id;
+
+  const { data, error } = await supabase
+    .from('services')
+    .insert({
+      ...serviceData,
+      category_id: categoryId
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Update an existing service
+ */
+export async function updateService(id: number | string, serviceData: Partial<Service>) {
+  // Convert id to number if needed
+  const numericId = typeof id === 'string' 
+    ? parseInt(id, 10) 
+    : id;
+  
+  // Convert category_id to number if it's a string
+  const categoryId = serviceData.category_id && typeof serviceData.category_id === 'string'
+    ? parseInt(serviceData.category_id, 10)
+    : serviceData.category_id;
+
+  const { data, error } = await supabase
+    .from('services')
+    .update({
+      ...serviceData,
+      category_id: categoryId,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', numericId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Delete a service by ID
+ */
+export async function deleteService(id: number | string) {
+  // Convert id to number if needed
+  const numericId = typeof id === 'string' 
+    ? parseInt(id, 10) 
+    : id;
+  
+  const { error } = await supabase
+    .from('services')
+    .delete()
+    .eq('id', numericId);
+
+  if (error) throw error;
+  return true;
+}
+
+/**
+ * Get featured services (limited number of services for display)
+ */
+export async function getFeaturedServices(limit: number = 6) {
+  const { data, error } = await supabase
+    .from('services')
+    .select('*')
+    .limit(limit);
+
+  if (error) throw error;
+  return data || [];
+}

@@ -6,8 +6,8 @@ import { useOrder } from '@/context/OrderContext';
 const ServiceSelection = () => {
   const { services, isLoading, error } = useServices();
   // Fix the OrderContext usage
-  const { selectService, order } = useOrder();
-  const selectedService = order?.serviceId; // Access serviceId from the order object
+  const { selectService, orderState } = useOrder();
+  const selectedService = orderState?.selectedServices || []; // Access selectedServices from orderState
 
   const handleServiceSelect = (serviceId: number) => {
     selectService(serviceId);
@@ -22,7 +22,7 @@ const ServiceSelection = () => {
         <div 
           key={service.id}
           className={`p-4 border rounded-lg cursor-pointer ${
-            selectedService === service.id ? 'bg-primary text-primary-foreground' : 'bg-card'
+            selectedService.includes(service.id) ? 'bg-primary text-primary-foreground' : 'bg-card'
           }`}
           onClick={() => handleServiceSelect(service.id)}
         >

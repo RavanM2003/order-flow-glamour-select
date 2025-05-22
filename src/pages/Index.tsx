@@ -9,7 +9,8 @@ import FeaturedServices from '@/components/FeaturedServices';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import { useLanguage } from '@/context/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
-import * as api from '@/lib/api';
+import * as serviceService from '@/services/service.service';
+import * as productService from '@/services/product.service';
 
 const Index = () => {
   const { t } = useLanguage();
@@ -18,14 +19,14 @@ const Index = () => {
   // Pre-fetch services and products for faster navigation
   const { data: servicesData } = useQuery({
     queryKey: ['services'],
-    // Use the appropriate function from api instead of API.services.list
-    queryFn: () => import('@/services/service.service').then(module => module.listServices()),
+    // Fix the function call to use getServices
+    queryFn: () => import('@/services/service.service').then(module => module.getServices()),
   });
 
   const { data: productsData } = useQuery({
     queryKey: ['products'],
-    // Use the appropriate function from api instead of API.products.list
-    queryFn: () => import('@/services/product.service').then(module => module.listProducts()),
+    // Fix the function call to use getProducts
+    queryFn: () => import('@/services/product.service').then(module => module.getProducts()),
   });
 
   useEffect(() => {

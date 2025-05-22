@@ -1,18 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-
-// Define the appointment types using the actual database enum values
-export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
-
-interface AppointmentData {
-  appointment_date: string;
-  start_time: string;
-  end_time: string;
-  status: AppointmentStatus;
-  total?: number;
-  customer_user_id: string;
-  user_id?: string | null;
-}
+import { AppointmentFormData, AppointmentStatus } from '@/models/appointment.model';
 
 /**
  * Get all appointments
@@ -30,10 +18,13 @@ export async function getAppointments() {
  * Get appointment by ID
  */
 export async function getAppointmentById(id: number) {
+  // Ensure id is a number
+  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+  
   const { data, error } = await supabase
     .from('appointments')
     .select('*')
-    .eq('id', id)
+    .eq('id', numericId)
     .single();
 
   if (error) throw error;
@@ -43,13 +34,13 @@ export async function getAppointmentById(id: number) {
 /**
  * Create a new appointment
  */
-export async function createAppointment(appointmentData: AppointmentData) {
+export async function createAppointment(appointmentData: AppointmentFormData) {
   // Convert the appointment data to match the database schema
   const appointmentRecord = {
     appointment_date: appointmentData.appointment_date,
     start_time: appointmentData.start_time,
     end_time: appointmentData.end_time,
-    status: appointmentData.status, // This should be one of the allowed enum values
+    status: appointmentData.status,
     total: appointmentData.total,
     customer_user_id: appointmentData.customer_user_id,
     user_id: appointmentData.user_id
@@ -68,14 +59,23 @@ export async function createAppointment(appointmentData: AppointmentData) {
 /**
  * Update an existing appointment
  */
-export async function updateAppointment(id: number, appointmentData: Partial<AppointmentData>) {
+export async function updateAppointment(id: number, appointmentData: Partial<AppointmentFormData>) {
+  // Ensure id is a number
+  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+  
+  // Ensure status is one of the allowed values
+  if (appointmentData.status && 
+      !['scheduled', 'completed', 'cancelled'].includes(appointmentData.status)) {
+    throw new Error('Invalid appointment status');
+  }
+  
   const { data, error } = await supabase
     .from('appointments')
     .update({
       ...appointmentData,
       updated_at: new Date().toISOString()
     })
-    .eq('id', id)
+    .eq('id', numericId)
     .select()
     .single();
 
@@ -87,10 +87,13 @@ export async function updateAppointment(id: number, appointmentData: Partial<App
  * Delete an appointment by ID
  */
 export async function deleteAppointment(id: number) {
+  // Ensure id is a number
+  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+  
   const { error } = await supabase
     .from('appointments')
     .delete()
-    .eq('id', id);
+    .eq('id', numericId);
 
   if (error) throw error;
   return true;
@@ -100,14 +103,17 @@ export async function deleteAppointment(id: number) {
  * Cancel an appointment
  */
 export async function cancelAppointment(id: number, reason: string) {
+  // Ensure id is a number
+  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+  
   const { data, error } = await supabase
     .from('appointments')
     .update({
-      status: 'cancelled',
+      status: 'cancelled' as AppointmentStatus,
       cancel_reason: reason,
       updated_at: new Date().toISOString()
     })
-    .eq('id', id)
+    .eq('id', numericId)
     .select()
     .single();
 
@@ -119,13 +125,16 @@ export async function cancelAppointment(id: number, reason: string) {
  * Mark appointment as completed
  */
 export async function completeAppointment(id: number) {
+  // Ensure id is a number
+  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+  
   const { data, error } = await supabase
     .from('appointments')
     .update({
-      status: 'completed',
+      status: 'completed' as AppointmentStatus,
       updated_at: new Date().toISOString()
     })
-    .eq('id', id)
+    .eq('id', numericId)
     .select()
     .single();
 

@@ -31,3 +31,25 @@ export interface User {
   lastLogin?: string;
   isActive?: boolean;
 }
+
+// Add missing types
+export interface UserCredentials {
+  email: string;
+  password: string;
+}
+
+export interface AuthResponse {
+  user: User | null;
+  session: any;
+  error: string | null;
+}
+
+export interface CustomerWithUserFormData {
+  name: string;
+  email: string;
+  phone: string;
+  gender?: string;
+  birth_date?: string;
+  note?: string;
+  password?: string;
+}
