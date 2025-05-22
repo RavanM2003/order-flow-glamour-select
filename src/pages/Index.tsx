@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import FeaturedServices from '@/components/FeaturedServices';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import { useLanguage } from '@/context/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
-import { API } from '@/lib/api';
+import * as api from '@/lib/api';
 
 const Index = () => {
   const { t } = useLanguage();
@@ -19,12 +18,14 @@ const Index = () => {
   // Pre-fetch services and products for faster navigation
   const { data: servicesData } = useQuery({
     queryKey: ['services'],
-    queryFn: API.services.list,
+    // Use the appropriate function from api instead of API.services.list
+    queryFn: () => import('@/services/service.service').then(module => module.listServices()),
   });
 
   const { data: productsData } = useQuery({
     queryKey: ['products'],
-    queryFn: API.products.list,
+    // Use the appropriate function from api instead of API.products.list
+    queryFn: () => import('@/services/product.service').then(module => module.listProducts()),
   });
 
   useEffect(() => {

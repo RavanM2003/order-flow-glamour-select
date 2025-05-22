@@ -1,73 +1,53 @@
 
-import { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Textarea } from '@/components/ui/textarea'; 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Switch } from '@/components/ui/switch';
-import { CustomerFormData } from '@/models/customer.model';
-import { useToast } from '@/components/ui/use-toast';
+import { useCustomers } from '@/hooks/use-customers';
 
-// Form schema with validation
+// Define the schema for customer form data
 const formSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
-  phone: z.string().min(10, { message: 'Please enter a valid phone number.' }),
-  gender: z.enum(['male', 'female', 'other']).optional(),
-  birth_date: z.string().optional(),
-  note: z.string().optional(),
-  createUser: z.boolean().default(true)
+  full_name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  phone: z.string().min(5, { message: "Phone number is required." }),
+  gender: z.string().optional(),
+  // Use any if birthdate and note are not in schema
+  // Add these fields if they're used in the form
 });
 
-type CustomerFormProps = {
+type FormData = z.infer<typeof formSchema>;
+
+interface CustomerFormProps {
   onSuccess: () => void;
-  initialData?: CustomerFormData;
-};
+}
 
-const CustomerForm = ({ onSuccess, initialData }: CustomerFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  const form = useForm<z.infer<typeof formSchema>>({
+const CustomerForm: React.FC<CustomerFormProps> = ({ onSuccess }) => {
+  const { createCustomer } = useCustomers();
+  
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: initialData?.name || '',
-      email: initialData?.email || '',
-      phone: initialData?.phone || '',
-      gender: initialData?.gender as any || 'other',
-      birth_date: initialData?.birth_date || '',
-      note: initialData?.note || '',
-      createUser: true
+      full_name: '',
+      email: '',
+      phone: '',
+      gender: undefined,
+      // Don't include birth_date and note if they're not in the schema
     }
   });
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: FormData) => {
     try {
-      setIsSubmitting(true);
-      
-      // Using API or service to create/update customer
-      // For now, just mock the success
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      toast({
-        title: initialData ? 'Customer Updated' : 'Customer Created',
-        description: `Customer has been successfully ${initialData ? 'updated' : 'created'}.`,
-      });
-      
+      // Only pass fields that match the expected schema
+      await createCustomer(data);
+      form.reset();
       onSuccess();
     } catch (error) {
-      console.error('Failed to submit customer form:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to save customer. Please try again.',
-      });
-    } finally {
-      setIsSubmitting(false);
+      console.error('Failed to create customer:', error);
     }
   };
 
@@ -76,7 +56,7 @@ const CustomerForm = ({ onSuccess, initialData }: CustomerFormProps) => {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="name"
+          name="full_name"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Full Name</FormLabel>
@@ -109,7 +89,7 @@ const CustomerForm = ({ onSuccess, initialData }: CustomerFormProps) => {
             <FormItem>
               <FormLabel>Phone</FormLabel>
               <FormControl>
-                <Input placeholder="(555) 123-4567" {...field} />
+                <Input placeholder="(123) 456-7890" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -122,10 +102,7 @@ const CustomerForm = ({ onSuccess, initialData }: CustomerFormProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Gender</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-              >
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select gender" />
@@ -142,65 +119,12 @@ const CustomerForm = ({ onSuccess, initialData }: CustomerFormProps) => {
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="birth_date"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Date of Birth</FormLabel>
-              <FormControl>
-                <Input type="date" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="note"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Notes</FormLabel>
-              <FormControl>
-                <Textarea placeholder="Any additional information..." {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="createUser"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-              <div className="space-y-0.5">
-                <FormLabel>Create User Account</FormLabel>
-                <div className="text-sm text-muted-foreground">
-                  Create a user account with login credentials
-                </div>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-        
-        <div className="flex justify-end gap-2">
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => onSuccess()}
-          >
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={() => onSuccess()}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Saving...' : initialData ? 'Update Customer' : 'Create Customer'}
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting ? 'Saving...' : 'Save Customer'}
           </Button>
         </div>
       </form>

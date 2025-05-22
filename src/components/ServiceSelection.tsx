@@ -5,7 +5,9 @@ import { useOrder } from '@/context/OrderContext';
 
 const ServiceSelection = () => {
   const { services, isLoading, error } = useServices();
-  const { selectedService, selectService } = useOrder();
+  // Fix the OrderContext usage
+  const { selectService, order } = useOrder();
+  const selectedService = order?.serviceId; // Access serviceId from the order object
 
   const handleServiceSelect = (serviceId: number) => {
     selectService(serviceId);

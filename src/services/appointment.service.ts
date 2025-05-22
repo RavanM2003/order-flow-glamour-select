@@ -1,229 +1,160 @@
 
-import {
-  Appointment,
-  AppointmentCreate,
-  AppointmentUpdate,
-  AppointmentStatus,
-  DatabaseAppointment,
-} from "@/models/appointment.model";
-import { ApiService } from "./api.service";
-import { ApiResponse } from "@/models/types";
-import { config } from "@/config/env";
-import { supabase } from "@/integrations/supabase/client";
-import { withUserId } from "@/utils/withUserId";
+import { supabase } from '@/integrations/supabase/client';
 
-// Convert database appointment to application appointment
-const convertToAppointment = (
-  dbAppointment: DatabaseAppointment
-): Appointment => ({
-  ...dbAppointment,
-  id: dbAppointment.id.toString(),
-});
+// Define the appointment types using the actual database enum values
+export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
 
-// Convert application appointment to database appointment
-const convertToDatabaseAppointment = (
-  appointment: Appointment
-): DatabaseAppointment => ({
-  ...appointment,
-  id: parseInt(appointment.id),
-});
-
-export class AppointmentService extends ApiService {
-  constructor() {
-    super();
-  }
-
-  async getAppointments(
-    config: { usesMockData?: boolean } = {}
-  ): Promise<ApiResponse<Appointment[]>> {
-    if (config.usesMockData) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return { data: [] }; // Return empty array instead of mock data to use real data
-    }
-
-    try {
-      const { data, error } = await supabase.from("appointments").select("*");
-
-      if (error) throw error;
-      return { data: data.map(convertToAppointment) };
-    } catch (error) {
-      console.error("Error fetching appointments:", error);
-      return { 
-        error: error instanceof Error ? error.message : "Failed to fetch appointments"
-      };
-    }
-  }
-
-  async getAppointmentById(
-    id: string,
-    config: { usesMockData?: boolean } = {}
-  ): Promise<ApiResponse<Appointment>> {
-    try {
-      const { data, error } = await supabase
-        .from("appointments")
-        .select("*")
-        .eq("id", parseInt(id))
-        .single();
-
-      if (error) throw error;
-      return { data: convertToAppointment(data) };
-    } catch (error) {
-      console.error("Error fetching appointment:", error);
-      return { 
-        error: error instanceof Error ? error.message : "Failed to fetch appointment"
-      };
-    }
-  }
-
-  async createAppointment(
-    appointment: AppointmentCreate
-  ): Promise<ApiResponse<Appointment>> {
-    try {
-      // Fix: Make sure we're inserting a single object, not an array
-      const { data, error } = await supabase
-        .from("appointments")
-        .insert({
-          ...appointment,
-          status: appointment.status || "scheduled",
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return { data: convertToAppointment(data) };
-    } catch (error) {
-      console.error("Error creating appointment:", error);
-      return { 
-        error: error instanceof Error ? error.message : "Failed to create appointment"
-      };
-    }
-  }
-
-  async updateAppointment(
-    id: string,
-    appointment: AppointmentUpdate
-  ): Promise<ApiResponse<Appointment>> {
-    try {
-      // Convert the AppointmentStatus if needed for database enum compatibility
-      const statusValue = appointment.status && 
-        ["scheduled", "completed", "cancelled", "confirmed", "pending", "rejected"].includes(appointment.status) 
-        ? appointment.status 
-        : undefined;
-      
-      const { data, error } = await supabase
-        .from("appointments")
-        .update({
-          ...appointment,
-          status: statusValue,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", parseInt(id))
-        .select()
-        .single();
-
-      if (error) throw error;
-      return { data: convertToAppointment(data) };
-    } catch (error) {
-      console.error("Error updating appointment:", error);
-      return { 
-        error: error instanceof Error ? error.message : "Failed to update appointment"
-      };
-    }
-  }
-
-  async deleteAppointment(
-    id: string
-  ): Promise<ApiResponse<void>> {
-    try {
-      const { error } = await supabase
-        .from("appointments")
-        .delete()
-        .eq("id", parseInt(id));
-
-      if (error) throw error;
-      return { data: undefined };
-    } catch (error) {
-      console.error("Error deleting appointment:", error);
-      return { 
-        error: error instanceof Error ? error.message : "Failed to delete appointment"
-      };
-    }
-  }
-
-  async confirmAppointment(
-    id: string
-  ): Promise<ApiResponse<Appointment>> {
-    return this.updateAppointment(id, { status: "scheduled" });
-  }
-
-  async rejectAppointment(
-    id: string,
-    reason: string
-  ): Promise<ApiResponse<Appointment>> {
-    return this.updateAppointment(
-      id,
-      {
-        status: "cancelled",
-        cancel_reason: reason,
-      }
-    );
-  }
-
-  async completeAppointment(
-    id: string
-  ): Promise<ApiResponse<Appointment>> {
-    return this.updateAppointment(id, { status: "completed" });
-  }
-
-  // Add missing methods for compatibility with hooks
-  async getAll(): Promise<ApiResponse<Appointment[]>> {
-    return this.getAppointments({ usesMockData: false });
-  }
-
-  async getByCustomerId(
-    customerId: string
-  ): Promise<ApiResponse<Appointment[]>> {
-    try {
-      const { data, error } = await supabase
-        .from("appointments")
-        .select("*")
-        .eq("customer_user_id", customerId);
-
-      if (error) throw error;
-      return { data: data.map(convertToAppointment) };
-    } catch (error) {
-      console.error("Error fetching customer appointments:", error);
-      return {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch customer appointments",
-      };
-    }
-  }
-
-  async create(
-    appointmentData: AppointmentCreate
-  ): Promise<ApiResponse<Appointment>> {
-    return this.createAppointment(appointmentData);
-  }
-
-  async update(
-    id: string,
-    appointmentData: AppointmentUpdate
-  ): Promise<ApiResponse<Appointment>> {
-    return this.updateAppointment(id, appointmentData);
-  }
-
-  async markAsPaid(
-    id: string
-  ): Promise<ApiResponse<Appointment>> {
-    // Here you would implement the logic to mark the appointment as paid
-    // For now, we just return the appointment updated with a note
-    return this.updateAppointment(id, { 
-      notes: "Payment received" 
-    });
-  }
+interface AppointmentData {
+  appointment_date: string;
+  start_time: string;
+  end_time: string;
+  status: AppointmentStatus;
+  total?: number;
+  customer_user_id: string;
+  user_id?: string | null;
 }
 
-export const appointmentService = new AppointmentService();
+/**
+ * Get all appointments
+ */
+export async function getAppointments() {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('*');
+
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Get appointment by ID
+ */
+export async function getAppointmentById(id: number) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Create a new appointment
+ */
+export async function createAppointment(appointmentData: AppointmentData) {
+  // Convert the appointment data to match the database schema
+  const appointmentRecord = {
+    appointment_date: appointmentData.appointment_date,
+    start_time: appointmentData.start_time,
+    end_time: appointmentData.end_time,
+    status: appointmentData.status, // This should be one of the allowed enum values
+    total: appointmentData.total,
+    customer_user_id: appointmentData.customer_user_id,
+    user_id: appointmentData.user_id
+  };
+
+  const { data, error } = await supabase
+    .from('appointments')
+    .insert(appointmentRecord)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Update an existing appointment
+ */
+export async function updateAppointment(id: number, appointmentData: Partial<AppointmentData>) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .update({
+      ...appointmentData,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Delete an appointment by ID
+ */
+export async function deleteAppointment(id: number) {
+  const { error } = await supabase
+    .from('appointments')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+  return true;
+}
+
+/**
+ * Cancel an appointment
+ */
+export async function cancelAppointment(id: number, reason: string) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .update({
+      status: 'cancelled',
+      cancel_reason: reason,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Mark appointment as completed
+ */
+export async function completeAppointment(id: number) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .update({
+      status: 'completed',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Get appointments for a specific customer
+ */
+export async function getCustomerAppointments(customerId: string) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('*')
+    .eq('customer_user_id', customerId);
+
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Get appointments for a specific staff member
+ */
+export async function getStaffAppointments(staffId: string) {
+  const { data, error } = await supabase
+    .from('appointments')
+    .select('*')
+    .eq('user_id', staffId);
+
+  if (error) throw error;
+  return data || [];
+}
