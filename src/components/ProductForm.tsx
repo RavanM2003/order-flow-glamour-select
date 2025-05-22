@@ -26,6 +26,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     name: initialData?.name || "",
     price: initialData?.price || 0,
     description: initialData?.description || "",
+    stock: initialData?.stock || 0,
     stock_quantity: initialData?.stock_quantity || 0,
     category: initialData?.category || "",
     image_url: initialData?.image_url || "",
@@ -46,6 +47,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         name: initialData.name || "",
         price: initialData.price || 0,
         description: initialData.description || "",
+        stock: initialData.stock || 0,
         stock_quantity: initialData.stock_quantity || 0,
         category: initialData.category || "",
         image_url: initialData.image_url || "",
@@ -123,7 +125,12 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Make sure stock is synchronized with stock_quantity
+    const submissionData: ProductFormData = {
+      ...formData,
+      stock: formData.stock_quantity || formData.stock
+    };
+    onSubmit(submissionData);
   };
 
   return (

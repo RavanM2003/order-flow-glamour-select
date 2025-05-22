@@ -33,11 +33,12 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
     } else if (staffId) {
       // Create default hours if none exists
       const defaultHours: StaffWorkingHours[] = dayNames.map((_, index) => ({
-        staff_id: Number(staffId),
+        staff_id: staffId,
         day_of_week: index,
         start_time: "09:00",
         end_time: "17:00",
         is_day_off: index === 0, // Sunday off by default
+        is_available: index !== 0 // Sunday not available
       }));
       setLocalHours(defaultHours);
     }

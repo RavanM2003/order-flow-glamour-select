@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { useOrderContext } from '@/context/OrderContext';
+import { useOrder } from '@/context/OrderContext';
 import { Service as ServiceType } from '@/models/service.model';
 import { Staff } from '@/models/staff.model';
 import { useQuery } from '@tanstack/react-query';
@@ -18,7 +17,7 @@ const ServiceSelection = () => {
     unselectService,
     setStaff,
     nextStep
-  } = useOrderContext();
+  } = useOrder();
 
   const [services, setServices] = useState<ServiceType[]>([]);
   const [staffMembers, setStaffMembers] = useState<Staff[]>([]);

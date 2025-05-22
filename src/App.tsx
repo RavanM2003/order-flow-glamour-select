@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,7 +22,7 @@ import ProductDetail from "./pages/ProductDetail";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import CustomerDetailPage from './pages/CustomerDetailPage';
-import { UserRole } from "./models/user.model";
+import { UserRole } from "./models/user.model"; // Fixed import
 import { UserProvider } from './context/UserContext';
 
 const queryClient = new QueryClient({

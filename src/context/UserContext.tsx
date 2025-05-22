@@ -1,7 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { User } from '@/models/user.model';
+import { User, UserRole } from '@/models/user.model';
 import { toast } from '@/components/ui/use-toast';
 
 interface UserContextProps {
@@ -116,7 +116,9 @@ export const UserProvider = ({ children }: UserProviderProps) => {
           firstName: data.first_name,
           lastName: data.last_name,
           isActive: true,
-          lastLogin: data.updated_at
+          lastLogin: data.updated_at,
+          // Ensure role is properly typed
+          role: data.role as UserRole
         };
         return userProfile;
       }
@@ -256,10 +258,11 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       if (error) throw error;
       
       if (data) {
-        // Update the local user state
+        // Update the local user state ensuring proper typing
         setUser({
           ...user,
-          ...data
+          ...data,
+          role: data.role as UserRole
         });
         
         toast({

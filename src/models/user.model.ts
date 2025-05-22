@@ -1,4 +1,15 @@
 
+export type UserRole = 
+  | 'super_admin' 
+  | 'admin' 
+  | 'staff' 
+  | 'customer' 
+  | 'cash' 
+  | 'appointment' 
+  | 'service' 
+  | 'product' 
+  | 'reception';
+
 export interface User {
   id: string;
   email: string;
@@ -10,7 +21,7 @@ export interface User {
   created_at?: string;
   updated_at?: string;
   gender?: 'male' | 'female' | 'other';
-  role?: 'admin' | 'customer' | 'staff';
+  role?: UserRole;
   phone?: string;
   note?: string;
 

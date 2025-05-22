@@ -25,6 +25,10 @@ export interface StaffPayment {
   payment_date: string;
   created_at: string;
   updated_at: string;
+  type?: string;
+  date?: string;
+  note?: string;
+  description?: string;
 }
 
 export interface StaffServiceRecord {
@@ -34,17 +38,24 @@ export interface StaffServiceRecord {
   commission_rate: number;
   created_at: string;
   updated_at: string;
+  date?: string;
+  customer_name?: string;
+  service_name?: string;
+  price?: number;
+  amount?: number;
+  commission?: number;
 }
 
 export interface StaffWorkingHours {
-  id: string;
-  staff_id: string;
+  id?: string;
+  staff_id: string | number;
   day_of_week: number;
   start_time: string;
   end_time: string;
-  is_available: boolean;
-  created_at: string;
-  updated_at: string;
+  is_available?: boolean;
+  is_day_off?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface StaffFormData {

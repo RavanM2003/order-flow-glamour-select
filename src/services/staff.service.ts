@@ -30,12 +30,15 @@ export class StaffService extends ApiService {
     return this.getAll();
   }
 
-  async getStaffMemberById(id: string): Promise<ApiResponse<Staff>> {
+  async getStaffMemberById(id: string | number): Promise<ApiResponse<Staff>> {
+    // Convert to string if it's a number
+    const staffId = typeof id === 'number' ? id.toString() : id;
+    
     try {
       const { data, error } = await supabase
         .from("staff")
         .select("*")
-        .eq("id", id)
+        .eq("id", staffId)
         .single();
 
       if (error) throw error;
