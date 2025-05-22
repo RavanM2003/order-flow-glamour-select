@@ -1,10 +1,10 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 import { config } from '@/config/env';
 import { UserRole } from '@/models/user.model';
 import { ROLE_PERMISSIONS } from '@/models/role.model';
+import { useUser } from '@/context/UserContext';
 
 // Interface for our session state
 interface UserSession {
@@ -49,6 +49,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     profile: null,
     isAuthenticated: false
   });
+  
+  // Get access to our user context
+  const { setCurrentUser } = useUser();
 
   // Check for existing session in localStorage
   useEffect(() => {
@@ -70,6 +73,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             },
             isAuthenticated: true
           });
+          
+          // Set the current user in our user context
+          setCurrentUser(user);
         } else {
           // Clear expired data
           localStorage.removeItem('auth_user');
@@ -81,7 +87,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
     
     setIsLoading(false);
-  }, []);
+  }, [setCurrentUser]);
 
   // Login function using public.users table
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -124,11 +130,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // Handle staffData properly - check for existence and proper structure
-      let staffId: number | null = null;
+      let staffId: string | null = null;
       if (userData.staff && typeof userData.staff === 'object') {
         // Type guard to ensure staff has an id property
         if ('id' in userData.staff) {
-          staffId = (userData.staff as any).id;
+          staffId = (userData.staff as any).id.toString();
         }
       }
       
@@ -141,7 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: (userData.role || 'customer') as UserRole,
         staffId: staffId,
         profileImage: userData.avatar_url,
-        roleId: staffId // Using staff ID as role ID
+        roleId: staffId ? parseInt(staffId) : null // Using staff ID as role ID
       };
       
       // Create a mock token and expiry (24 hours)
@@ -164,6 +170,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
         isAuthenticated: true
       });
+      
+      // Update user context
+      setCurrentUser(user);
       
       toast({
         title: "Giriş uğurlu",
@@ -248,6 +257,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         profile: null,
         isAuthenticated: false
       });
+      
+      // Clear current user in user context
+      setCurrentUser(null);
       
       toast({
         title: "Çıxış edildi",

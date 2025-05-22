@@ -158,11 +158,11 @@ export class AuthService extends ApiService {
       }
 
       // Handle staffData properly - check for existence and proper structure
-      let staffId: number | null = null;
+      let staffId: string | null = null;
       if (userData.staff && typeof userData.staff === "object") {
         // Type guard to ensure staff has an id property
         if ("id" in userData.staff) {
-          staffId = (userData.staff as StaffWithId).id;
+          staffId = (userData.staff as StaffWithId).id.toString();
         }
       }
 
@@ -177,7 +177,7 @@ export class AuthService extends ApiService {
         profileImage: userData.avatar_url,
         lastLogin: new Date().toISOString(),
         isActive: true,
-        roleId: staffId, // Using staff ID as role ID
+        roleId: staffId ? parseInt(staffId) : null, // Using staff ID as role ID
       };
 
       // Create a mock token and expiry (24 hours)
