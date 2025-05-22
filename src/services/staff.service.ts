@@ -30,7 +30,8 @@ export const staffService = {
     return {
       data: {
         id: '123',
-        name: data.name || ''
+        name: data.name || '',
+        phone: data.phone || ''
       }
     };
   },
@@ -40,7 +41,8 @@ export const staffService = {
     return {
       data: {
         id: typeof id === 'string' ? id : id.toString(),
-        name: data.name || ''
+        name: data.name || '',
+        phone: data.phone || ''
       }
     };
   },
@@ -50,6 +52,7 @@ export const staffService = {
     return { data: true };
   },
   
+  // These are the methods being used in the hooks
   getStaffMembers: async (): Promise<ApiResponse<Staff[]>> => {
     return staffService.getAll();
   },

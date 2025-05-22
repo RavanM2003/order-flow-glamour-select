@@ -25,6 +25,7 @@ const StaffWorkingHoursEditor: React.FC<StaffWorkingHoursEditorProps> = ({ staff
     if (staffId) {
       // Create default hours since we don't have the fetchWorkingHours function yet
       const defaultHours: StaffWorkingHours[] = dayNames.map((_, index) => ({
+        id: `wh-${staffId}-${index}`, // Add id property
         staff_id: staffId,
         day_of_week: index,
         start_time: "09:00",

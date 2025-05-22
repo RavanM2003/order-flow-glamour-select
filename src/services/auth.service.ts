@@ -1,9 +1,6 @@
 import { AuthResponse, CustomerWithUserFormData, User, UserCredentials } from "@/models/user.model";
 import { v4 as uuidv4 } from 'uuid';
 import { supabase } from "@/integrations/supabase/client";
-import { staffService } from "./staff.service";
-
-const uuid = uuidv4();
 
 export const authService = {
   login: async (credentials: UserCredentials): Promise<AuthResponse> => {
@@ -15,11 +12,18 @@ export const authService = {
         return { user: null, session: null, error: error.message };
       }
       
-      const { user, session } = data;
+      const { user: supabaseUser, session } = data;
       
-      if (!user || !session) {
+      if (!supabaseUser || !session) {
         return { user: null, session: null, error: 'Failed to retrieve user session after login.' };
       }
+      
+      // Convert Supabase user to our User type
+      const user: User = {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        // ... other properties as needed
+      };
       
       const token = session.access_token;
       const expiresAt = session.expires_at;
@@ -62,11 +66,18 @@ export const authService = {
         return { user: null, session: null, error: error.message };
       }
   
-      const { user, session } = data;
+      const { user: supabaseUser, session } = data;
   
-      if (!user) {
+      if (!supabaseUser) {
         return { user: null, session: null, error: 'Failed to retrieve user after registration.' };
       }
+      
+      // Convert Supabase user to our User type
+      const user: User = {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        // ... other properties as needed
+      };
   
       return { user, session, error: null };
     } catch (err) {
@@ -91,7 +102,14 @@ export const authService = {
         return { user: null, session: null, error: 'No active session found.' };
       }
       
-      const user = session.user;
+      // Convert Supabase user to our User type
+      const supabaseUser = session.user;
+      const user: User = {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        // ... other properties as needed
+      };
+      
       const token = session.access_token;
       const expiresAt = session.expires_at;
       
@@ -118,11 +136,18 @@ export const authService = {
         return { user: null, session: null, error: error.message };
       }
       
-      const { user } = data;
+      const supabaseUser = data.user;
       
-      if (!user) {
+      if (!supabaseUser) {
         return { user: null, session: null, error: 'Failed to retrieve updated user.' };
       }
+      
+      // Convert Supabase user to our User type
+      const user: User = {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        // ... other properties as needed
+      };
       
       return { user, session: null, error: null };
     } catch (err) {
@@ -188,15 +213,15 @@ export const authService = {
         return { user: null, session: null, error: authError.message };
       }
   
-      const { user: authUser, session } = authData;
-      if (!authUser) {
+      const { user: supabaseUser, session } = authData;
+      if (!supabaseUser) {
         return { user: null, session: null, error: 'Failed to retrieve user after registration.' };
       }
   
       // Create user in public.users table
       const staffId = uuidv4();
-      const user = {
-        id: uuid,
+      const userData = {
+        id: uuidv4(),
         email: data.email,
         first_name: data.firstName || '',
         last_name: data.lastName || '',
@@ -210,22 +235,43 @@ export const authService = {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
-  
-      const { error: userError } = await supabase
-        .from('users')
-        .insert([user]);
-  
-      if (userError) {
-        console.error('Error creating user details:', userError);
-        return { user: null, session: null, error: userError.message };
+      
+      try {
+        const { error: userError } = await supabase
+          .from('users')
+          .insert([userData]);
+    
+        if (userError) {
+          console.error('Error creating user details:', userError);
+          return { user: null, session: null, error: userError.message };
+        }
+      } catch (err) {
+        console.error('Database error:', err);
+        return { user: null, session: null, error: 'Database error occurred' };
       }
   
+      const user: User = {
+        id: userData.id,
+        email: userData.email,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+        full_name: userData.full_name,
+        gender: userData.gender as 'male' | 'female' | 'other',
+        birth_date: userData.birth_date,
+        phone: userData.phone,
+        note: userData.note,
+        role: 'customer',
+        staffId: staffId.toString(),
+        created_at: userData.created_at,
+        updated_at: userData.updated_at
+      };
+      
       return {
-        user: user as User,
+        user,
+        session,
+        error: null,
         token: session?.access_token || '',
-        expiresAt: session?.expires_at || 0,
-        session: null,
-        error: null
+        expiresAt: session?.expires_at || 0
       };
     } catch (err) {
       console.error('Failed to create customer with user:', err);
@@ -234,7 +280,7 @@ export const authService = {
     }
   },
 
-  createUser: async (email: string, role: string, staffId?: string, roleId?: number): Promise<AuthResponse> => {
+  createUser: async (email: string, role: string, staffId?: string, roleId?: string): Promise<AuthResponse> => {
     try {
       // Create user in public.users table
       const uuid = uuidv4();
@@ -259,10 +305,10 @@ export const authService = {
 
       return {
         user: user as User,
-        token: '',
-        expiresAt: 0,
         session: null,
-        error: null
+        error: null,
+        token: '',
+        expiresAt: 0
       };
     } catch (err) {
       console.error('Failed to create user:', err);

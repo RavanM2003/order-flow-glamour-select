@@ -1,5 +1,4 @@
-
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from './use-toast';
 import { config } from '@/config/env';
@@ -307,6 +306,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     return false;
   };
+
+  const updateUser = useCallback(async (userData: Partial<User>) => {
+    if (userData.roleId) {
+      userData.roleId = String(userData.roleId);
+    }
+    setUser(userData);
+  }, []);
+
+  const setCurrentUser = useCallback((userData: User | null) => {
+    if (userData) {
+      // Ensure roleId is a string
+      const updatedUserData = {
+        ...userData,
+        roleId: userData.roleId ? String(userData.roleId) : undefined
+      };
+      setUser(updatedUserData);
+    } else {
+      setUser(null);
+    }
+  }, []);
 
   return (
     <AuthContext.Provider value={{ 

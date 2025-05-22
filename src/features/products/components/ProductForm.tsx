@@ -42,7 +42,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
   onCancel
 }) => {
   const isEditMode = !!product;
-  const { createProduct, updateProduct, isCreating, isUpdating } = useProductActions();
+  const { createProduct, updateProduct, loading, isCreating, isUpdating } = useProductActions();
   
   // Initialize form with schema validation
   const form = useForm<ProductFormData>({
@@ -203,7 +203,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </Button>
             <Button
               type="submit"
-              disabled={productActions.loading}
+              disabled={loading}
             >
               {isEditMode ? 'Update' : 'Create'}
             </Button>

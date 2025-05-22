@@ -5,21 +5,23 @@ import { ApiResponse } from './staff.service';
 
 export const serviceService = {
   // Basic CRUD methods
-  getAll: async (): Promise<Service[]> => {
+  getAll: async (): Promise<ApiResponse<Service[]>> => {
     try {
       const { data, error } = await supabase
         .from('services')
         .select('*');
         
-      if (error) throw new Error(error.message);
-      return data || [];
+      if (error) {
+        return { error: error.message };
+      }
+      return { data: data || [] };
     } catch (error) {
       console.error('Error fetching services:', error);
-      return [];
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   },
   
-  getById: async (id: string | number): Promise<Service | null> => {
+  getById: async (id: string | number): Promise<ApiResponse<Service>> => {
     try {
       const { data, error } = await supabase
         .from('services')
@@ -27,15 +29,17 @@ export const serviceService = {
         .eq('id', id)
         .single();
         
-      if (error) throw new Error(error.message);
-      return data;
+      if (error) {
+        return { error: error.message };
+      }
+      return { data };
     } catch (error) {
       console.error(`Error fetching service ${id}:`, error);
-      return null;
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   },
   
-  create: async (serviceData: ServiceFormData): Promise<Service | null> => {
+  create: async (serviceData: ServiceFormData): Promise<ApiResponse<Service>> => {
     try {
       const { data, error } = await supabase
         .from('services')
@@ -43,15 +47,17 @@ export const serviceService = {
         .select()
         .single();
         
-      if (error) throw new Error(error.message);
-      return data;
+      if (error) {
+        return { error: error.message };
+      }
+      return { data };
     } catch (error) {
       console.error('Error creating service:', error);
-      return null;
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   },
   
-  update: async (id: string | number, serviceData: Partial<ServiceFormData>): Promise<Service | null> => {
+  update: async (id: string | number, serviceData: Partial<ServiceFormData>): Promise<ApiResponse<Service>> => {
     try {
       const { data, error } = await supabase
         .from('services')
@@ -60,88 +66,55 @@ export const serviceService = {
         .select()
         .single();
         
-      if (error) throw new Error(error.message);
-      return data;
+      if (error) {
+        return { error: error.message };
+      }
+      return { data };
     } catch (error) {
       console.error(`Error updating service ${id}:`, error);
-      return null;
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   },
   
-  delete: async (id: string | number): Promise<boolean> => {
+  delete: async (id: string | number): Promise<ApiResponse<boolean>> => {
     try {
       const { error } = await supabase
         .from('services')
         .delete()
         .eq('id', id);
         
-      if (error) throw new Error(error.message);
-      return true;
+      if (error) {
+        return { error: error.message };
+      }
+      return { data: true };
     } catch (error) {
       console.error(`Error deleting service ${id}:`, error);
-      return false;
+      return { error: error instanceof Error ? error.message : 'Unknown error' };
     }
   },
   
-  // Additional methods used in the app
+  // Additional methods that match the API pattern
   getServices: async (): Promise<ApiResponse<Service[]>> => {
-    try {
-      const services = await serviceService.getAll();
-      return { data: services };
-    } catch (err) {
-      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
-    }
+    return serviceService.getAll();
   },
   
-  getServiceById: async (id: string): Promise<ApiResponse<Service>> => {
-    try {
-      const service = await serviceService.getById(id);
-      if (!service) {
-        return { error: 'Service not found' };
-      }
-      return { data: service };
-    } catch (err) {
-      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
-    }
+  getServiceById: async (id: string | number): Promise<ApiResponse<Service>> => {
+    return serviceService.getById(id);
   },
   
   createService: async (serviceData: ServiceFormData): Promise<ApiResponse<Service>> => {
-    try {
-      const service = await serviceService.create(serviceData);
-      if (!service) {
-        return { error: 'Failed to create service' };
-      }
-      return { data: service };
-    } catch (err) {
-      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
-    }
+    return serviceService.create(serviceData);
   },
   
-  updateService: async (id: string, serviceData: Partial<ServiceFormData>): Promise<ApiResponse<Service>> => {
-    try {
-      const service = await serviceService.update(id, serviceData);
-      if (!service) {
-        return { error: 'Failed to update service' };
-      }
-      return { data: service };
-    } catch (err) {
-      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
-    }
+  updateService: async (id: string | number, serviceData: Partial<ServiceFormData>): Promise<ApiResponse<Service>> => {
+    return serviceService.update(id, serviceData);
   },
   
-  deleteService: async (id: string): Promise<ApiResponse<boolean>> => {
-    try {
-      const success = await serviceService.delete(id);
-      if (!success) {
-        return { error: 'Failed to delete service' };
-      }
-      return { data: true };
-    } catch (err) {
-      return { error: err instanceof Error ? err.message : 'Unknown error occurred' };
-    }
+  deleteService: async (id: string | number): Promise<ApiResponse<boolean>> => {
+    return serviceService.delete(id);
   },
   
   listServices: async (): Promise<ApiResponse<Service[]>> => {
-    return serviceService.getServices();
+    return serviceService.getAll();
   }
 };

@@ -14,7 +14,7 @@ export interface Staff {
   paymentType?: "salary" | "commission" | "hybrid";
   salary?: number;
   commissionRate?: number;
-  role_id?: number;
+  role_id?: string;
 }
 
 export interface StaffFormData {

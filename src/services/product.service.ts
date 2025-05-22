@@ -88,7 +88,7 @@ export const productService = {
     }
   },
   
-  // Additional methods used in the app
+  // Additional methods - make sure they call the basic methods
   getProducts: async (): Promise<ApiResponse<Product[]>> => {
     return productService.getAll();
   },

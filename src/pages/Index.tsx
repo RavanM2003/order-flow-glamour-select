@@ -9,8 +9,8 @@ import FeaturedServices from '@/components/FeaturedServices';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import { useLanguage } from '@/context/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
-import * as serviceService from '@/services/service.service';
-import * as productService from '@/services/product.service';
+import { serviceService } from '@/services/service.service';
+import { productService } from '@/services/product.service';
 
 const Index = () => {
   const { t } = useLanguage();
@@ -25,14 +25,12 @@ const Index = () => {
   // Pre-fetch services and products for faster navigation
   const { data: servicesData } = useQuery({
     queryKey: ['services'],
-    // Fix the function call to use getServices
-    queryFn: () => import('@/services/service.service').then(module => module.getServices()),
+    queryFn: () => serviceService.getAll(),
   });
 
   const { data: productsData } = useQuery({
     queryKey: ['products'],
-    // Fix the function call to use getProducts
-    queryFn: () => import('@/services/product.service').then(module => module.getProducts()),
+    queryFn: () => productService.getAll(),
   });
 
   useEffect(() => {
@@ -47,7 +45,7 @@ const Index = () => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await serviceService.getServices();
+        const response = await serviceService.getAll();
         if (response.data) {
           setServices(response.data.slice(0, 4));
         }
@@ -58,7 +56,7 @@ const Index = () => {
 
     const fetchProducts = async () => {
       try {
-        const response = await productService.getProducts();
+        const response = await productService.getAll();
         if (response.data) {
           setProducts(response.data.slice(0, 4));
         }
