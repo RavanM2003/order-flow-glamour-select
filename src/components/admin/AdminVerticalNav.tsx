@@ -49,12 +49,12 @@ const tabToUrl: Record<string, string> = {
 };
 
 const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminVerticalNavProps) => {
-  const { session, logout } = useAuth();
+  const { user, session, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
   
   // Get user role from auth context and ensure it's a valid UserRole
-  const userRole = (session.user?.role || 'customer') as UserRole;
+  const userRole = (user?.role || 'customer') as UserRole;
   
   // Filter sidebar items based on user role
   const filteredItems = SIDEBAR_ITEMS.filter(item => 
@@ -104,8 +104,8 @@ const AdminVerticalNav = ({ activeTab, setActiveTab, notifications = 0 }: AdminV
           <div className="flex items-center">
             <div className="w-8 h-8 rounded-full bg-gray-200"></div>
             <div className="ml-3">
-              <p className="text-sm font-medium">{session.user?.firstName} {session.user?.lastName}</p>
-              <p className="text-xs text-gray-500">{session.user?.email}</p>
+              <p className="text-sm font-medium">{user?.first_name || ''} {user?.last_name || ''}</p>
+              <p className="text-xs text-gray-500">{user?.email || ''}</p>
             </div>
           </div>
           <div className="relative">

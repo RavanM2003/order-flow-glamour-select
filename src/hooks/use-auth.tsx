@@ -7,7 +7,7 @@ import { Session } from '@supabase/supabase-js';
 
 interface AuthContextProps {
   user: User | null;
-  session: Session | null; // Added session property
+  session: Session | null;
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
@@ -61,12 +61,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               setUser({
                 id: userData.user.id,
                 email: userData.user.email || '',
-                firstName: profileData.first_name || '',
-                lastName: profileData.last_name || '',
+                first_name: profileData.first_name || '',
+                last_name: profileData.last_name || '',
                 role: profileData.role as UserRole,
-                staffId: profileData.staff_id || '',
-                profileImage: profileData.avatar_url || '',
-                roleId: profileData.role_id?.toString() || ''
+                phone: profileData.phone || '',
+                note: profileData.note || '',
+                gender: profileData.gender,
+                birth_date: profileData.birth_date,
+                full_name: profileData.full_name,
+                avatar_url: profileData.avatar_url
               });
             } else {
               // Basic user data from auth
@@ -74,11 +77,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 id: userData.user.id,
                 email: userData.user.email || '',
                 role: 'customer' as UserRole,
-                firstName: '',
-                lastName: '',
-                staffId: '',
-                profileImage: '',
-                roleId: ''
+                first_name: '',
+                last_name: '',
+                phone: ''
               });
             }
           }
@@ -115,12 +116,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 setUser({
                   id: userData.user.id,
                   email: userData.user.email || '',
-                  firstName: profileData.first_name || '',
-                  lastName: profileData.last_name || '',
+                  first_name: profileData.first_name || '',
+                  last_name: profileData.last_name || '',
                   role: profileData.role as UserRole,
-                  staffId: profileData.staff_id || '',
-                  profileImage: profileData.avatar_url || '',
-                  roleId: profileData.role_id?.toString() || ''
+                  phone: profileData.phone || '',
+                  note: profileData.note || '',
+                  gender: profileData.gender,
+                  birth_date: profileData.birth_date,
+                  full_name: profileData.full_name,
+                  avatar_url: profileData.avatar_url
                 });
               }
             }
@@ -162,18 +166,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setUser({
             id: data.user.id,
             email: data.user.email || '',
-            firstName: profileData.first_name || '',
-            lastName: profileData.last_name || '',
+            first_name: profileData.first_name || '',
+            last_name: profileData.last_name || '',
             role: profileData.role as UserRole,
-            staffId: profileData.staff_id || '',
-            profileImage: profileData.avatar_url || '',
-            roleId: profileData.role_id?.toString() || ''
+            phone: profileData.phone || '',
+            note: profileData.note || '',
+            gender: profileData.gender,
+            birth_date: profileData.birth_date,
+            full_name: profileData.full_name,
+            avatar_url: profileData.avatar_url
           });
         }
       }
+
+      return;
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Failed to login");
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -184,9 +194,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await supabase.auth.signOut();
       setSession(null);
       setUser(null);
+      return;
     } catch (err) {
       console.error("Logout error:", err);
       setError(err instanceof Error ? err.message : "Failed to logout");
+      throw err;
     }
   };
 
@@ -200,8 +212,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         password,
         options: {
           data: {
-            first_name: userData?.firstName || '',
-            last_name: userData?.lastName || '',
+            first_name: userData?.first_name || '',
+            last_name: userData?.last_name || '',
           }
         }
       });
@@ -213,10 +225,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         const userProfile = {
           id: data.user.id,
           email,
-          first_name: userData?.firstName || '',
-          last_name: userData?.lastName || '',
+          first_name: userData?.first_name || '',
+          last_name: userData?.last_name || '',
           role: userData?.role || 'customer',
-          hashed_password: '', // Required field for users table
+          hashed_password: '',  // Required field for users table
           phone: userData?.phone || '' // Required field for users table
         };
         
@@ -224,9 +236,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         
         // Don't set user here as the onAuthStateChange will handle it
       }
+
+      return;
     } catch (err) {
       console.error("Registration error:", err);
       setError(err instanceof Error ? err.message : "Failed to register");
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -241,9 +256,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       // Map to database field names
       const dbUpdates: any = {
-        first_name: updates.firstName,
-        last_name: updates.lastName,
-        avatar_url: updates.profileImage,
+        first_name: updates.first_name,
+        last_name: updates.last_name,
+        avatar_url: updates.avatar_url,
         // Add other fields as needed
       };
       
@@ -262,18 +277,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       if (error) throw error;
       
       // Fix the partial user update
-      setUser(prevUser => {
-        if (!prevUser) return null;
-        return {
-          ...prevUser,
+      if (user) {
+        setUser({
+          ...user,
           ...updates
-        };
-      });
+        });
+      }
       
       toast({
         title: "Profile updated",
         description: "Your profile has been successfully updated."
       });
+
+      return;
     } catch (err) {
       console.error("Profile update error:", err);
       setError(err instanceof Error ? err.message : "Failed to update profile");
@@ -283,6 +299,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         title: "Update failed",
         description: err instanceof Error ? err.message : "Failed to update profile"
       });
+      throw err;
     } finally {
       setIsLoading(false);
     }
@@ -301,3 +318,5 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export { AuthProvider };

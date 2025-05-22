@@ -24,25 +24,17 @@ export interface User {
   role?: UserRole;
   phone?: string;
   note?: string;
-  staffId?: string;
-  token?: string;
-  profileImage?: string;
-  firstName?: string;
-  lastName?: string;
-  lastLogin?: string;
-  isActive?: boolean;
-  roleId?: string;
 }
 
 export interface UserFormData {
   email: string;
   password?: string;
-  firstName?: string;
-  lastName?: string;
+  first_name?: string;
+  last_name?: string;
   role?: UserRole;
   phone?: string;
   gender?: 'male' | 'female' | 'other';
-  birthDate?: string;
+  birth_date?: string;
 }
 
 export interface UserCredentials {
@@ -66,6 +58,6 @@ export interface CustomerWithUserFormData {
   birth_date?: string;
   note?: string;
   password?: string;
-  firstName?: string;
-  lastName?: string;
+  first_name?: string;
+  last_name?: string;
 }

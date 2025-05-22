@@ -1,76 +1,52 @@
 
 import { useState, useCallback } from 'react';
-import { Appointment, AppointmentStatus, AppointmentFormData } from '@/models/appointment.model';
-import { supabase } from '@/integrations/supabase/client';
+import { Appointment, AppointmentFormData, AppointmentStatus } from '@/models/appointment.model';
+import * as appointmentService from '@/services/appointment.service';
 import { toast } from '@/components/ui/use-toast';
 
 export const useAppointments = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fix the toISOString issue in the appointment hook
-  const formatAppointmentDate = (date: Date | string | null): string => {
-    if (!date) return '';
-    
-    if (typeof date === 'string') {
-      return date;
-    }
-    
-    if (date instanceof Date) {
-      return date.toISOString().split('T')[0];
-    }
-    
-    return '';
-  };
-
-  const createAppointment = useCallback(async (appointmentData: {
-    appointment_date: Date | string;
-    start_time: string;
-    end_time: string;
-    status?: AppointmentStatus;
-    total?: number;
-    customer_user_id?: string;
-    user_id?: string;
-    cancel_reason?: string;
-  }) => {
+  /**
+   * Fetch all appointments
+   */
+  const fetchAppointments = useCallback(async () => {
     setIsLoading(true);
+    setError(null);
     try {
-      // Ensure appointment_date is a string, not a Date object
-      const formattedData = {
-        appointment_date: formatAppointmentDate(appointmentData.appointment_date),
-        start_time: appointmentData.start_time,
-        end_time: appointmentData.end_time,
-        // Handle status appropriately
-        status: appointmentData.status || 'scheduled',
-        total: appointmentData.total,
-        customer_user_id: appointmentData.customer_user_id,
-        user_id: appointmentData.user_id,
-        cancel_reason: appointmentData.cancel_reason
-      };
-      
-      const { data, error } = await supabase
-        .from('appointments')
-        .insert([formattedData])
-        .select()
-        .single();
+      const data = await appointmentService.getAppointments();
+      setAppointments(data as Appointment[]);
+    } catch (err) {
+      console.error('Error fetching appointments:', err);
+      setError(err instanceof Error ? err.message : 'Failed to fetch appointments');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-      if (error) {
-        throw error;
-      }
-
+  /**
+   * Create a new appointment
+   */
+  const createAppointment = useCallback(async (appointmentData: AppointmentFormData) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const newAppointment = await appointmentService.createAppointment(appointmentData);
+      setAppointments((prev) => [...prev, newAppointment as Appointment]);
       toast({
-        title: "Success",
-        description: "Appointment created successfully"
+        title: 'Appointment created',
+        description: 'New appointment has been scheduled successfully',
       });
-
-      return data as Appointment;
-    } catch (error: any) {
-      const errorMessage = error.message || 'Failed to create appointment';
-      setError(errorMessage);
+      return newAppointment;
+    } catch (err) {
+      console.error('Error creating appointment:', err);
+      setError(err instanceof Error ? err.message : 'Failed to create appointment');
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: errorMessage
+        variant: 'destructive',
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to create appointment',
       });
       return null;
     } finally {
@@ -78,100 +54,124 @@ export const useAppointments = () => {
     }
   }, []);
 
-  const updateAppointmentStatus = useCallback(async (appointmentId: number, status: AppointmentStatus, reason?: string) => {
+  /**
+   * Update an existing appointment
+   */
+  const updateAppointment = useCallback(async (id: number, appointmentData: Partial<AppointmentFormData>) => {
     setIsLoading(true);
     setError(null);
     try {
-      // Make sure we're using a valid status
-      const updateData: Record<string, any> = { 
-        status: status
-      };
-      
-      if (reason && status === 'cancelled') {
-        updateData.cancel_reason = reason;
-      }
-      
-      // For no_show status, set the is_no_show flag
-      if (status === 'no_show') {
-        updateData.is_no_show = true;
-      }
-
-      const { data, error } = await supabase
-        .from('appointments')
-        .update(updateData)
-        .eq('id', appointmentId)
-        .select()
-        .single();
-
-      if (error) throw error;
-
+      const updated = await appointmentService.updateAppointment(id, appointmentData);
+      setAppointments((prev) => 
+        prev.map((appointment) => 
+          appointment.id === id ? { ...appointment, ...updated } : appointment
+        )
+      );
       toast({
-        title: "Success",
-        description: `Appointment ${status} successfully`
+        title: 'Appointment updated',
+        description: 'Appointment has been updated successfully',
       });
-
-      return data as Appointment;
-    } catch (err: any) {
-      const errorMessage = err.message || `Failed to update appointment status to ${status}`;
-      setError(errorMessage);
-      
+      return updated;
+    } catch (err) {
+      console.error('Error updating appointment:', err);
+      setError(err instanceof Error ? err.message : 'Failed to update appointment');
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: errorMessage
+        variant: 'destructive',
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to update appointment',
       });
-      
       return null;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Helper functions to make code more readable
-  const cancelAppointment = useCallback((appointmentId: number, reason: string) => {
-    return updateAppointmentStatus(appointmentId, 'cancelled', reason);
-  }, [updateAppointmentStatus]);
-
-  const completeAppointment = useCallback((appointmentId: number) => {
-    return updateAppointmentStatus(appointmentId, 'completed');
-  }, [updateAppointmentStatus]);
-
-  const rescheduleAppointment = useCallback(async (appointmentId: number, newDate: Date | string, newStartTime: string, newEndTime: string) => {
+  /**
+   * Delete an appointment
+   */
+  const deleteAppointment = useCallback(async (id: number) => {
     setIsLoading(true);
     setError(null);
     try {
-      // Format date if it's a Date object
-      const formattedDate = formatAppointmentDate(newDate);
-
-      const { data, error } = await supabase
-        .from('appointments')
-        .update({
-          appointment_date: formattedDate,
-          start_time: newStartTime,
-          end_time: newEndTime
-        })
-        .eq('id', appointmentId)
-        .select()
-        .single();
-
-      if (error) throw error;
-
+      await appointmentService.deleteAppointment(id);
+      setAppointments((prev) => prev.filter((appointment) => appointment.id !== id));
       toast({
-        title: "Success",
-        description: "Appointment rescheduled successfully"
+        title: 'Appointment deleted',
+        description: 'Appointment has been deleted successfully',
       });
-
-      return data as Appointment;
-    } catch (err: any) {
-      const errorMessage = err.message || "Failed to reschedule appointment";
-      setError(errorMessage);
-      
+      return true;
+    } catch (err) {
+      console.error('Error deleting appointment:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete appointment');
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: errorMessage
+        variant: 'destructive',
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to delete appointment',
       });
-      
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  /**
+   * Cancel an appointment
+   */
+  const cancelAppointment = useCallback(async (id: number, reason: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const updated = await appointmentService.cancelAppointment(id, reason);
+      setAppointments((prev) => 
+        prev.map((appointment) => 
+          appointment.id === id ? { ...appointment, status: 'cancelled' as AppointmentStatus, cancel_reason: reason } : appointment
+        )
+      );
+      toast({
+        title: 'Appointment cancelled',
+        description: 'Appointment has been cancelled successfully',
+      });
+      return updated;
+    } catch (err) {
+      console.error('Error cancelling appointment:', err);
+      setError(err instanceof Error ? err.message : 'Failed to cancel appointment');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to cancel appointment',
+      });
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  /**
+   * Mark appointment as completed
+   */
+  const completeAppointment = useCallback(async (id: number) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const updated = await appointmentService.completeAppointment(id);
+      setAppointments((prev) => 
+        prev.map((appointment) => 
+          appointment.id === id ? { ...appointment, status: 'completed' as AppointmentStatus } : appointment
+        )
+      );
+      toast({
+        title: 'Appointment completed',
+        description: 'Appointment has been marked as completed',
+      });
+      return updated;
+    } catch (err) {
+      console.error('Error marking appointment as completed:', err);
+      setError(err instanceof Error ? err.message : 'Failed to mark appointment as completed');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Failed to mark appointment as completed',
+      });
       return null;
     } finally {
       setIsLoading(false);
@@ -179,12 +179,14 @@ export const useAppointments = () => {
   }, []);
 
   return {
+    appointments,
+    isLoading,
+    error,
+    fetchAppointments,
     createAppointment,
-    updateAppointmentStatus,
+    updateAppointment,
+    deleteAppointment,
     cancelAppointment,
     completeAppointment,
-    rescheduleAppointment,
-    isLoading,
-    error
   };
 };

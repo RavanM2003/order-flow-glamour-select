@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { AppointmentFormData, AppointmentStatus } from '@/models/appointment.model';
+import { Appointment, AppointmentFormData, AppointmentStatus } from '@/models/appointment.model';
 
 /**
  * Get all appointments
@@ -37,9 +37,10 @@ export async function getAppointmentById(id: number) {
 export async function createAppointment(appointmentData: AppointmentFormData) {
   // Convert the appointment data to match the database schema
   // Ensure appointment_date is a string
-  const appointmentDate = typeof appointmentData.appointment_date === 'string' 
-    ? appointmentData.appointment_date 
-    : appointmentData.appointment_date.toISOString().split('T')[0];
+  const appointmentDate = 
+    typeof appointmentData.appointment_date === 'string' 
+      ? appointmentData.appointment_date 
+      : appointmentData.appointment_date.toISOString().split('T')[0];
   
   const appointmentRecord = {
     appointment_date: appointmentDate,
@@ -48,7 +49,8 @@ export async function createAppointment(appointmentData: AppointmentFormData) {
     status: appointmentData.status || 'scheduled',
     total: appointmentData.total,
     customer_user_id: appointmentData.customer_user_id,
-    user_id: appointmentData.user_id
+    user_id: appointmentData.user_id,
+    cancel_reason: appointmentData.cancel_reason
   };
 
   const { data, error } = await supabase
@@ -69,16 +71,20 @@ export async function updateAppointment(id: number, appointmentData: Partial<App
   const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
   
   // Convert date if it's a Date object
-  if (appointmentData.appointment_date && appointmentData.appointment_date instanceof Date) {
-    appointmentData.appointment_date = appointmentData.appointment_date.toISOString().split('T')[0];
+  let appointment_date = appointmentData.appointment_date;
+  if (appointment_date && appointment_date instanceof Date) {
+    appointment_date = appointment_date.toISOString().split('T')[0];
   }
+  
+  const updateData = {
+    ...appointmentData,
+    appointment_date,
+    updated_at: new Date().toISOString()
+  };
   
   const { data, error } = await supabase
     .from('appointments')
-    .update({
-      ...appointmentData,
-      updated_at: new Date().toISOString()
-    })
+    .update(updateData)
     .eq('id', numericId)
     .select()
     .single();

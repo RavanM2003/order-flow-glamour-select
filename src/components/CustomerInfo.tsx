@@ -38,7 +38,6 @@ const customerSchema = z.object({
   phone: z
     .string()
     .min(9, { message: "Telefon nömrəsi ən azı 9 rəqəm olmalıdır" }),
-  address: z.string().optional(),
 });
 
 // Define the type for the customer form
@@ -55,7 +54,6 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode, onSubmit }) =>
       name: orderState.customer?.name || "",
       email: orderState.customer?.email || "",
       phone: orderState.customer?.phone || "",
-      address: "",  // Default to empty string
     },
   });
 
@@ -143,22 +141,6 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode, onSubmit }) =>
                 </FormItem>
               )}
             />
-
-            {bookingMode === "home" && (
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Ünvan</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ünvan" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Gözləyin..." : "Davam et"}
