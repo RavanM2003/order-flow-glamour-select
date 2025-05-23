@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -56,7 +57,7 @@ const Admin: React.FC<AdminProps> = ({ initialTab }) => {
   
   // Log environment info when admin loads (helpful for debugging)
   useEffect(() => {
-    if (config.featureFlags.showDebugInfo) {
+    if (config.features.showDebugInfo) {
       console.log('Admin loaded in', config.usesMockData ? 'mock mode' : 'API mode');
     }
   }, []);
@@ -81,7 +82,7 @@ const Admin: React.FC<AdminProps> = ({ initialTab }) => {
       >
         <AdminVerticalNav 
           activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
+          onTabChange={setActiveTab} 
           notifications={notifications} 
         />
       </div>

@@ -148,7 +148,8 @@ const Index = () => {
             {config.features.debugMode && (
               <div className="mt-12 p-4 bg-amber-50 border border-amber-200 rounded text-amber-800">
                 <p className="text-center text-sm">
-                  {config.usesMockData ? 'Local Development Mode' : 'API Mode'}: {config.usesMockData ? 'Using Mock Data' : 'Using Real API'}
+                  {config.features.debugMode ? 'Local Development Mode' : 'API Mode'}: 
+                  {config.features.debugMode ? 'Using Mock Data' : 'Using Real API'}
                 </p>
               </div>
             )}

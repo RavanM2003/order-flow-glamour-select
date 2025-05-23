@@ -8,7 +8,8 @@ export type UserRole =
   | 'appointment' 
   | 'service' 
   | 'product' 
-  | 'reception';
+  | 'reception'
+  | 'inactive'; // Add 'inactive' as a valid role
 
 export interface User {
   id: string;
@@ -25,7 +26,7 @@ export interface User {
   phone?: string;
   note?: string;
   
-  // Aliases for backward compatibility
+  // Aliases for backward compatibility are now optional
   firstName?: string;
   lastName?: string;
 }
@@ -69,7 +70,7 @@ export interface CustomerWithUserFormData {
   first_name?: string;
   last_name?: string;
   full_name?: string;
-  user_id?: string; // Added this field to fix the error
+  user_id?: string;
   
   // Aliases for backward compatibility
   firstName?: string;

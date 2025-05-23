@@ -23,10 +23,12 @@ export const serviceService = {
   
   getById: async (id: string | number): Promise<ApiResponse<Service>> => {
     try {
+      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+      
       const { data, error } = await supabase
         .from('services')
         .select('*')
-        .eq('id', id)
+        .eq('id', numericId)
         .single();
         
       if (error) {
@@ -59,10 +61,12 @@ export const serviceService = {
   
   update: async (id: string | number, serviceData: Partial<ServiceFormData>): Promise<ApiResponse<Service>> => {
     try {
+      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+      
       const { data, error } = await supabase
         .from('services')
         .update(serviceData)
-        .eq('id', id)
+        .eq('id', numericId)
         .select()
         .single();
         
@@ -78,10 +82,12 @@ export const serviceService = {
   
   delete: async (id: string | number): Promise<ApiResponse<boolean>> => {
     try {
+      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+      
       const { error } = await supabase
         .from('services')
         .delete()
-        .eq('id', id);
+        .eq('id', numericId);
         
       if (error) {
         return { error: error.message };

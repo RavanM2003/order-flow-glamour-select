@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Appointment, AppointmentFormData, AppointmentStatus } from '@/models/appointment.model';
 
@@ -41,15 +40,18 @@ export async function createAppointment(appointmentData: AppointmentFormData) {
       ? appointmentData.appointment_date 
       : appointmentData.appointment_date.toISOString().split('T')[0];
   
-  // Cast status to string to resolve type issues with Supabase
+  // Ensure status is a valid enum value for database compatibility
+  const status = appointmentData.status || 'scheduled';
+  
+  // Create appointment record with proper typing
   const appointmentRecord = {
     appointment_date: appointmentDate,
     start_time: appointmentData.start_time,
     end_time: appointmentData.end_time,
-    status: (appointmentData.status || 'scheduled') as string,
-    total: appointmentData.total,
+    status: status as 'scheduled' | 'completed' | 'cancelled', // Cast to match database enum
+    total: appointmentData.total || 0,
     customer_user_id: appointmentData.customer_user_id,
-    user_id: appointmentData.user_id,
+    user_id: appointmentData.user_id || '',
     cancel_reason: appointmentData.cancel_reason
   };
 
@@ -71,21 +73,31 @@ export async function updateAppointment(id: number, appointmentData: Partial<App
   const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
   
   // Convert date if it's a Date object
-  let appointment_date = appointmentData.appointment_date;
-  if (appointment_date && appointment_date instanceof Date) {
-    appointment_date = appointment_date.toISOString().split('T')[0];
+  let appointmentDate = appointmentData.appointment_date;
+  if (appointmentDate && appointmentDate instanceof Date) {
+    appointmentDate = appointmentDate.toISOString().split('T')[0];
   }
   
-  // Cast status to string for Supabase compatibility
+  // Prepare update data with proper type handling
   const updateData: any = {
     ...appointmentData,
-    appointment_date,
-    updated_at: new Date().toISOString()
+    appointment_date: appointmentDate,
+    updated_at: new Date().toISOString(),
   };
   
-  // If status is included, cast it to string
+  // If status is included, ensure it's compatible with the database
   if (updateData.status) {
-    updateData.status = updateData.status as string;
+    // Make sure the status is one of the allowed database values
+    if (!['scheduled', 'completed', 'cancelled'].includes(updateData.status)) {
+      // Map 'no_show' to is_no_show flag instead
+      if (updateData.status === 'no_show') {
+        updateData.is_no_show = true;
+        updateData.status = 'cancelled';
+      } else {
+        // Default to 'scheduled' for any other values
+        updateData.status = 'scheduled';
+      }
+    }
   }
 
   const { data, error } = await supabase
@@ -125,7 +137,7 @@ export async function cancelAppointment(id: number, reason: string) {
   const { data, error } = await supabase
     .from('appointments')
     .update({
-      status: 'cancelled' as string,
+      status: 'cancelled' as 'scheduled' | 'completed' | 'cancelled',
       cancel_reason: reason,
       updated_at: new Date().toISOString()
     })
@@ -147,7 +159,7 @@ export async function completeAppointment(id: number) {
   const { data, error } = await supabase
     .from('appointments')
     .update({
-      status: 'completed' as string,
+      status: 'completed' as 'scheduled' | 'completed' | 'cancelled',
       updated_at: new Date().toISOString()
     })
     .eq('id', numericId)

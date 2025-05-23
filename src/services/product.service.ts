@@ -21,10 +21,12 @@ export const productService = {
   
   getById: async (id: string | number): Promise<ApiResponse<Product>> => {
     try {
+      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+      
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .eq('id', id)
+        .eq('id', numericId)
         .single();
       
       if (error) {
@@ -57,10 +59,12 @@ export const productService = {
   
   update: async (id: string | number, productData: Partial<ProductFormData>): Promise<ApiResponse<Product>> => {
     try {
+      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+      
       const { data, error } = await supabase
         .from('products')
         .update(productData)
-        .eq('id', id)
+        .eq('id', numericId)
         .select()
         .single();
       
@@ -76,7 +80,9 @@ export const productService = {
   
   delete: async (id: string | number): Promise<ApiResponse<boolean>> => {
     try {
-      const { error } = await supabase.from('products').delete().eq('id', id);
+      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
+      
+      const { error } = await supabase.from('products').delete().eq('id', numericId);
       
       if (error) {
         return { error: error.message };
@@ -111,10 +117,12 @@ export const productService = {
   
   getByServiceId: async (serviceId: string | number): Promise<ApiResponse<Product[]>> => {
     try {
+      const numericId = typeof serviceId === 'string' ? parseInt(serviceId, 10) : serviceId;
+      
       const { data, error } = await supabase
         .from('service_products')
         .select('product_id')
-        .eq('service_id', serviceId);
+        .eq('service_id', numericId);
       
       if (error) {
         return { error: error.message };

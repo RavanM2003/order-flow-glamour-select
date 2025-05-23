@@ -1,14 +1,17 @@
-
 import { ApiService } from './api.service';
 import { Role } from '@/models/role.model';
 import { ApiResponse } from '@/models/types';
 import { config } from '@/config/env';
 import { supabase } from '@/integrations/supabase/client';
 
+export const usesMockData = () => {
+  return Boolean(config.features.debugMode);
+};
+
 export class RoleService extends ApiService {
   // Get all roles
   async getAll(): Promise<ApiResponse<Role[]>> {
-    if (config.usesMockData) {
+    if (usesMockData()) {
       // Mock roles for development
       const mockRoles: Role[] = [
         {

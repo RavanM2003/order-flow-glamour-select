@@ -14,6 +14,8 @@ export interface Customer {
   address?: string;
   created_at?: string;
   updated_at?: string;
+  first_name?: string; // Add these properties for consistency
+  last_name?: string;
 }
 
 export type CustomerFormData = {
@@ -24,4 +26,7 @@ export type CustomerFormData = {
   birth_date?: string;
   note?: string;
   address?: string;
+  first_name?: string; // Add these properties for consistency
+  last_name?: string;
+  full_name?: string;
 };

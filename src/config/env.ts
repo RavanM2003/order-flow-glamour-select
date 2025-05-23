@@ -1,3 +1,4 @@
+
 // Environment Configuration
 
 interface Config {
@@ -31,6 +32,12 @@ interface Config {
   };
   features: {
     debugMode: boolean;
+    showDebugInfo?: boolean;
+  };
+  // Add these properties
+  usesMockData?: boolean;
+  featureFlags?: {
+    showDebugInfo?: boolean;
   };
 }
 
@@ -64,6 +71,12 @@ export const config: Config = {
     }
   },
   features: {
-    debugMode: process.env.NODE_ENV !== "production"
+    debugMode: process.env.NODE_ENV !== "production",
+    showDebugInfo: process.env.NODE_ENV !== "production"
+  },
+  // Add these properties to match the interface
+  usesMockData: false,
+  featureFlags: {
+    showDebugInfo: process.env.NODE_ENV !== "production"
   }
 };

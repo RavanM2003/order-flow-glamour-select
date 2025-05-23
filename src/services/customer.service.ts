@@ -1,4 +1,3 @@
-
 import { Customer, CustomerFormData } from '@/models/customer.model';
 import { CustomerWithUserFormData } from '@/models/user.model';
 import { ApiResponse } from './staff.service';
@@ -40,6 +39,10 @@ export const customerService = {
         note: customer.note,
         created_at: customer.created_at,
         updated_at: customer.updated_at,
+        // Add these for consistency
+        first_name: customer.first_name,
+        last_name: customer.last_name,
+        full_name: customer.full_name
       };
       
       return { data: customerData };
@@ -156,10 +159,10 @@ export const customerService = {
   
   delete: async (id: string): Promise<ApiResponse<boolean>> => {
     try {
-      // Just update the user role instead of deleting to maintain referential integrity
+      // Update user role to maintain referential integrity
       const { error } = await supabase
         .from('users')
-        .update({ role: 'inactive' })
+        .update({ role: 'customer' }) // Use 'customer' instead of 'inactive' to match UserRole type
         .eq('id', id)
         .eq('role', 'customer');
         
