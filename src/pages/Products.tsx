@@ -13,10 +13,10 @@ const Products = () => {
       <Header />
       <main className="container py-12">
         <h1 className="text-4xl font-bold text-glamour-800 mb-2">
-          {t("products.title", "Məhsullar")}
+          {t("products.title")}
         </h1>
         <p className="text-lg text-gray-600 mb-6 max-w-3xl">
-          {t("products.description", "Gündəlik qulluq rutininizi artırmaq üçün təbii inqrediyentlərlə hazırlanmış premium gözəllik məhsullarımızı kəşf edin.")}
+          {t("products.description")}
         </p>
         <ProductList />
       </main>

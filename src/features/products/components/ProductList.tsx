@@ -61,7 +61,7 @@ const ProductList = () => {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[1, 2, 3, 4, 5, 6].map((index) => (
-            <div key={`skeleton-${index}`} className="bg-white rounded-lg overflow-hidden shadow-md">
+            <div key={`product-skeleton-${index}`} className="bg-white rounded-lg overflow-hidden shadow-md">
               <Skeleton className="h-48 w-full" />
               <div className="p-6">
                 <Skeleton className="h-6 w-32 mb-2" />
@@ -85,7 +85,7 @@ const ProductList = () => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input 
-            placeholder="Məhsulları axtar..." 
+            placeholder={t("products.search")} 
             value={searchTerm} 
             onChange={e => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -95,7 +95,7 @@ const ProductList = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {paginatedItems.map((product) => (
-          <div key={`product-${product.id}`} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+          <div key={`product-item-${product.id}`} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
             <div className="h-48 bg-gray-200 flex items-center justify-center">
               {product.image_url ? (
                 <img 
@@ -124,7 +124,7 @@ const ProductList = () => {
               
               <Button className="w-full bg-glamour-700 hover:bg-glamour-800" asChild>
                 <Link to={`/products/${product.id}`}>
-                  Ətraflı bax
+                  {t("products.viewDetails")}
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -141,21 +141,21 @@ const ProductList = () => {
             onClick={loadMore}
             className="px-8"
           >
-            Daha çox yüklə
+            {t("products.loadMore")}
           </Button>
         </div>
       )}
       
       {filteredProducts.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-lg text-gray-600">"{searchTerm}" axtarışına uyğun məhsul tapılmadı</p>
+          <p className="text-lg text-gray-600">"{searchTerm}" {t("products.noResults")}</p>
         </div>
       )}
       
       <div className="mt-12 text-center">
-        <p className="text-lg text-gray-600 mb-6">Keyfiyyətli məhsullarımızı sınamağa hazırsınız?</p>
+        <p className="text-lg text-gray-600 mb-6">{t("products.cta")}</p>
         <Button size="lg" className="bg-glamour-700 hover:bg-glamour-800" asChild>
-          <Link to="/booking">Təyinat edin</Link>
+          <Link to="/booking">{t("products.bookNow")}</Link>
         </Button>
       </div>
     </div>

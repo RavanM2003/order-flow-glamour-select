@@ -13,10 +13,10 @@ const Services = () => {
       <Header />
       <main className="container py-12">
         <h1 className="text-4xl font-bold text-glamour-800 mb-2">
-          {t("services.title", "Xidmətlərimiz")}
+          {t("services.title")}
         </h1>
         <p className="text-lg text-gray-600 mb-6 max-w-3xl">
-          {t("services.description", "Təbii gözəlliyinizi artırmaq və rifahınızı təşviq etmək üçün hazırlanmış hərtərəfli gözəllik və sağlamlıq xidmətlərimizi kəşf edin.")}
+          {t("services.description")}
         </p>
         <ServiceList />
       </main>
