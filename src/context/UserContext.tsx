@@ -1,3 +1,4 @@
+
 // Only the context creation and export needs to be modified to ensure proper export
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -244,12 +245,16 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     setLoading(true);
     
     try {
+      // Map role to string for database storage
+      const dbUpdates = {
+        ...updates,
+        role: updates.role ? updates.role as string : undefined,
+        updated_at: new Date().toISOString()
+      };
+
       const { data, error } = await supabase
         .from('users')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
+        .update(dbUpdates)
         .eq('id', user.id)
         .select()
         .single();

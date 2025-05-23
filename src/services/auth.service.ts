@@ -1,6 +1,9 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '@/models/types';
+import type { AuthError } from '@supabase/supabase-js';
+import type { User } from '@/models/user.model';
 
 /**
  * Sign in with email and password
@@ -124,7 +127,7 @@ export const signUp = async (email: string, password: string, userData: any = {}
         first_name: userData.first_name || userData.firstName || '',
         last_name: userData.last_name || userData.lastName || '',
         full_name: `${userData.first_name || userData.firstName || ''} ${userData.last_name || userData.lastName || ''}`.trim(),
-        role: (userData.role || 'customer') as UserRole,
+        role: (userData.role || 'customer') as string,
         gender: userData.gender || 'other',
         phone: userData.phone || '',
         hashed_password: '' // Password is handled by auth, this is just for schema compatibility
@@ -132,7 +135,7 @@ export const signUp = async (email: string, password: string, userData: any = {}
 
       const { error: profileError } = await supabase
         .from('users')
-        .insert([userProfile]);
+        .insert(userProfile);
 
       if (profileError) {
         console.error("Failed to create user profile:", profileError);
@@ -312,7 +315,7 @@ export const createStaffUser = async (userData: any) => {
         first_name: userData.first_name || '',
         last_name: userData.last_name || '',
         full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
-        role: 'staff' as UserRole,
+        role: 'staff' as string,
         gender: userData.gender || 'other',
         phone: userData.phone || '',
         birth_date: userData.birth_date || null,
@@ -321,7 +324,7 @@ export const createStaffUser = async (userData: any) => {
 
       const { error: profileError } = await supabase
         .from('users')
-        .insert([userProfile]);
+        .insert(userProfile);
 
       if (profileError) {
         console.error("Failed to create staff profile:", profileError);
