@@ -245,12 +245,19 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     setLoading(true);
     
     try {
-      // Map role to string for database storage
-      const dbUpdates = {
+      // Map role to string for database storage and filter out 'inactive' role
+      const dbUpdates: any = {
         ...updates,
-        role: updates.role ? updates.role as string : undefined,
         updated_at: new Date().toISOString()
       };
+
+      // Handle role conversion - exclude 'inactive' role as it's not in database enum
+      if (updates.role && updates.role !== 'inactive') {
+        dbUpdates.role = updates.role;
+      } else if (updates.role === 'inactive') {
+        // Default to 'customer' if 'inactive' role is provided
+        dbUpdates.role = 'customer';
+      }
 
       const { data, error } = await supabase
         .from('users')

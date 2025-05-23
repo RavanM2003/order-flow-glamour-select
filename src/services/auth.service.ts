@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '@/models/types';
@@ -120,6 +119,9 @@ export const signUp = async (email: string, password: string, userData: any = {}
 
     let user = null;
     if (data.user) {
+      // Filter out 'inactive' role as it's not in database enum
+      const role = userData.role && userData.role !== 'inactive' ? userData.role : 'customer';
+      
       // Create user profile record with additional data
       const userProfile = {
         id: data.user.id,
@@ -127,7 +129,7 @@ export const signUp = async (email: string, password: string, userData: any = {}
         first_name: userData.first_name || userData.firstName || '',
         last_name: userData.last_name || userData.lastName || '',
         full_name: `${userData.first_name || userData.firstName || ''} ${userData.last_name || userData.lastName || ''}`.trim(),
-        role: (userData.role || 'customer') as string,
+        role: role,
         gender: userData.gender || 'other',
         phone: userData.phone || '',
         hashed_password: '' // Password is handled by auth, this is just for schema compatibility
@@ -152,7 +154,7 @@ export const signUp = async (email: string, password: string, userData: any = {}
         email: data.user.email || '',
         first_name: userData.first_name || userData.firstName || '',
         last_name: userData.last_name || userData.lastName || '',
-        role: (userData.role || 'customer') as UserRole,
+        role: role as UserRole,
         phone: userData.phone || '',
         gender: userData.gender || 'other',
         token: data.session?.access_token || ''
@@ -315,7 +317,7 @@ export const createStaffUser = async (userData: any) => {
         first_name: userData.first_name || '',
         last_name: userData.last_name || '',
         full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
-        role: 'staff' as string,
+        role: 'staff',
         gender: userData.gender || 'other',
         phone: userData.phone || '',
         birth_date: userData.birth_date || null,
@@ -399,7 +401,8 @@ export const updateUserProfile = async (userId: string, updates: any) => {
     if (updates.note !== undefined) 
       dbUpdates.note = updates.note;
     
-    if (updates.role !== undefined) 
+    // Handle role conversion - exclude 'inactive' role as it's not in database enum
+    if (updates.role !== undefined && updates.role !== 'inactive') 
       dbUpdates.role = updates.role;
     
     const { data, error } = await supabase

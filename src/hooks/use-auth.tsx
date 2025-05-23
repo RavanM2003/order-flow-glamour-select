@@ -234,17 +234,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       // Create a profile record if user is created
       if (data.user) {
+        // Filter out 'inactive' role as it's not in database enum
+        const role = userData?.role && userData.role !== 'inactive' ? userData.role : 'customer';
+        
         const userProfile = {
           id: data.user.id,
           email,
           first_name: userData?.first_name || userData?.firstName || '',
           last_name: userData?.last_name || userData?.lastName || '',
-          role: userData?.role || 'customer',
+          role: role,
           hashed_password: '',  // Required field for users table
           phone: userData?.phone || '' // Required field for users table
         };
         
-        await supabase.from('users').insert([userProfile]);
+        await supabase.from('users').insert(userProfile);
       }
 
       return;
@@ -264,13 +267,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setError(null);
     
     try {
-      // Map to database field names
+      // Map to database field names and filter out 'inactive' role
       const dbUpdates: any = {
         first_name: updates.first_name || updates.firstName,
         last_name: updates.last_name || updates.lastName,
         avatar_url: updates.avatar_url,
         // Add other fields as needed
       };
+      
+      // Handle role conversion - exclude 'inactive' role as it's not in database enum
+      if (updates.role && updates.role !== 'inactive') {
+        dbUpdates.role = updates.role;
+      }
       
       // Remove undefined values
       Object.keys(dbUpdates).forEach(key => {
