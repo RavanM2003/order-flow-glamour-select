@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SettingsValue {
-  [key: string]: string | any;
+  [key: string]: any;
 }
 
 export interface Setting {
@@ -26,7 +26,11 @@ class SettingsService {
       throw error;
     }
     
-    return data || [];
+    // Type assertion to handle Json to SettingsValue conversion
+    return (data || []).map(item => ({
+      ...item,
+      value: item.value as SettingsValue
+    }));
   }
 
   async getSettingByKey(key: string): Promise<Setting | null> {
@@ -42,7 +46,11 @@ class SettingsService {
       return null;
     }
     
-    return data;
+    // Type assertion to handle Json to SettingsValue conversion
+    return data ? {
+      ...data,
+      value: data.value as SettingsValue
+    } : null;
   }
 
   getLocalizedValue(setting: Setting | null, language: string = 'az', fallbackKey?: string): string {
@@ -81,7 +89,11 @@ class SettingsService {
       throw error;
     }
     
-    return data;
+    // Type assertion to handle Json to SettingsValue conversion
+    return data ? {
+      ...data,
+      value: data.value as SettingsValue
+    } : null;
   }
 }
 
