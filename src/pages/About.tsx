@@ -19,7 +19,7 @@ interface TeamMember {
 
 const About = () => {
   const { getLocalizedSetting, isLoading: settingsLoading } = useSettings();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const { data: teamMembers, isLoading: teamLoading } = useQuery({
     queryKey: ['team-members'],
@@ -31,7 +31,8 @@ const About = () => {
           full_name,
           bio,
           photo_url,
-          role
+          role,
+          position
         `)
         .in('role', ['staff', 'admin', 'super_admin'])
         .not('full_name', 'is', null);
@@ -45,8 +46,21 @@ const About = () => {
     },
   });
 
+  // Get all about page content from settings
   const aboutUs = getLocalizedSetting('about_us');
   const siteName = getLocalizedSetting('site_name');
+  const ourStoryTitle = getLocalizedSetting('about_our_story_title', 'Our Story');
+  const ourStoryContent = getLocalizedSetting('about_our_story_content', 'about_us');
+  const meetOurTeamTitle = getLocalizedSetting('about_team_title', 'Meet Our Team');
+  const ourValuesTitle = getLocalizedSetting('about_values_title', 'Our Values');
+  
+  // Values from settings
+  const valueQualityTitle = getLocalizedSetting('value_quality_title', 'Quality');
+  const valueQualityText = getLocalizedSetting('value_quality_text', 'We use only the highest quality products and maintain the strictest standards in all our services.');
+  const valueCareTitle = getLocalizedSetting('value_care_title', 'Care');
+  const valueCareText = getLocalizedSetting('value_care_text', 'Every client receives personalized attention and care tailored to their unique needs and preferences.');
+  const valueExcellenceTitle = getLocalizedSetting('value_excellence_title', 'Excellence');
+  const valueExcellenceText = getLocalizedSetting('value_excellence_text', 'We strive for excellence in every service, ensuring you leave feeling confident and beautiful.');
 
   return (
     <div className="min-h-screen bg-background">
@@ -73,14 +87,14 @@ const About = () => {
 
           {/* Our Story Section */}
           <div className="max-w-4xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-glamour-800 mb-6 text-center">Our Story</h2>
+            <h2 className="text-3xl font-bold text-glamour-800 mb-6 text-center">{ourStoryTitle}</h2>
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
                 <p className="text-gray-600 leading-relaxed mb-4">
-                  Founded with a passion for enhancing natural beauty, {siteName} has been serving our community with dedication and expertise. Our journey began with a simple mission: to create a space where everyone feels beautiful and confident.
+                  {ourStoryContent || `Founded with a passion for enhancing natural beauty, ${siteName} has been serving our community with dedication and expertise. Our journey began with a simple mission: to create a space where everyone feels beautiful and confident.`}
                 </p>
                 <p className="text-gray-600 leading-relaxed">
-                  We believe that beauty is not just about appearance, but about feeling confident and comfortable in your own skin. Our team of skilled professionals is committed to providing personalized services that bring out the best in you.
+                  {getLocalizedSetting('about_our_story_content_2', 'We believe that beauty is not just about appearance, but about feeling confident and comfortable in your own skin. Our team of skilled professionals is committed to providing personalized services that bring out the best in you.')}
                 </p>
               </div>
               <div className="bg-gray-200 rounded-lg h-80 flex items-center justify-center">
@@ -91,7 +105,7 @@ const About = () => {
 
           {/* Team Section */}
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-glamour-800 mb-8 text-center">Meet Our Team</h2>
+            <h2 className="text-3xl font-bold text-glamour-800 mb-8 text-center">{meetOurTeamTitle}</h2>
             
             {teamLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -125,7 +139,7 @@ const About = () => {
                       {member.full_name}
                     </h3>
                     <p className="text-glamour-600 mb-3 capitalize">
-                      {member.role.replace('_', ' ')}
+                      {member.position || member.role.replace('_', ' ')}
                     </p>
                     {member.bio && (
                       <p className="text-gray-600 text-sm leading-relaxed">
@@ -144,28 +158,28 @@ const About = () => {
 
           {/* Values Section */}
           <div className="max-w-4xl mx-auto mt-16">
-            <h2 className="text-3xl font-bold text-glamour-800 mb-8 text-center">Our Values</h2>
+            <h2 className="text-3xl font-bold text-glamour-800 mb-8 text-center">{ourValuesTitle}</h2>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="w-16 h-16 bg-glamour-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">✨</span>
                 </div>
-                <h3 className="text-xl font-semibold text-glamour-800 mb-2">Quality</h3>
-                <p className="text-gray-600">We use only the highest quality products and maintain the strictest standards in all our services.</p>
+                <h3 className="text-xl font-semibold text-glamour-800 mb-2">{valueQualityTitle}</h3>
+                <p className="text-gray-600">{valueQualityText}</p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 bg-glamour-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">💝</span>
                 </div>
-                <h3 className="text-xl font-semibold text-glamour-800 mb-2">Care</h3>
-                <p className="text-gray-600">Every client receives personalized attention and care tailored to their unique needs and preferences.</p>
+                <h3 className="text-xl font-semibold text-glamour-800 mb-2">{valueCareTitle}</h3>
+                <p className="text-gray-600">{valueCareText}</p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 bg-glamour-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">🌟</span>
                 </div>
-                <h3 className="text-xl font-semibold text-glamour-800 mb-2">Excellence</h3>
-                <p className="text-gray-600">We strive for excellence in every service, ensuring you leave feeling confident and beautiful.</p>
+                <h3 className="text-xl font-semibold text-glamour-800 mb-2">{valueExcellenceTitle}</h3>
+                <p className="text-gray-600">{valueExcellenceText}</p>
               </div>
             </div>
           </div>

@@ -17,8 +17,28 @@ export const useSettings = () => {
   };
 
   const getLocalizedSetting = (key: string, fallbackKey?: string): string => {
-    if (!settings) return '';
-    return settingsService.getLocalizedValue(settings, key, language, fallbackKey);
+    // First try to get setting in current language
+    const setting = getSetting(key);
+    
+    // If not found and language is not 'az', try with 'az'
+    if (!setting && language !== 'az') {
+      const azSetting = getSetting(key, 'az');
+      if (azSetting) return azSetting.value;
+    }
+    
+    // If still not found and fallbackKey is provided, try with fallbackKey
+    if (!setting && fallbackKey) {
+      const fallbackSetting = getSetting(fallbackKey);
+      if (fallbackSetting) return fallbackSetting.value;
+      
+      // Try fallback key with 'az' language
+      if (language !== 'az') {
+        const azFallbackSetting = getSetting(fallbackKey, 'az');
+        if (azFallbackSetting) return azFallbackSetting.value;
+      }
+    }
+    
+    return setting?.value || '';
   };
 
   return {

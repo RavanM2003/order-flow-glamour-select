@@ -23,7 +23,7 @@ class SettingsService {
       throw error;
     }
     
-    return data || [];
+    return data as Setting[] || [];
   }
 
   async getSettingByKey(key: string, lang: string = 'az'): Promise<Setting | null> {
@@ -40,7 +40,7 @@ class SettingsService {
       return null;
     }
     
-    return data;
+    return data as Setting;
   }
 
   getLocalizedValue(settings: Setting[], key: string, language: string = 'az', fallbackKey?: string): string {
@@ -77,7 +77,7 @@ class SettingsService {
       throw error;
     }
     
-    return data;
+    return data as Setting;
   }
 }
 

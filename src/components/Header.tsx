@@ -69,7 +69,7 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Header - 3 sections stacked and sticky */}
+      {/* Mobile Header - Only show icons on mobile */}
       <div className="md:hidden">
         {/* Section 1: Brand Name */}
         <div className="border-b px-4 py-3 bg-white sticky top-0 z-50">
@@ -84,31 +84,26 @@ const Header = () => {
             <Button variant={isActive('/') ? 'default' : 'ghost'} size="sm" className={isActive('/') ? "bg-glamour-700" : ""} asChild>
               <Link to="/" className="flex flex-col items-center p-2">
                 <Home className="h-5 w-5" />
-                <span className="text-xs mt-1">{t('nav.home')}</span>
               </Link>
             </Button>
             <Button variant={isActive('/services') ? 'default' : 'ghost'} size="sm" className={isActive('/services') ? "bg-glamour-700" : ""} asChild>
               <Link to="/services" className="flex flex-col items-center p-2">
                 <Scissors className="h-5 w-5" />
-                <span className="text-xs mt-1">{t('nav.services')}</span>
               </Link>
             </Button>
             <Button variant={isActive('/products') ? 'default' : 'ghost'} size="sm" className={isActive('/products') ? "bg-glamour-700" : ""} asChild>
               <Link to="/products" className="flex flex-col items-center p-2">
                 <Package className="h-5 w-5" />
-                <span className="text-xs mt-1">{t('nav.products')}</span>
               </Link>
             </Button>
             <Button variant={isActive('/about') ? 'default' : 'ghost'} size="sm" className={isActive('/about') ? "bg-glamour-700" : ""} asChild>
               <Link to="/about" className="flex flex-col items-center p-2">
                 <Info className="h-5 w-5" />
-                <span className="text-xs mt-1">{t('nav.about')}</span>
               </Link>
             </Button>
             <Button variant={isActive('/contact') ? 'default' : 'ghost'} size="sm" className={isActive('/contact') ? "bg-glamour-700" : ""} asChild>
               <Link to="/contact" className="flex flex-col items-center p-2">
                 <Phone className="h-5 w-5" />
-                <span className="text-xs mt-1">{t('nav.contact')}</span>
               </Link>
             </Button>
           </div>

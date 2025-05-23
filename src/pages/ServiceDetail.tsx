@@ -1,67 +1,123 @@
 
-import React from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Clock, DollarSign, ChevronRight } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
-const services = [
-  {
-    id: "1",
-    title: "Facial Treatment",
-    description: "Our advanced facial treatment is designed to cleanse, exfoliate, and nourish your skin, promoting a clear, well-hydrated complexion. The treatment begins with a thorough skin analysis to determine your specific needs, followed by deep cleansing, gentle exfoliation, and a customized mask application. Our estheticians use premium products that target your unique skin concerns, whether it's dryness, acne, signs of aging, or sensitivity. The treatment concludes with a relaxing facial massage that improves circulation and enhances the absorption of applied products. You'll leave with glowing, refreshed skin and personalized recommendations for your home skincare routine.",
-    longDescription: "Our signature facial treatment begins with a detailed consultation to understand your skin concerns and goals. The procedure starts with a gentle cleansing to remove surface impurities, followed by a deeper cleanse to prepare your skin for treatment. Next, our esthetician will perform a careful exfoliation to remove dead skin cells, unclog pores, and reveal fresh skin underneath. Depending on your skin's needs, we may incorporate steam to soften the skin and facilitate extraction of clogged pores. A specialized mask will then be applied to address your specific concerns, whether it's hydration, purification, or anti-aging. During the mask application, you'll enjoy a relaxing hand and arm massage. The treatment concludes with the application of toner, serums, moisturizer, and SPF protection tailored to your skin type. Our specialists will also provide you with personalized skincare recommendations to maintain your results at home.",
-    image: "facial.jpg",
-    duration: "60 min",
-    price: 150,
-    benefits: [
-      "Deep cleansing and pore purification",
-      "Improved skin texture and tone",
-      "Reduced appearance of fine lines and wrinkles",
-      "Hydration boost for glowing skin",
-      "Customized treatment for your skin type"
-    ],
-    relatedProducts: [
-      { id: 1, name: "Moisturizer Cream", price: 45 },
-      { id: 2, name: "Anti-Aging Serum", price: 75 }
-    ]
-  },
-  {
-    id: "2",
-    title: "Massage Therapy",
-    description: "Relax and unwind with our therapeutic massage treatments. Our skilled massage therapists use various techniques to relieve muscle tension and promote overall wellness.",
-    longDescription: "Our professional massage therapy service is designed to alleviate tension, reduce stress, and promote overall well-being. Our skilled therapists begin with a consultation to understand your specific needs and concerns, allowing them to customize the pressure and techniques used during your session. The massage incorporates a blend of Swedish, deep tissue, and therapeutic techniques to address muscle tension, improve circulation, and enhance relaxation. Essential oils may be used to enhance the therapeutic benefits. Throughout the session, your therapist will check in regarding pressure and comfort levels to ensure the most beneficial experience. Regular massage therapy can help reduce chronic pain, improve mobility, enhance sleep quality, and contribute to better mental health by reducing stress and anxiety levels.",
-    image: "massage.jpg",
-    duration: "45 min",
-    price: 120,
-    benefits: [
-      "Relief from muscle tension and pain",
-      "Reduced stress and anxiety",
-      "Improved circulation",
-      "Enhanced mobility and flexibility",
-      "Better sleep quality"
-    ],
-    relatedProducts: [
-      { id: 3, name: "Hair Care Kit", price: 60 }
-    ]
-  },
-  // Additional services would be added here
-];
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ShoppingBag, Calendar, Check } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from '@/context/LanguageContext';
+import { Service } from "@/models/service.model";
+import { Product } from "@/models/product.model";
 
 const ServiceDetail = () => {
-  const { id } = useParams<{id: string}>();
-  const service = services.find(s => s.id === id);
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   
-  if (!service) {
+  // Fetch service details
+  const { data: service, isLoading, error } = useQuery({
+    queryKey: ['service', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Service ID is required');
+      
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error) throw error;
+      return data as Service;
+    }
+  });
+  
+  // Fetch related products
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      if (!id) return;
+      
+      try {
+        // First get product_ids related to this service
+        const { data: serviceProducts, error: spError } = await supabase
+          .from('service_products')
+          .select('product_id')
+          .eq('service_id', id);
+        
+        if (spError || !serviceProducts || serviceProducts.length === 0) {
+          // If no direct relations, just fetch some products
+          const { data: someProducts, error: productsError } = await supabase
+            .from('products')
+            .select('*')
+            .limit(3);
+          
+          if (!productsError && someProducts) {
+            setRelatedProducts(someProducts as Product[]);
+          }
+          return;
+        }
+        
+        // Get product details
+        const productIds = serviceProducts.map(sp => sp.product_id);
+        const { data: products, error: productsError } = await supabase
+          .from('products')
+          .select('*')
+          .in('id', productIds);
+        
+        if (!productsError && products) {
+          setRelatedProducts(products as Product[]);
+        }
+      } catch (err) {
+        console.error('Error fetching related products:', err);
+      }
+    };
+    
+    fetchRelatedProducts();
+  }, [id]);
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container py-12">
+          <Button variant="outline" className="mb-6" asChild>
+            <Link to="/services">
+              <ChevronLeft className="mr-2 h-4 w-4" />
+              {t('service.backToServices')}
+            </Link>
+          </Button>
+          
+          <div className="grid md:grid-cols-2 gap-8">
+            <Skeleton className="w-full h-96 rounded-lg" />
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-3/4" />
+              <Skeleton className="h-6 w-1/4" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <div className="pt-6">
+                <Skeleton className="h-12 w-full" />
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+  
+  if (error || !service) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container py-12 text-center">
-          <h1 className="text-4xl font-bold text-glamour-800 mb-6">Service Not Found</h1>
-          <p className="text-lg text-gray-600 mb-8">The service you're looking for doesn't exist or has been removed.</p>
-          <Button className="bg-glamour-700 hover:bg-glamour-800" asChild>
-            <Link to="/services">Browse All Services</Link>
+          <h1 className="text-2xl font-bold mb-4">{t('service.notFound')}</h1>
+          <p className="text-gray-600 mb-8">{t('service.notFoundMessage')}</p>
+          <Button asChild>
+            <Link to="/services">{t('service.browseServices')}</Link>
           </Button>
         </main>
         <Footer />
@@ -72,80 +128,115 @@ const ServiceDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-
+      
       <main className="container py-12">
-        <div className="flex flex-col lg:flex-row gap-10">
-          <div className="lg:w-2/3">
-            <h1 className="text-4xl font-bold text-glamour-800 mb-4">{service.title}</h1>
-            
-            <div className="flex items-center space-x-6 mb-6">
-              <div className="flex items-center text-glamour-600">
-                <Clock className="mr-2 h-5 w-5" />
-                <span>{service.duration}</span>
+        {/* Back Button */}
+        <Button variant="outline" className="mb-6" asChild>
+          <Link to="/services">
+            <ChevronLeft className="mr-2 h-4 w-4" />
+            {t('service.backToServices')}
+          </Link>
+        </Button>
+        
+        {/* Service Details */}
+        <div className="grid md:grid-cols-2 gap-8 mb-12">
+          {/* Service Image */}
+          <div className="bg-white rounded-lg overflow-hidden shadow-md">
+            {service.image_urls && service.image_urls.length > 0 ? (
+              <img 
+                src={service.image_urls[0]} 
+                alt={service.name}
+                className="w-full h-96 object-cover object-center"
+              />
+            ) : (
+              <div className="w-full h-96 bg-gray-200 flex items-center justify-center">
+                <p className="text-gray-500">No service image available</p>
               </div>
-              <div className="flex items-center text-glamour-700 font-semibold">
-                <DollarSign className="mr-1 h-5 w-5" />
-                <span>${service.price}</span>
-              </div>
-            </div>
-            
-            <div className="bg-gray-200 h-80 rounded-lg mb-8 flex items-center justify-center">
-              <p className="text-glamour-600">Service Image</p>
-            </div>
-            
-            <div className="prose max-w-none mb-8">
-              <h2 className="text-2xl font-semibold text-glamour-800 mb-4">Description</h2>
-              <p className="text-gray-700 mb-6">{service.longDescription || service.description}</p>
-              
-              <h2 className="text-2xl font-semibold text-glamour-800 mb-4">Benefits</h2>
-              <ul className="space-y-2 mb-6">
-                {service.benefits.map((benefit, index) => (
-                  <li key={index} className="flex items-start">
-                    <span className="bg-glamour-100 text-glamour-800 font-semibold rounded-full p-1 mr-2">✓</span>
-                    <span>{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            )}
           </div>
           
-          <div className="lg:w-1/3">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-24">
-              <h3 className="text-xl font-bold text-glamour-800 mb-4">Book this Service</h3>
-              <p className="text-gray-600 mb-6">
-                Ready to experience the benefits of our {service.title.toLowerCase()}? Book your appointment today.
-              </p>
-              
-              <Button className="w-full bg-glamour-700 hover:bg-glamour-800 mb-4" size="lg" asChild>
-                <Link to="/booking">Book Now</Link>
+          {/* Service Info */}
+          <div>
+            <h1 className="text-3xl font-bold text-glamour-800 mb-2">{service.name}</h1>
+            
+            <div className="flex justify-between items-center mb-6">
+              <div className="text-2xl font-semibold text-glamour-700">{service.price} AZN</div>
+              <div className="bg-gray-100 px-3 py-1 rounded text-gray-600">
+                {service.duration} {t('service.minutes')}
+              </div>
+            </div>
+            
+            {service.description && (
+              <div className="mb-6">
+                <p className="text-gray-600">{service.description}</p>
+              </div>
+            )}
+            
+            {/* Benefits */}
+            {service.benefits && service.benefits.length > 0 && (
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-glamour-800 mb-3">{t('service.benefits')}</h2>
+                <ul className="space-y-2">
+                  {service.benefits.map((benefit, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="h-5 w-5 text-glamour-600 mr-2 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-700">{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
+              <Button size="lg" className="bg-glamour-700 hover:bg-glamour-800" onClick={() => navigate('/booking')}>
+                <Calendar className="mr-2 h-5 w-5" />
+                {t('service.bookNow')}
               </Button>
-              
-              {service.relatedProducts && service.relatedProducts.length > 0 && (
-                <>
-                  <h3 className="text-lg font-semibold text-glamour-800 mt-8 mb-4">Recommended Products</h3>
-                  <div className="space-y-4">
-                    {service.relatedProducts.map(product => (
-                      <div key={product.id} className="border rounded-md p-4">
-                        <div className="flex justify-between mb-2">
-                          <h4 className="font-medium">{product.name}</h4>
-                          <span className="text-glamour-700 font-semibold">${product.price}</span>
-                        </div>
-                        <Button variant="outline" size="sm" className="w-full" asChild>
-                          <Link to={`/products/${product.id}`}>
-                            View Details
-                            <ChevronRight className="ml-1 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
             </div>
           </div>
         </div>
+        
+        {/* Related Products Section */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16">
+            <h2 className="text-2xl font-bold text-glamour-800 mb-6">{t('service.recommendedProducts')}</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {relatedProducts.map((product) => (
+                <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                  <div className="h-48 bg-gray-200">
+                    {product.image_url ? (
+                      <img 
+                        src={product.image_url} 
+                        alt={product.name}
+                        className="w-full h-full object-cover object-center"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <p className="text-gray-500">No image</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <div className="flex justify-between mb-2">
+                      <h3 className="text-xl font-semibold text-glamour-800">{product.name}</h3>
+                      <span className="font-semibold text-glamour-700">{product.price} AZN</span>
+                    </div>
+                    <p className="text-gray-600 mb-4 line-clamp-2">{product.description}</p>
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link to={`/products/${product.id}`}>
+                        <ShoppingBag className="mr-2 h-4 w-4" />
+                        {t('service.viewProductDetails')}
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </main>
-
+      
       <Footer />
     </div>
   );
