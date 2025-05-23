@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import CustomerInfo from "./CustomerInfo";
@@ -363,7 +364,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     max={new Date(Date.now() + maxBookingDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    {t("booking.availableForNextDays", { days: maxBookingDays })}
+                    {t("booking.availableForNextDays")} {maxBookingDays} {t("booking.days")}
                   </p>
                 </div>
                 
@@ -381,7 +382,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                     max={workingHoursEnd}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    {t("booking.workingHours", { start: workingHoursStart, end: workingHoursEnd })}
+                    {t("booking.workingHours")} {workingHoursStart} - {workingHoursEnd}
                   </p>
                 </div>
               </div>
