@@ -1,4 +1,3 @@
-
 // Common base types for the application
 
 // Basic User type
@@ -8,6 +7,19 @@ export interface User {
   email: string;
   role?: string;
 }
+
+// Update UserRole type to include 'inactive'
+export type UserRole = 
+  | 'super_admin' 
+  | 'admin' 
+  | 'staff' 
+  | 'customer' 
+  | 'cash' 
+  | 'appointment' 
+  | 'service' 
+  | 'product' 
+  | 'reception'
+  | 'inactive';
 
 // Generic pagination response
 export interface PaginatedResponse<T> {

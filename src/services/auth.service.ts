@@ -1,11 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { User, UserRole } from '@/models/user.model';
 import { v4 as uuidv4 } from 'uuid';
-
-interface AuthError {
-  message: string;
-}
+import { UserRole } from '@/models/types';
 
 /**
  * Sign in with email and password
@@ -98,30 +93,29 @@ export const signOut = async () => {
 /**
  * Create a new user account
  */
-export const signUp = async (
-  email: string,
-  password: string,
-  userData: Record<string, any> = {}
-) => {
+export const signUp = async (email: string, password: string, userData: any = {}) => {
   try {
     // First create the auth user
-    const { data, error } = await supabase.auth.signUp({ 
-      email, 
+    const { data, error } = await supabase.auth.signUp({
+      email,
       password,
       options: {
         data: {
           first_name: userData.first_name || userData.firstName || '',
-          last_name: userData.last_name || userData.lastName || '',
+          last_name: userData.last_name || userData.lastName || ''
         }
       }
     });
-    
+
     if (error) {
-      return { user: null, session: null, error: error.message };
+      return {
+        user: null,
+        session: null,
+        error: error.message
+      };
     }
-    
+
     let user = null;
-    
     if (data.user) {
       // Create user profile record with additional data
       const userProfile = {
@@ -130,25 +124,25 @@ export const signUp = async (
         first_name: userData.first_name || userData.firstName || '',
         last_name: userData.last_name || userData.lastName || '',
         full_name: `${userData.first_name || userData.firstName || ''} ${userData.last_name || userData.lastName || ''}`.trim(),
-        role: userData.role || 'customer',
+        role: (userData.role || 'customer') as UserRole,
         gender: userData.gender || 'other',
         phone: userData.phone || '',
         hashed_password: '' // Password is handled by auth, this is just for schema compatibility
       };
-      
+
       const { error: profileError } = await supabase
         .from('users')
         .insert([userProfile]);
-      
+
       if (profileError) {
         console.error("Failed to create user profile:", profileError);
         return {
-          user: null, 
+          user: null,
           session: null,
           error: profileError.message
         };
       }
-      
+
       // Map response to our User interface
       user = {
         id: data.user.id,
@@ -158,18 +152,18 @@ export const signUp = async (
         role: (userData.role || 'customer') as UserRole,
         phone: userData.phone || '',
         gender: userData.gender || 'other',
-        token: data.session?.access_token || '',
+        token: data.session?.access_token || ''
       };
     }
-    
+
     return {
       user,
       session: data.session,
       error: null
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Sign up error:", error);
-    const authError = error as AuthError;
+    const authError = error;
     return {
       user: null,
       session: null,
@@ -285,11 +279,11 @@ export const getAllStaff = async () => {
 /**
  * Create a new staff user
  */
-export const createStaffUser = async (userData: Record<string, any>) => {
+export const createStaffUser = async (userData: any) => {
   try {
     // Generate a random password if not provided
     const password = userData.password || uuidv4().substring(0, 12);
-    
+
     // Create the auth user
     const { data, error } = await supabase.auth.signUp({
       email: userData.email,
@@ -297,17 +291,19 @@ export const createStaffUser = async (userData: Record<string, any>) => {
       options: {
         data: {
           first_name: userData.first_name || '',
-          last_name: userData.last_name || '',
+          last_name: userData.last_name || ''
         }
       }
     });
-    
+
     if (error) {
-      return { user: null, error: error.message };
+      return {
+        user: null,
+        error: error.message
+      };
     }
-    
+
     let user = null;
-    
     if (data.user) {
       // Create user profile with role set to staff
       const userProfile = {
@@ -316,17 +312,17 @@ export const createStaffUser = async (userData: Record<string, any>) => {
         first_name: userData.first_name || '',
         last_name: userData.last_name || '',
         full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
-        role: 'staff',
+        role: 'staff' as UserRole,
         gender: userData.gender || 'other',
         phone: userData.phone || '',
         birth_date: userData.birth_date || null,
-        hashed_password: '', // Password is handled by auth
+        hashed_password: ''
       };
-      
+
       const { error: profileError } = await supabase
         .from('users')
         .insert([userProfile]);
-      
+
       if (profileError) {
         console.error("Failed to create staff profile:", profileError);
         return {
@@ -334,39 +330,39 @@ export const createStaffUser = async (userData: Record<string, any>) => {
           error: profileError.message
         };
       }
-      
+
       // Also create an entry in the staff table
       const staffRecord = {
         user_id: data.user.id,
-        position: 'Staff Member', // Default position
-        name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
+        position: 'Staff Member',
+        name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim()
       };
-      
+
       const { error: staffError } = await supabase
         .from('staff')
         .insert([staffRecord]);
-      
+
       if (staffError) {
         console.error("Failed to create staff record:", staffError);
       }
-      
+
       // Map response to our User interface
       user = {
         id: data.user.id,
         email: userData.email,
         first_name: userData.first_name || '',
         last_name: userData.last_name || '',
-        role: 'staff' as UserRole,
+        role: 'staff' as UserRole
       };
     }
-    
+
     return {
       user,
       error: null
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Create staff user error:", error);
-    const authError = error as AuthError;
+    const authError = error;
     return {
       user: null,
       error: authError.message || 'Failed to create staff user'
@@ -374,7 +370,7 @@ export const createStaffUser = async (userData: Record<string, any>) => {
   }
 };
 
-export const updateUserProfile = async (userId: string, updates: Partial<User>) => {
+export const updateUserProfile = async (userId: string, updates: any) => {
   try {
     // Map our User interface to database fields
     const dbUpdates: Record<string, any> = {};
@@ -478,4 +474,16 @@ export const updatePasswordWithResetToken = async (newPassword: string) => {
     const authError = error as AuthError;
     return { error: authError.message || 'Failed to update password' };
   }
+};
+
+export const authService = {
+  signInWithEmail,
+  signOut,
+  signUp,
+  getCurrentUser,
+  getAllStaff,
+  createStaffUser,
+  updateUserProfile,
+  requestPasswordReset,
+  updatePasswordWithResetToken
 };

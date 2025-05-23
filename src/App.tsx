@@ -20,6 +20,7 @@ import BookingDetails from '@/pages/BookingDetails';
 import ScrollToTop from '@/components/ScrollToTop';
 import CustomerDetailPage from '@/pages/CustomerDetailPage';
 import { config } from "@/config/env";
+import { LanguageProvider } from '@/context/LanguageContext';
 
 function App() {
   useEffect(() => {
@@ -31,77 +32,79 @@ function App() {
   
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/services/:id" element={<ServiceDetail />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/booking" element={<Booking />} />
-          <Route path="/booking/:id" element={<BookingDetails />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/auth" element={<LoginPage />} />
-          
-          {/* Admin routes */}
-          <Route path="/admin" element={
-            <RequireAuth>
-              <Admin initialTab="dashboard" />
-            </RequireAuth>
-          } />
-          <Route path="/admin/customers" element={
-            <RequireAuth>
-              <Admin initialTab="customers" />
-            </RequireAuth>
-          } />
-          <Route path="/admin/customers/:customerId" element={
-            <RequireAuth>
-              <CustomerDetailPage />
-            </RequireAuth>
-          } />
-          <Route path="/admin/services" element={
-            <RequireAuth>
-              <Admin initialTab="services" />
-            </RequireAuth>
-          } />
-          <Route path="/admin/products" element={
-            <RequireAuth>
-              <Admin initialTab="products" />
-            </RequireAuth>
-          } />
-          <Route path="/admin/appointments" element={
-            <RequireAuth>
-              <Admin initialTab="appointments" />
-            </RequireAuth>
-          } />
-          <Route path="/admin/staff" element={
-            <RequireAuth>
-              <Admin initialTab="staff" />
-            </RequireAuth>
-          } />
-          <Route path="/admin/settings" element={
-            <RequireAuth>
-              <Admin initialTab="settings" />
-            </RequireAuth>
-          } />
-          <Route path="/admin/profile" element={
-            <RequireAuth>
-              <Admin initialTab="profile" />
-            </RequireAuth>
-          } />
-          <Route path="/admin/cash" element={
-            <RequireAuth>
-              <Admin initialTab="cash" />
-            </RequireAuth>
-          } />
-          
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Toaster />
-      </AuthProvider>
+      <LanguageProvider>
+        <AuthProvider>
+          <ScrollToTop />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/services/:id" element={<ServiceDetail />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/booking" element={<Booking />} />
+            <Route path="/booking/:id" element={<BookingDetails />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/auth" element={<LoginPage />} />
+            
+            {/* Admin routes */}
+            <Route path="/admin" element={
+              <RequireAuth>
+                <Admin initialTab="dashboard" />
+              </RequireAuth>
+            } />
+            <Route path="/admin/customers" element={
+              <RequireAuth>
+                <Admin initialTab="customers" />
+              </RequireAuth>
+            } />
+            <Route path="/admin/customers/:customerId" element={
+              <RequireAuth>
+                <CustomerDetailPage />
+              </RequireAuth>
+            } />
+            <Route path="/admin/services" element={
+              <RequireAuth>
+                <Admin initialTab="services" />
+              </RequireAuth>
+            } />
+            <Route path="/admin/products" element={
+              <RequireAuth>
+                <Admin initialTab="products" />
+              </RequireAuth>
+            } />
+            <Route path="/admin/appointments" element={
+              <RequireAuth>
+                <Admin initialTab="appointments" />
+              </RequireAuth>
+            } />
+            <Route path="/admin/staff" element={
+              <RequireAuth>
+                <Admin initialTab="staff" />
+              </RequireAuth>
+            } />
+            <Route path="/admin/settings" element={
+              <RequireAuth>
+                <Admin initialTab="settings" />
+              </RequireAuth>
+            } />
+            <Route path="/admin/profile" element={
+              <RequireAuth>
+                <Admin initialTab="profile" />
+              </RequireAuth>
+            } />
+            <Route path="/admin/cash" element={
+              <RequireAuth>
+                <Admin initialTab="cash" />
+              </RequireAuth>
+            } />
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Toaster />
+        </AuthProvider>
+      </LanguageProvider>
     </BrowserRouter>
   );
 }
