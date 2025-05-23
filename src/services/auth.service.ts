@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '@/models/types';
@@ -311,15 +312,15 @@ export const createStaffUser = async (userData: any) => {
     let user = null;
     if (data.user) {
       // Create user profile with role set to staff
-      // Ensure role is compatible with database enum (exclude 'inactive')
+      // Use explicit type casting to match database enum
       const userProfile = {
         id: data.user.id,
         email: userData.email,
         first_name: userData.first_name || '',
         last_name: userData.last_name || '',
         full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
-        role: 'staff', // Use string literal instead of UserRole type
-        gender: userData.gender || 'other',
+        role: 'staff' as const, // Use const assertion to ensure exact type match
+        gender: (userData.gender || 'other') as 'male' | 'female' | 'other',
         phone: userData.phone || '',
         birth_date: userData.birth_date || null,
         hashed_password: ''
