@@ -11,13 +11,14 @@ export const useSettings = () => {
     queryFn: () => settingsService.getAllSettings(),
   });
 
-  const getSetting = (key: string): Setting | null => {
-    return settings?.find(setting => setting.key === key) || null;
+  const getSetting = (key: string, lang?: string): Setting | null => {
+    const targetLang = lang || language;
+    return settings?.find(setting => setting.key === key && setting.lang === targetLang) || null;
   };
 
   const getLocalizedSetting = (key: string, fallbackKey?: string): string => {
-    const setting = getSetting(key);
-    return settingsService.getLocalizedValue(setting, language, fallbackKey);
+    if (!settings) return '';
+    return settingsService.getLocalizedValue(settings, key, language, fallbackKey);
   };
 
   return {
@@ -33,15 +34,13 @@ export const useSettingByKey = (key: string) => {
   const { language } = useLanguage();
   
   const { data: setting, isLoading, error } = useQuery({
-    queryKey: ['setting', key],
-    queryFn: () => settingsService.getSettingByKey(key),
+    queryKey: ['setting', key, language],
+    queryFn: () => settingsService.getSettingByKey(key, language),
   });
-
-  const localizedValue = setting ? settingsService.getLocalizedValue(setting, language) : '';
 
   return {
     setting,
-    localizedValue,
+    localizedValue: setting?.value || '',
     isLoading,
     error,
   };

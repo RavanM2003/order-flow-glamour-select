@@ -551,25 +551,55 @@ export type Database = {
           created_at: string | null
           id: string
           key: string
+          lang: string
           status: boolean | null
           updated_at: string | null
-          value: Json
+          value: string
         }
         Insert: {
           created_at?: string | null
           id?: string
           key: string
+          lang?: string
           status?: boolean | null
           updated_at?: string | null
-          value: Json
+          value: string
         }
         Update: {
           created_at?: string | null
           id?: string
           key?: string
+          lang?: string
           status?: boolean | null
           updated_at?: string | null
-          value?: Json
+          value?: string
+        }
+        Relationships: []
+      }
+      settings_backup: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          key: string | null
+          status: boolean | null
+          updated_at: string | null
+          value: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          key?: string | null
+          status?: boolean | null
+          updated_at?: string | null
+          value?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          key?: string | null
+          status?: boolean | null
+          updated_at?: string | null
+          value?: Json | null
         }
         Relationships: []
       }
@@ -640,6 +670,7 @@ export type Database = {
       users: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           birth_date: string | null
           created_at: string | null
           email: string
@@ -651,11 +682,13 @@ export type Database = {
           last_name: string | null
           note: string | null
           phone: string
+          photo_url: string | null
           role: Database["public"]["Enums"]["role_enum"] | null
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           birth_date?: string | null
           created_at?: string | null
           email: string
@@ -667,11 +700,13 @@ export type Database = {
           last_name?: string | null
           note?: string | null
           phone: string
+          photo_url?: string | null
           role?: Database["public"]["Enums"]["role_enum"] | null
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           birth_date?: string | null
           created_at?: string | null
           email?: string
@@ -683,6 +718,7 @@ export type Database = {
           last_name?: string | null
           note?: string | null
           phone?: string
+          photo_url?: string | null
           role?: Database["public"]["Enums"]["role_enum"] | null
           updated_at?: string | null
         }
