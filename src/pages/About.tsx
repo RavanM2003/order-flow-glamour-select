@@ -42,7 +42,7 @@ const About = () => {
         throw error;
       }
 
-      return data as TeamMember[];
+      return data as unknown as TeamMember[];
     },
   });
 

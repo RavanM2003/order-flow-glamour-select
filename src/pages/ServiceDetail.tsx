@@ -27,7 +27,7 @@ const ServiceDetail = () => {
       const { data, error } = await supabase
         .from('services')
         .select('*')
-        .eq('id', id)
+        .eq('id', parseInt(id, 10))
         .single();
       
       if (error) throw error;
@@ -45,7 +45,7 @@ const ServiceDetail = () => {
         const { data: serviceProducts, error: spError } = await supabase
           .from('service_products')
           .select('product_id')
-          .eq('service_id', id);
+          .eq('service_id', parseInt(id, 10));
         
         if (spError || !serviceProducts || serviceProducts.length === 0) {
           // If no direct relations, just fetch some products

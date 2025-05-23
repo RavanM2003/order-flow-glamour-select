@@ -1,7 +1,7 @@
-
 export interface Staff {
   id: string;
-  name: string;
+  name?: string;
+  full_name?: string; // Added to match actual data structure from users table
   position?: string;
   specializations?: number[];
   created_at?: string;
@@ -11,6 +11,7 @@ export interface Staff {
   phone?: string;
   paymentType?: string;
   avatar_url?: string;
+  role?: string; // Added to match actual data structure from users table
 }
 
 export interface StaffWorkingHours {

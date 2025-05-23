@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useOrder } from "@/context/OrderContext";
 import CustomerInfo from "./CustomerInfo";
@@ -12,6 +11,7 @@ import { Service } from "@/models/service.model";
 import { Product } from "@/models/product.model";
 import { Staff } from "@/models/staff.model";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 export type BookingMode = "customer" | "staff";
 
@@ -69,7 +69,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         .select("id, full_name, role, position")
         .eq("role", "staff");
       if (error) throw error;
-      return data as Staff[];
+      return data as unknown as Staff[];
     },
   });
 
@@ -879,7 +879,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                   !formData.time ||
                   selectedServices.length === 0 ||
                   // Check if all selected services have staff assigned
-                  !Object.keys(selectedStaff).length === selectedServices.length
+                  Object.keys(selectedStaff).length !== selectedServices.length
                 }
               >
                 {t("booking.confirmBooking")}
