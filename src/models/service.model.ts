@@ -5,6 +5,7 @@ export interface Service {
   description?: string;
   duration: number; // Duration in minutes (must be number type)
   price: number;
+  discount?: number; // Added discount field
   benefits?: string[];
   category_id?: number;
   user_id?: string;
@@ -20,6 +21,7 @@ export interface ServiceFormData {
   description?: string;
   duration: number; // Ensure this is a number
   price: number;
+  discount?: number; // Added discount field
   benefits?: string[];
   relatedProducts?: number[];
   category_id?: number;
