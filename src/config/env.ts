@@ -44,8 +44,8 @@ interface Config {
 export const config: Config = {
   title: "Beauty Salon",
   api: {
-    url: process.env.API_URL || "",
-    key: process.env.API_KEY || "",
+    url: import.meta.env.VITE_API_URL || "",
+    key: import.meta.env.VITE_API_KEY || "",
     schema: {
       auth: {
         login: "/auth/login",
@@ -71,12 +71,12 @@ export const config: Config = {
     }
   },
   features: {
-    debugMode: process.env.NODE_ENV !== "production",
-    showDebugInfo: process.env.NODE_ENV !== "production"
+    debugMode: import.meta.env.MODE !== "production",
+    showDebugInfo: import.meta.env.MODE !== "production"
   },
   // Add these properties to match the interface
-  usesMockData: false,
+  usesMockData: import.meta.env.VITE_USE_MOCK_DATA === 'true',
   featureFlags: {
-    showDebugInfo: process.env.NODE_ENV !== "production"
+    showDebugInfo: import.meta.env.MODE !== "production"
   }
 };

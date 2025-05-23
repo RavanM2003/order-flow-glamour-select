@@ -17,7 +17,7 @@ interface AppConfig {
 }
 
 // Get environment variables
-const appMode = (import.meta.env.VITE_APP_MODE || 'prod') as AppMode; // Changed default to 'prod'
+const appMode = (import.meta.env.VITE_APP_MODE || 'prod') as AppMode;
 const prodApiUrl = import.meta.env.VITE_PROD_API_URL || null;
 const forceMockData = import.meta.env.VITE_USE_MOCK_DATA === 'true';
 
