@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/models/user.model';
 import { v4 as uuidv4 } from 'uuid';
@@ -355,7 +356,7 @@ export const createStaffUser = async (userData: Record<string, any>) => {
         email: userData.email,
         first_name: userData.first_name || '',
         last_name: userData.last_name || '',
-        role: 'staff',
+        role: 'staff' as UserRole,
       };
     }
     
