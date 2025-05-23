@@ -1,22 +1,82 @@
-import React, { useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Clock, DollarSign, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useServiceData } from '../hooks/useServiceData';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Service } from '@/models/service.model';
+import { Product } from '@/models/product.model';
+import { supabase } from '@/integrations/supabase/client';
 
 const ServiceDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { service, isLoading, error, fetchService } = useServiceData();
+  const navigate = useNavigate();
+  const [service, setService] = useState<Service | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
     if (id) {
-      fetchService(parseInt(id, 10)).catch(console.error);
+      fetchServiceAndProducts(parseInt(id, 10));
     }
-  }, [id, fetchService]);
+  }, [id]);
+
+  const fetchServiceAndProducts = async (serviceId: number) => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Fetch service details
+      const { data: serviceData, error: serviceError } = await supabase
+        .from('services')
+        .select('*')
+        .eq('id', serviceId)
+        .single();
+
+      if (serviceError) {
+        if (serviceError.code === 'PGRST116') {
+          // No rows returned - service not found
+          navigate('/404');
+          return;
+        }
+        throw serviceError;
+      }
+
+      setService(serviceData as Service);
+
+      // Fetch related products
+      const { data: serviceProductsData, error: serviceProductsError } = await supabase
+        .from('service_products')
+        .select('product_id')
+        .eq('service_id', serviceId);
+
+      if (serviceProductsError) {
+        console.error('Error fetching service products:', serviceProductsError);
+      } else if (serviceProductsData && serviceProductsData.length > 0) {
+        const productIds = serviceProductsData.map(sp => sp.product_id);
+        
+        const { data: productsData, error: productsError } = await supabase
+          .from('products')
+          .select('*')
+          .in('id', productIds);
+
+        if (productsError) {
+          console.error('Error fetching products:', productsError);
+        } else if (productsData) {
+          setRelatedProducts(productsData as Product[]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching service details:', error);
+      setError('Xidmət məlumatları yüklənə bilmədi');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   if (isLoading) {
     return (
@@ -40,12 +100,12 @@ const ServiceDetail: React.FC = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container py-12 text-center">
-          <h1 className="text-4xl font-bold text-glamour-800 mb-6">Service Not Found</h1>
+          <h1 className="text-4xl font-bold text-glamour-800 mb-6">Xidmət tapılmadı</h1>
           <p className="text-lg text-gray-600 mb-8">
-            {error ? String(error) : "The service you're looking for doesn't exist or has been removed."}
+            {error || "Axtardığınız xidmət mövcud deyil və ya silinib."}
           </p>
           <Button className="bg-glamour-700 hover:bg-glamour-800" asChild>
-            <Link to="/services">Browse All Services</Link>
+            <Link to="/services">Bütün xidmətlərə bax</Link>
           </Button>
         </main>
         <Footer />
@@ -65,11 +125,11 @@ const ServiceDetail: React.FC = () => {
             <div className="flex items-center space-x-6 mb-6">
               <div className="flex items-center text-glamour-600">
                 <Clock className="mr-2 h-5 w-5" />
-                <span>{service.duration} min</span>
+                <span>{service.duration} dəq</span>
               </div>
               <div className="flex items-center text-glamour-700 font-semibold">
                 <DollarSign className="mr-1 h-5 w-5" />
-                <span>{service.price}</span>
+                <span>{service.price} AZN</span>
               </div>
             </div>
             
@@ -82,18 +142,18 @@ const ServiceDetail: React.FC = () => {
                 />
               ) : (
                 <div className="bg-gray-200 h-full rounded-lg flex items-center justify-center">
-                  <p className="text-glamour-600">No image available</p>
+                  <p className="text-glamour-600">Şəkil mövcud deyil</p>
                 </div>
               )}
             </div>
             
             <div className="prose max-w-none mb-8">
-              <h2 className="text-2xl font-semibold text-glamour-800 mb-4">Description</h2>
-              <p className="text-gray-700 mb-6">{service.description || "No description available."}</p>
+              <h2 className="text-2xl font-semibold text-glamour-800 mb-4">Təsvir</h2>
+              <p className="text-gray-700 mb-6">{service.description || "Təsvir mövcud deyil."}</p>
               
               {service.benefits && service.benefits.length > 0 && (
                 <>
-                  <h2 className="text-2xl font-semibold text-glamour-800 mb-4">Benefits</h2>
+                  <h2 className="text-2xl font-semibold text-glamour-800 mb-4">Faydalar</h2>
                   <ul className="space-y-2 mb-6">
                     {service.benefits.map((benefit, index) => (
                       <li key={index} className="flex items-start">
@@ -110,27 +170,31 @@ const ServiceDetail: React.FC = () => {
           <div className="lg:w-1/3">
             <Card className="sticky top-24">
               <CardContent className="p-6">
-                <h3 className="text-xl font-bold text-glamour-800 mb-4">Book this Service</h3>
+                <h3 className="text-xl font-bold text-glamour-800 mb-4">Bu xidməti sifariş edin</h3>
                 <p className="text-gray-600 mb-6">
-                  Ready to experience the benefits of our {service.name.toLowerCase()}? Book your appointment today.
+                  {service.name.toLowerCase()} xidmətimizin faydalarını hiss etməyə hazırsınız? Bu gün təyinatınızı edin.
                 </p>
                 
                 <Button className="w-full bg-glamour-700 hover:bg-glamour-800 mb-4" size="lg" asChild>
-                  <Link to="/booking">Book Now</Link>
+                  <Link to="/booking">İndi sifariş et</Link>
                 </Button>
                 
-                {service.relatedProducts && service.relatedProducts.length > 0 && (
+                {relatedProducts && relatedProducts.length > 0 && (
                   <>
-                    <h3 className="text-lg font-semibold text-glamour-800 mt-8 mb-4">Recommended Products</h3>
+                    <h3 className="text-lg font-semibold text-glamour-800 mt-8 mb-4">Tövsiyə olunan məhsullar</h3>
                     <div className="space-y-4">
-                      {service.relatedProducts.map(productId => (
-                        <div key={productId} className="border rounded-md p-4">
+                      {relatedProducts.map(product => (
+                        <div key={product.id} className="border rounded-md p-4">
                           <div className="flex justify-between mb-2">
-                            <h4 className="font-medium">Product #{productId}</h4>
+                            <h4 className="font-medium">{product.name}</h4>
+                            <span className="text-glamour-700 font-semibold">{product.price} AZN</span>
                           </div>
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                            {product.description || "Məhsul haqqında məlumat yoxdur"}
+                          </p>
                           <Button variant="outline" size="sm" className="w-full" asChild>
-                            <Link to={`/products/${productId}`}>
-                              View Details
+                            <Link to={`/products/${product.id}`}>
+                              Ətraflı bax
                               <ChevronRight className="ml-1 h-4 w-4" />
                             </Link>
                           </Button>

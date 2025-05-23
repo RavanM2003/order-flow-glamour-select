@@ -1,12 +1,13 @@
+
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Calendar, ChevronRight, Lock } from 'lucide-react';
 import { config } from '@/config/env';
-import FeaturedServices from '@/components/FeaturedServices';
-import FeaturedProducts from '@/components/FeaturedProducts';
+import HomeServicesSection from '@/components/HomeServicesSection';
+import HomeProductsSection from '@/components/HomeProductsSection';
 import { useLanguage } from '@/context/LanguageContext';
 import { useQuery } from '@tanstack/react-query';
 import { serviceService } from '@/services/service.service';
@@ -14,13 +15,8 @@ import { productService } from '@/services/product.service';
 
 const Index = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
-  const [loadingServices, setLoadingServices] = useState(true);
-  const [loadingProducts, setLoadingProducts] = useState(true);
-  const [services, setServices] = useState([]);
-  const [products, setProducts] = useState([]);
-  const [allServices, setAllServices] = useState([]);
-  const [filteredServices, setFilteredServices] = useState([]);
 
   // Pre-fetch services and products for faster navigation
   const { data: servicesData } = useQuery({
@@ -42,32 +38,9 @@ const Index = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const fetchServices = async () => {
-      try {
-        const response = await serviceService.getAll();
-        if (response.data) {
-          setServices(response.data.slice(0, 4));
-        }
-      } catch (error) {
-        console.error('Error fetching services:', error);
-      }
-    };
-
-    const fetchProducts = async () => {
-      try {
-        const response = await productService.getAll();
-        if (response.data) {
-          setProducts(response.data.slice(0, 4));
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error);
-      }
-    };
-
-    fetchServices();
-    fetchProducts();
-  }, []);
+  const handleBookingClick = () => {
+    navigate('/booking');
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -86,11 +59,9 @@ const Index = () => {
                   {t('home.subtitle')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start animate-fade-in" style={{animationDelay: '0.4s'}}>
-                  <Button asChild size="lg" className="font-semibold">
-                    <Link to="/booking">
-                      {t('home.makeAppointment')}
-                      <Calendar className="ml-2 h-4 w-4" />
-                    </Link>
+                  <Button onClick={handleBookingClick} size="lg" className="font-semibold">
+                    {t('home.makeAppointment')}
+                    <Calendar className="ml-2 h-4 w-4" />
                   </Button>
                   <Button asChild variant="outline" size="lg">
                     <Link to="/services">
@@ -125,34 +96,22 @@ const Index = () => {
           </div>
         </section>
         
-        {/* Feature Section */}
+        {/* Services and Products Sections */}
         <section className="py-12 px-4 bg-background">
           <div className="container mx-auto max-w-6xl">
-            <h2 className="text-3xl font-bold text-center mb-12">{t('home.platform')}</h2>
-            
             <div className="space-y-12">
               {/* Services Section */}
               <div>
-                <h3 className="text-2xl font-semibold mb-6 text-center">{t('home.services')}</h3>
-                <FeaturedServices />
+                <h2 className="text-3xl font-bold text-center mb-8">{t('home.services')}</h2>
+                <HomeServicesSection />
               </div>
               
               {/* Products Section */}
               <div>
-                <h3 className="text-2xl font-semibold mb-6 text-center">{t('home.products')}</h3>
-                <FeaturedProducts />
+                <h2 className="text-3xl font-bold text-center mb-8">{t('home.products')}</h2>
+                <HomeProductsSection />
               </div>
             </div>
-            
-            {/* Environment Indicator (for development) */}
-            {config.features.debugMode && (
-              <div className="mt-12 p-4 bg-amber-50 border border-amber-200 rounded text-amber-800">
-                <p className="text-center text-sm">
-                  {config.features.debugMode ? 'Local Development Mode' : 'API Mode'}: 
-                  {config.features.debugMode ? 'Using Mock Data' : 'Using Real API'}
-                </p>
-              </div>
-            )}
           </div>
         </section>
       </main>
