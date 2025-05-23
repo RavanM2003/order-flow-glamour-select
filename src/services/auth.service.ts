@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { UserRole } from '@/models/types';
@@ -138,7 +137,7 @@ export const signUp = async (email: string, password: string, userData: any = {}
 
       const { error: profileError } = await supabase
         .from('users')
-        .insert(userProfile);
+        .insert([userProfile]);
 
       if (profileError) {
         console.error("Failed to create user profile:", profileError);
@@ -312,14 +311,14 @@ export const createStaffUser = async (userData: any) => {
     let user = null;
     if (data.user) {
       // Create user profile with role set to staff
-      // Using type casting to ensure compatibility with the database enum
+      // Ensure role is compatible with database enum (exclude 'inactive')
       const userProfile = {
         id: data.user.id,
         email: userData.email,
         first_name: userData.first_name || '',
         last_name: userData.last_name || '',
         full_name: `${userData.first_name || ''} ${userData.last_name || ''}`.trim(),
-        role: 'staff' as UserRole, // Explicitly cast to UserRole type
+        role: 'staff', // Use string literal instead of UserRole type
         gender: userData.gender || 'other',
         phone: userData.phone || '',
         birth_date: userData.birth_date || null,
@@ -328,7 +327,7 @@ export const createStaffUser = async (userData: any) => {
 
       const { error: profileError } = await supabase
         .from('users')
-        .insert(userProfile);
+        .insert([userProfile]);
 
       if (profileError) {
         console.error("Failed to create staff profile:", profileError);
