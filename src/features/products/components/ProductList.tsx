@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Product } from "@/models/product.model";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import DiscountBadge from "@/components/ui/discount-badge";
+import PriceDisplay from "@/components/ui/price-display";
 import { usePagination } from "@/hooks/use-pagination";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -94,8 +96,10 @@ const ProductList = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {paginatedItems.map((product) => (
-          <div key={`product-item-${product.id}`} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+        {paginatedItems.map((product, index) => (
+          <div key={`product-${product.id}-${index}`} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow relative">
+            <DiscountBadge discount={product.discount || 0} />
+            
             <div className="h-48 bg-gray-200 flex items-center justify-center">
               {product.image_url ? (
                 <img 
@@ -111,7 +115,11 @@ const ProductList = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-xl font-bold text-glamour-800">{product.name}</h2>
-                <div className="text-glamour-700 font-semibold">{product.price} AZN</div>
+                <PriceDisplay 
+                  price={product.price} 
+                  discount={product.discount}
+                  className="ml-4"
+                />
               </div>
               
               <div className="text-sm text-gray-500 mb-4">

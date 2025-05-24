@@ -6,10 +6,14 @@ import { ChevronRight, Package } from "lucide-react";
 import { Product } from "@/models/product.model";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import DiscountBadge from "@/components/ui/discount-badge";
+import PriceDisplay from "@/components/ui/price-display";
+import { useLanguage } from "@/context/LanguageContext";
 
 const HomeProductsSection = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -65,7 +69,9 @@ const HomeProductsSection = () => {
     <div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         {products.map((product) => (
-          <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+          <div key={product.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow relative">
+            <DiscountBadge discount={product.discount || 0} />
+            
             <div className="h-48 bg-gray-200 flex items-center justify-center">
               {product.image_url ? (
                 <img 
@@ -80,12 +86,16 @@ const HomeProductsSection = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-xl font-bold text-glamour-800">{product.name}</h3>
-                <div className="text-glamour-700 font-semibold">{product.price} AZN</div>
+                <PriceDisplay 
+                  price={product.price} 
+                  discount={product.discount}
+                  className="ml-4"
+                />
               </div>
-              <p className="text-gray-600 mb-6 line-clamp-3">{product.description || "Məhsul haqqında məlumat yoxdur"}</p>
+              <p className="text-gray-600 mb-6 line-clamp-3">{product.description || t('products.noDescription')}</p>
               <Button className="w-full bg-glamour-700 hover:bg-glamour-800" asChild>
                 <Link to={`/products/${product.id}`}>
-                  Ətraflı bax
+                  {t('home.viewDetails')}
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -98,7 +108,7 @@ const HomeProductsSection = () => {
         <div className="text-center">
           <Button asChild variant="outline" size="lg">
             <Link to="/products">
-              Bütün məhsullara bax
+              {t('home.viewAllProducts')}
               <ChevronRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -107,9 +117,9 @@ const HomeProductsSection = () => {
       
       {products.length === 0 && !loading && (
         <div className="text-center py-12">
-          <p className="text-lg text-gray-600 mb-6">Hələ heç bir məhsul əlavə edilməyib</p>
+          <p className="text-lg text-gray-600 mb-6">{t('products.noProductsAdded')}</p>
           <Button asChild variant="outline">
-            <Link to="/products">Məhsullar səhifəsinə bax</Link>
+            <Link to="/products">{t('products.viewProductsPage')}</Link>
           </Button>
         </div>
       )}

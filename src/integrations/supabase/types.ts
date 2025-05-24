@@ -344,6 +344,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           details: string | null
+          discount: number | null
           how_to_use: string | null
           id: number
           ingredients: string | null
@@ -357,6 +358,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           details?: string | null
+          discount?: number | null
           how_to_use?: string | null
           id?: number
           ingredients?: string | null
@@ -370,6 +372,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           details?: string | null
+          discount?: number | null
           how_to_use?: string | null
           id?: number
           ingredients?: string | null

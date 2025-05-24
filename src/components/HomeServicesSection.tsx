@@ -2,14 +2,18 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ChevronRight, Clock, DollarSign } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
 import { Service } from "@/models/service.model";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
+import DiscountBadge from "@/components/ui/discount-badge";
+import PriceDisplay from "@/components/ui/price-display";
+import { useLanguage } from "@/context/LanguageContext";
 
 const HomeServicesSection = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -66,7 +70,9 @@ const HomeServicesSection = () => {
     <div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         {services.map((service) => (
-          <div key={service.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+          <div key={service.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow relative">
+            <DiscountBadge discount={service.discount || 0} />
+            
             <div className="h-48 bg-gray-200 flex items-center justify-center">
               {service.image_urls && service.image_urls.length > 0 ? (
                 <img 
@@ -81,16 +87,20 @@ const HomeServicesSection = () => {
             <div className="p-6">
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-xl font-bold text-glamour-800">{service.name}</h3>
-                <div className="text-glamour-700 font-semibold">{service.price} AZN</div>
+                <PriceDisplay 
+                  price={service.price} 
+                  discount={service.discount}
+                  className="ml-4"
+                />
               </div>
               <div className="flex items-center text-sm text-gray-500 mb-4">
                 <Clock className="mr-1 h-4 w-4" />
-                <span>Müddət: {service.duration} dəq</span>
+                <span>{t('services.duration')}: {service.duration} {t('services.minutes')}</span>
               </div>
-              <p className="text-gray-600 mb-6 line-clamp-3">{service.description || "Xidmət haqqında məlumat yoxdur"}</p>
+              <p className="text-gray-600 mb-6 line-clamp-3">{service.description || t('services.noDescription')}</p>
               <Button className="w-full bg-glamour-700 hover:bg-glamour-800" asChild>
                 <Link to={`/services/${service.id}`}>
-                  Ətraflı bax
+                  {t('home.viewDetails')}
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -103,7 +113,7 @@ const HomeServicesSection = () => {
         <div className="text-center">
           <Button asChild variant="outline" size="lg">
             <Link to="/services">
-              Bütün xidmətlərə bax
+              {t('home.viewAllServices')}
               <ChevronRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
@@ -112,9 +122,9 @@ const HomeServicesSection = () => {
       
       {services.length === 0 && !loading && (
         <div className="text-center py-12">
-          <p className="text-lg text-gray-600 mb-6">Hələ heç bir xidmət əlavə edilməyib</p>
+          <p className="text-lg text-gray-600 mb-6">{t('services.noServicesAdded')}</p>
           <Button asChild variant="outline">
-            <Link to="/services">Xidmətlər səhifəsinə bax</Link>
+            <Link to="/services">{t('services.viewServicesPage')}</Link>
           </Button>
         </div>
       )}

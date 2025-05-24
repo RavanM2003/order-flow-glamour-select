@@ -11,6 +11,7 @@ export interface Product {
   user_id?: string;
   created_at?: string;
   updated_at?: string;
+  discount?: number; // Added discount field
   // Additional fields from database
   details?: string;
   ingredients?: string;
@@ -29,4 +30,5 @@ export interface ProductFormData {
   category?: string;
   image_url?: string;
   isServiceRelated?: boolean;
+  discount?: number; // Added discount field
 }
