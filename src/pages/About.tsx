@@ -31,8 +31,7 @@ const About = () => {
           full_name,
           bio,
           photo_url,
-          role,
-          position
+          role
         `)
         .in('role', ['staff', 'admin', 'super_admin'])
         .not('full_name', 'is', null);
