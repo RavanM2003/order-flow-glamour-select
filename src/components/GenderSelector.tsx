@@ -2,7 +2,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { mars, venus } from 'lucide-react';
+import { User, Users } from 'lucide-react';
 import { useLanguage } from '@/context/LanguageContext';
 
 interface GenderSelectorProps {
@@ -37,7 +37,7 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({ value, onChange, classN
                 ? "bg-white text-glamour-700"
                 : "bg-gray-100 text-glamour-700"
             )}>
-              {React.createElement(mars, { className: "h-6 w-6" })}
+              <User className="h-6 w-6" />
             </div>
             <span className={cn(
               "text-sm font-medium transition-colors hidden md:block",
@@ -65,7 +65,7 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({ value, onChange, classN
                 ? "bg-white text-glamour-700"
                 : "bg-gray-100 text-glamour-700"
             )}>
-              {React.createElement(venus, { className: "h-6 w-6" })}
+              <Users className="h-6 w-6" />
             </div>
             <span className={cn(
               "text-sm font-medium transition-colors hidden md:block",
