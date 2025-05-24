@@ -17,7 +17,7 @@ export type Database = {
           price: number | null
           product_id: number | null
           quantity: number | null
-          staff_id: string | null
+          staff_user_id: string | null
         }
         Insert: {
           amount?: number | null
@@ -26,7 +26,7 @@ export type Database = {
           price?: number | null
           product_id?: number | null
           quantity?: number | null
-          staff_id?: string | null
+          staff_user_id?: string | null
         }
         Update: {
           amount?: number | null
@@ -35,7 +35,7 @@ export type Database = {
           price?: number | null
           product_id?: number | null
           quantity?: number | null
-          staff_id?: string | null
+          staff_user_id?: string | null
         }
         Relationships: [
           {
@@ -54,7 +54,7 @@ export type Database = {
           },
           {
             foreignKeyName: "appointment_products_staff_id_fkey"
-            columns: ["staff_id"]
+            columns: ["staff_user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -69,7 +69,7 @@ export type Database = {
           price: number | null
           quantity: number | null
           service_id: number | null
-          staff_id: string | null
+          staff_user_id: string | null
         }
         Insert: {
           appointment_id?: number | null
@@ -78,7 +78,7 @@ export type Database = {
           price?: number | null
           quantity?: number | null
           service_id?: number | null
-          staff_id?: string | null
+          staff_user_id?: string | null
         }
         Update: {
           appointment_id?: number | null
@@ -87,7 +87,7 @@ export type Database = {
           price?: number | null
           quantity?: number | null
           service_id?: number | null
-          staff_id?: string | null
+          staff_user_id?: string | null
         }
         Relationships: [
           {
@@ -106,7 +106,7 @@ export type Database = {
           },
           {
             foreignKeyName: "appointment_services_staff_id_fkey"
-            columns: ["staff_id"]
+            columns: ["staff_user_id"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -239,23 +239,29 @@ export type Database = {
       invoices: {
         Row: {
           appointment_id: number | null
+          appointment_json: Json | null
           id: number
           invoice_number: string
           issued_at: string | null
+          status: string | null
           total_amount: number
         }
         Insert: {
           appointment_id?: number | null
+          appointment_json?: Json | null
           id?: number
           invoice_number: string
           issued_at?: string | null
+          status?: string | null
           total_amount: number
         }
         Update: {
           appointment_id?: number | null
+          appointment_json?: Json | null
           id?: number
           invoice_number?: string
           issued_at?: string | null
+          status?: string | null
           total_amount?: number
         }
         Relationships: [
@@ -732,10 +738,29 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      staff_with_services_json: {
+        Row: {
+          positions: Json | null
+          user: Json | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      get_available_staff_by_service_and_date: {
+        Args: { service_id: number; reservation_date: string }
+        Returns: {
+          user_id: string
+          full_name: string
+        }[]
+      }
+      get_staff_by_service: {
+        Args: { service_id: number }
+        Returns: {
+          user_id: string
+          full_name: string
+        }[]
+      }
     }
     Enums: {
       action_enum: "INSERT" | "UPDATE" | "DELETE"

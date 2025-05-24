@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -19,10 +18,12 @@ const HomeProductsSection = () => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
+        // Order by discount first (descending), then by created_at
         const { data, error } = await supabase
           .from('products')
           .select('*')
           .limit(3)
+          .order('discount', { ascending: false })
           .order('created_at', { ascending: false });
         
         if (error) {
