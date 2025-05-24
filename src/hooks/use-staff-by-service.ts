@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Staff } from '@/models/staff.model';
 
@@ -15,13 +15,17 @@ export function useStaffByService(): UseStaffByServiceResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStaffByService = async (serviceId: number, date: Date) => {
+  const fetchStaffByService = useCallback(async (serviceId: number, date: Date) => {
+    console.log('useStaffByService: Starting fetch', { serviceId, date });
     setLoading(true);
     setError(null);
     
     try {
       const formattedDate = date.toISOString().split('T')[0];
-      console.log('Fetching staff for service:', serviceId, 'date:', formattedDate);
+      console.log('useStaffByService: Calling RPC with:', {
+        service_id: serviceId,
+        reservation_date: formattedDate
+      });
       
       const { data, error } = await supabase
         .rpc('get_available_staff_by_service_and_date', {
@@ -29,31 +33,34 @@ export function useStaffByService(): UseStaffByServiceResult {
           reservation_date: formattedDate
         });
 
+      console.log('useStaffByService: RPC response:', { data, error });
+
       if (error) {
-        console.error('Error fetching staff:', error);
+        console.error('useStaffByService: RPC error:', error);
         throw error;
       }
 
-      console.log('Raw staff data from RPC:', data);
-
       // Map the RPC response to Staff model format
-      const staffData = data?.map((item: any) => ({
-        id: item.user_id,
-        user_id: item.user_id,
-        full_name: item.full_name,
-        name: item.full_name, // For compatibility
-      })) || [];
+      const staffData = data?.map((item: any) => {
+        console.log('useStaffByService: Mapping staff item:', item);
+        return {
+          id: item.user_id,
+          user_id: item.user_id,
+          full_name: item.full_name,
+          name: item.full_name, // For compatibility
+        };
+      }) || [];
 
-      console.log('Mapped staff data:', staffData);
+      console.log('useStaffByService: Final mapped staff data:', staffData);
       setStaff(staffData);
     } catch (err) {
-      console.error('Failed to fetch staff:', err);
+      console.error('useStaffByService: Failed to fetch staff:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch staff');
       setStaff([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   return {
     staff,

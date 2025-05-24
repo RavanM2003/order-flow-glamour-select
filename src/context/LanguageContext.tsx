@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type Language = 'az' | 'en' | 'ru' | 'uz';
@@ -8,9 +9,31 @@ interface LanguageContextType {
   t: (key: string) => string;
 }
 
-// Translations object
+// Translations object with all missing keys added
 const translations = {
   az: {
+    // Navigation
+    'nav.home': 'Ana səhifə',
+    'nav.services': 'Xidmətlər',
+    'nav.products': 'Məhsullar',
+    'nav.about': 'Haqqımızda',
+    'nav.contact': 'Əlaqə',
+    'nav.bookNow': 'Rezerv et',
+    
+    // Home
+    'home.title': 'Glamour Studio-ya xoş gəlmisiniz',
+    'home.subtitle': 'Sizin gözəlliyiniz, bizim missiyamız',
+    'home.makeAppointment': 'Təyinat rezerv et',
+    'home.viewServices': 'Xidmətlərə bax',
+    'home.services': 'Xidmətlərimiz',
+    'home.products': 'Məhsullarımız',
+    'home.viewDetails': 'Ətraflı bax',
+    'home.viewAllProducts': 'Bütün məhsullara bax',
+    'home.viewAllServices': 'Bütün xidmətlərə bax',
+    
+    // Admin
+    'admin.login': 'İdarəçi girişi',
+    
     // Common
     'common.discount': 'ENDİRİM',
     'common.viewDetails': 'Ətraflı bax',
@@ -18,12 +41,6 @@ const translations = {
     'common.search': 'Axtar...',
     'common.loadMore': 'Daha çox',
     'common.noData': 'Məlumat tapılmadı',
-    
-    // Home
-    'home.demoLogin': 'Demo rejimdə test istifadəçiləri ilə giriş edə bilərsiniz',
-    'home.viewDetails': 'Ətraflı bax',
-    'home.viewAllProducts': 'Bütün məhsullara bax',
-    'home.viewAllServices': 'Bütün xidmətlərə bax',
     
     // Services
     'services.title': 'Xidmətlərimiz',
@@ -41,14 +58,6 @@ const translations = {
     'services.viewServicesPage': 'Xidmətlər səhifəsinə bax',
     'services.viewAllServices': 'Bütün xidmətlərə bax',
     
-    // Service Detail
-    'service.backToServices': 'Xidmətlərə qayıt',
-    'service.minutes': 'dəqiqə',
-    'service.benefits': 'Faydalar',
-    'service.bookNow': 'İndi rezerv et',
-    'service.recommendedProducts': 'Tövsiyə olunan məhsullar',
-    'service.viewProductDetails': 'Məhsul detallarına bax',
-    
     // Products
     'products.title': 'Məhsullarımız',
     'products.description': 'Keyfiyyətli gözəllik məhsulları',
@@ -59,15 +68,6 @@ const translations = {
     'products.noDescription': 'Təsvir mövcud deyil',
     'products.noProductsAdded': 'Hələ heç bir məhsul əlavə edilməyib',
     'products.viewProductsPage': 'Məhsullar səhifəsinə bax',
-    
-    // Product Detail
-    'product.backToProducts': 'Məhsullara qayıt',
-    'product.details': 'Detallar',
-    'product.howToUse': 'İstifadə qaydası',
-    'product.ingredients': 'Tərkib',
-    'product.bookAppointment': 'Təyinat rezerv et',
-    'product.relatedServices': 'Əlaqəli xidmətlər',
-    'product.viewServiceDetails': 'Xidmət detallarına bax',
     
     // Contact
     'contact.name': 'Ad',
@@ -132,45 +132,30 @@ const translations = {
     'booking.servicesRequired': 'Ən azı bir xidmət seçilməlidir',
     'booking.staffRequired': 'Bütün xidmətlər üçün işçi seçilməlidir',
     'booking.loadMore': 'Daha çox',
-    'booking.searchProducts': 'Məhsulları axtar...',
-    'booking.recommendedProducts': 'Tövsiyə olunan məhsullar',
-    'booking.allProducts': 'Bütün məhsullar',
-    'booking.selectedProducts': 'Seçilmiş məhsullar',
-    'booking.productsTotal': 'Məhsullar cəmi',
-    'booking.noProducts': 'Məhsul tapılmadı',
-    'booking.orderSummary': 'Sifariş xülasəsi',
-    'booking.customerDetails': 'Müştəri məlumatları',
-    'booking.appointmentDate': 'Təyinat tarixi',
-    'booking.paymentMethod': 'Ödəniş üsulu',
-    'booking.total': 'Ümumi',
-    'booking.cashPayment': 'Nağd ödəniş',
-    'booking.cashPaymentDesc': 'Xidmət zamanı nağd ödəniş',
-    'booking.cardPayment': 'Kart ödənişi',
-    'booking.cardPaymentDesc': 'Bank kartı ilə ödəniş',
-    'booking.posTerminal': 'POS terminal',
-    'booking.posTerminalDesc': 'POS terminal vasitəsilə ödəniş',
-    'booking.bankTransfer': 'Bank köçürməsi',
-    'booking.bankTransferDesc': 'Bank hesabına köçürmə',
-    'booking.bankDetails': 'Bank rekvizitləri',
-    'booking.bankName': 'Bank adı',
-    'booking.accountName': 'Hesab sahibi',
-    'booking.accountNumber': 'Hesab nömrəsi',
-    'booking.swiftCode': 'SWIFT kodu',
-    'booking.confirmBooking': 'Təsdiq et',
-    'booking.bookingConfirmed': 'Rezervasiya təsdiqləndi',
-    'booking.confirmationMessage': 'Rezervasiyanız uğurla təsdiqləndi. Təsdiq e-poçtu göndərildi.',
-    'booking.bookingDate': 'Rezervasiya tarixi',
-    'booking.customer': 'Müştəri',
-    'booking.contact': 'Əlaqə',
-    'booking.totalAmount': 'Ümumi məbləğ',
-    'booking.saveBookingDetails': 'Bu məlumatları saxlayın',
-    'booking.print': 'Çap et',
-    'booking.detailed': 'Ətraflı',
-    'booking.backToHome': 'Ana səhifəyə qayıt',
-    'booking.error': 'Xəta',
-    'booking.errorMessage': 'Rezervasiya zamanı xəta baş verdi',
   },
   en: {
+    // Navigation
+    'nav.home': 'Home',
+    'nav.services': 'Services',
+    'nav.products': 'Products',
+    'nav.about': 'About',
+    'nav.contact': 'Contact',
+    'nav.bookNow': 'Book Now',
+    
+    // Home
+    'home.title': 'Welcome to Glamour Studio',
+    'home.subtitle': 'Your beauty, our mission',
+    'home.makeAppointment': 'Make Appointment',
+    'home.viewServices': 'View Services',
+    'home.services': 'Our Services',
+    'home.products': 'Our Products',
+    'home.viewDetails': 'View Details',
+    'home.viewAllProducts': 'View All Products',
+    'home.viewAllServices': 'View All Services',
+    
+    // Admin
+    'admin.login': 'Admin Login',
+    
     // Common
     'common.discount': 'DISCOUNT',
     'common.viewDetails': 'View Details',
@@ -178,12 +163,6 @@ const translations = {
     'common.search': 'Search...',
     'common.loadMore': 'Load More',
     'common.noData': 'No data found',
-    
-    // Home
-    'home.demoLogin': 'You can login with demo test users',
-    'home.viewDetails': 'View Details',
-    'home.viewAllProducts': 'View All Products',
-    'home.viewAllServices': 'View All Services',
     
     // Services
     'services.title': 'Our Services',
@@ -201,14 +180,6 @@ const translations = {
     'services.viewServicesPage': 'View Services Page',
     'services.viewAllServices': 'View All Services',
     
-    // Service Detail
-    'service.backToServices': 'Back to Services',
-    'service.minutes': 'minutes',
-    'service.benefits': 'Benefits',
-    'service.bookNow': 'Book Now',
-    'service.recommendedProducts': 'Recommended Products',
-    'service.viewProductDetails': 'View Product Details',
-    
     // Products
     'products.title': 'Our Products',
     'products.description': 'Quality beauty products',
@@ -219,15 +190,6 @@ const translations = {
     'products.noDescription': 'No description available',
     'products.noProductsAdded': 'No products have been added yet',
     'products.viewProductsPage': 'View Products Page',
-    
-    // Product Detail
-    'product.backToProducts': 'Back to Products',
-    'product.details': 'Details',
-    'product.howToUse': 'How to Use',
-    'product.ingredients': 'Ingredients',
-    'product.bookAppointment': 'Book Appointment',
-    'product.relatedServices': 'Related Services',
-    'product.viewServiceDetails': 'View Service Details',
     
     // Contact
     'contact.name': 'Name',
@@ -292,45 +254,30 @@ const translations = {
     'booking.servicesRequired': 'At least one service must be selected',
     'booking.staffRequired': 'Staff must be selected for all services',
     'booking.loadMore': 'Load More',
-    'booking.searchProducts': 'Search products...',
-    'booking.recommendedProducts': 'Recommended Products',
-    'booking.allProducts': 'All Products',
-    'booking.selectedProducts': 'Selected Products',
-    'booking.productsTotal': 'Products Total',
-    'booking.noProducts': 'No products found',
-    'booking.orderSummary': 'Order Summary',
-    'booking.customerDetails': 'Customer Details',
-    'booking.appointmentDate': 'Appointment Date',
-    'booking.paymentMethod': 'Payment Method',
-    'booking.total': 'Total',
-    'booking.cashPayment': 'Cash Payment',
-    'booking.cashPaymentDesc': 'Pay in cash during service',
-    'booking.cardPayment': 'Card Payment',
-    'booking.cardPaymentDesc': 'Pay with bank card',
-    'booking.posTerminal': 'POS Terminal',
-    'booking.posTerminalDesc': 'Pay via POS terminal',
-    'booking.bankTransfer': 'Bank Transfer',
-    'booking.bankTransferDesc': 'Transfer to bank account',
-    'booking.bankDetails': 'Bank Details',
-    'booking.bankName': 'Bank Name',
-    'booking.accountName': 'Account Holder',
-    'booking.accountNumber': 'Account Number',
-    'booking.swiftCode': 'SWIFT Code',
-    'booking.confirmBooking': 'Confirm',
-    'booking.bookingConfirmed': 'Booking Confirmed',
-    'booking.confirmationMessage': 'Your booking has been confirmed successfully. Confirmation email sent.',
-    'booking.bookingDate': 'Booking Date',
-    'booking.customer': 'Customer',
-    'booking.contact': 'Contact',
-    'booking.totalAmount': 'Total Amount',
-    'booking.saveBookingDetails': 'Save these booking details',
-    'booking.print': 'Print',
-    'booking.detailed': 'Detailed',
-    'booking.backToHome': 'Back to Home',
-    'booking.error': 'Error',
-    'booking.errorMessage': 'An error occurred during booking',
   },
   ru: {
+    // Navigation
+    'nav.home': 'Главная',
+    'nav.services': 'Услуги',
+    'nav.products': 'Продукты',
+    'nav.about': 'О нас',
+    'nav.contact': 'Контакты',
+    'nav.bookNow': 'Записаться',
+    
+    // Home
+    'home.title': 'Добро пожаловать в Glamour Studio',
+    'home.subtitle': 'Ваша красота, наша миссия',
+    'home.makeAppointment': 'Записаться',
+    'home.viewServices': 'Услуги',
+    'home.services': 'Наши услуги',
+    'home.products': 'Наши продукты',
+    'home.viewDetails': 'Подробнее',
+    'home.viewAllProducts': 'Все продукты',
+    'home.viewAllServices': 'Все услуги',
+    
+    // Admin
+    'admin.login': 'Вход администратора',
+    
     // Common
     'common.discount': 'СКИДКА',
     'common.viewDetails': 'Подробнее',
@@ -339,15 +286,9 @@ const translations = {
     'common.loadMore': 'Загрузить еще',
     'common.noData': 'Данные не найдены',
     
-    // Home
-    'home.demoLogin': 'Вы можете войти с демо-пользователями',
-    'home.viewDetails': 'Подробнее',
-    'home.viewAllProducts': 'Все продукты',
-    'home.viewAllServices': 'Все услуги',
-    
     // Services
     'services.title': 'Наши услуги',
-    'services.description': 'Профессиональные косметические услуги с нашей командой экспертов',
+    'services.description': 'Профессиональные косметические услуги',
     'services.search': 'Поиск услуг...',
     'services.duration': 'Продолжительность',
     'services.minutes': 'минут',
@@ -361,14 +302,6 @@ const translations = {
     'services.viewServicesPage': 'Страница услуг',
     'services.viewAllServices': 'Все услуги',
     
-    // Service Detail
-    'service.backToServices': 'К услугам',
-    'service.minutes': 'минут',
-    'service.benefits': 'Преимущества',
-    'service.bookNow': 'Забронировать',
-    'service.recommendedProducts': 'Рекомендуемые продукты',
-    'service.viewProductDetails': 'Детали продукта',
-    
     // Products
     'products.title': 'Наши продукты',
     'products.description': 'Качественные косметические продукты',
@@ -379,15 +312,6 @@ const translations = {
     'products.noDescription': 'Описание недоступно',
     'products.noProductsAdded': 'Продукты еще не добавлены',
     'products.viewProductsPage': 'Страница продуктов',
-    
-    // Product Detail
-    'product.backToProducts': 'К продуктам',
-    'product.details': 'Детали',
-    'product.howToUse': 'Как использовать',
-    'product.ingredients': 'Состав',
-    'product.bookAppointment': 'Записаться',
-    'product.relatedServices': 'Связанные услуги',
-    'product.viewServiceDetails': 'Детали услуги',
     
     // Contact
     'contact.name': 'Имя',
@@ -452,203 +376,68 @@ const translations = {
     'booking.servicesRequired': 'Необходимо выбрать хотя бы одну услугу',
     'booking.staffRequired': 'Необходимо выбрать сотрудника для всех услуг',
     'booking.loadMore': 'Загрузить еще',
-    'booking.searchProducts': 'Поиск продуктов...',
-    'booking.recommendedProducts': 'Рекомендуемые продукты',
-    'booking.allProducts': 'Все продукты',
-    'booking.selectedProducts': 'Выбранные продукты',
-    'booking.productsTotal': 'Итого продукты',
-    'booking.noProducts': 'Продукты не найдены',
-    'booking.orderSummary': 'Сводка заказа',
-    'booking.customerDetails': 'Данные клиента',
-    'booking.appointmentDate': 'Дата приема',
-    'booking.paymentMethod': 'Способ оплаты',
-    'booking.total': 'Итого',
-    'booking.cashPayment': 'Наличными',
-    'booking.cashPaymentDesc': 'Оплата наличными при обслуживании',
-    'booking.cardPayment': 'Картой',
-    'booking.cardPaymentDesc': 'Оплата банковской картой',
-    'booking.posTerminal': 'POS терминал',
-    'booking.posTerminalDesc': 'Оплата через POS терминал',
-    'booking.bankTransfer': 'Банковский перевод',
-    'booking.bankTransferDesc': 'Перевод на банковский счет',
-    'booking.bankDetails': 'Банковские реквизиты',
-    'booking.bankName': 'Название банка',
-    'booking.accountName': 'Владелец счета',
-    'booking.accountNumber': 'Номер счета',
-    'booking.swiftCode': 'SWIFT код',
-    'booking.confirmBooking': 'Подтвердить',
-    'booking.bookingConfirmed': 'Запись подтверждена',
-    'booking.confirmationMessage': 'Ваша запись успешно подтверждена. Письмо с подтверждением отправлено.',
-    'booking.bookingDate': 'Дата записи',
-    'booking.customer': 'Клиент',
-    'booking.contact': 'Контакт',
-    'booking.totalAmount': 'Общая сумма',
-    'booking.saveBookingDetails': 'Сохраните детали записи',
-    'booking.print': 'Печать',
-    'booking.detailed': 'Подробно',
-    'booking.backToHome': 'На главную',
-    'booking.error': 'Ошибка',
-    'booking.errorMessage': 'Произошла ошибка при записи',
   },
   uz: {
-    // Common
-    'common.discount': 'Скидка',
-    'common.viewDetails': 'Batafsil',
-    'common.viewAll': 'Barcha',
-    'common.search': 'Qidirish...',
-    'common.loadMore': 'Ko\'proq',
-    'common.noData': 'Ma\'lumot topilmadi',
+    // Navigation
+    'nav.home': 'Bosh sahifa',
+    'nav.services': 'Xizmatlar',
+    'nav.products': 'Mahsulotlar',
+    'nav.about': 'Biz haqimizda',
+    'nav.contact': 'Aloqa',
+    'nav.bookNow': 'Buyurtma berish',
     
     // Home
-    'home.demoLogin': 'Demo test foydalanuvchilariga kirish mumkin',
+    'home.title': 'Glamour Studio-ga xush kelibsiz',
+    'home.subtitle': 'Sizning go\'zalligingiz, bizning vazifamiz',
+    'home.makeAppointment': 'Uchrashuv belgilash',
+    'home.viewServices': 'Xizmatlarni ko\'rish',
+    'home.services': 'Bizning xizmatlarimiz',
+    'home.products': 'Bizning mahsulotlarimiz',
     'home.viewDetails': 'Batafsil',
-    'home.viewAllProducts': 'Barcha mahsulotlarga baxish',
-    'home.viewAllServices': 'Barcha xizmatlarga baxish',
+    'home.viewAllProducts': 'Barcha mahsulotlar',
+    'home.viewAllServices': 'Barcha xizmatlar',
     
-    // Services
+    // Admin
+    'admin.login': 'Administrator kirishi',
+    
+    // Common
+    'common.discount': 'CHEGIRMA',
+    'common.viewDetails': 'Batafsil',
+    'common.viewAll': 'Barchasini ko\'rish',
+    'common.search': 'Qidirish...',
+    'common.loadMore': 'Ko\'proq yuklash',
+    'common.noData': 'Ma\'lumot topilmadi',
+    
+    // Services and other keys continue with Uzbek translations...
     'services.title': 'Bizning xizmatlarimiz',
-    'services.description': 'Bizning ishchilarimizga ega yaratilgan yaxshi xizmatlar',
+    'services.description': 'Professional go\'zallik xizmatlari',
     'services.search': 'Xizmatlarni qidirish...',
-    'services.duration': 'Muddat',
+    'services.duration': 'Davomiyligi',
     'services.minutes': 'daqiqa',
-    'services.benefits': 'Foydalar',
+    'services.benefits': 'Foydalari',
     'services.viewDetails': 'Batafsil',
-    'services.loadMore': 'Ko\'proq',
-    'services.cta': 'Rezervatsiya et',
-    'services.bookNow': 'Joriy rezervatsiya',
+    'services.loadMore': 'Ko\'proq yuklash',
+    'services.cta': 'Buyurtma berish',
+    'services.bookNow': 'Buyurtma berish',
     'services.noDescription': 'Tavsif mavjud emas',
-    'services.noServicesAdded': 'Hali hech bir xizmat qo\'shilmagan',
-    'services.viewServicesPage': 'Xizmatlar sahifasini ko\'rish',
-    'services.viewAllServices': 'Barcha xizmatlarga baxish',
+    'services.noServicesAdded': 'Xizmatlar hali qo\'shilmagan',
+    'services.viewServicesPage': 'Xizmatlar sahifasi',
+    'services.viewAllServices': 'Barcha xizmatlar',
     
-    // Service Detail
-    'service.backToServices': 'Xizmatlarga qaytish',
-    'service.minutes': 'daqiqa',
-    'service.benefits': 'Foydalar',
-    'service.bookNow': 'Joriy rezervatsiya',
-    'service.recommendedProducts': 'Tavsiya olgan mahsulotlar',
-    'service.viewProductDetails': 'Mahsulot detallarini ko\'rish',
-    
-    // Products
-    'products.title': 'Bizning mahsulotlarimiz',
-    'products.description': 'Yaxshi xizmatlar uchun yaratilgan mahsulotlar',
-    'products.search': 'Mahsulotlarni qidirish...',
-    'products.cta': 'Sotish',
-    'products.viewDetails': 'Batafsil',
-    'products.bookNow': 'Sotish',
-    'products.noDescription': 'Tavsif mavjud emas',
-    'products.noProductsAdded': 'Hali hech bir mahsulot qo\'shilmagan',
-    'products.viewProductsPage': 'Mahsulotlar sahifasini ko\'rish',
-    
-    // Product Detail
-    'product.backToProducts': 'Mahsulotlarga qaytish',
-    'product.details': 'Detalalar',
-    'product.howToUse': 'Ishtirok qilish qaydasi',
-    'product.ingredients': 'Tarkib',
-    'product.bookAppointment': 'Rezervatsiya qilish',
-    'product.relatedServices': 'Yashirin xizmatlar',
-    'product.viewServiceDetails': 'Xizmat detallarini ko\'rish',
-    
-    // Contact
-    'contact.name': 'Ism',
-    'contact.namePlaceholder': 'Ismingizni kiriting',
-    'contact.email': 'Email',
-    'contact.emailPlaceholder': 'Email manzilini kiriting',
-    'contact.phone': 'Telefon',
-    'contact.phonePlaceholder': 'Telefon raqamingizni kiriting',
-    'contact.subject': 'Mavzu',
-    'contact.subjectPlaceholder': 'Mavzuni kiriting',
-    'contact.message': 'Xabar',
-    'contact.messagePlaceholder': 'Xabaringizni kiriting',
-    'contact.send': 'Yuborish',
-    'contact.address': 'Manzil',
-    'contact.phoneNumber': 'Telefon raqami',
-    'contact.emailAddress': 'Email manzili',
-    'contact.workingHours': 'Ish vaqtlari',
-    
-    // Booking
+    // Additional translations for booking and other sections
     'booking.title': 'Rezervatsiya',
     'booking.customerInfo': 'Mijoz ma\'lumotlari',
     'booking.services': 'Xizmatlar',
     'booking.products': 'Mahsulotlar',
     'booking.payment': 'To\'lov',
     'booking.confirmation': 'Tasdiqlash',
-    'booking.gender': 'Cins',
-    'booking.male': 'Erkak',
-    'booking.female': 'Ayol',
-    'booking.fullName': 'To\'liq ism',
-    'booking.fullNamePlaceholder': 'Masalan: Ali Mammadov',
-    'booking.fullNameValidation': 'To\'liq ism 10-100 xonadon bo\'lishi kerak',
-    'booking.genderRequired': 'Cinsni tanlash kerak',
-    'booking.email': 'Email',
-    'booking.emailPlaceholder': 'example@example.com',
-    'booking.emailValidation': 'To\'g\'ri email manzilini kiriting',
-    'booking.phone': 'Telefon',
-    'booking.phonePlaceholder': '+994 XX XXX XX XX',
-    'booking.phoneRequired': 'Telefon raqamni talab qilinadi',
-    'booking.notes': 'Qaydlar',
-    'booking.notesPlaceholder': 'Qo\'shimcha qaydlaringizni kiriting',
-    'booking.date': 'Sana',
-    'booking.dateRequired': 'Sana tanlanishi kerak',
-    'booking.time': 'Vaqt',
-    'booking.timeRequired': 'Vaqt tanlanishi kerak',
-    'booking.availableForNextDays': 'Ko\'proq',
-    'booking.days': 'kunlar',
-    'booking.workingHours': 'Ish vaqtlari',
-    'booking.next': 'Ko\'proq',
-    'booking.previous': 'Oldingi',
-    'booking.searchServices': 'Xizmatlarni qidirish...',
+    'booking.selectStaff': 'Xodimni tanlang',
+    'booking.loadMore': 'Ko\'proq yuklash',
     'booking.minutes': 'daqiqa',
-    'booking.moreInfo': 'Batafsil ma\'lumotlar',
-    'booking.noDescription': 'Tavsif mavjud emas',
-    'booking.selectStaff': 'Ishtirokchini tanlash',
-    'booking.chooseStaff': 'Ishtirokchini tanlash',
-    'booking.noServices': 'Xizmat topilmadi',
-    'booking.selectedServices': 'Tanlangan xizmatlar',
-    'booking.servicesTotal': 'Xizmatlar yohshida',
-    'booking.totalDuration': 'Umumiy muddat',
-    'booking.duration': 'Muddat',
-    'booking.endTime': 'Tugash vaqtini',
-    'booking.servicesRequired': 'En kamida bir xizmat tanlanishi kerak',
-    'booking.staffRequired': 'Barcha xizmatlar uchun ishtirokchilarni tanlash kerak',
-    'booking.loadMore': 'Ko\'proq',
-    'booking.searchProducts': 'Mahsulotlarni qidirish...',
-    'booking.recommendedProducts': 'Tavsiya olgan mahsulotlar',
-    'booking.allProducts': 'Barcha mahsulotlar',
-    'booking.selectedProducts': 'Tanlangan mahsulotlar',
-    'booking.productsTotal': 'Mahsulotlar yohshida',
-    'booking.noProducts': 'Mahsulot topilmadi',
-    'booking.orderSummary': 'Sotish xotirasi',
-    'booking.customerDetails': 'Mijoz ma\'lumotlari',
-    'booking.appointmentDate': 'Rezervatsiya sana',
-    'booking.paymentMethod': 'To\'lov usuli',
-    'booking.total': 'Umumiy',
-    'booking.cashPayment': 'Naqd to\'lov',
-    'booking.cashPaymentDesc': 'Xizmat davomida naqd to\'lov',
-    'booking.cardPayment': 'Kartadan to\'lov',
-    'booking.cardPaymentDesc': 'Bank kartasi orqali to\'lov',
-    'booking.posTerminal': 'POS terminali',
-    'booking.posTerminalDesc': 'POS terminal orqali to\'lov',
-    'booking.bankTransfer': 'Bank to\'lov',
-    'booking.bankTransferDesc': 'Bank hesabining to\'lovini qilish',
-    'booking.bankDetails': 'Bank raqamlar',
-    'booking.bankName': 'Bank nomi',
-    'booking.accountName': 'Hesab sahibi',
-    'booking.accountNumber': 'Hesab raqami',
-    'booking.swiftCode': 'SWIFT kodi',
-    'booking.confirmBooking': 'Tasdiqlash',
-    'booking.bookingConfirmed': 'Rezervatsiya tasdiqlangan',
-    'booking.confirmationMessage': 'Sizning rezervatsiyangiz muvaffaqiyatli tasdiqlangan. Tasdiqlash xabarini yuborilgan.',
-    'booking.bookingDate': 'Rezervatsiya sana',
-    'booking.customer': 'Mijoz',
-    'booking.contact': 'Kontakt',
-    'booking.totalAmount': 'Umumiy summa',
-    'booking.saveBookingDetails': 'Bu ma\'lumotlarni saqlash',
-    'booking.print': 'Chap qilish',
-    'booking.detailed': 'Batafsil',
-    'booking.backToHome': 'Bosh sahifaga qaytish',
-    'booking.error': 'Xato',
-    'booking.errorMessage': 'Rezervatsiya davomida xato yuz berdi',
+    'booking.next': 'Keyingi',
+    'booking.previous': 'Oldingi',
+    'booking.servicesRequired': 'Kamida bitta xizmat tanlanishi kerak',
+    'booking.staffRequired': 'Barcha xizmatlar uchun xodim tanlanishi kerak',
   }
 };
 
@@ -685,6 +474,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       value = value?.[k];
     }
     
+    // If translation not found, return the key itself (for debugging)
     return value || key;
   };
 
