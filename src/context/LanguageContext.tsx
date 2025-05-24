@@ -1,7 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-type Language = 'az' | 'en' | 'ru';
+type Language = 'az' | 'en' | 'ru' | 'uz';
 
 interface LanguageContextType {
   language: Language;
@@ -490,6 +489,166 @@ const translations = {
     'booking.backToHome': 'На главную',
     'booking.error': 'Ошибка',
     'booking.errorMessage': 'Произошла ошибка при записи',
+  },
+  uz: {
+    // Common
+    'common.discount': 'Скидка',
+    'common.viewDetails': 'Batafsil',
+    'common.viewAll': 'Barcha',
+    'common.search': 'Qidirish...',
+    'common.loadMore': 'Ko\'proq',
+    'common.noData': 'Ma\'lumot topilmadi',
+    
+    // Home
+    'home.demoLogin': 'Demo test foydalanuvchilariga kirish mumkin',
+    'home.viewDetails': 'Batafsil',
+    'home.viewAllProducts': 'Barcha mahsulotlarga baxish',
+    'home.viewAllServices': 'Barcha xizmatlarga baxish',
+    
+    // Services
+    'services.title': 'Bizning xizmatlarimiz',
+    'services.description': 'Bizning ishchilarimizga ega yaratilgan yaxshi xizmatlar',
+    'services.search': 'Xizmatlarni qidirish...',
+    'services.duration': 'Muddat',
+    'services.minutes': 'daqiqa',
+    'services.benefits': 'Foydalar',
+    'services.viewDetails': 'Batafsil',
+    'services.loadMore': 'Ko\'proq',
+    'services.cta': 'Rezervatsiya et',
+    'services.bookNow': 'Joriy rezervatsiya',
+    'services.noDescription': 'Tavsif mavjud emas',
+    'services.noServicesAdded': 'Hali hech bir xizmat qo\'shilmagan',
+    'services.viewServicesPage': 'Xizmatlar sahifasini ko\'rish',
+    'services.viewAllServices': 'Barcha xizmatlarga baxish',
+    
+    // Service Detail
+    'service.backToServices': 'Xizmatlarga qaytish',
+    'service.minutes': 'daqiqa',
+    'service.benefits': 'Foydalar',
+    'service.bookNow': 'Joriy rezervatsiya',
+    'service.recommendedProducts': 'Tavsiya olgan mahsulotlar',
+    'service.viewProductDetails': 'Mahsulot detallarini ko\'rish',
+    
+    // Products
+    'products.title': 'Bizning mahsulotlarimiz',
+    'products.description': 'Yaxshi xizmatlar uchun yaratilgan mahsulotlar',
+    'products.search': 'Mahsulotlarni qidirish...',
+    'products.cta': 'Sotish',
+    'products.viewDetails': 'Batafsil',
+    'products.bookNow': 'Sotish',
+    'products.noDescription': 'Tavsif mavjud emas',
+    'products.noProductsAdded': 'Hali hech bir mahsulot qo\'shilmagan',
+    'products.viewProductsPage': 'Mahsulotlar sahifasini ko\'rish',
+    
+    // Product Detail
+    'product.backToProducts': 'Mahsulotlarga qaytish',
+    'product.details': 'Detalalar',
+    'product.howToUse': 'Ishtirok qilish qaydasi',
+    'product.ingredients': 'Tarkib',
+    'product.bookAppointment': 'Rezervatsiya qilish',
+    'product.relatedServices': 'Yashirin xizmatlar',
+    'product.viewServiceDetails': 'Xizmat detallarini ko\'rish',
+    
+    // Contact
+    'contact.name': 'Ism',
+    'contact.namePlaceholder': 'Ismingizni kiriting',
+    'contact.email': 'Email',
+    'contact.emailPlaceholder': 'Email manzilini kiriting',
+    'contact.phone': 'Telefon',
+    'contact.phonePlaceholder': 'Telefon raqamingizni kiriting',
+    'contact.subject': 'Mavzu',
+    'contact.subjectPlaceholder': 'Mavzuni kiriting',
+    'contact.message': 'Xabar',
+    'contact.messagePlaceholder': 'Xabaringizni kiriting',
+    'contact.send': 'Yuborish',
+    'contact.address': 'Manzil',
+    'contact.phoneNumber': 'Telefon raqami',
+    'contact.emailAddress': 'Email manzili',
+    'contact.workingHours': 'Ish vaqtlari',
+    
+    // Booking
+    'booking.title': 'Rezervatsiya',
+    'booking.customerInfo': 'Mijoz ma\'lumotlari',
+    'booking.services': 'Xizmatlar',
+    'booking.products': 'Mahsulotlar',
+    'booking.payment': 'To\'lov',
+    'booking.confirmation': 'Tasdiqlash',
+    'booking.gender': 'Cins',
+    'booking.male': 'Erkak',
+    'booking.female': 'Ayol',
+    'booking.fullName': 'To\'liq ism',
+    'booking.fullNamePlaceholder': 'Masalan: Ali Mammadov',
+    'booking.fullNameValidation': 'To\'liq ism 10-100 xonadon bo\'lishi kerak',
+    'booking.genderRequired': 'Cinsni tanlash kerak',
+    'booking.email': 'Email',
+    'booking.emailPlaceholder': 'example@example.com',
+    'booking.emailValidation': 'To\'g\'ri email manzilini kiriting',
+    'booking.phone': 'Telefon',
+    'booking.phonePlaceholder': '+994 XX XXX XX XX',
+    'booking.phoneRequired': 'Telefon raqamni talab qilinadi',
+    'booking.notes': 'Qaydlar',
+    'booking.notesPlaceholder': 'Qo\'shimcha qaydlaringizni kiriting',
+    'booking.date': 'Sana',
+    'booking.dateRequired': 'Sana tanlanishi kerak',
+    'booking.time': 'Vaqt',
+    'booking.timeRequired': 'Vaqt tanlanishi kerak',
+    'booking.availableForNextDays': 'Ko\'proq',
+    'booking.days': 'kunlar',
+    'booking.workingHours': 'Ish vaqtlari',
+    'booking.next': 'Ko\'proq',
+    'booking.previous': 'Oldingi',
+    'booking.searchServices': 'Xizmatlarni qidirish...',
+    'booking.minutes': 'daqiqa',
+    'booking.moreInfo': 'Batafsil ma\'lumotlar',
+    'booking.noDescription': 'Tavsif mavjud emas',
+    'booking.selectStaff': 'Ishtirokchini tanlash',
+    'booking.chooseStaff': 'Ishtirokchini tanlash',
+    'booking.noServices': 'Xizmat topilmadi',
+    'booking.selectedServices': 'Tanlangan xizmatlar',
+    'booking.servicesTotal': 'Xizmatlar yohshida',
+    'booking.totalDuration': 'Umumiy muddat',
+    'booking.duration': 'Muddat',
+    'booking.endTime': 'Tugash vaqtini',
+    'booking.servicesRequired': 'En kamida bir xizmat tanlanishi kerak',
+    'booking.staffRequired': 'Barcha xizmatlar uchun ishtirokchilarni tanlash kerak',
+    'booking.loadMore': 'Ko\'proq',
+    'booking.searchProducts': 'Mahsulotlarni qidirish...',
+    'booking.recommendedProducts': 'Tavsiya olgan mahsulotlar',
+    'booking.allProducts': 'Barcha mahsulotlar',
+    'booking.selectedProducts': 'Tanlangan mahsulotlar',
+    'booking.productsTotal': 'Mahsulotlar yohshida',
+    'booking.noProducts': 'Mahsulot topilmadi',
+    'booking.orderSummary': 'Sotish xotirasi',
+    'booking.customerDetails': 'Mijoz ma\'lumotlari',
+    'booking.appointmentDate': 'Rezervatsiya sana',
+    'booking.paymentMethod': 'To\'lov usuli',
+    'booking.total': 'Umumiy',
+    'booking.cashPayment': 'Naqd to\'lov',
+    'booking.cashPaymentDesc': 'Xizmat davomida naqd to\'lov',
+    'booking.cardPayment': 'Kartadan to\'lov',
+    'booking.cardPaymentDesc': 'Bank kartasi orqali to\'lov',
+    'booking.posTerminal': 'POS terminali',
+    'booking.posTerminalDesc': 'POS terminal orqali to\'lov',
+    'booking.bankTransfer': 'Bank to\'lov',
+    'booking.bankTransferDesc': 'Bank hesabining to\'lovini qilish',
+    'booking.bankDetails': 'Bank raqamlar',
+    'booking.bankName': 'Bank nomi',
+    'booking.accountName': 'Hesab sahibi',
+    'booking.accountNumber': 'Hesab raqami',
+    'booking.swiftCode': 'SWIFT kodi',
+    'booking.confirmBooking': 'Tasdiqlash',
+    'booking.bookingConfirmed': 'Rezervatsiya tasdiqlangan',
+    'booking.confirmationMessage': 'Sizning rezervatsiyangiz muvaffaqiyatli tasdiqlangan. Tasdiqlash xabarini yuborilgan.',
+    'booking.bookingDate': 'Rezervatsiya sana',
+    'booking.customer': 'Mijoz',
+    'booking.contact': 'Kontakt',
+    'booking.totalAmount': 'Umumiy summa',
+    'booking.saveBookingDetails': 'Bu ma\'lumotlarni saqlash',
+    'booking.print': 'Chap qilish',
+    'booking.detailed': 'Batafsil',
+    'booking.backToHome': 'Bosh sahifaga qaytish',
+    'booking.error': 'Xato',
+    'booking.errorMessage': 'Rezervatsiya davomida xato yuz berdi',
   }
 };
 
@@ -508,7 +667,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     const savedLanguage = localStorage.getItem('language') as Language;
-    if (savedLanguage && ['az', 'en', 'ru'].includes(savedLanguage)) {
+    if (savedLanguage && ['az', 'en', 'ru', 'uz'].includes(savedLanguage)) {
       setLanguage(savedLanguage);
     }
   }, []);

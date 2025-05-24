@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,7 +87,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
           phone: userData.phone || "",
         };
 
-        // Fetch appointment services
+        // Fetch appointment services using correct column name
         const { data: serviceEntries, error: serviceError } = await supabase
           .from("appointment_services")
           .select(`
@@ -96,7 +95,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
             service_id,
             price,
             quantity,
-            staff_id,
+            staff_user_id,
             duration,
             services:service_id(name)
           `)
@@ -104,8 +103,8 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
 
         if (serviceError) throw serviceError;
 
-        // Fetch staff names
-        const staffIds = serviceEntries.map((entry) => entry.staff_id);
+        // Fetch staff names using correct column name
+        const staffIds = serviceEntries.map((entry) => entry.staff_user_id);
         const { data: staffData, error: staffError } = await supabase
           .from("users")
           .select("id, full_name")
@@ -122,13 +121,13 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
           {}
         );
 
-        // Format services data
+        // Format services data using correct property names
         const services = serviceEntries.map((entry) => ({
           id: entry.service_id,
           name: entry.services?.name || "Unknown Service",
           price: entry.price || 0,
           duration: entry.duration || 0,
-          staffName: staffMap[entry.staff_id] || "Unknown Staff",
+          staffName: staffMap[entry.staff_user_id] || "Unknown Staff",
         }));
 
         // Fetch appointment products
