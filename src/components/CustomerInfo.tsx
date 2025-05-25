@@ -1,12 +1,6 @@
-
-import React, { useState } from "react";
+import { useState } from "react";
 import { useOrder } from "@/context/OrderContext";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -23,11 +17,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Customer } from "@/models/customer.model";
 
 // Define the type for booking mode
-export type BookingMode = 'salon' | 'home';
+export type BookingMode = "salon" | "home";
 
 // Define props for the component
 export interface CustomerInfoProps {
-  bookingMode: BookingMode;
   onSubmit: () => void;
 }
 
@@ -43,7 +36,51 @@ const customerSchema = z.object({
 // Define the type for the customer form
 type CustomerFormValues = z.infer<typeof customerSchema>;
 
-const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode, onSubmit }) => {
+const FormFieldInput = ({ control, name, label, placeholder }) => (
+  <FormField
+    control={control}
+    name={name}
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>{label}</FormLabel>
+        <FormControl>
+          <Input placeholder={placeholder} {...field} />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+);
+
+const CustomerForm = ({ form, onSubmit, isLoading }) => (
+  <Form {...form}>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <FormFieldInput
+        control={form.control}
+        name="name"
+        label="Ad və Soyad"
+        placeholder="Ad və Soyad"
+      />
+      <FormFieldInput
+        control={form.control}
+        name="email"
+        label="Email"
+        placeholder="Email"
+      />
+      <FormFieldInput
+        control={form.control}
+        name="phone"
+        label="Telefon"
+        placeholder="Telefon"
+      />
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? "Gözləyin..." : "Davam et"}
+      </Button>
+    </form>
+  </Form>
+);
+
+const CustomerInfo: React.FC<CustomerInfoProps> = ({ onSubmit }) => {
   const { orderState, setCustomer, setNextStep } = useOrder();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -68,10 +105,10 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode, onSubmit }) =>
         email: values.email,
         phone: values.phone,
         // Add required fields with default values
-        id: orderState.customer?.id || 'temp-id',
-        gender: orderState.customer?.gender || 'other',
+        id: orderState.customer?.id || "temp-id",
+        gender: orderState.customer?.gender || "other",
         lastVisit: orderState.customer?.lastVisit || new Date().toISOString(),
-        totalSpent: orderState.customer?.totalSpent || 0
+        totalSpent: orderState.customer?.totalSpent || 0,
       };
 
       // Update customer data in order context
@@ -79,7 +116,7 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode, onSubmit }) =>
 
       // Move to next step in checkout flow
       setNextStep();
-      
+
       // Call the onSubmit prop to notify parent component
       onSubmit();
     } catch (error) {
@@ -95,58 +132,11 @@ const CustomerInfo: React.FC<CustomerInfoProps> = ({ bookingMode, onSubmit }) =>
         <CardTitle>Müştəri məlumatları</CardTitle>
       </CardHeader>
       <CardContent>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
-          >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ad və Soyad</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ad və Soyad" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="phone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Telefon</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Telefon" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Gözləyin..." : "Davam et"}
-            </Button>
-          </form>
-        </Form>
+        <CustomerForm
+          form={form}
+          onSubmit={handleSubmit}
+          isLoading={isLoading}
+        />
       </CardContent>
     </Card>
   );
