@@ -35,10 +35,7 @@ const About = () => {
         `)
         .in('role', ['staff', 'admin', 'super_admin'])
         .not('full_name', 'is', null);
-      const { dataStaff, errorDataStaff } = await supabase
-        .from('staff_with_services_json')
-        .select(`*`);
-      console.log(dataStaff);
+
       if (error) {
         console.error('Error fetching team members:', error);
         throw error;
