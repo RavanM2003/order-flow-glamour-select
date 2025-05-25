@@ -62,7 +62,6 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumbe
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [canCancel, setCanCancel] = useState(false);
-const { t } = useLanguage();
 console.log(t("nav.about"));
   useEffect(() => {
     const fetchBookingDetails = async () => {
