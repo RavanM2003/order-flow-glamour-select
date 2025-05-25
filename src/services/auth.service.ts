@@ -37,15 +37,29 @@ type StaffUserData = SignUpData & {
  */
 export const signInWithEmail = async (email: string, password: string) => {
   try {
-    // Query the public.users table directly
+    console.log("Attempting login with:", { email, password });
+    
+    // Query the public.users table directly using maybeSingle() to avoid errors when no data found
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("*")
       .eq("email", email)
-      .eq("hashed_password", password) // Assuming password is stored as plain text or you handle hashing
-      .single();
+      .eq("hashed_password", password)
+      .maybeSingle();
 
-    if (userError || !userData) {
+    console.log("Database query result:", { userData, userError });
+
+    if (userError) {
+      console.error("Database error:", userError);
+      return { 
+        user: null, 
+        session: null, 
+        error: "Database error occurred" 
+      };
+    }
+
+    if (!userData) {
+      console.log("No user found with provided credentials");
       return { 
         user: null, 
         session: null, 
@@ -82,6 +96,8 @@ export const signInWithEmail = async (email: string, password: string) => {
       firstName: userData.first_name || "",
       lastName: userData.last_name || "",
     };
+
+    console.log("Login successful for user:", user);
 
     return {
       user,
