@@ -14,6 +14,7 @@ export interface Appointment {
   created_at?: string;
   updated_at?: string;
   is_no_show?: boolean;
+  notes?: string;
 }
 
 export interface AppointmentFormData {
@@ -25,4 +26,5 @@ export interface AppointmentFormData {
   total?: number;
   user_id?: string;
   cancel_reason?: string;
+  notes?: string;
 }

@@ -55,6 +55,7 @@ export async function createAppointment(appointmentData: AppointmentFormData) {
     customer_user_id: appointmentData.customer_user_id,
     user_id: appointmentData.user_id || "",
     cancel_reason: appointmentData.cancel_reason,
+    notes: appointmentData.notes, // Add notes field
   };
 
   const { data, error } = await supabase

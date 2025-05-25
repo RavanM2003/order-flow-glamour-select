@@ -136,6 +136,7 @@ export type Database = {
           end_time: string
           id: number
           is_no_show: boolean | null
+          notes: string | null
           start_time: string
           status: Database["public"]["Enums"]["appointment_status"] | null
           total: number | null
@@ -150,6 +151,7 @@ export type Database = {
           end_time: string
           id?: number
           is_no_show?: boolean | null
+          notes?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["appointment_status"] | null
           total?: number | null
@@ -164,6 +166,7 @@ export type Database = {
           end_time?: string
           id?: number
           is_no_show?: boolean | null
+          notes?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["appointment_status"] | null
           total?: number | null
