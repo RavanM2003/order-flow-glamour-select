@@ -1,11 +1,10 @@
-
 // Environment Configuration
 
 interface Config {
   title: string;
   api: {
-    url: any;
-    key: any;
+    url: string;
+    key: string;
     schema: {
       auth: {
         login: string;
@@ -65,18 +64,19 @@ export const config: Config = {
         setAvailability: (id) => `/staff/${id}/availability`,
         getWorkingHours: (id) => `/staff/${id}/working-hours`,
         setWorkingHours: (id) => `/staff/${id}/working-hours`,
-        checkAvailability: (id, date) => `/staff/${id}/check-availability?date=${date.toISOString()}`,
+        checkAvailability: (id, date) =>
+          `/staff/${id}/check-availability?date=${date.toISOString()}`,
       },
       // Other schemas configuration would go here
-    }
+    },
   },
   features: {
     debugMode: import.meta.env.MODE !== "production",
-    showDebugInfo: import.meta.env.MODE !== "production"
+    showDebugInfo: import.meta.env.MODE !== "production",
   },
   // Add these properties to match the interface
-  usesMockData: import.meta.env.VITE_USE_MOCK_DATA === 'true',
+  usesMockData: import.meta.env.VITE_USE_MOCK_DATA === "true",
   featureFlags: {
-    showDebugInfo: import.meta.env.MODE !== "production"
-  }
+    showDebugInfo: import.meta.env.MODE !== "production",
+  },
 };
