@@ -1,9 +1,7 @@
-
-import React from 'react';
-import { Route, Routes } from 'react-router-dom';
-import FeatureList from './components/FeatureList';
-import FeatureDetail from './components/FeatureDetail';
-import FeatureForm from './components/FeatureForm';
+import { Route, Routes } from "react-router-dom";
+import FeatureList from "./components/FeatureList";
+import FeatureDetail from "./components/FeatureDetail";
+import FeatureForm from "./components/FeatureForm";
 
 const FeatureRoutes = () => {
   return (
