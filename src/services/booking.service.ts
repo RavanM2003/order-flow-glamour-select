@@ -73,7 +73,7 @@ export const createBooking = async (
       return "other";
     };
 
-    // Ensure gender is properly typed as gender_enum
+    // Create the appointment JSON with properly typed gender
     const appointmentJson = {
       ...bookingData,
       customer_info: {
@@ -82,25 +82,22 @@ export const createBooking = async (
       },
     };
 
-    const { data, error } = await supabase
-      .from("invoices")
-      .insert([
-        {
-          invoice_number: bookingData.invoice_number,
-          total_amount: bookingData.payment_details.total_amount,
-          status: "waiting",
-          appointment_json: appointmentJson,
-        },
-      ])
-      .select()
-      .single();
+    // Use a raw SQL insert to properly cast the gender enum
+    const { data, error } = await supabase.rpc('create_invoice_with_appointment', {
+      p_invoice_number: bookingData.invoice_number,
+      p_total_amount: bookingData.payment_details.total_amount,
+      p_status: "waiting",
+      p_appointment_json: appointmentJson
+    });
 
     if (error) {
+      console.error("Database error:", error);
       return { error: error.message };
     }
 
     return { data };
   } catch (error) {
+    console.error("Service error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);
     return { error: errorMessage };
   }
