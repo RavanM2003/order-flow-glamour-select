@@ -1,3 +1,4 @@
+
 import { useEffect, type FC } from "react";
 import { useStaffByService } from "@/hooks/use-staff-by-service";
 import { useOrder } from "@/context/OrderContext";
@@ -23,6 +24,7 @@ const StaffSelection: FC<StaffSelectionProps> = ({
 
   useEffect(() => {
     if (serviceId && orderState.appointmentDate) {
+      console.log('StaffSelection: Fetching staff for service:', serviceId, 'date:', orderState.appointmentDate);
       fetchStaffByService(serviceId, orderState.appointmentDate);
     }
   }, [serviceId, orderState.appointmentDate, fetchStaffByService]);
@@ -48,7 +50,12 @@ const StaffSelection: FC<StaffSelectionProps> = ({
         <p className="text-sm font-medium text-gray-700">
           {t("booking.selectStaff")}
         </p>
-        <p className="text-sm text-red-600">Error: {error}</p>
+        <div className="bg-red-50 border border-red-200 rounded-md p-3">
+          <p className="text-sm text-red-600">Error: {error}</p>
+          <p className="text-xs text-red-500 mt-1">
+            Service ID: {serviceId}, Date: {orderState.appointmentDate?.toISOString()}
+          </p>
+        </div>
       </div>
     );
   }
@@ -59,12 +66,17 @@ const StaffSelection: FC<StaffSelectionProps> = ({
         <p className="text-sm font-medium text-gray-700">
           {t("booking.selectStaff")}
         </p>
-        <p className="text-sm text-gray-500">
-          No staff available for this service
-        </p>
-        <p className="text-xs text-gray-400">
-          Debug: staff array is {staff ? "empty" : "null/undefined"}
-        </p>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+          <p className="text-sm text-yellow-700">
+            No staff available for this service on the selected date
+          </p>
+          <p className="text-xs text-yellow-600 mt-1">
+            Service ID: {serviceId} | Date: {orderState.appointmentDate?.toLocaleDateString()}
+          </p>
+          <p className="text-xs text-yellow-600">
+            Staff array is {staff ? `empty (length: ${staff.length})` : "null/undefined"}
+          </p>
+        </div>
       </div>
     );
   }
@@ -74,8 +86,8 @@ const StaffSelection: FC<StaffSelectionProps> = ({
       <p className="text-sm font-medium text-gray-700">
         {t("booking.selectStaff")}
       </p>
-      <p className="text-xs text-gray-400">
-        Found {staff.length} staff member(s)
+      <p className="text-xs text-green-600">
+        Found {staff.length} available staff member(s)
       </p>
       <div className="grid grid-cols-1 gap-2">
         {staff.map((staffMember) => (

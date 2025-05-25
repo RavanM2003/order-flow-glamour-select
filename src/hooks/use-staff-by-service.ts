@@ -53,6 +53,26 @@ export function useStaffByService(): UseStaffByServiceResult {
 
       console.log('useStaffByService: Final mapped staff data:', staffData);
       setStaff(staffData);
+      
+      // If no staff found, also try the fallback get_staff_by_service function
+      if (staffData.length === 0) {
+        console.log('useStaffByService: No staff found with availability, trying fallback');
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .rpc('get_staff_by_service', {
+            service_id: serviceId
+          });
+          
+        if (!fallbackError && fallbackData?.length > 0) {
+          const fallbackStaffData = fallbackData.map((item: any) => ({
+            id: item.user_id,
+            user_id: item.user_id,
+            full_name: item.full_name,
+            name: item.full_name,
+          }));
+          console.log('useStaffByService: Using fallback staff data:', fallbackStaffData);
+          setStaff(fallbackStaffData);
+        }
+      }
     } catch (err) {
       console.error('useStaffByService: Failed to fetch staff:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch staff');
