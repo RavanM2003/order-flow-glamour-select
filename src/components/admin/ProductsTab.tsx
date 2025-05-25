@@ -509,6 +509,28 @@ const EditProductForm = ({
   </form>
 );
 
+const DeleteProductDialog = ({ open, onOpenChange, onConfirm, onCancel }) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent>
+      <DialogHeader>Məhsulu silmək istədiyinizə əminsiniz?</DialogHeader>
+      <div className="py-4 text-sm text-muted-foreground">
+        Bu əməliyyat geri qaytarıla bilməz. Məhsul silinəcək.
+      </div>
+      <DialogFooter className="flex justify-end gap-2">
+        <Button variant="outline" onClick={onCancel}>
+          Ləğv et
+        </Button>
+        <Button
+          className="bg-red-600 hover:bg-red-700 text-white"
+          onClick={onConfirm}
+        >
+          Sil
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+);
+
 const ProductsTab = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -810,25 +832,12 @@ const ProductsTab = () => {
           allServices={allServices}
         />
       </DetailDrawer>
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>Məhsulu silmək istədiyinizə əminsiniz?</DialogHeader>
-          <div className="py-4 text-sm text-muted-foreground">
-            Bu əməliyyat geri qaytarıla bilməz. Məhsul silinəcək.
-          </div>
-          <DialogFooter className="flex justify-end gap-2">
-            <Button variant="outline" onClick={cancelDeleteProduct}>
-              Ləğv et
-            </Button>
-            <Button
-              className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={confirmDeleteProduct}
-            >
-              Sil
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteProductDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDeleteProduct}
+        onCancel={cancelDeleteProduct}
+      />
     </div>
   );
 };
