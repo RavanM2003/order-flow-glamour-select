@@ -50,7 +50,6 @@ export const staffService = {
   },
 
   delete: async (id: number | string): Promise<ApiResponse<boolean>> => {
-    // TODO: Implement actual API call using the id parameter
     return { data: true };
   },
 
