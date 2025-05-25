@@ -1,13 +1,12 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { signInWithEmail, signOut, signUp, getCurrentUser, updateUserProfile } from '@/services/auth.service';
 import { User, UserRole } from '@/models/user.model';
 import { toast } from '@/components/ui/use-toast';
-import { Session } from '@supabase/supabase-js';
 
 interface AuthContextProps {
   user: User | null;
-  session: Session | null;
+  session: any | null;
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
@@ -32,63 +31,28 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check current session on mount
+    // Check for existing user session on mount
     const checkSession = async () => {
       setIsLoading(true);
       
       try {
-        const { data } = await supabase.auth.getSession();
+        const { user, error } = await getCurrentUser();
         
-        if (data.session) {
-          setSession(data.session);
-          const { data: userData } = await supabase.auth.getUser();
-          
-          if (userData.user) {
-            // Get additional user data from users table if needed
-            const { data: profileData } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', userData.user.id)
-              .single();
-            
-            if (profileData) {
-              // Set user with proper type handling
-              setUser({
-                id: userData.user.id,
-                email: userData.user.email || '',
-                first_name: profileData.first_name || '',
-                last_name: profileData.last_name || '',
-                role: profileData.role as UserRole,
-                phone: profileData.phone || '',
-                note: profileData.note || '',
-                gender: profileData.gender,
-                birth_date: profileData.birth_date,
-                full_name: profileData.full_name,
-                avatar_url: profileData.avatar_url,
-                // Add aliases for backward compatibility
-                firstName: profileData.first_name || '',
-                lastName: profileData.last_name || ''
-              });
-            } else {
-              // Basic user data from auth
-              setUser({
-                id: userData.user.id,
-                email: userData.user.email || '',
-                role: 'customer' as UserRole,
-                first_name: '',
-                last_name: '',
-                phone: '',
-                // Add aliases for backward compatibility
-                firstName: '',
-                lastName: ''
-              });
-            }
-          }
+        if (error) {
+          console.error("Session check error:", error);
+          setError(error);
+        } else if (user) {
+          setUser(user);
+          // Create a mock session for consistency
+          setSession({
+            access_token: `mock_token_${user.id}`,
+            user: { id: user.id, email: user.email }
+          });
         }
       } catch (err) {
         console.error("Session check error:", err);
@@ -99,59 +63,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
 
     checkSession();
-    
-    // Auth state subscription
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          setSession(session);
-          setIsLoading(true);
-          
-          try {
-            const { data: userData } = await supabase.auth.getUser();
-            
-            if (userData.user) {
-              // Get profile data
-              const { data: profileData } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', userData.user.id)
-                .single();
-              
-              if (profileData) {
-                setUser({
-                  id: userData.user.id,
-                  email: userData.user.email || '',
-                  first_name: profileData.first_name || '',
-                  last_name: profileData.last_name || '',
-                  role: profileData.role as UserRole,
-                  phone: profileData.phone || '',
-                  note: profileData.note || '',
-                  gender: profileData.gender,
-                  birth_date: profileData.birth_date,
-                  full_name: profileData.full_name,
-                  avatar_url: profileData.avatar_url,
-                  // Add aliases for backward compatibility
-                  firstName: profileData.first_name || '',
-                  lastName: profileData.last_name || ''
-                });
-              }
-            }
-          } catch (err) {
-            console.error("Auth state change error:", err);
-          } finally {
-            setIsLoading(false);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setSession(null);
-          setUser(null);
-        }
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -159,42 +70,32 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setError(null);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { user, session, error } = await signInWithEmail(email, password);
       
-      if (error) throw error;
-      
-      if (data.user) {
-        setSession(data.session);
-        const { data: profileData } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-        
-        if (profileData) {
-          setUser({
-            id: data.user.id,
-            email: data.user.email || '',
-            first_name: profileData.first_name || '',
-            last_name: profileData.last_name || '',
-            role: profileData.role as UserRole,
-            phone: profileData.phone || '',
-            note: profileData.note || '',
-            gender: profileData.gender,
-            birth_date: profileData.birth_date,
-            full_name: profileData.full_name,
-            avatar_url: profileData.avatar_url,
-            // Add aliases for backward compatibility
-            firstName: profileData.first_name || '',
-            lastName: profileData.last_name || ''
-          });
-        }
+      if (error) {
+        throw new Error(error);
       }
-
-      return;
+      
+      if (user && session) {
+        setUser(user);
+        setSession(session);
+        // Store user ID in localStorage for session persistence
+        localStorage.setItem('current_user_id', user.id);
+        
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${user.full_name || user.email}!`,
+        });
+      }
     } catch (err) {
       console.error("Login error:", err);
       setError(err instanceof Error ? err.message : "Failed to login");
+      
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: err instanceof Error ? err.message : 'An error occurred',
+      });
       throw err;
     } finally {
       setIsLoading(false);
@@ -203,13 +104,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
-      setSession(null);
+      await signOut();
       setUser(null);
-      return;
+      setSession(null);
+      localStorage.removeItem('current_user_id');
+      
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
     } catch (err) {
       console.error("Logout error:", err);
       setError(err instanceof Error ? err.message : "Failed to logout");
+      
+      toast({
+        variant: "destructive",
+        title: "Logout failed",
+        description: err instanceof Error ? err.message : 'An error occurred',
+      });
       throw err;
     }
   };
@@ -219,41 +131,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setError(null);
     
     try {
-      const { data, error } = await supabase.auth.signUp({ 
-        email, 
-        password,
-        options: {
-          data: {
-            first_name: userData?.first_name || userData?.firstName || '',
-            last_name: userData?.last_name || userData?.lastName || '',
-          }
-        }
-      });
+      const { user, session, error } = await signUp(email, password, userData);
       
-      if (error) throw error;
-      
-      // Create a profile record if user is created
-      if (data.user) {
-        // Filter out 'inactive' role as it's not in database enum
-        const role = userData?.role && userData.role !== 'inactive' ? userData.role : 'customer';
-        
-        const userProfile = {
-          id: data.user.id,
-          email,
-          first_name: userData?.first_name || userData?.firstName || '',
-          last_name: userData?.last_name || userData?.lastName || '',
-          role: role,
-          hashed_password: '',  // Required field for users table
-          phone: userData?.phone || '' // Required field for users table
-        };
-        
-        await supabase.from('users').insert(userProfile);
+      if (error) {
+        throw new Error(error);
       }
-
-      return;
+      
+      if (user && session) {
+        setUser(user);
+        setSession(session);
+        localStorage.setItem('current_user_id', user.id);
+        
+        toast({
+          title: "Registration successful",
+          description: "Your account has been created successfully.",
+        });
+      }
     } catch (err) {
       console.error("Registration error:", err);
       setError(err instanceof Error ? err.message : "Failed to register");
+      
+      toast({
+        variant: "destructive",
+        title: "Registration failed",
+        description: err instanceof Error ? err.message : 'An error occurred',
+      });
       throw err;
     } finally {
       setIsLoading(false);
@@ -267,50 +169,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setError(null);
     
     try {
-      // Map to database field names and filter out 'inactive' role
-      const dbUpdates: any = {
-        first_name: updates.first_name || updates.firstName,
-        last_name: updates.last_name || updates.lastName,
-        avatar_url: updates.avatar_url,
-        // Add other fields as needed
-      };
+      const { user: updatedUser, error } = await updateUserProfile(user.id, updates);
       
-      // Handle role conversion - exclude 'inactive' role as it's not in database enum
-      if (updates.role && updates.role !== 'inactive') {
-        dbUpdates.role = updates.role;
+      if (error) {
+        throw new Error(error);
       }
       
-      // Remove undefined values
-      Object.keys(dbUpdates).forEach(key => {
-        if (dbUpdates[key] === undefined) {
-          delete dbUpdates[key];
-        }
-      });
-      
-      const { error } = await supabase
-        .from('users')
-        .update(dbUpdates)
-        .eq('id', user.id);
-      
-      if (error) throw error;
-      
-      // Fix the partial user update
-      if (user) {
-        setUser({
-          ...user,
-          ...updates,
-          // Ensure aliases are updated too
-          firstName: updates.first_name || updates.firstName || user.first_name || user.firstName,
-          lastName: updates.last_name || updates.lastName || user.last_name || user.lastName
+      if (updatedUser) {
+        setUser(updatedUser);
+        
+        toast({
+          title: "Profile updated",
+          description: "Your profile has been successfully updated."
         });
       }
-      
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been successfully updated."
-      });
-
-      return;
     } catch (err) {
       console.error("Profile update error:", err);
       setError(err instanceof Error ? err.message : "Failed to update profile");

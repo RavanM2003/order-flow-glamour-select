@@ -33,73 +33,68 @@ type StaffUserData = SignUpData & {
 };
 
 /**
- * Sign in with email and password
+ * Sign in by checking credentials directly in public.users table
  */
 export const signInWithEmail = async (email: string, password: string) => {
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    // Query the public.users table directly
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("email", email)
+      .eq("hashed_password", password) // Assuming password is stored as plain text or you handle hashing
+      .single();
 
-    if (error) {
-      return { user: null, session: null, error: error.message };
+    if (userError || !userData) {
+      return { 
+        user: null, 
+        session: null, 
+        error: "Invalid login credentials" 
+      };
     }
 
-    let user = null;
-
-    if (data.user) {
-      // Get user profile data from users table
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", data.user.id)
-        .single();
-
-      if (userError) {
-        console.error("Failed to fetch user data:", userError);
+    // Create a mock session object since we're not using Supabase Auth
+    const mockSession = {
+      access_token: `mock_token_${userData.id}`,
+      token_type: "bearer",
+      expires_in: 3600,
+      expires_at: Date.now() + 3600000,
+      refresh_token: `refresh_${userData.id}`,
+      user: {
+        id: userData.id,
+        email: userData.email,
       }
+    };
 
-      if (userData) {
-        // Map Supabase user to our User interface
-        user = {
-          id: data.user.id,
-          email: data.user.email || "",
-          first_name: userData.first_name || "",
-          last_name: userData.last_name || "",
-          full_name: userData.full_name || "",
-          avatar_url: userData.avatar_url || "",
-          role: userData.role as UserRole,
-          gender: userData.gender,
-          phone: userData.phone || "",
-          note: userData.note || "",
-          token: data.session?.access_token || "",
-          // Add aliases for backward compatibility
-          firstName: userData.first_name || "",
-          lastName: userData.last_name || "",
-        };
-      } else {
-        // If no user profile found, use basic auth data
-        user = {
-          id: data.user.id,
-          email: data.user.email || "",
-          role: "customer" as UserRole,
-        };
-      }
-    }
+    // Map database user to our User interface
+    const user: User = {
+      id: userData.id,
+      email: userData.email || "",
+      first_name: userData.first_name || "",
+      last_name: userData.last_name || "",
+      full_name: userData.full_name || "",
+      avatar_url: userData.avatar_url || "",
+      role: userData.role as UserRole,
+      gender: userData.gender,
+      phone: userData.phone || "",
+      note: userData.note || "",
+      token: mockSession.access_token,
+      // Add aliases for backward compatibility
+      firstName: userData.first_name || "",
+      lastName: userData.last_name || "",
+    };
 
     return {
       user,
-      session: data.session,
+      session: mockSession,
       error: null,
     };
   } catch (error) {
     console.error("Sign in error:", error);
-    const authError = error as AuthError;
     return {
       user: null,
       session: null,
-      error: authError.message || "Sign in failed",
+      error: "Sign in failed",
     };
   }
 };
@@ -109,17 +104,12 @@ export const signInWithEmail = async (email: string, password: string) => {
  */
 export const signOut = async () => {
   try {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      return { error: error.message };
-    }
-
+    // Since we're not using Supabase Auth, just clear local storage or session
+    localStorage.removeItem('supabase.auth.token');
     return { error: null };
   } catch (error) {
     console.error("Sign out error:", error);
-    const authError = error as AuthError;
-    return { error: authError.message || "Sign out failed" };
+    return { error: "Sign out failed" };
   }
 };
 
@@ -154,7 +144,7 @@ const createUserProfile = async (
 };
 
 /**
- * Create a new user account
+ * Create a new user account directly in public.users table
  */
 export const signUp = async (
   email: string,
@@ -162,117 +152,117 @@ export const signUp = async (
   userData: SignUpData = {}
 ) => {
   try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: userData.first_name || userData.firstName || "",
-          last_name: userData.last_name || userData.lastName || "",
-        },
-      },
-    });
+    // Generate a new UUID for the user
+    const userId = uuidv4();
+    
+    const userProfile = {
+      id: userId,
+      email: email,
+      hashed_password: password, // Store password directly (consider hashing in production)
+      first_name: userData.first_name || userData.firstName || "",
+      last_name: userData.last_name || userData.lastName || "",
+      full_name: `${userData.first_name || userData.firstName || ""} ${
+        userData.last_name || userData.lastName || ""
+      }`.trim(),
+      role: userData.role && userData.role !== "inactive" ? userData.role : "customer",
+      gender: userData.gender || "other",
+      phone: userData.phone || "",
+    };
+
+    const { data, error } = await supabase
+      .from("users")
+      .insert([userProfile])
+      .select()
+      .single();
 
     if (error) {
       return { user: null, session: null, error: error.message };
     }
 
-    if (!data.user) {
-      return { user: null, session: null, error: "No user data returned" };
-    }
-
-    const role =
-      userData.role && userData.role !== "inactive"
-        ? userData.role
-        : "customer";
-    const userProfile = await createUserProfile(data.user.id, userData, role);
+    // Create mock session for the new user
+    const mockSession = {
+      access_token: `mock_token_${data.id}`,
+      token_type: "bearer",
+      expires_in: 3600,
+      expires_at: Date.now() + 3600000,
+      refresh_token: `refresh_${data.id}`,
+      user: {
+        id: data.id,
+        email: data.email,
+      }
+    };
 
     return {
       user: {
-        id: data.user.id,
-        email: data.user.email || "",
-        first_name: userProfile.first_name,
-        last_name: userProfile.last_name,
-        role: userProfile.role as UserRole,
-        phone: userProfile.phone,
-        gender: userProfile.gender,
-        token: data.session?.access_token || "",
+        id: data.id,
+        email: data.email || "",
+        first_name: data.first_name,
+        last_name: data.last_name,
+        role: data.role as UserRole,
+        phone: data.phone,
+        gender: data.gender,
+        token: mockSession.access_token,
       },
-      session: data.session,
+      session: mockSession,
       error: null,
     };
   } catch (error: unknown) {
     console.error("Sign up error:", error);
-    const authError = error as AuthError;
     return {
       user: null,
       session: null,
-      error: authError.message || "Sign up failed",
+      error: "Sign up failed",
     };
   }
 };
 
 /**
- * Get current authenticated user
+ * Get current authenticated user from local storage or session
  */
 export const getCurrentUser = async () => {
   try {
-    const { data, error } = await supabase.auth.getUser();
-
-    if (error) {
-      return { user: null, error: error.message };
+    // Since we're not using Supabase Auth, check if we have a stored user session
+    const storedToken = localStorage.getItem('current_user_id');
+    
+    if (!storedToken) {
+      return { user: null, error: null };
     }
 
-    let user = null;
+    // Get user data from users table
+    const { data: userData, error: userError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", storedToken)
+      .single();
 
-    if (data.user) {
-      // Get user profile data from users table
-      const { data: userData, error: userError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", data.user.id)
-        .single();
-
-      if (userError && userError.code !== "PGRST116") {
-        // PGRST116 = no rows returned
-        console.error("Failed to fetch user data:", userError);
-      }
-
-      if (userData) {
-        // Map Supabase user to our User interface
-        user = {
-          id: data.user.id,
-          email: data.user.email || "",
-          first_name: userData.first_name || "",
-          last_name: userData.last_name || "",
-          full_name: userData.full_name || "",
-          avatar_url: userData.avatar_url || "",
-          role: userData.role as UserRole,
-          gender: userData.gender,
-          phone: userData.phone || "",
-          note: userData.note || "",
-          // Remove references to roleId that doesn't exist
-        };
-      } else {
-        // If no user profile found, use basic auth data
-        user = {
-          id: data.user.id,
-          email: data.user.email || "",
-          role: "customer" as UserRole,
-        };
-      }
+    if (userError) {
+      return { user: null, error: userError.message };
     }
 
-    return {
-      user,
-      error: null,
-    };
+    if (userData) {
+      // Map database user to our User interface
+      const user: User = {
+        id: userData.id,
+        email: userData.email || "",
+        first_name: userData.first_name || "",
+        last_name: userData.last_name || "",
+        full_name: userData.full_name || "",
+        avatar_url: userData.avatar_url || "",
+        role: userData.role as UserRole,
+        gender: userData.gender,
+        phone: userData.phone || "",
+        note: userData.note || "",
+      };
+
+      return { user, error: null };
+    }
+
+    return { user: null, error: null };
   } catch (error) {
     console.error("Get current user error:", error);
-    const authError = error as AuthError;
     return {
       user: null,
-      error: authError.message || "Failed to get current user",
+      error: "Failed to get current user",
     };
   }
 };
