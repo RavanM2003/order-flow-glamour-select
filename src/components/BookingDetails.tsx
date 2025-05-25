@@ -10,11 +10,52 @@ import { formatDurationMultiLanguage } from '@/utils/validation';
 interface BookingDetailsProps {
   invoiceId?: string;
   invoiceNumber?: string;
+  appointmentId?: string;
 }
 
-const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumber }) => {
+interface AppointmentJson {
+  customer_info?: {
+    full_name?: string;
+    email?: string;
+    number?: string;
+    date?: string;
+    time?: string;
+    note?: string;
+  };
+  services?: Array<{
+    id: number;
+    name: string;
+    duration: number;
+    price: number;
+    discount: number;
+    discounted_price: number;
+  }>;
+  products?: Array<{
+    id: number;
+    name: string;
+    quantity: number;
+    price: number;
+    discount: number;
+    discounted_price: number;
+  }>;
+  payment_details?: {
+    method: string;
+    total_amount: number;
+    discount_amount: number;
+    paid_amount: number;
+  };
+}
+
+interface BookingData {
+  id: number;
+  invoice_number: string;
+  status: string;
+  appointment_json: AppointmentJson;
+}
+
+const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumber, appointmentId }) => {
   const { t } = useLanguage();
-  const [booking, setBooking] = useState<any>(null);
+  const [booking, setBooking] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [canCancel, setCanCancel] = useState(false);
 
@@ -24,9 +65,11 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumbe
         let query = supabase.from('invoices').select('*');
         
         if (invoiceId) {
-          query = query.eq('id', invoiceId);
+          query = query.eq('id', parseInt(invoiceId));
         } else if (invoiceNumber) {
           query = query.eq('invoice_number', invoiceNumber);
+        } else if (appointmentId) {
+          query = query.eq('id', parseInt(appointmentId));
         }
         
         const { data, error } = await query.single();
@@ -36,8 +79,9 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumbe
         setBooking(data);
         
         // Check if booking can be cancelled (2 hours before appointment)
-        if (data.appointment_json?.customer_info) {
-          const appointmentDate = new Date(`${data.appointment_json.customer_info.date} ${data.appointment_json.customer_info.time}`);
+        const customerInfo = (data.appointment_json as AppointmentJson)?.customer_info;
+        if (customerInfo?.date && customerInfo?.time) {
+          const appointmentDate = new Date(`${customerInfo.date} ${customerInfo.time}`);
           const now = new Date();
           const timeDiff = appointmentDate.getTime() - now.getTime();
           const hoursDiff = timeDiff / (1000 * 60 * 60);
@@ -51,10 +95,10 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumbe
       }
     };
 
-    if (invoiceId || invoiceNumber) {
+    if (invoiceId || invoiceNumber || appointmentId) {
       fetchBookingDetails();
     }
-  }, [invoiceId, invoiceNumber]);
+  }, [invoiceId, invoiceNumber, appointmentId]);
 
   const handleCancelBooking = async () => {
     if (!booking) return;
@@ -70,7 +114,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumbe
       
       if (error) throw error;
       
-      setBooking(prev => ({ ...prev, status: 'cancelled' }));
+      setBooking(prev => prev ? { ...prev, status: 'cancelled' } : null);
       setCanCancel(false);
     } catch (error) {
       console.error('Error cancelling booking:', error);
@@ -93,10 +137,11 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumbe
     );
   }
 
-  const customerInfo = booking.appointment_json?.customer_info;
-  const services = booking.appointment_json?.services || [];
-  const products = booking.appointment_json?.products || [];
-  const paymentDetails = booking.appointment_json?.payment_details;
+  const appointmentJson = booking.appointment_json as AppointmentJson;
+  const customerInfo = appointmentJson?.customer_info;
+  const services = appointmentJson?.services || [];
+  const products = appointmentJson?.products || [];
+  const paymentDetails = appointmentJson?.payment_details;
 
   const totalDuration = services.reduce((total: number, service: any) => total + (service.duration || 0), 0);
 
