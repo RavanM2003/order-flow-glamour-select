@@ -1,29 +1,28 @@
-
-import React from 'react';
-import { useLanguage } from '@/context/LanguageContext';
-import { Button } from '@/components/ui/button';
-import { Globe, ChevronDown } from 'lucide-react';
+import { memo } from "react";
+import { useLanguage } from "@/context";
+import { Button } from "@/components/ui/button";
+import { Globe, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
-const LanguageSelector: React.FC = () => {
+const LanguageSelector = () => {
   const { language, setLanguage } = useLanguage();
 
   // Language options with flag emojis
   const languages = [
-    { code: 'az', name: 'Azərbaycan', flag: '🇦🇿' },
-    { code: 'ru', name: 'Русский', flag: '🇷🇺' },
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-    { code: 'uz', name: 'O\'zbek', flag: '🇺🇿' },
+    { code: "az", name: "Azərbaycan", flag: "🇦🇿" },
+    { code: "ru", name: "Русский", flag: "🇷🇺" },
+    { code: "en", name: "English", flag: "🇬🇧" },
+    { code: "uz", name: "O'zbek", flag: "🇺🇿" },
   ];
 
   // Find current language
-  const currentLang = languages.find(lang => lang.code === language);
+  const currentLang = languages.find((lang) => lang.code === language);
 
   return (
     <DropdownMenu>
@@ -37,9 +36,9 @@ const LanguageSelector: React.FC = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-white">
         {languages.map((lang) => (
-          <DropdownMenuItem 
+          <DropdownMenuItem
             key={lang.code}
-            onClick={() => setLanguage(lang.code as 'az' | 'ru' | 'en' | 'uz')}
+            onClick={() => setLanguage(lang.code as "az" | "ru" | "en" | "uz")}
             className={cn(
               "cursor-pointer",
               language === lang.code && "bg-muted"
@@ -54,4 +53,4 @@ const LanguageSelector: React.FC = () => {
   );
 };
 
-export default React.memo(LanguageSelector);
+export default memo(LanguageSelector);
