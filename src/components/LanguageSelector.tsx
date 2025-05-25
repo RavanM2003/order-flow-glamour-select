@@ -1,5 +1,6 @@
+
 import { memo } from "react";
-import { useLanguage } from "@/context";
+import { useLanguage } from "@/context/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Globe, ChevronDown } from "lucide-react";
 import {

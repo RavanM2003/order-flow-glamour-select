@@ -1,6 +1,5 @@
 
-import React, { useState, useEffect, useContext } from "react";
-import { LanguageContext } from "./context";
+import React, { useState, useEffect, useContext, createContext } from "react";
 
 type Language = "az" | "en" | "ru" | "uz";
 
@@ -9,6 +8,11 @@ interface LanguageContextType {
   setLanguage: (lang: Language) => void;
   t: (key: string) => string;
 }
+
+// Create context
+export const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined
+);
 
 export const useLanguage = () => {
   const context = useContext(LanguageContext);
@@ -57,29 +61,35 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({
         if (value && typeof value === "object") {
           value = value[keyPart];
         } else {
-          // Try English fallback first
-          if (language !== "en") {
-            let fallback: any = translations.en;
-            for (const fallbackKeyPart of keys) {
-              if (fallback && typeof fallback === "object") {
-                fallback = fallback[fallbackKeyPart];
-              } else {
-                break;
-              }
-            }
-            if (fallback && typeof fallback === "string") {
-              console.warn(`Using English fallback for key: ${key}`);
-              return fallback;
-            }
-          }
-          console.warn(
-            `Translation key not found: ${key} for language: ${language}`
-          );
-          return key;
+          value = undefined;
+          break;
         }
       }
 
-      return typeof value === "string" ? value : key;
+      // If value found and is string, return it
+      if (typeof value === "string") {
+        return value;
+      }
+
+      // Try English fallback
+      if (language !== "en") {
+        let fallback: any = translations.en;
+        for (const fallbackKeyPart of keys) {
+          if (fallback && typeof fallback === "object") {
+            fallback = fallback[fallbackKeyPart];
+          } else {
+            fallback = undefined;
+            break;
+          }
+        }
+        if (typeof fallback === "string") {
+          console.warn(`Using English fallback for key: ${key}`);
+          return fallback;
+        }
+      }
+
+      console.warn(`Translation key not found: ${key} for language: ${language}`);
+      return key;
     } catch (error) {
       console.error(`Error translating key ${key}:`, error);
       return key;
