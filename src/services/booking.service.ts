@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
 
@@ -64,12 +65,20 @@ export const createBooking = async (
   bookingData: BookingFormData
 ): Promise<ApiResponse<Booking>> => {
   try {
+    // Normalize gender value to match database enum
+    const normalizeGender = (gender: string): "male" | "female" | "other" => {
+      const lowerGender = gender.toLowerCase().trim();
+      if (lowerGender === "male" || lowerGender === "m") return "male";
+      if (lowerGender === "female" || lowerGender === "f") return "female";
+      return "other";
+    };
+
     // Ensure gender is properly typed as gender_enum
     const appointmentJson = {
       ...bookingData,
       customer_info: {
         ...bookingData.customer_info,
-        gender: bookingData.customer_info.gender as "male" | "female" | "other",
+        gender: normalizeGender(bookingData.customer_info.gender),
       },
     };
 
