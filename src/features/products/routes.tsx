@@ -1,18 +1,16 @@
-
-import React from 'react';
-import { RouteObject } from 'react-router-dom';
-import ProductList from './components/ProductList';
-import ProductDetail from './components/ProductDetail';
+import { RouteObject } from "react-router-dom";
+import ProductList from "./components/ProductList";
+import ProductDetail from "./components/ProductDetail";
 
 const productRoutes: RouteObject[] = [
   {
     path: "/admin/products",
-    element: <ProductList />
+    element: <ProductList />,
   },
   {
     path: "/admin/products/:id",
-    element: <ProductDetail />
-  }
+    element: <ProductDetail />,
+  },
 ];
 
 export default productRoutes;
