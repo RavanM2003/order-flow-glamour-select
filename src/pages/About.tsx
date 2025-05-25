@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -7,6 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useLanguage } from '@/context/LanguageContext';
+import StaffCard from '@/components/ui/staff-card';
 
 interface TeamMember {
   id: string;
@@ -17,31 +17,46 @@ interface TeamMember {
   position?: string;
 }
 
+interface StaffPosition {
+  position: string;
+  services: Array<{
+    id: number;
+    name: string;
+    price: number;
+    duration: number;
+  }>;
+}
+
+interface StaffUser {
+  bio?: string;
+  role: string;
+  full_name: string;
+  photo_url?: string;
+}
+
+interface StaffData {
+  user: StaffUser;
+  positions: StaffPosition[];
+}
+
 const About = () => {
   const { getLocalizedSetting, isLoading: settingsLoading } = useSettings();
   const { t, language } = useLanguage();
 
-  const { data: teamMembers, isLoading: teamLoading } = useQuery({
-    queryKey: ['team-members'],
+  // Fetch detailed staff data with services
+  const { data: staffWithServices, isLoading: staffLoading } = useQuery({
+    queryKey: ['staff-with-services'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('users')
-        .select(`
-          id,
-          full_name,
-          bio,
-          photo_url,
-          role
-        `)
-        .in('role', ['staff', 'admin', 'super_admin'])
-        .not('full_name', 'is', null);
+        .from('staff_with_services_json')
+        .select('*');
 
       if (error) {
-        console.error('Error fetching team members:', error);
+        console.error('Error fetching staff with services:', error);
         throw error;
       }
 
-      return data as unknown as TeamMember[];
+      return data as StaffData[];
     },
   });
 
@@ -86,7 +101,9 @@ const About = () => {
 
           {/* Our Story Section */}
           <div className="max-w-4xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold text-glamour-800 mb-6 text-center">{ourStoryTitle}</h2>
+            <h2 className="text-3xl font-bold text-glamour-800 mb-6 text-center">
+              {ourStoryTitle}
+            </h2>
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div>
                 <p className="text-gray-600 leading-relaxed mb-4">
@@ -104,9 +121,11 @@ const About = () => {
 
           {/* Team Section */}
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-glamour-800 mb-8 text-center">{meetOurTeamTitle}</h2>
+            <h2 className="text-3xl font-bold text-glamour-800 mb-8 text-center">
+              {meetOurTeamTitle}
+            </h2>
             
-            {teamLoading ? (
+            {staffLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="bg-white rounded-lg shadow-md p-6">
@@ -117,35 +136,10 @@ const About = () => {
                   </div>
                 ))}
               </div>
-            ) : teamMembers && teamMembers.length > 0 ? (
+            ) : staffWithServices && staffWithServices.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {teamMembers.map((member) => (
-                  <div key={member.id} className="bg-white rounded-lg shadow-md p-6 text-center">
-                    <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                      {member.photo_url ? (
-                        <img 
-                          src={member.photo_url} 
-                          alt={member.full_name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-2xl text-glamour-600">
-                          {member.full_name?.charAt(0)}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="text-xl font-semibold text-glamour-800 mb-1">
-                      {member.full_name}
-                    </h3>
-                    <p className="text-glamour-600 mb-3 capitalize">
-                      {member.position || member.role.replace('_', ' ')}
-                    </p>
-                    {member.bio && (
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        {member.bio}
-                      </p>
-                    )}
-                  </div>
+                {staffWithServices.map((staffData, index) => (
+                  <StaffCard key={index} staffData={staffData} />
                 ))}
               </div>
             ) : (
@@ -157,28 +151,42 @@ const About = () => {
 
           {/* Values Section */}
           <div className="max-w-4xl mx-auto mt-16">
-            <h2 className="text-3xl font-bold text-glamour-800 mb-8 text-center">{ourValuesTitle}</h2>
+            <h2 className="text-3xl font-bold text-glamour-800 mb-8 text-center">
+              {ourValuesTitle}
+            </h2>
             <div className="grid md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="w-16 h-16 bg-glamour-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">✨</span>
                 </div>
-                <h3 className="text-xl font-semibold text-glamour-800 mb-2">{valueQualityTitle}</h3>
-                <p className="text-gray-600">{valueQualityText}</p>
+                <h3 className="text-xl font-semibold text-glamour-800 mb-2">
+                  {valueQualityTitle}
+                </h3>
+                <p className="text-gray-600">
+                  {valueQualityText}
+                </p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 bg-glamour-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">💝</span>
                 </div>
-                <h3 className="text-xl font-semibold text-glamour-800 mb-2">{valueCareTitle}</h3>
-                <p className="text-gray-600">{valueCareText}</p>
+                <h3 className="text-xl font-semibold text-glamour-800 mb-2">
+                  {valueCareTitle}
+                </h3>
+                <p className="text-gray-600">
+                  {valueCareText}
+                </p>
               </div>
               <div className="text-center">
                 <div className="w-16 h-16 bg-glamour-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <span className="text-2xl">🌟</span>
                 </div>
-                <h3 className="text-xl font-semibold text-glamour-800 mb-2">{valueExcellenceTitle}</h3>
-                <p className="text-gray-600">{valueExcellenceText}</p>
+                <h3 className="text-xl font-semibold text-glamour-800 mb-2">
+                  {valueExcellenceTitle}
+                </h3>
+                <p className="text-gray-600">
+                  {valueExcellenceText}
+                </p>
               </div>
             </div>
           </div>

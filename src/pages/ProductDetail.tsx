@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from '@/context/LanguageContext';
 import { Product } from "@/models/product.model";
 import { Service } from "@/models/service.model";
+import PriceDisplay from "@/components/ui/price-display";
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -158,7 +159,13 @@ const ProductDetail = () => {
           {/* Product Info */}
           <div>
             <h1 className="text-3xl font-bold text-glamour-800 mb-2">{product.name}</h1>
-            <p className="text-2xl font-semibold text-glamour-700 mb-4">{product.price} AZN</p>
+            <div className="mb-4">
+              <PriceDisplay 
+                price={product.price} 
+                discount={product.discount}
+                className="text-2xl"
+              />
+            </div>
             
             {product.description && (
               <div className="mb-6">
@@ -208,7 +215,11 @@ const ProductDetail = () => {
                     <h3 className="text-xl font-semibold text-glamour-800 mb-2">{service.name}</h3>
                     <div className="flex justify-between text-sm text-gray-600 mb-3">
                       <span>{service.duration} min</span>
-                      <span>{service.price} AZN</span>
+                      <PriceDisplay 
+                        price={service.price} 
+                        discount={service.discount}
+                        className="text-sm"
+                      />
                     </div>
                     <p className="text-gray-600 mb-4 line-clamp-2">{service.description}</p>
                     <Button variant="outline" className="w-full" asChild>
