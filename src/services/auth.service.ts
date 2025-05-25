@@ -78,7 +78,6 @@ export const signInWithEmail = async (email: string, password: string) => {
       gender: userData.gender,
       phone: userData.phone || "",
       note: userData.note || "",
-      token: mockSession.access_token,
       // Add aliases for backward compatibility
       firstName: userData.first_name || "",
       lastName: userData.last_name || "",
@@ -201,7 +200,6 @@ export const signUp = async (
         role: data.role as UserRole,
         phone: data.phone,
         gender: data.gender,
-        token: mockSession.access_token,
       },
       session: mockSession,
       error: null,
