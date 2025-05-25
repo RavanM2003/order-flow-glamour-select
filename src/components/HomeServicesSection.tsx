@@ -112,14 +112,11 @@ const HomeServicesSection = () => {
                   <Clock className="h-4 w-4 mr-1" />
                   <span>{service.duration} {t('services.minutes')}</span>
                 </div>
-                <Link to={`/services/${service.id}`} className="text-glamour-700 hover:underline">
-                  {t('services.viewDetails')}
-                </Link>
               </div>
               <p className="text-gray-600 mb-6 line-clamp-3">{service.description || t('services.noDescription')}</p>
               <Button className="w-full bg-glamour-700 hover:bg-glamour-800" asChild>
-                <Link to="/booking">
-                  {t('services.bookNow')}
+                <Link to={`/services/${service.id}`}>
+                  {t('home.viewDetails')}
                   <ChevronRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
