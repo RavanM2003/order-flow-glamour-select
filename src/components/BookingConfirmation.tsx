@@ -5,6 +5,166 @@ import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import type { Staff } from "@/models/staff.model";
+
+interface Customer {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+interface Service {
+  id: number;
+  name: string;
+  duration: number;
+  price: number;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  price?: number;
+}
+
+const InfoSection = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => (
+  <div>
+    <h3 className="font-semibold text-gray-700 mb-2">{title}</h3>
+    <div className="bg-white p-4 rounded border">{children}</div>
+  </div>
+);
+
+const CustomerInfo = ({ customer }: { customer: Customer }) => (
+  <div>
+    <p>
+      <span className="font-medium">Ad:</span> {customer.name}
+    </p>
+    <p>
+      <span className="font-medium">Email:</span> {customer.email}
+    </p>
+    <p>
+      <span className="font-medium">Telefon:</span> {customer.phone}
+    </p>
+  </div>
+);
+
+const AppointmentTimeInfo = ({
+  date,
+  time,
+}: {
+  date: Date | null;
+  time: string;
+}) => (
+  <div>
+    <p>
+      <span className="font-medium">Tarix:</span>{" "}
+      {date ? format(date, "MMMM d, yyyy") : "Tarix seçilməyib"}
+    </p>
+    <p>
+      <span className="font-medium">Saat:</span> {time || "Saat seçilməyib"}
+    </p>
+  </div>
+);
+
+const ServiceInfo = ({ service }: { service: Service }) => (
+  <div>
+    <p>
+      <span className="font-medium">Xidmət adı:</span> {service.name}
+    </p>
+    <p>
+      <span className="font-medium">Müddət:</span> {service.duration} dəqiqə
+    </p>
+    <p>
+      <span className="font-medium">Qiymət:</span> {service.price} AZN
+    </p>
+  </div>
+);
+
+const StaffInfo = ({ staff }: { staff: Staff }) => (
+  <div>
+    <p>
+      <span className="font-medium">İşçi adı:</span> {staff.name}
+    </p>
+    <p>
+      <span className="font-medium">Mövqe:</span> {staff.position}
+    </p>
+  </div>
+);
+
+const ProductsInfo = ({ products }: { products: Product[] }) => (
+  <ul className="list-disc list-inside">
+    {products.map((product) => (
+      <li key={product.id}>
+        {product.name} - {product.price} AZN
+      </li>
+    ))}
+  </ul>
+);
+
+const TotalAmount = ({ amount }: { amount: number }) => (
+  <div>
+    <h3 className="font-semibold text-gray-700 mb-2">Ümumi məbləğ</h3>
+    <div className="bg-purple-100 p-4 rounded border border-purple-200">
+      <p className="text-xl font-bold text-purple-900">{amount} AZN</p>
+    </div>
+  </div>
+);
+
+const BookingDetails = ({
+  customer,
+  appointmentDate,
+  appointmentTime,
+  selectedService,
+  selectedStaff,
+  selectedProducts,
+  totalAmount,
+}: {
+  customer: Customer;
+  appointmentDate: Date | null;
+  appointmentTime: string;
+  selectedService: Service | null;
+  selectedStaff: Staff | null;
+  selectedProducts: Product[];
+  totalAmount: number;
+}) => (
+  <div className="bg-purple-50 border border-purple-100 rounded-lg p-6">
+    <h2 className="text-3xl font-bold mb-6 text-purple-800">Təyinatınız</h2>
+    <div className="space-y-6">
+      <InfoSection title="Müştəri məlumatları">
+        <CustomerInfo customer={customer} />
+      </InfoSection>
+
+      <InfoSection title="Təyinat vaxtı">
+        <AppointmentTimeInfo date={appointmentDate} time={appointmentTime} />
+      </InfoSection>
+
+      {selectedService && (
+        <InfoSection title="Seçilən xidmət">
+          <ServiceInfo service={selectedService} />
+        </InfoSection>
+      )}
+
+      {selectedStaff && (
+        <InfoSection title="Seçilən işçi">
+          <StaffInfo staff={selectedStaff} />
+        </InfoSection>
+      )}
+
+      {selectedProducts.length > 0 && (
+        <InfoSection title="Əlavə məhsullar">
+          <ProductsInfo products={selectedProducts} />
+        </InfoSection>
+      )}
+
+      <TotalAmount amount={totalAmount} />
+    </div>
+  </div>
+);
 
 const BookingConfirmation = () => {
   const { orderState, resetOrder } = useOrder();
@@ -161,9 +321,9 @@ const BookingConfirmation = () => {
           appointment_id: appointment.id,
           product_id: product.id,
           staff_id: selectedStaff.id.toString(),
-          price: product.price,
+          price: Number(product.price),
           quantity: 1,
-          amount: product.price * 1, // price * quantity
+          amount: Number(product.price),
         }));
 
         for (const product of appointmentProducts) {
@@ -205,116 +365,16 @@ const BookingConfirmation = () => {
 
   return (
     <div className="space-y-8">
-      <div className="bg-purple-50 border border-purple-100 rounded-lg p-6">
-        <h2 className="text-3xl font-bold mb-6 text-purple-800">Təyinatınız</h2>
+      <BookingDetails
+        customer={customer}
+        appointmentDate={appointmentDate}
+        appointmentTime={appointmentTime}
+        selectedService={selectedService}
+        selectedStaff={selectedStaff}
+        selectedProducts={selectedProducts}
+        totalAmount={totalAmount}
+      />
 
-        <div className="space-y-6">
-          {/* Customer information */}
-          <div>
-            <h3 className="font-semibold text-gray-700 mb-2">
-              Müştəri məlumatları
-            </h3>
-            <div className="bg-white p-4 rounded border">
-              <p>
-                <span className="font-medium">Ad:</span> {customer.name}
-              </p>
-              <p>
-                <span className="font-medium">Email:</span> {customer.email}
-              </p>
-              <p>
-                <span className="font-medium">Telefon:</span> {customer.phone}
-              </p>
-            </div>
-          </div>
-
-          {/* Appointment time */}
-          <div>
-            <h3 className="font-semibold text-gray-700 mb-2">Təyinat vaxtı</h3>
-            <div className="bg-white p-4 rounded border">
-              <p>
-                <span className="font-medium">Tarix:</span>{" "}
-                {appointmentDate
-                  ? format(appointmentDate, "MMMM d, yyyy")
-                  : "Tarix seçilməyib"}
-              </p>
-              <p>
-                <span className="font-medium">Saat:</span>{" "}
-                {appointmentTime || "Saat seçilməyib"}
-              </p>
-            </div>
-          </div>
-
-          {/* Selected service */}
-          {selectedService && (
-            <div>
-              <h3 className="font-semibold text-gray-700 mb-2">
-                Seçilən xidmət
-              </h3>
-              <div className="bg-white p-4 rounded border">
-                <p>
-                  <span className="font-medium">Xidmət adı:</span>{" "}
-                  {selectedService.name}
-                </p>
-                <p>
-                  <span className="font-medium">Müddət:</span>{" "}
-                  {selectedService.duration} dəqiqə
-                </p>
-                <p>
-                  <span className="font-medium">Qiymət:</span>{" "}
-                  {selectedService.price} AZN
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Selected staff */}
-          {selectedStaff && (
-            <div>
-              <h3 className="font-semibold text-gray-700 mb-2">Seçilən işçi</h3>
-              <div className="bg-white p-4 rounded border">
-                <p>
-                  <span className="font-medium">İşçi adı:</span>{" "}
-                  {selectedStaff.name}
-                </p>
-                <p>
-                  <span className="font-medium">Mövqe:</span>{" "}
-                  {selectedStaff.position}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Selected products */}
-          {selectedProducts.length > 0 && (
-            <div>
-              <h3 className="font-semibold text-gray-700 mb-2">
-                Əlavə məhsullar
-              </h3>
-              <div className="bg-white p-4 rounded border">
-                <ul className="list-disc list-inside">
-                  {selectedProducts.map((product) => (
-                    <li key={product.id}>
-                      {product.name} - {product.price} AZN
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {/* Total amount */}
-          <div>
-            <h3 className="font-semibold text-gray-700 mb-2">Ümumi məbləğ</h3>
-            <div className="bg-purple-100 p-4 rounded border border-purple-200">
-              <p className="text-xl font-bold text-purple-900">
-                {totalAmount} AZN
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Action buttons */}
       <div className="flex justify-between pt-6">
         <Button variant="outline" onClick={() => resetOrder()}>
           Təyinatı ləğv et
