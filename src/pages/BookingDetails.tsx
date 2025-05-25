@@ -17,7 +17,7 @@ const BookingDetailsPage = () => {
         <div className="w-full md:max-w-4xl md:mx-auto">
           <h1 className="text-3xl font-bold text-glamour-800 mb-8 text-center">Booking Details</h1>
           <OrderProvider>
-            <BookingDetails invoiceId={orderId || ''} />
+            <BookingDetails invoiceId={orderId} />
           </OrderProvider>
         </div>
       </main>
