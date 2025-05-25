@@ -5,8 +5,7 @@ import {
   Appointment,
   AppointmentCreate,
 } from "@/models/types";
-import { SupabaseClient, createClient } from "@supabase/supabase-js";
-import { config } from "@/config/env";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 class SupabaseService {
@@ -20,11 +19,11 @@ class SupabaseService {
   // Method to upload image to Supabase storage
   async uploadImage(file: File, storagePath: string): Promise<string | null> {
     try {
-      const { data, error } = await this.supabase.storage
-        .from("images") // Replace 'your-bucket-name' with your actual bucket name
+      const { error } = await this.supabase.storage
+        .from("images")
         .upload(`${storagePath}/${file.name}`, file, {
           cacheControl: "3600",
-          upsert: false, // Set to true if you want to overwrite existing files
+          upsert: false,
         });
 
       if (error) {
