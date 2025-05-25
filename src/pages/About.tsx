@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -56,7 +57,11 @@ const About = () => {
         throw error;
       }
 
-      return data as StaffData[];
+      // Convert Json types to our TypeScript interfaces
+      return (data || []).map((item): StaffData => ({
+        user: item.user as StaffUser,
+        positions: item.positions as StaffPosition[]
+      }));
     },
   });
 
