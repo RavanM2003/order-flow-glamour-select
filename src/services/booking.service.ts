@@ -82,7 +82,7 @@ export const createBooking = async (
       },
     };
 
-    // Use a raw SQL insert to properly cast the gender enum
+    // Use the SQL function to properly handle gender enum casting
     const { data, error } = await supabase.rpc('create_invoice_with_appointment', {
       p_invoice_number: bookingData.invoice_number,
       p_total_amount: bookingData.payment_details.total_amount,
@@ -95,7 +95,14 @@ export const createBooking = async (
       return { error: error.message };
     }
 
-    return { data };
+    // The function returns an array, get the first item
+    const bookingResult = Array.isArray(data) ? data[0] : data;
+    
+    if (!bookingResult) {
+      return { error: "No booking data returned" };
+    }
+
+    return { data: bookingResult };
   } catch (error) {
     console.error("Service error:", error);
     const errorMessage = error instanceof Error ? error.message : String(error);

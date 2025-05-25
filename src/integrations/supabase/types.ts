@@ -747,6 +747,23 @@ export type Database = {
       }
     }
     Functions: {
+      create_invoice_with_appointment: {
+        Args: {
+          p_invoice_number: string
+          p_total_amount: number
+          p_status: string
+          p_appointment_json: Json
+        }
+        Returns: {
+          id: number
+          invoice_number: string
+          total_amount: number
+          status: string
+          appointment_json: Json
+          appointment_id: number
+          issued_at: string
+        }[]
+      }
       get_available_staff_by_service_and_date: {
         Args: { service_id: number; reservation_date: string }
         Returns: {
