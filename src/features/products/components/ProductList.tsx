@@ -28,7 +28,7 @@ const ProductList = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('discount', { ascending: false });
       
       if (error) {
         console.error("Error fetching products:", error);
