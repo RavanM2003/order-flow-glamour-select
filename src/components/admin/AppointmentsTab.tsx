@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -44,12 +44,567 @@ interface Appointment {
   paymentMethod?: string;
 }
 
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "confirmed":
+      return <Badge className="bg-green-500">Confirmed</Badge>;
+    case "pending":
+      return <Badge className="bg-yellow-500">Pending</Badge>;
+    case "rejected":
+      return <Badge className="bg-red-500">Rejected</Badge>;
+    case "completed":
+      return <Badge className="bg-blue-500">Completed</Badge>;
+    default:
+      return <Badge>Unknown</Badge>;
+  }
+};
+
+const AppointmentTableRow = ({
+  appointment,
+  onAccept,
+  onReject,
+  onEdit,
+  onMarkCompleted,
+  onView,
+  onRepeat,
+}) => (
+  <TableRow>
+    <TableCell className="font-medium">
+      <div className="flex flex-col">
+        <div className="flex items-center">
+          <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
+          {appointment.time}
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {appointment.duration}
+        </span>
+      </div>
+    </TableCell>
+    <TableCell>
+      <div className="flex flex-col">
+        <div className="flex items-center">
+          <User className="h-4 w-4 mr-1 text-muted-foreground" />
+          {appointment.customerName}
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {appointment.customerPhone}
+        </span>
+      </div>
+    </TableCell>
+    <TableCell className="hidden md:table-cell">
+      <div className="flex flex-wrap gap-1">
+        {appointment.services.map((service, index) => (
+          <span
+            key={index}
+            className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full"
+          >
+            {service}
+          </span>
+        ))}
+        {appointment.products.map((product, index) => (
+          <span
+            key={`p-${index}`}
+            className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full"
+          >
+            {product}
+          </span>
+        ))}
+      </div>
+    </TableCell>
+    <TableCell className="text-right hidden md:table-cell font-medium">
+      ${appointment.totalAmount}
+    </TableCell>
+    <TableCell>{getStatusBadge(appointment.status)}</TableCell>
+    <TableCell>
+      <div className="flex justify-center gap-2">
+        {appointment.status === "pending" && (
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
+              onClick={() => onAccept(appointment)}
+            >
+              <Check className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
+              onClick={() => onReject(appointment)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </>
+        )}
+        {appointment.status === "confirmed" && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="p-1 text-blue-600 hover:text-blue-700"
+              onClick={() => onEdit(appointment)}
+            >
+              <Edit className="h-4 w-4 mr-1" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="p-1 text-green-600 hover:text-green-700"
+              onClick={() => onMarkCompleted(appointment)}
+            >
+              <CheckCircle className="h-4 w-4 mr-1" />
+            </Button>
+          </div>
+        )}
+        {(appointment.status === "completed" ||
+          appointment.status === "rejected") && (
+          <div className="flex gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700"
+              onClick={() => onView(appointment)}
+            >
+              <Info className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 w-8 p-0 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
+              onClick={() => onRepeat(appointment)}
+            >
+              <RefreshCcw className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </TableCell>
+  </TableRow>
+);
+
+const AppointmentsTableHeader = () => (
+  <TableHeader>
+    <TableRow>
+      <TableHead>Time</TableHead>
+      <TableHead>Customer</TableHead>
+      <TableHead className="hidden md:table-cell">
+        Services and Products
+      </TableHead>
+      <TableHead className="text-right hidden md:table-cell">Total</TableHead>
+      <TableHead>Status</TableHead>
+      <TableHead className="text-center">Actions</TableHead>
+    </TableRow>
+  </TableHeader>
+);
+
+const AppointmentsTable = ({
+  appointments,
+  onAccept,
+  onReject,
+  onEdit,
+  onMarkCompleted,
+  onView,
+  onRepeat,
+}) => (
+  <div className="border rounded-md overflow-auto">
+    <Table>
+      <AppointmentsTableHeader />
+      <TableBody>
+        {appointments.map((appointment) => (
+          <AppointmentTableRow
+            key={appointment.id}
+            appointment={appointment}
+            onAccept={onAccept}
+            onReject={onReject}
+            onEdit={onEdit}
+            onMarkCompleted={onMarkCompleted}
+            onView={onView}
+            onRepeat={onRepeat}
+          />
+        ))}
+      </TableBody>
+    </Table>
+  </div>
+);
+
+// Add these component definitions before the AppointmentsTab component
+const EditCustomerSection = ({ editForm, setEditForm, isEditing, onSave }) => (
+  <div className="border rounded-md p-4">
+    <div className="flex items-center justify-between mb-2">
+      <h3 className="font-semibold">Customer Information</h3>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={onSave}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+    </div>
+    {isEditing ? (
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="customerName" className="block text-xs mb-1">
+            Name
+          </label>
+          <Input
+            id="customerName"
+            value={editForm.customerName}
+            onChange={(e) =>
+              setEditForm({ ...editForm, customerName: e.target.value })
+            }
+          />
+        </div>
+        <div>
+          <label htmlFor="customerPhone" className="block text-xs mb-1">
+            Phone
+          </label>
+          <Input
+            id="customerPhone"
+            value={editForm.customerPhone}
+            onChange={(e) =>
+              setEditForm({ ...editForm, customerPhone: e.target.value })
+            }
+          />
+        </div>
+        <div className="flex justify-end">
+          <Button size="sm" onClick={onSave}>
+            Save
+          </Button>
+        </div>
+      </div>
+    ) : (
+      <div>
+        <div>{editForm.customerName}</div>
+        <div className="text-sm text-muted-foreground">
+          {editForm.customerPhone}
+        </div>
+      </div>
+    )}
+  </div>
+);
+
+const EditServicesSection = ({
+  editForm,
+  setEditForm,
+  isEditing,
+  onSave,
+  serviceSearch,
+  setServiceSearch,
+  filteredServices,
+}) => (
+  <div className="border rounded-md p-4">
+    <div className="flex items-center justify-between mb-2">
+      <h3 className="font-semibold">Services</h3>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={onSave}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+    </div>
+    {isEditing ? (
+      <div className="space-y-4">
+        <Input
+          placeholder="Search services..."
+          value={serviceSearch}
+          onChange={(e) => setServiceSearch(e.target.value)}
+          className="mb-2"
+        />
+        <div className="max-h-40 overflow-y-auto">
+          {filteredServices.map((service) => (
+            <div
+              key={service.id}
+              className="flex items-center justify-between py-1"
+            >
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={editForm.services.includes(service.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setEditForm({
+                        ...editForm,
+                        services: [...editForm.services, service.id],
+                      });
+                    } else {
+                      setEditForm({
+                        ...editForm,
+                        services: editForm.services.filter(
+                          (id) => id !== service.id
+                        ),
+                      });
+                    }
+                  }}
+                />
+                {service.name}
+              </label>
+              <span>${service.price}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-end">
+          <Button size="sm" onClick={onSave}>
+            Save
+          </Button>
+        </div>
+      </div>
+    ) : (
+      <div>
+        {editForm.services.length === 0 ? (
+          <div className="text-sm text-muted-foreground">
+            No services selected
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {filteredServices.map((service) => (
+              <div key={service.id} className="flex justify-between">
+                <span>{service.name}</span>
+                <span>${service.price}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+);
+
+const EditProductsSection = ({
+  editForm,
+  setEditForm,
+  isEditing,
+  onSave,
+  productSearch,
+  setProductSearch,
+  filteredProducts,
+}) => (
+  <div className="border rounded-md p-4">
+    <div className="flex items-center justify-between mb-2">
+      <h3 className="font-semibold">Products</h3>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={onSave}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+    </div>
+    {isEditing ? (
+      <div className="space-y-4">
+        <Input
+          placeholder="Search products..."
+          value={productSearch}
+          onChange={(e) => setProductSearch(e.target.value)}
+          className="mb-2"
+        />
+        <div className="max-h-40 overflow-y-auto">
+          {filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              className="flex items-center justify-between py-1"
+            >
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={editForm.products.includes(product.id)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setEditForm({
+                        ...editForm,
+                        products: [...editForm.products, product.id],
+                      });
+                    } else {
+                      setEditForm({
+                        ...editForm,
+                        products: editForm.products.filter(
+                          (id) => id !== product.id
+                        ),
+                      });
+                    }
+                  }}
+                />
+                {product.name}
+              </label>
+              <span>${product.price}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-end">
+          <Button size="sm" onClick={onSave}>
+            Save
+          </Button>
+        </div>
+      </div>
+    ) : (
+      <div>
+        {editForm.products.length === 0 ? (
+          <div className="text-sm text-muted-foreground">
+            No products selected
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {filteredProducts.map((product) => (
+              <div key={product.id} className="flex justify-between">
+                <span>{product.name}</span>
+                <span>${product.price}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+);
+
+const EditDateTimeSection = ({ editForm, setEditForm, isEditing, onSave }) => (
+  <div className="border rounded-md p-4">
+    <div className="flex items-center justify-between mb-2">
+      <h3 className="font-semibold">Date & Time</h3>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="h-8 w-8 p-0"
+        onClick={onSave}
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+    </div>
+    {isEditing ? (
+      <div className="space-y-4">
+        <div>
+          <label htmlFor="appointmentDate" className="block text-xs mb-1">
+            Date
+          </label>
+          <Input
+            id="appointmentDate"
+            type="date"
+            value={editForm.date}
+            onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+          />
+        </div>
+        <div>
+          <label htmlFor="appointmentTime" className="block text-xs mb-1">
+            Time
+          </label>
+          <Input
+            id="appointmentTime"
+            type="time"
+            value={editForm.time}
+            onChange={(e) => setEditForm({ ...editForm, time: e.target.value })}
+          />
+        </div>
+        <div className="flex justify-end">
+          <Button size="sm" onClick={onSave}>
+            Save
+          </Button>
+        </div>
+      </div>
+    ) : (
+      <div>
+        {editForm.date} at {editForm.time}
+      </div>
+    )}
+  </div>
+);
+
+const CalendarCard = ({ date, setDate }) => (
+  <Card className="p-6">
+    <h3 className="text-lg font-medium mb-4 flex items-center">
+      <CalendarIcon className="mr-2 h-5 w-5" />
+      Select Date
+    </h3>
+    <Calendar
+      mode="single"
+      selected={date}
+      onSelect={setDate}
+      className="rounded-md border"
+    />
+  </Card>
+);
+
+const AppointmentsListCard = ({
+  date,
+  filteredAppointments,
+  onAccept,
+  onReject,
+  onEdit,
+  onMarkCompleted,
+  onView,
+  onRepeat,
+  setAddAppointmentOpen,
+}) => (
+  <Card className="lg:col-span-2 p-6">
+    <div className="flex items-center justify-between mb-6">
+      <h3 className="text-lg font-medium mb-4">
+        Appointments for {date?.toLocaleDateString()}
+      </h3>
+      <Button
+        className="bg-glamour-700 hover:bg-glamour-800 text-white"
+        onClick={() => setAddAppointmentOpen(true)}
+      >
+        <CalendarPlus className="w-4 h-4 mr-2" /> Add Appointment
+      </Button>
+    </div>
+
+    {filteredAppointments.length > 0 ? (
+      <AppointmentsTable
+        appointments={filteredAppointments}
+        onAccept={onAccept}
+        onReject={onReject}
+        onEdit={onEdit}
+        onMarkCompleted={onMarkCompleted}
+        onView={onView}
+        onRepeat={onRepeat}
+      />
+    ) : (
+      <div className="text-center py-12 text-muted-foreground">
+        No appointments scheduled for this date
+      </div>
+    )}
+  </Card>
+);
+
+const AppointmentsContent = ({
+  date,
+  setDate,
+  filteredAppointments,
+  onAccept,
+  onReject,
+  onEdit,
+  onMarkCompleted,
+  onView,
+  onRepeat,
+  setAddAppointmentOpen,
+}) => (
+  <div className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <CalendarCard date={date} setDate={setDate} />
+      <AppointmentsListCard
+        date={date}
+        filteredAppointments={filteredAppointments}
+        onAccept={onAccept}
+        onReject={onReject}
+        onEdit={onEdit}
+        onMarkCompleted={onMarkCompleted}
+        onView={onView}
+        onRepeat={onRepeat}
+        setAddAppointmentOpen={setAddAppointmentOpen}
+      />
+    </div>
+  </div>
+);
+
 const AppointmentsTab = () => {
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
-  const [addAppointmentOpen, setAddAppointmentOpen] = React.useState(false);
+  const [date, setDate] = useState<Date | undefined>(new Date());
+  const [addAppointmentOpen, setAddAppointmentOpen] = useState(false);
 
   // Mock appointments data
-  const [appointments, setAppointments] = React.useState<Appointment[]>([
+  const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: 1,
       customerName: "Anna Johnson",
@@ -142,21 +697,6 @@ const AppointmentsTab = () => {
     (appointment) => appointment.date === selectedDate
   );
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return <Badge className="bg-green-500">Confirmed</Badge>;
-      case "pending":
-        return <Badge className="bg-yellow-500">Pending</Badge>;
-      case "rejected":
-        return <Badge className="bg-red-500">Rejected</Badge>;
-      case "completed":
-        return <Badge className="bg-blue-500">Completed</Badge>;
-      default:
-        return <Badge>Unknown</Badge>;
-    }
-  };
-
   const staffList = [
     { id: 1, name: "Sarah Johnson" },
     { id: 2, name: "David Chen" },
@@ -172,21 +712,21 @@ const AppointmentsTab = () => {
     "Hair Care Kit": 1,
   };
 
-  const [acceptDrawerOpen, setAcceptDrawerOpen] = React.useState(false);
-  const [rejectDrawerOpen, setRejectDrawerOpen] = React.useState(false);
-  const [viewDrawerOpen, setViewDrawerOpen] = React.useState(false);
+  const [acceptDrawerOpen, setAcceptDrawerOpen] = useState(false);
+  const [rejectDrawerOpen, setRejectDrawerOpen] = useState(false);
+  const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] =
-    React.useState<Appointment | null>(null);
-  const [serviceStaff, setServiceStaff] = React.useState({});
-  const [rejectReason, setRejectReason] = React.useState("");
-  const [editMode, setEditMode] = React.useState(false);
-  const [editDrawerOpen, setEditDrawerOpen] = React.useState(false);
-  const [isEditingCustomer, setIsEditingCustomer] = React.useState(false);
-  const [isEditingServices, setIsEditingServices] = React.useState(false);
-  const [isEditingProducts, setIsEditingProducts] = React.useState(false);
-  const [isEditingDateTime, setIsEditingDateTime] = React.useState(false);
-  const [isEditingPayment, setIsEditingPayment] = React.useState(false);
-  const [editForm, setEditForm] = React.useState({
+    useState<Appointment | null>(null);
+  const [serviceStaff, setServiceStaff] = useState({});
+  const [rejectReason, setRejectReason] = useState("");
+  const [editMode, setEditMode] = useState(false);
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false);
+  const [isEditingCustomer, setIsEditingCustomer] = useState(false);
+  const [isEditingServices, setIsEditingServices] = useState(false);
+  const [isEditingProducts, setIsEditingProducts] = useState(false);
+  const [isEditingDateTime, setIsEditingDateTime] = useState(false);
+  const [isEditingPayment, setIsEditingPayment] = useState(false);
+  const [editForm, setEditForm] = useState({
     customerName: "",
     customerPhone: "",
     services: [],
@@ -212,8 +752,8 @@ const AppointmentsTab = () => {
   ];
 
   // Add search state for services/products
-  const [serviceSearch, setServiceSearch] = React.useState("");
-  const [productSearch, setProductSearch] = React.useState("");
+  const [serviceSearch, setServiceSearch] = useState("");
+  const [productSearch, setProductSearch] = useState("");
 
   // Filtered lists for search
   const filteredServices = allServices.filter((s) =>
@@ -240,13 +780,8 @@ const AppointmentsTab = () => {
   );
   const total = servicesTotal + productsTotal;
 
-  // For online payment, mock previous paid amount
-  const previousPaid = 0; // You can set this from appointment if needed
-  const balance = previousPaid > total ? previousPaid - total : 0;
-  const missing = total > previousPaid ? total - previousPaid : 0;
-
   // When editMode is enabled, initialize editForm with selectedAppointment data
-  React.useEffect(() => {
+  useEffect(() => {
     if (editMode && selectedAppointment) {
       setEditForm({
         customerName: selectedAppointment.customerName,
@@ -414,180 +949,19 @@ const AppointmentsTab = () => {
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="p-6">
-            <h3 className="text-lg font-medium mb-4 flex items-center">
-              <CalendarIcon className="mr-2 h-5 w-5" />
-              Select Date
-            </h3>
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              className="rounded-md border"
-            />
-          </Card>
-
-          <Card className="lg:col-span-2 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium mb-4">
-                Appointments for {date?.toLocaleDateString()}
-              </h3>
-              <Button
-                className="bg-glamour-700 hover:bg-glamour-800 text-white"
-                onClick={() => setAddAppointmentOpen(true)}
-              >
-                <CalendarPlus className="w-4 h-4 mr-2" /> Add Appointment
-              </Button>
-            </div>
-
-            {filteredAppointments.length > 0 ? (
-              <div className="border rounded-md overflow-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Customer</TableHead>
-                      <TableHead className="hidden md:table-cell">Services and Products</TableHead>
-                      <TableHead className="text-right hidden md:table-cell">Total</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-center">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAppointments.map((appointment) => (
-                      <TableRow key={appointment.id}>
-                        <TableCell className="font-medium">
-                          <div className="flex flex-col">
-                            <div className="flex items-center">
-                              <Clock className="h-4 w-4 mr-1 text-muted-foreground" />
-                              {appointment.time}
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {appointment.duration}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex flex-col">
-                            <div className="flex items-center">
-                              <User className="h-4 w-4 mr-1 text-muted-foreground" />
-                              {appointment.customerName}
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {appointment.customerPhone}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">
-                          <div className="flex flex-wrap gap-1">
-                            {appointment.services.map((service, index) => (
-                              <span
-                                key={index}
-                                className="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full"
-                              >
-                                {service}
-                              </span>
-                            ))}
-                            {appointment.products.length > 0 &&
-                              appointment.products.map((product, index) => (
-                                <span
-                                  key={`p-${index}`}
-                                  className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full"
-                                >
-                                  {product}
-                                </span>
-                              ))}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right hidden md:table-cell font-medium">
-                          ${appointment.totalAmount}
-                        </TableCell>
-                        <TableCell>
-                          {getStatusBadge(appointment.status)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex justify-center gap-2">
-                            {appointment.status === "pending" && (
-                              <>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
-                                  onClick={() => handleAccept(appointment)}
-                                >
-                                  <Check className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700"
-                                  onClick={() => handleReject(appointment)}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </>
-                            )}
-                            {appointment.status === "confirmed" && (
-                              <div className="flex gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="p-1 text-blue-600 hover:text-blue-700"
-                                  onClick={() => handleEdit(appointment)}
-                                >
-                                  <Edit className="h-4 w-4 mr-1" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="p-1 text-green-600 hover:text-green-700"
-                                  onClick={() =>
-                                    handleMarkCompleted(appointment)
-                                  }
-                                >
-                                  <CheckCircle className="h-4 w-4 mr-1" />
-                                </Button>
-                              </div>
-                            )}
-                            {(appointment.status === "completed" ||
-                              appointment.status === "rejected") && (
-                              <div className="flex gap-1">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700"
-                                  onClick={() => handleView(appointment)}
-                                >
-                                  <Info className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 bg-green-50 text-green-600 hover:bg-green-100 hover:text-green-700"
-                                  onClick={() => handleRepeat(appointment)}
-                                >
-                                  <RefreshCcw className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-muted-foreground">
-                No appointments scheduled for this date
-              </div>
-            )}
-          </Card>
-        </div>
-      </div>
-      {/* Add Appointment Drawer */}
+      <AppointmentsContent
+        date={date}
+        setDate={setDate}
+        filteredAppointments={filteredAppointments}
+        onAccept={handleAccept}
+        onReject={handleReject}
+        onEdit={handleEdit}
+        onMarkCompleted={handleMarkCompleted}
+        onView={handleView}
+        onRepeat={handleRepeat}
+        setAddAppointmentOpen={setAddAppointmentOpen}
+      />
+      {/* Drawers */}
       <DetailDrawer
         open={addAppointmentOpen}
         onOpenChange={setAddAppointmentOpen}
@@ -666,8 +1040,11 @@ const AppointmentsTab = () => {
         {selectedAppointment && (
           <div className="space-y-4 p-4">
             <div>
-              <label className="block mb-1 font-medium">Səbəb</label>
+              <label htmlFor="rejectReason" className="block mb-1 font-medium">
+                Səbəb
+              </label>
               <textarea
+                id="rejectReason"
                 className="w-full min-h-[100px] p-2 border rounded-md"
                 placeholder="Reject səbəbini daxil edin..."
                 value={rejectReason}
@@ -798,264 +1175,51 @@ const AppointmentsTab = () => {
       >
         {selectedAppointment && (
           <div className="p-4 space-y-6">
-            <div className="border rounded-md p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Customer Information</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => setIsEditingCustomer(!isEditingCustomer)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </div>
-              {isEditingCustomer ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs mb-1">Name</label>
-                    <Input
-                      value={editForm.customerName}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          customerName: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-1">Phone</label>
-                    <Input
-                      value={editForm.customerPhone}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          customerPhone: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex justify-end">
-                    <Button size="sm" onClick={handleSaveCustomer}>
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <div>{editForm.customerName}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {editForm.customerPhone}
-                  </div>
-                </div>
-              )}
-            </div>
+            <EditCustomerSection
+              editForm={editForm}
+              setEditForm={setEditForm}
+              isEditing={isEditingCustomer}
+              onSave={() => {
+                handleSaveCustomer();
+                setIsEditingCustomer(!isEditingCustomer);
+              }}
+            />
 
-            <div className="border rounded-md p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Services</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => setIsEditingServices(!isEditingServices)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </div>
-              {isEditingServices ? (
-                <div className="space-y-4">
-                  {/* Service editing interface */}
-                  <Input
-                    placeholder="Search services..."
-                    value={serviceSearch}
-                    onChange={(e) => setServiceSearch(e.target.value)}
-                    className="mb-2"
-                  />
-                  <div className="max-h-40 overflow-y-auto">
-                    {filteredServices.map((service) => (
-                      <div
-                        key={service.id}
-                        className="flex items-center justify-between py-1"
-                      >
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={editForm.services.includes(service.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setEditForm({
-                                  ...editForm,
-                                  services: [...editForm.services, service.id],
-                                });
-                              } else {
-                                setEditForm({
-                                  ...editForm,
-                                  services: editForm.services.filter(
-                                    (id) => id !== service.id
-                                  ),
-                                });
-                              }
-                            }}
-                          />
-                          {service.name}
-                        </label>
-                        <span>${service.price}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-end">
-                    <Button size="sm" onClick={handleSaveServices}>
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  {selectedServiceObjs.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">
-                      No services selected
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {selectedServiceObjs.map((service) => (
-                        <div key={service.id} className="flex justify-between">
-                          <span>{service.name}</span>
-                          <span>${service.price}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <EditServicesSection
+              editForm={editForm}
+              setEditForm={setEditForm}
+              isEditing={isEditingServices}
+              onSave={() => {
+                handleSaveServices();
+                setIsEditingServices(!isEditingServices);
+              }}
+              serviceSearch={serviceSearch}
+              setServiceSearch={setServiceSearch}
+              filteredServices={filteredServices}
+            />
 
-            <div className="border rounded-md p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Products</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => setIsEditingProducts(!isEditingProducts)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </div>
-              {isEditingProducts ? (
-                <div className="space-y-4">
-                  {/* Product editing interface */}
-                  <Input
-                    placeholder="Search products..."
-                    value={productSearch}
-                    onChange={(e) => setProductSearch(e.target.value)}
-                    className="mb-2"
-                  />
-                  <div className="max-h-40 overflow-y-auto">
-                    {filteredProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className="flex items-center justify-between py-1"
-                      >
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={editForm.products.includes(product.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setEditForm({
-                                  ...editForm,
-                                  products: [...editForm.products, product.id],
-                                });
-                              } else {
-                                setEditForm({
-                                  ...editForm,
-                                  products: editForm.products.filter(
-                                    (id) => id !== product.id
-                                  ),
-                                });
-                              }
-                            }}
-                          />
-                          {product.name}
-                        </label>
-                        <span>${product.price}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex justify-end">
-                    <Button size="sm" onClick={handleSaveProducts}>
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  {selectedProductObjs.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">
-                      No products selected
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      {selectedProductObjs.map((product) => (
-                        <div key={product.id} className="flex justify-between">
-                          <span>{product.name}</span>
-                          <span>${product.price}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            <EditProductsSection
+              editForm={editForm}
+              setEditForm={setEditForm}
+              isEditing={isEditingProducts}
+              onSave={() => {
+                handleSaveProducts();
+                setIsEditingProducts(!isEditingProducts);
+              }}
+              productSearch={productSearch}
+              setProductSearch={setProductSearch}
+              filteredProducts={filteredProducts}
+            />
 
-            <div className="border rounded-md p-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-semibold">Date & Time</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0"
-                  onClick={() => setIsEditingDateTime(!isEditingDateTime)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </div>
-              {isEditingDateTime ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs mb-1">Date</label>
-                    <Input
-                      type="date"
-                      value={editForm.date}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, date: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs mb-1">Time</label>
-                    <Input
-                      type="time"
-                      value={editForm.time}
-                      onChange={(e) =>
-                        setEditForm({ ...editForm, time: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="flex justify-end">
-                    <Button size="sm" onClick={handleSaveDateTime}>
-                      Save
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  {editForm.date} at {editForm.time}
-                </div>
-              )}
-            </div>
+            <EditDateTimeSection
+              editForm={editForm}
+              setEditForm={setEditForm}
+              isEditing={isEditingDateTime}
+              onSave={() => {
+                handleSaveDateTime();
+                setIsEditingDateTime(!isEditingDateTime);
+              }}
+            />
 
             <div className="border rounded-md p-4">
               <div className="flex items-center justify-between mb-2">
@@ -1073,8 +1237,14 @@ const AppointmentsTab = () => {
               {isEditingPayment ? (
                 <div className="space-y-4 mt-2">
                   <div>
-                    <label className="block text-xs mb-1">Payment Method</label>
+                    <label
+                      htmlFor="paymentMethod"
+                      className="block text-xs mb-1"
+                    >
+                      Payment Method
+                    </label>
                     <select
+                      id="paymentMethod"
                       className="w-full border rounded px-3 py-2"
                       value={editForm.paymentMethod}
                       onChange={(e) =>
