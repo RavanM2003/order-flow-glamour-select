@@ -50,7 +50,11 @@ interface BookingData {
   id: number;
   invoice_number: string;
   status: string;
-  appointment_json: AppointmentJson;
+  appointment_json: any; // Use any to match Supabase Json type
+  appointment_id?: number;
+  appointment_status?: string;
+  issued_at?: string;
+  total_amount: number;
 }
 
 const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumber, appointmentId }) => {
