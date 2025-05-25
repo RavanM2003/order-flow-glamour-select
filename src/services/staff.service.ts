@@ -1,4 +1,3 @@
-
 import { Staff, StaffFormData } from "@/models/staff.model";
 
 // Define the ApiResponse interface for consistent return types
@@ -14,62 +13,72 @@ export const staffService = {
     // Implement actual API call
     return { data: [] };
   },
-  
+
   getById: async (id: number | string): Promise<ApiResponse<Staff>> => {
     // Implement actual API call
     return {
       data: {
-        id: typeof id === 'string' ? id : id.toString(),
-        name: ''
-      }
+        id: typeof id === "string" ? id : id.toString(),
+        name: "",
+      },
     };
   },
-  
+
   create: async (data: StaffFormData): Promise<ApiResponse<Staff>> => {
     // Implement actual API call
     return {
       data: {
-        id: '123',
-        name: data.name || '',
-        phone: data.phone || ''
-      }
+        id: "123",
+        name: data.name || "",
+        phone: data.phone || "",
+      },
     };
   },
-  
-  update: async (id: number | string, data: Partial<StaffFormData>): Promise<ApiResponse<Staff>> => {
+
+  update: async (
+    id: number | string,
+    data: Partial<StaffFormData>
+  ): Promise<ApiResponse<Staff>> => {
     // Implement actual API call
     return {
       data: {
-        id: typeof id === 'string' ? id : id.toString(),
-        name: data.name || '',
-        phone: data.phone || ''
-      }
+        id: typeof id === "string" ? id : id.toString(),
+        name: data.name || "",
+        phone: data.phone || "",
+      },
     };
   },
-  
+
   delete: async (id: number | string): Promise<ApiResponse<boolean>> => {
-    // Implement actual API call
+    // TODO: Implement actual API call using the id parameter
     return { data: true };
   },
-  
+
   // These are the methods being used in the hooks
   getStaffMembers: async (): Promise<ApiResponse<Staff[]>> => {
     return staffService.getAll();
   },
-  
-  getStaffMemberById: async (id: string | number): Promise<ApiResponse<Staff>> => {
+
+  getStaffMemberById: async (
+    id: string | number
+  ): Promise<ApiResponse<Staff>> => {
     return staffService.getById(id);
   },
-  
-  createStaffMember: async (data: StaffFormData): Promise<ApiResponse<Staff>> => {
+
+  createStaffMember: async (
+    data: StaffFormData
+  ): Promise<ApiResponse<Staff>> => {
     return staffService.create(data);
   },
-  
-  updateStaffMember: async (id: string, data: Partial<StaffFormData>): Promise<ApiResponse<Staff>> => {
+
+  updateStaffMember: async (
+    id: string,
+    data: Partial<StaffFormData>
+  ): Promise<ApiResponse<Staff>> => {
     return staffService.update(id, data);
   },
-  
+
   deleteStaffMember: async (id: string): Promise<ApiResponse<boolean>> => {
     return staffService.delete(id);
-  }
+  },
 };
