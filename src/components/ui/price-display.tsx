@@ -20,7 +20,7 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
 
   if (!hasDiscount) {
     return (
-      <div className={cn("flex flex-col items-end", className)}>
+      <div className={cn("flex flex-col items-start", className)}>
         <span className="font-semibold text-glamour-700">
           {price.toFixed(2)} {showCurrency ? 'AZN' : ''}
         </span>
