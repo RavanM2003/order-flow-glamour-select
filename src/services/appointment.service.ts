@@ -1,13 +1,14 @@
-import { supabase } from '@/integrations/supabase/client';
-import { Appointment, AppointmentFormData, AppointmentStatus } from '@/models/appointment.model';
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AppointmentFormData,
+  AppointmentStatus,
+} from "@/models/appointment.model";
 
 /**
  * Get all appointments
  */
 export async function getAppointments() {
-  const { data, error } = await supabase
-    .from('appointments')
-    .select('*');
+  const { data, error } = await supabase.from("appointments").select("*");
 
   if (error) throw error;
   return data || [];
@@ -18,12 +19,12 @@ export async function getAppointments() {
  */
 export async function getAppointmentById(id: number) {
   // Ensure id is a number
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-  
+  const numericId = typeof id === "string" ? parseInt(id, 10) : id;
+
   const { data, error } = await supabase
-    .from('appointments')
-    .select('*')
-    .eq('id', numericId)
+    .from("appointments")
+    .select("*")
+    .eq("id", numericId)
     .single();
 
   if (error) throw error;
@@ -35,28 +36,28 @@ export async function getAppointmentById(id: number) {
  */
 export async function createAppointment(appointmentData: AppointmentFormData) {
   // Convert the appointment date to a string if it's a Date object
-  const appointmentDate = 
-    typeof appointmentData.appointment_date === 'string' 
-      ? appointmentData.appointment_date 
-      : appointmentData.appointment_date.toISOString().split('T')[0];
-  
+  const appointmentDate =
+    typeof appointmentData.appointment_date === "string"
+      ? appointmentData.appointment_date
+      : appointmentData.appointment_date.toISOString().split("T")[0];
+
   // Ensure status is a valid enum value for database compatibility
-  const status = appointmentData.status || 'scheduled';
-  
+  const status = appointmentData.status || "scheduled";
+
   // Create appointment record with proper typing
   const appointmentRecord = {
     appointment_date: appointmentDate,
     start_time: appointmentData.start_time,
     end_time: appointmentData.end_time,
-    status: status as 'scheduled' | 'completed' | 'cancelled', // Cast to match database enum
+    status: status as "scheduled" | "completed" | "cancelled", // Cast to match database enum
     total: appointmentData.total || 0,
     customer_user_id: appointmentData.customer_user_id,
-    user_id: appointmentData.user_id || '',
-    cancel_reason: appointmentData.cancel_reason
+    user_id: appointmentData.user_id || "",
+    cancel_reason: appointmentData.cancel_reason,
   };
 
   const { data, error } = await supabase
-    .from('appointments')
+    .from("appointments")
     .insert(appointmentRecord)
     .select()
     .single();
@@ -68,42 +69,52 @@ export async function createAppointment(appointmentData: AppointmentFormData) {
 /**
  * Update an existing appointment
  */
-export async function updateAppointment(id: number, appointmentData: Partial<AppointmentFormData>) {
+export async function updateAppointment(
+  id: number,
+  appointmentData: Partial<AppointmentFormData>
+) {
   // Ensure id is a number
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-  
+  const numericId = typeof id === "string" ? parseInt(id, 10) : id;
+
   // Convert date if it's a Date object
   let appointmentDate = appointmentData.appointment_date;
   if (appointmentDate && appointmentDate instanceof Date) {
-    appointmentDate = appointmentDate.toISOString().split('T')[0];
+    appointmentDate = appointmentDate.toISOString().split("T")[0];
   }
-  
+
   // Prepare update data with proper type handling
-  const updateData: any = {
+  const updateData = {
     ...appointmentData,
-    appointment_date: appointmentDate,
+    appointment_date: appointmentDate as string,
     updated_at: new Date().toISOString(),
+  } as {
+    appointment_date?: string;
+    start_time?: string;
+    end_time?: string;
+    status?: "scheduled" | "completed" | "cancelled";
+    total?: number;
+    customer_user_id?: string;
+    user_id?: string;
+    cancel_reason?: string;
+    is_no_show?: boolean;
+    updated_at: string;
   };
-  
+
   // If status is included, ensure it's compatible with the database
   if (updateData.status) {
-    // Make sure the status is one of the allowed database values
-    if (!['scheduled', 'completed', 'cancelled'].includes(updateData.status)) {
-      // Map 'no_show' to is_no_show flag instead
-      if (updateData.status === 'no_show') {
-        updateData.is_no_show = true;
-        updateData.status = 'cancelled';
-      } else {
-        // Default to 'scheduled' for any other values
-        updateData.status = 'scheduled';
-      }
+    const status = updateData.status as AppointmentStatus;
+    if (status === "no_show") {
+      updateData.is_no_show = true;
+      updateData.status = "cancelled";
+    } else if (!["scheduled", "completed", "cancelled"].includes(status)) {
+      updateData.status = "scheduled";
     }
   }
 
   const { data, error } = await supabase
-    .from('appointments')
+    .from("appointments")
     .update(updateData)
-    .eq('id', numericId)
+    .eq("id", numericId)
     .select()
     .single();
 
@@ -116,12 +127,12 @@ export async function updateAppointment(id: number, appointmentData: Partial<App
  */
 export async function deleteAppointment(id: number) {
   // Ensure id is a number
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-  
+  const numericId = typeof id === "string" ? parseInt(id, 10) : id;
+
   const { error } = await supabase
-    .from('appointments')
+    .from("appointments")
     .delete()
-    .eq('id', numericId);
+    .eq("id", numericId);
 
   if (error) throw error;
   return true;
@@ -132,16 +143,16 @@ export async function deleteAppointment(id: number) {
  */
 export async function cancelAppointment(id: number, reason: string) {
   // Ensure id is a number
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-  
+  const numericId = typeof id === "string" ? parseInt(id, 10) : id;
+
   const { data, error } = await supabase
-    .from('appointments')
+    .from("appointments")
     .update({
-      status: 'cancelled' as 'scheduled' | 'completed' | 'cancelled',
+      status: "cancelled" as "scheduled" | "completed" | "cancelled",
       cancel_reason: reason,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
-    .eq('id', numericId)
+    .eq("id", numericId)
     .select()
     .single();
 
@@ -154,15 +165,15 @@ export async function cancelAppointment(id: number, reason: string) {
  */
 export async function completeAppointment(id: number) {
   // Ensure id is a number
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-  
+  const numericId = typeof id === "string" ? parseInt(id, 10) : id;
+
   const { data, error } = await supabase
-    .from('appointments')
+    .from("appointments")
     .update({
-      status: 'completed' as 'scheduled' | 'completed' | 'cancelled',
-      updated_at: new Date().toISOString()
+      status: "completed" as "scheduled" | "completed" | "cancelled",
+      updated_at: new Date().toISOString(),
     })
-    .eq('id', numericId)
+    .eq("id", numericId)
     .select()
     .single();
 
@@ -175,9 +186,9 @@ export async function completeAppointment(id: number) {
  */
 export async function getCustomerAppointments(customerId: string) {
   const { data, error } = await supabase
-    .from('appointments')
-    .select('*')
-    .eq('customer_user_id', customerId);
+    .from("appointments")
+    .select("*")
+    .eq("customer_user_id", customerId);
 
   if (error) throw error;
   return data || [];
@@ -188,9 +199,9 @@ export async function getCustomerAppointments(customerId: string) {
  */
 export async function getStaffAppointments(staffId: string) {
   const { data, error } = await supabase
-    .from('appointments')
-    .select('*')
-    .eq('user_id', staffId);
+    .from("appointments")
+    .select("*")
+    .eq("user_id", staffId);
 
   if (error) throw error;
   return data || [];
