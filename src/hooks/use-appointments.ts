@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import {
   Appointment,
@@ -83,7 +84,7 @@ export const useAppointments = () => {
         const updated = await updateAppointment(id, appointmentData);
         setAppointments((prev) =>
           prev.map((appointment) =>
-            appointment.id === id ? { ...appointment, ...updated } : appointment
+            appointment.id === id ? { ...appointment, ...updated } as Appointment : appointment
           )
         );
         toast({

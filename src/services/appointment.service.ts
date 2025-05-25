@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import {
   AppointmentFormData,
@@ -42,14 +43,14 @@ export async function createAppointment(appointmentData: AppointmentFormData) {
       : appointmentData.appointment_date.toISOString().split("T")[0];
 
   // Ensure status is a valid enum value for database compatibility
-  const status = appointmentData.status || "scheduled";
+  const status = appointmentData.status || "pending";
 
   // Create appointment record with proper typing
   const appointmentRecord = {
     appointment_date: appointmentDate,
     start_time: appointmentData.start_time,
     end_time: appointmentData.end_time,
-    status: status as "scheduled" | "completed" | "cancelled", // Cast to match database enum
+    status: status as AppointmentStatus,
     total: appointmentData.total || 0,
     customer_user_id: appointmentData.customer_user_id,
     user_id: appointmentData.user_id || "",
@@ -91,7 +92,7 @@ export async function updateAppointment(
     appointment_date?: string;
     start_time?: string;
     end_time?: string;
-    status?: "scheduled" | "completed" | "cancelled";
+    status?: AppointmentStatus;
     total?: number;
     customer_user_id?: string;
     user_id?: string;
@@ -106,8 +107,6 @@ export async function updateAppointment(
     if (status === "no_show") {
       updateData.is_no_show = true;
       updateData.status = "cancelled";
-    } else if (!["scheduled", "completed", "cancelled"].includes(status)) {
-      updateData.status = "scheduled";
     }
   }
 
@@ -148,7 +147,7 @@ export async function cancelAppointment(id: number, reason: string) {
   const { data, error } = await supabase
     .from("appointments")
     .update({
-      status: "cancelled" as "scheduled" | "completed" | "cancelled",
+      status: "cancelled" as AppointmentStatus,
       cancel_reason: reason,
       updated_at: new Date().toISOString(),
     })
@@ -170,7 +169,7 @@ export async function completeAppointment(id: number) {
   const { data, error } = await supabase
     .from("appointments")
     .update({
-      status: "completed" as "scheduled" | "completed" | "cancelled",
+      status: "completed" as AppointmentStatus,
       updated_at: new Date().toISOString(),
     })
     .eq("id", numericId)

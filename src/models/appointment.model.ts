@@ -1,5 +1,5 @@
 
-export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show';
+export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'rescheduled' | 'in_progress' | 'completed' | 'no_show' | 'awaiting_payment' | 'paid';
 
 export interface Appointment {
   id: number;

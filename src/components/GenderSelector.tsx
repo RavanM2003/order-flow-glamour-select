@@ -7,13 +7,21 @@ import { useLanguage } from '@/context/LanguageContext';
 interface GenderSelectorProps {
   selectedGender: string;
   onGenderSelect: (gender: 'male' | 'female') => void;
+  value?: string;
+  onChange?: (value: any) => void;
 }
 
 const GenderSelector: React.FC<GenderSelectorProps> = ({
   selectedGender,
   onGenderSelect,
+  value,
+  onChange,
 }) => {
   const { t } = useLanguage();
+
+  // Use value/onChange if provided, otherwise use selectedGender/onGenderSelect
+  const currentValue = value !== undefined ? value : selectedGender;
+  const handleChange = onChange || onGenderSelect;
 
   return (
     <div className="space-y-2">
@@ -23,27 +31,27 @@ const GenderSelector: React.FC<GenderSelectorProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <Card
           className={`p-3 cursor-pointer transition-all hover:shadow-md ${
-            selectedGender === 'male'
+            currentValue === 'male'
               ? 'border-glamour-700 bg-glamour-50'
               : 'border-gray-200'
           }`}
-          onClick={() => onGenderSelect('male')}
+          onClick={() => handleChange('male')}
         >
           <div className="flex items-center justify-center space-x-2">
-            <User className="h-4 w-4 text-blue-600" />
+            <User className="h-3 w-3 text-blue-600" />
             <span className="text-sm font-medium">{t('booking.male')}</span>
           </div>
         </Card>
         <Card
           className={`p-3 cursor-pointer transition-all hover:shadow-md ${
-            selectedGender === 'female'
+            currentValue === 'female'
               ? 'border-glamour-700 bg-glamour-50'
               : 'border-gray-200'
           }`}
-          onClick={() => onGenderSelect('female')}
+          onClick={() => handleChange('female')}
         >
           <div className="flex items-center justify-center space-x-2">
-            <UserX className="h-4 w-4 text-pink-600" />
+            <UserX className="h-3 w-3 text-pink-600" />
             <span className="text-sm font-medium">{t('booking.female')}</span>
           </div>
         </Card>

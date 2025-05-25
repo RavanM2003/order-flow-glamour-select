@@ -277,17 +277,15 @@ const BookingConfirmation = () => {
       // 3. Create appointment
       const { data: appointment, error: appointmentError } = await supabase
         .from("appointments")
-        .insert([
-          {
-            customer_user_id: customerId,
-            user_id: userId, // Same as customer_user_id since the customer is creating the appointment
-            appointment_date: formattedDate,
-            start_time: startTime,
-            end_time: endTime,
-            total: totalAmount,
-            status: "scheduled",
-          },
-        ])
+        .insert({
+          customer_user_id: customerId,
+          user_id: userId, // Same as customer_user_id since the customer is creating the appointment
+          appointment_date: formattedDate,
+          start_time: startTime,
+          end_time: endTime,
+          total: totalAmount,
+          status: "pending",
+        })
         .select("id")
         .single();
 
@@ -300,7 +298,7 @@ const BookingConfirmation = () => {
       const appointmentService = {
         appointment_id: appointment.id,
         service_id: selectedService.id,
-        staff_id: selectedStaff.id.toString(),
+        staff_user_id: selectedStaff.id.toString(),
         price: selectedService.price,
         duration: selectedService.duration,
         quantity: 1,
@@ -320,7 +318,7 @@ const BookingConfirmation = () => {
         const appointmentProducts = selectedProducts.map((product) => ({
           appointment_id: appointment.id,
           product_id: product.id,
-          staff_id: selectedStaff.id.toString(),
+          staff_user_id: selectedStaff.id.toString(),
           price: Number(product.price),
           quantity: 1,
           amount: Number(product.price),
