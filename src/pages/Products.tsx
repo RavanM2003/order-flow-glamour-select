@@ -1,13 +1,11 @@
-
-import React from 'react';
-import { ProductList } from '@/features/products';
+import { ProductList } from "@/features/products";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/context/LanguageContext";
 
 const Products = () => {
   const { t } = useLanguage();
-  
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -23,6 +21,6 @@ const Products = () => {
       <Footer />
     </div>
   );
-}
+};
 
 export default Products;
