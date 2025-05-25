@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "./ui/button";
@@ -18,6 +17,7 @@ import GenderSelector from "./GenderSelector";
 import { useStaffByService } from "@/hooks/use-staff-by-service";
 import { generateOrderId, calculateDiscountedPrice, formatDuration } from "@/utils/orderUtils";
 import { useToast } from "@/hooks/use-toast";
+import { validateEmail, getCurrentDate, isWithinWorkingHours } from "@/utils/validation";
 
 export type BookingMode = "customer" | "staff";
 
@@ -147,7 +147,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         if (!formData.gender) {
           errors.gender = t("booking.genderRequired");
         }
-        if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
+        if (!formData.email || !validateEmail(formData.email)) {
           errors.email = t("booking.emailValidation");
         }
         if (!formData.phone) {
@@ -158,6 +158,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
         }
         if (!formData.time) {
           errors.time = t("booking.timeRequired");
+        } else if (!isWithinWorkingHours(formData.time, workingHoursStart, workingHoursEnd)) {
+          errors.time = t("booking.timeOutsideWorkingHours");
         }
         break;
       case 2:
@@ -490,8 +492,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
               </div>
               
               <GenderSelector
-                value={formData.gender as 'male' | 'female' | ''}
-                onChange={(value) => handleFormChange("gender", value)}
+                selectedGender={formData.gender}
+                onGenderSelect={(gender) => handleFormChange("gender", gender)}
               />
               {validationErrors.gender && (
                 <p className="text-red-500 text-sm mt-1">{validationErrors.gender}</p>
@@ -566,7 +568,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({
                       validationErrors.date ? "border-red-500" : ""
                     )}
                     required
-                    min={new Date().toISOString().split('T')[0]}
+                    min={getCurrentDate()}
                     max={new Date(Date.now() + maxBookingDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
                   />
                   <p className="text-xs text-gray-500 mt-1">
