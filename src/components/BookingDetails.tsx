@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -36,6 +36,60 @@ interface AppointmentWithDetails {
   }>;
 }
 
+const AppointmentHeader = ({
+  status,
+  date,
+  time,
+  total,
+}: {
+  status: string;
+  date: string;
+  time: string;
+  total: number;
+}) => (
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div>
+      <p className="text-sm text-gray-500">Status</p>
+      <p className="font-medium">
+        {status === "completed"
+          ? "Tamamlanıb"
+          : status === "scheduled"
+          ? "Planlaşdırılıb"
+          : "Ləğv edilib"}
+      </p>
+    </div>
+    <div>
+      <p className="text-sm text-gray-500">Tarix</p>
+      <p className="font-medium">{date}</p>
+    </div>
+    <div>
+      <p className="text-sm text-gray-500">Vaxt</p>
+      <p className="font-medium">{time}</p>
+    </div>
+    <div>
+      <p className="text-sm text-gray-500">Ümumi məbləğ</p>
+      <p className="font-bold text-xl">{total} AZN</p>
+    </div>
+  </div>
+);
+
+const CustomerInfo = ({ customer }: { customer: Customer }) => (
+  <div className="mb-6">
+    <h3 className="text-lg font-semibold mb-2">Müştəri məlumatları</h3>
+    <div className="bg-gray-50 p-3 rounded">
+      <p>
+        <span className="font-medium">Ad:</span> {customer.name}
+      </p>
+      <p>
+        <span className="font-medium">Email:</span> {customer.email}
+      </p>
+      <p>
+        <span className="font-medium">Telefon:</span> {customer.phone}
+      </p>
+    </div>
+  </div>
+);
+
 const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
   const [appointment, setAppointment] = useState<AppointmentWithDetails | null>(
     null
@@ -51,7 +105,7 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
 
         // Convert appointmentId to number for the database query
         const appointmentIdNumber = parseInt(appointmentId);
-        
+
         if (isNaN(appointmentIdNumber)) {
           throw new Error("Invalid appointment ID");
         }
@@ -90,7 +144,8 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
         // Fetch appointment services using correct column name
         const { data: serviceEntries, error: serviceError } = await supabase
           .from("appointment_services")
-          .select(`
+          .select(
+            `
             id, 
             service_id,
             price,
@@ -98,7 +153,8 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
             staff_user_id,
             duration,
             services:service_id(name)
-          `)
+          `
+          )
           .eq("appointment_id", appointmentIdNumber);
 
         if (serviceError) throw serviceError;
@@ -133,13 +189,15 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
         // Fetch appointment products
         const { data: productEntries, error: productError } = await supabase
           .from("appointment_products")
-          .select(`
+          .select(
+            `
             id,
             product_id,
             price,
             quantity,
             products:product_id(name)
-          `)
+          `
+          )
           .eq("appointment_id", appointmentIdNumber);
 
         if (productError) throw productError;
@@ -205,51 +263,14 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ appointmentId }) => {
           Təyinat #{appointment.id}
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <p className="text-sm text-gray-500">Status</p>
-            <p className="font-medium">
-              {appointment.status === "completed"
-                ? "Tamamlanıb"
-                : appointment.status === "scheduled"
-                ? "Planlaşdırılıb"
-                : "Ləğv edilib"}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Tarix</p>
-            <p className="font-medium">
-              {formatDate(appointment.appointment_date)}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Vaxt</p>
-            <p className="font-medium">
-              {appointment.start_time} - {appointment.end_time}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-500">Ümumi məbləğ</p>
-            <p className="font-bold text-xl">{appointment.total} AZN</p>
-          </div>
-        </div>
+        <AppointmentHeader
+          status={appointment.status}
+          date={formatDate(appointment.appointment_date)}
+          time={`${appointment.start_time} - ${appointment.end_time}`}
+          total={appointment.total}
+        />
 
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">Müştəri məlumatları</h3>
-          <div className="bg-gray-50 p-3 rounded">
-            <p>
-              <span className="font-medium">Ad:</span> {appointment.customer.name}
-            </p>
-            <p>
-              <span className="font-medium">Email:</span>{" "}
-              {appointment.customer.email}
-            </p>
-            <p>
-              <span className="font-medium">Telefon:</span>{" "}
-              {appointment.customer.phone}
-            </p>
-          </div>
-        </div>
+        <CustomerInfo customer={appointment.customer} />
 
         <div className="mb-6">
           <h3 className="text-lg font-semibold mb-2">Xidmətlər</h3>
