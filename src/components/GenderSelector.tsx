@@ -1,72 +1,52 @@
-import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { User, Users } from "lucide-react";
-import { useLanguage } from "@/context/LanguageContext";
+
+import React from 'react';
+import { Card } from '@/components/ui/card';
+import { User, UserX } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface GenderSelectorProps {
-  value: "male" | "female" | "";
-  onChange: (value: "male" | "female") => void;
-  className?: string;
+  selectedGender: string;
+  onGenderSelect: (gender: 'male' | 'female') => void;
 }
 
-const GenderOption = ({ selected, onClick, icon: Icon, label }) => (
-  <Card
-    className={cn(
-      "p-4 cursor-pointer transition-all hover:shadow-md",
-      selected
-        ? "border-glamour-700 bg-glamour-700"
-        : "border-gray-200 hover:border-glamour-300 bg-white"
-    )}
-    onClick={onClick}
-  >
-    <div className="flex flex-col items-center space-y-2">
-      <div
-        className={cn(
-          "p-3 rounded-full transition-all",
-          selected
-            ? "bg-white text-glamour-700"
-            : "bg-gray-100 text-glamour-700"
-        )}
-      >
-        <Icon className="h-6 w-6" />
-      </div>
-      <span
-        className={cn(
-          "text-sm font-medium transition-colors hidden md:block",
-          selected ? "text-white" : "text-gray-600"
-        )}
-      >
-        {label}
-      </span>
-    </div>
-  </Card>
-);
-
-const GenderSelector = ({
-  value,
-  onChange,
-  className,
-}: GenderSelectorProps) => {
+const GenderSelector: React.FC<GenderSelectorProps> = ({
+  selectedGender,
+  onGenderSelect,
+}) => {
   const { t } = useLanguage();
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className="space-y-2">
       <label className="text-sm font-medium text-gray-700">
-        {t("booking.gender")} *
+        {t('booking.gender')} *
       </label>
-      <div className="grid grid-cols-2 gap-4">
-        <GenderOption
-          selected={value === "male"}
-          onClick={() => onChange("male")}
-          icon={User}
-          label={t("booking.male")}
-        />
-        <GenderOption
-          selected={value === "female"}
-          onClick={() => onChange("female")}
-          icon={Users}
-          label={t("booking.female")}
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <Card
+          className={`p-3 cursor-pointer transition-all hover:shadow-md ${
+            selectedGender === 'male'
+              ? 'border-glamour-700 bg-glamour-50'
+              : 'border-gray-200'
+          }`}
+          onClick={() => onGenderSelect('male')}
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <User className="h-4 w-4 text-blue-600" />
+            <span className="text-sm font-medium">{t('booking.male')}</span>
+          </div>
+        </Card>
+        <Card
+          className={`p-3 cursor-pointer transition-all hover:shadow-md ${
+            selectedGender === 'female'
+              ? 'border-glamour-700 bg-glamour-50'
+              : 'border-gray-200'
+          }`}
+          onClick={() => onGenderSelect('female')}
+        >
+          <div className="flex items-center justify-center space-x-2">
+            <UserX className="h-4 w-4 text-pink-600" />
+            <span className="text-sm font-medium">{t('booking.female')}</span>
+          </div>
+        </Card>
       </div>
     </div>
   );

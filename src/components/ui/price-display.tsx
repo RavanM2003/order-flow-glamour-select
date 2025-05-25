@@ -30,12 +30,14 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({
 
   return (
     <div className={cn("flex flex-col items-start", className)}>
-      <span className="text-sm text-gray-500 line-through">
-        {price.toFixed(2)} {showCurrency ? 'AZN' : ''}
-      </span>
-      <span className="font-semibold text-red-600">
-        {discountedPrice.toFixed(2)} {showCurrency ? 'AZN' : ''}
-      </span>
+      <div className="flex items-center space-x-2">
+        <span className="text-sm text-gray-500 line-through">
+          {price.toFixed(2)} {showCurrency ? 'AZN' : ''}
+        </span>
+        <span className="font-semibold text-red-600">
+          {discountedPrice.toFixed(2)} {showCurrency ? 'AZN' : ''}
+        </span>
+      </div>
     </div>
   );
 };

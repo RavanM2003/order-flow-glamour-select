@@ -56,6 +56,13 @@ export type Database = {
             foreignKeyName: "appointment_products_staff_id_fkey"
             columns: ["staff_user_id"]
             isOneToOne: false
+            referencedRelation: "staff_with_services_json"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "appointment_products_staff_id_fkey"
+            columns: ["staff_user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -103,6 +110,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_services_staff_id_fkey"
+            columns: ["staff_user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_with_services_json"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "appointment_services_staff_id_fkey"
@@ -161,8 +175,22 @@ export type Database = {
             foreignKeyName: "appointments_customer_user_id_fkey"
             columns: ["customer_user_id"]
             isOneToOne: false
+            referencedRelation: "staff_with_services_json"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "appointments_customer_user_id_fkey"
+            columns: ["customer_user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_with_services_json"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "appointments_user_id_fkey"
@@ -240,6 +268,7 @@ export type Database = {
         Row: {
           appointment_id: number | null
           appointment_json: Json | null
+          appointment_status: string | null
           id: number
           invoice_number: string
           issued_at: string | null
@@ -249,6 +278,7 @@ export type Database = {
         Insert: {
           appointment_id?: number | null
           appointment_json?: Json | null
+          appointment_status?: string | null
           id?: number
           invoice_number: string
           issued_at?: string | null
@@ -258,6 +288,7 @@ export type Database = {
         Update: {
           appointment_id?: number | null
           appointment_json?: Json | null
+          appointment_status?: string | null
           id?: number
           invoice_number?: string
           issued_at?: string | null
@@ -393,6 +424,13 @@ export type Database = {
             foreignKeyName: "products_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "staff_with_services_json"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "products_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -434,6 +472,13 @@ export type Database = {
             foreignKeyName: "promo_codes_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "staff_with_services_json"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "promo_codes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -462,6 +507,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "service_categories_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_with_services_json"
+            referencedColumns: ["user_id"]
+          },
           {
             foreignKeyName: "service_categories_user_id_fkey"
             columns: ["user_id"]
@@ -548,6 +600,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "service_categories"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "services_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "staff_with_services_json"
+            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "services_user_id_fkey"
@@ -645,6 +704,13 @@ export type Database = {
             foreignKeyName: "staff_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "staff_with_services_json"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "staff_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -674,6 +740,13 @@ export type Database = {
             foreignKeyName: "staff_availability_staff_user_id_fkey"
             columns: ["staff_user_id"]
             isOneToOne: false
+            referencedRelation: "staff_with_services_json"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "staff_availability_staff_user_id_fkey"
+            columns: ["staff_user_id"]
+            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -685,7 +758,7 @@ export type Database = {
           bio: string | null
           birth_date: string | null
           created_at: string | null
-          email: string
+          email: string | null
           first_name: string | null
           full_name: string | null
           gender: Database["public"]["Enums"]["gender_enum"] | null
@@ -703,7 +776,7 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           created_at?: string | null
-          email: string
+          email?: string | null
           first_name?: string | null
           full_name?: string | null
           gender?: Database["public"]["Enums"]["gender_enum"] | null
@@ -721,7 +794,7 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           created_at?: string | null
-          email?: string
+          email?: string | null
           first_name?: string | null
           full_name?: string | null
           gender?: Database["public"]["Enums"]["gender_enum"] | null
@@ -742,6 +815,7 @@ export type Database = {
         Row: {
           positions: Json | null
           user: Json | null
+          user_id: string | null
         }
         Relationships: []
       }
@@ -781,7 +855,16 @@ export type Database = {
     }
     Enums: {
       action_enum: "INSERT" | "UPDATE" | "DELETE"
-      appointment_status: "scheduled" | "completed" | "cancelled"
+      appointment_status:
+        | "pending"
+        | "confirmed"
+        | "cancelled"
+        | "rescheduled"
+        | "in_progress"
+        | "completed"
+        | "no_show"
+        | "awaiting_payment"
+        | "paid"
       gender_enum: "male" | "female" | "other"
       payment_method:
         | "cash"
@@ -917,7 +1000,17 @@ export const Constants = {
   public: {
     Enums: {
       action_enum: ["INSERT", "UPDATE", "DELETE"],
-      appointment_status: ["scheduled", "completed", "cancelled"],
+      appointment_status: [
+        "pending",
+        "confirmed",
+        "cancelled",
+        "rescheduled",
+        "in_progress",
+        "completed",
+        "no_show",
+        "awaiting_payment",
+        "paid",
+      ],
       gender_enum: ["male", "female", "other"],
       payment_method: ["cash", "card", "bank", "pos", "discount", "promo_code"],
       payment_type: ["income", "expense"],
