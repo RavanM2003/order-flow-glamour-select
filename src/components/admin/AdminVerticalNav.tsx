@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 import {
   Calendar,
   Users,
@@ -10,13 +9,14 @@ import {
   Bell,
   User,
   DollarSign,
-  LogOut
+  LogOut,
+  LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { SIDEBAR_ITEMS, SidebarItem, UserRole } from '@/models/role.model';
-import { useLanguage } from '@/context/LanguageContext';
+import { SIDEBAR_ITEMS, UserRole } from "@/models/role.model";
+import { useLanguage } from "@/context";
 
 interface AdminVerticalNavProps {
   activeTab: string;
@@ -24,53 +24,83 @@ interface AdminVerticalNavProps {
   notifications?: number;
 }
 
-const iconMap: Record<string, React.ComponentType<any>> = {
-  Home: Home,
-  Users: Users,
-  Scissors: Scissors,
-  Package: Package,
-  Calendar: Calendar,
-  DollarSign: DollarSign,
-  User: User,
-  Settings: Settings
+const UserInfo = ({ user }) => (
+  <div className="flex items-center">
+    <div className="w-8 h-8 rounded-full bg-gray-200"></div>
+    <div className="ml-3">
+      <p className="text-sm font-medium">
+        {user?.first_name || ""} {user?.last_name || ""}
+      </p>
+      <p className="text-xs text-gray-500">{user?.email || ""}</p>
+    </div>
+  </div>
+);
+
+const NotificationBell = ({ count }) => (
+  <div className="relative">
+    <Bell className="h-5 w-5 text-gray-500 cursor-pointer" />
+    {count > 0 && (
+      <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
+        {count > 9 ? "9+" : count}
+      </div>
+    )}
+  </div>
+);
+
+const UserProfile = ({ user, notifications, onLogout, t }) => (
+  <div className="p-4 border-t">
+    <div className="flex items-center justify-between">
+      <UserInfo user={user} />
+      <NotificationBell count={notifications} />
+    </div>
+    <div className="mt-4 space-y-2">
+      <a
+        href="/admin/profile"
+        className="block w-full text-center py-2 rounded bg-glamour-700 text-white font-semibold hover:bg-glamour-800 transition-colors"
+      >
+        {t("admin.profile")}
+      </a>
+      <Button variant="outline" className="w-full" onClick={onLogout}>
+        <LogOut className="h-4 w-4 mr-2" />
+        {t("admin.logout")}
+      </Button>
+    </div>
+  </div>
+);
+
+const iconMap: Record<string, LucideIcon> = {
+  Home,
+  Users,
+  Scissors,
+  Package,
+  Calendar,
+  DollarSign,
+  User,
+  Settings,
 };
 
-const tabToUrl: Record<string, string> = {
-  dashboard: '/admin',
-  customers: '/admin/customers',
-  services: '/admin/services',
-  products: '/admin/products',
-  appointments: '/admin/appointments',
-  cash: '/admin/cash',
-  staff: '/admin/staff',
-  settings: '/admin/settings',
-  profile: '/admin/profile',
-};
-
-const AdminVerticalNav = ({ activeTab, onTabChange, notifications = 0 }: AdminVerticalNavProps) => {
-  const { user, session, logout } = useAuth();
+const AdminVerticalNav = ({
+  activeTab,
+  onTabChange,
+  notifications = 0,
+}: AdminVerticalNavProps) => {
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  
+
   // Get user role from auth context and ensure it's a valid UserRole
-  const userRole = (user?.role || 'customer') as UserRole;
-  
+  const userRole = (user?.role || "customer") as UserRole;
+
   // Filter sidebar items based on user role
-  const filteredItems = SIDEBAR_ITEMS.filter(item => 
+  const filteredItems = SIDEBAR_ITEMS.filter((item) =>
     item.requiredRoles.includes(userRole)
   );
-  
+
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate("/login");
   };
-  
-  useEffect(() => {
-    if (session) {
-      console.log('User is authenticated with session:', session);
-    }
-  }, [session]);
-  
+
   return (
     <div className="w-64 bg-white border-r h-screen flex flex-col">
       <div className="p-4 border-b">
@@ -81,7 +111,7 @@ const AdminVerticalNav = ({ activeTab, onTabChange, notifications = 0 }: AdminVe
           <span className="font-bold text-lg">Glamour Studio</span>
         </div>
       </div>
-      
+
       <div className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
         {filteredItems.map((item) => {
           const IconComponent = iconMap[item.icon];
@@ -103,33 +133,13 @@ const AdminVerticalNav = ({ activeTab, onTabChange, notifications = 0 }: AdminVe
           );
         })}
       </div>
-      
-      <div className="p-4 border-t">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-8 h-8 rounded-full bg-gray-200"></div>
-            <div className="ml-3">
-              <p className="text-sm font-medium">{user?.first_name || ''} {user?.last_name || ''}</p>
-              <p className="text-xs text-gray-500">{user?.email || ''}</p>
-            </div>
-          </div>
-          <div className="relative">
-            <Bell className="h-5 w-5 text-gray-500 cursor-pointer" />
-            {notifications > 0 && (
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center text-white text-xs">
-                {notifications > 9 ? '9+' : notifications}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="mt-4 space-y-2">
-          <a href="/admin/profile" className="block w-full text-center py-2 rounded bg-glamour-700 text-white font-semibold hover:bg-glamour-800 transition-colors">{t('admin.profile')}</a>
-          <Button variant="outline" className="w-full" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            {t('admin.logout')}
-          </Button>
-        </div>
-      </div>
+
+      <UserProfile
+        user={user}
+        notifications={notifications}
+        onLogout={handleLogout}
+        t={t}
+      />
     </div>
   );
 };
