@@ -1,18 +1,271 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useServices } from "@/hooks/use-services";
 import { Service, ServiceFormData } from "@/models/service.model";
 import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+const ServiceTableRow = ({ service, onEdit, onDelete }) => (
+  <TableRow key={service.id}>
+    <TableCell className="font-medium">{service.name}</TableCell>
+    <TableCell>{service.duration} min</TableCell>
+    <TableCell>${service.price.toFixed(2)}</TableCell>
+    <TableCell className="text-right">
+      <Button variant="ghost" size="sm" onClick={() => onEdit(service)}>
+        <Pencil className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="sm" onClick={() => onDelete(service)}>
+        <Trash2 className="h-4 w-4 text-destructive" />
+      </Button>
+    </TableCell>
+  </TableRow>
+);
+
+const ServiceTableHeader = () => (
+  <TableHeader>
+    <TableRow>
+      <TableHead>Name</TableHead>
+      <TableHead>Duration</TableHead>
+      <TableHead>Price</TableHead>
+      <TableHead className="text-right">Actions</TableHead>
+    </TableRow>
+  </TableHeader>
+);
+
+const ServiceTable = ({ services, onEdit, onDelete }) => (
+  <Card>
+    <CardContent className="p-0">
+      <Table>
+        <ServiceTableHeader />
+        <TableBody>
+          {services.map((service) => (
+            <ServiceTableRow
+              key={service.id}
+              service={service}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))}
+        </TableBody>
+      </Table>
+    </CardContent>
+  </Card>
+);
+
+const ServiceFormFields = ({
+  formData,
+  handleInputChange,
+  handleBenefitsChange,
+}) => (
+  <div className="grid gap-4 py-4">
+    <div className="grid gap-2">
+      <Label htmlFor="name">Name *</Label>
+      <Input
+        id="name"
+        name="name"
+        value={formData.name}
+        onChange={handleInputChange}
+        required
+      />
+    </div>
+    <div className="grid gap-2">
+      <Label htmlFor="description">Description</Label>
+      <Textarea
+        id="description"
+        name="description"
+        value={formData.description}
+        onChange={handleInputChange}
+        rows={3}
+      />
+    </div>
+    <div className="grid grid-cols-2 gap-4">
+      <div className="grid gap-2">
+        <Label htmlFor="duration">Duration (minutes) *</Label>
+        <Input
+          id="duration"
+          name="duration"
+          type="number"
+          min="1"
+          value={formData.duration}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="price">Price ($) *</Label>
+        <Input
+          id="price"
+          name="price"
+          type="number"
+          min="0"
+          step="0.01"
+          value={formData.price}
+          onChange={handleInputChange}
+          required
+        />
+      </div>
+    </div>
+    <div className="grid gap-2">
+      <Label htmlFor="benefits">Benefits (one per line)</Label>
+      <Textarea
+        id="benefits"
+        name="benefits"
+        value={formData.benefits?.join("\n") || ""}
+        onChange={handleBenefitsChange}
+        rows={3}
+        placeholder="Enter each benefit on a new line"
+      />
+    </div>
+  </div>
+);
+
+const DialogContentWrapper = ({ title, description, children }) => (
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>{title}</DialogTitle>
+      <DialogDescription>{description}</DialogDescription>
+    </DialogHeader>
+    {children}
+  </DialogContent>
+);
+
+const ServiceForm = ({
+  onSubmit,
+  formData,
+  handleInputChange,
+  handleBenefitsChange,
+  resetForm,
+  onOpenChange,
+  submitText,
+}) => (
+  <form onSubmit={onSubmit}>
+    <ServiceFormFields
+      formData={formData}
+      handleInputChange={handleInputChange}
+      handleBenefitsChange={handleBenefitsChange}
+    />
+    <DialogFooter>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => {
+          resetForm();
+          onOpenChange(false);
+        }}
+      >
+        Cancel
+      </Button>
+      <Button type="submit">{submitText}</Button>
+    </DialogFooter>
+  </form>
+);
+
+const CreateServiceDialog = ({
+  open,
+  onOpenChange,
+  formData,
+  handleInputChange,
+  handleBenefitsChange,
+  handleCreateSubmit,
+  resetForm,
+}) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContentWrapper
+      title="Create New Service"
+      description="Add a new service to your catalog."
+    >
+      <ServiceForm
+        onSubmit={handleCreateSubmit}
+        formData={formData}
+        handleInputChange={handleInputChange}
+        handleBenefitsChange={handleBenefitsChange}
+        resetForm={resetForm}
+        onOpenChange={onOpenChange}
+        submitText="Create Service"
+      />
+    </DialogContentWrapper>
+  </Dialog>
+);
+
+const EditServiceDialog = ({
+  open,
+  onOpenChange,
+  formData,
+  handleInputChange,
+  handleBenefitsChange,
+  handleEditSubmit,
+  resetForm,
+}) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContentWrapper
+      title="Edit Service"
+      description="Update the service details."
+    >
+      <ServiceForm
+        onSubmit={handleEditSubmit}
+        formData={formData}
+        handleInputChange={handleInputChange}
+        handleBenefitsChange={handleBenefitsChange}
+        resetForm={resetForm}
+        onOpenChange={onOpenChange}
+        submitText="Update Service"
+      />
+    </DialogContentWrapper>
+  </Dialog>
+);
+
+const DeleteServiceDialog = ({ open, onOpenChange, onConfirm }) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContentWrapper
+      title="Delete Service"
+      description="Are you sure you want to delete this service? This action cannot be undone."
+    >
+      <DialogFooter>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+        >
+          Cancel
+        </Button>
+        <Button type="button" variant="destructive" onClick={onConfirm}>
+          Delete
+        </Button>
+      </DialogFooter>
+    </DialogContentWrapper>
+  </Dialog>
+);
+
 const ServicesTab = () => {
-  const { services, isLoading, error, fetchServices, createService, updateService, deleteService } = useServices();
+  const {
+    services,
+    isLoading,
+    error,
+    fetchServices,
+    createService,
+    updateService,
+    deleteService,
+  } = useServices();
   const { toast } = useToast();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -30,9 +283,11 @@ const ServicesTab = () => {
     fetchServices();
   }, [fetchServices]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    
+
     if (name === "duration" || name === "price") {
       setFormData({
         ...formData,
@@ -72,7 +327,7 @@ const ServicesTab = () => {
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || formData.price <= 0 || formData.duration <= 0) {
       toast({
         variant: "destructive",
@@ -105,9 +360,9 @@ const ServicesTab = () => {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!currentService) return;
-    
+
     if (!formData.name || formData.price <= 0 || formData.duration <= 0) {
       toast({
         variant: "destructive",
@@ -131,7 +386,7 @@ const ServicesTab = () => {
 
   const handleDeleteConfirm = async () => {
     if (!currentService) return;
-    
+
     const result = await deleteService(currentService.id.toString());
     if (result) {
       setIsDeleteDialogOpen(false);
@@ -171,252 +426,38 @@ const ServicesTab = () => {
           </CardContent>
         </Card>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {services.map((service) => (
-                  <TableRow key={service.id}>
-                    <TableCell className="font-medium">{service.name}</TableCell>
-                    <TableCell>{service.duration} min</TableCell>
-                    <TableCell>${service.price.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditClick(service)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteClick(service)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <ServiceTable
+          services={services}
+          onEdit={handleEditClick}
+          onDelete={handleDeleteClick}
+        />
       )}
 
-      {/* Create Service Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Service</DialogTitle>
-            <DialogDescription>
-              Add a new service to your catalog.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCreateSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Name *</Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="duration">Duration (minutes) *</Label>
-                  <Input
-                    id="duration"
-                    name="duration"
-                    type="number"
-                    min="1"
-                    value={formData.duration}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="price">Price ($) *</Label>
-                  <Input
-                    id="price"
-                    name="price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="benefits">
-                  Benefits (one per line)
-                </Label>
-                <Textarea
-                  id="benefits"
-                  name="benefits"
-                  value={formData.benefits?.join("\n") || ""}
-                  onChange={handleBenefitsChange}
-                  rows={3}
-                  placeholder="Enter each benefit on a new line"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  resetForm();
-                  setIsCreateDialogOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Create Service</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <CreateServiceDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+        formData={formData}
+        handleInputChange={handleInputChange}
+        handleBenefitsChange={handleBenefitsChange}
+        handleCreateSubmit={handleCreateSubmit}
+        resetForm={resetForm}
+      />
 
-      {/* Edit Service Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Service</DialogTitle>
-            <DialogDescription>
-              Update the service details.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleEditSubmit}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">Name *</Label>
-                <Input
-                  id="edit-name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-description">Description</Label>
-                <Textarea
-                  id="edit-description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-duration">Duration (minutes) *</Label>
-                  <Input
-                    id="edit-duration"
-                    name="duration"
-                    type="number"
-                    min="1"
-                    value={formData.duration}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-price">Price ($) *</Label>
-                  <Input
-                    id="edit-price"
-                    name="price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-benefits">
-                  Benefits (one per line)
-                </Label>
-                <Textarea
-                  id="edit-benefits"
-                  name="benefits"
-                  value={formData.benefits?.join("\n") || ""}
-                  onChange={handleBenefitsChange}
-                  rows={3}
-                  placeholder="Enter each benefit on a new line"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  resetForm();
-                  setIsEditDialogOpen(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Update Service</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <EditServiceDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        formData={formData}
+        handleInputChange={handleInputChange}
+        handleBenefitsChange={handleBenefitsChange}
+        handleEditSubmit={handleEditSubmit}
+        resetForm={resetForm}
+      />
 
-      {/* Delete Service Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Service</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this service? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteServiceDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 };
