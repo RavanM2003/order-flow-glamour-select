@@ -471,10 +471,30 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     let value: any = translations[language];
     
     for (const k of keys) {
-      value = value?.[k];
+      if (value && typeof value === 'object') {
+        value = value[k];
+      } else {
+        console.warn(`Translation key not found: ${key} for language: ${language}`);
+        return key; // Return key if translation not found
+      }
     }
     
-    // If translation not found, return the key itself (for debugging)
+    // If translation not found, try fallback to English
+    if (!value && language !== 'en') {
+      let fallback: any = translations.en;
+      for (const k of keys) {
+        if (fallback && typeof fallback === 'object') {
+          fallback = fallback[k];
+        } else {
+          break;
+        }
+      }
+      if (fallback) {
+        console.warn(`Using English fallback for key: ${key}`);
+        return fallback;
+      }
+    }
+    
     return value || key;
   };
 
