@@ -136,6 +136,7 @@ export type Database = {
           end_time: string
           id: number
           is_no_show: boolean | null
+          new_id: string | null
           notes: string | null
           start_time: string
           status: Database["public"]["Enums"]["appointment_status"] | null
@@ -151,6 +152,7 @@ export type Database = {
           end_time: string
           id?: number
           is_no_show?: boolean | null
+          new_id?: string | null
           notes?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["appointment_status"] | null
@@ -166,6 +168,7 @@ export type Database = {
           end_time?: string
           id?: number
           is_no_show?: boolean | null
+          new_id?: string | null
           notes?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["appointment_status"] | null
@@ -751,6 +754,59 @@ export type Database = {
             columns: ["staff_user_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          appointment_id: number | null
+          category: string | null
+          created_at: string | null
+          customer_name: string | null
+          description: string | null
+          id: string
+          notes: string | null
+          payment_type: string | null
+          source: string | null
+          status: string | null
+          type: string
+        }
+        Insert: {
+          amount: number
+          appointment_id?: number | null
+          category?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          payment_type?: string | null
+          source?: string | null
+          status?: string | null
+          type: string
+        }
+        Update: {
+          amount?: number
+          appointment_id?: number | null
+          category?: string | null
+          created_at?: string | null
+          customer_name?: string | null
+          description?: string | null
+          id?: string
+          notes?: string | null
+          payment_type?: string | null
+          source?: string | null
+          status?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
             referencedColumns: ["id"]
           },
         ]
