@@ -12,13 +12,13 @@ export interface Product {
   created_at?: string;
   updated_at?: string;
   discount?: number; // Added discount field
+  quantity?: number; // For UI display - quantity selected by user
   // Additional fields from database
   details?: string;
   ingredients?: string;
   how_to_use?: string;
   // For type compatibility
   stock_quantity?: number; // Alias for stock
-  quantity?: number; // For UI display
 }
 
 export interface ProductFormData {

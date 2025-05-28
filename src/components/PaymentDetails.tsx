@@ -99,7 +99,7 @@ const PaymentDetails = () => {
 
       {showCardForm && (
         <Card className="p-6">
-          <CardPayment amount={totalAmount} />
+          <CardPayment />
         </Card>
       )}
 

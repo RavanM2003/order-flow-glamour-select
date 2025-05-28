@@ -18,7 +18,7 @@ const CustomerInfo = () => {
     email: orderState.customer?.email || '',
     phone: orderState.customer?.phone || '',
     gender: orderState.customer?.gender || 'female',
-    notes: '' // This will be saved to appointments.notes instead of users table
+    notes: orderState.customer?.notes || '' // This will be saved to appointments.notes
   });
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -107,8 +107,8 @@ const CustomerInfo = () => {
       <div>
         <Label>{t('booking.gender')} *</Label>
         <GenderSelector
-          value={formData.gender}
-          onChange={(value) => handleInputChange('gender', value)}
+          selectedGender={formData.gender}
+          onGenderSelect={(value) => handleInputChange('gender', value)}
         />
       </div>
 

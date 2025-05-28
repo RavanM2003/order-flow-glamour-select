@@ -63,27 +63,30 @@ const ProductSelection = () => {
         <Card className="p-4 bg-glamour-50">
           <h3 className="font-medium text-glamour-800 mb-3">{t('booking.selectedProducts')}</h3>
           <div className="space-y-2">
-            {selectedProducts.map((product) => (
-              <div key={product.id} className="flex items-center justify-between p-2 bg-white rounded border">
-                <div className="flex-1">
-                  <span className="font-medium">{product.name}</span>
+            {selectedProducts.map((product) => {
+              const quantity = getProductQuantity(product.id);
+              return (
+                <div key={product.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                  <div className="flex-1">
+                    <span className="font-medium">{product.name}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge variant="secondary">{quantity}x</Badge>
+                    <PriceDisplay 
+                      price={(product.price || 0) * quantity} 
+                      className="text-sm"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeProduct(product.id)}
+                    >
+                      {t('common.remove')}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Badge variant="secondary">{product.quantity || 1}x</Badge>
-                  <PriceDisplay 
-                    price={(product.price || 0) * (product.quantity || 1)} 
-                    className="text-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeProduct(product.id)}
-                  >
-                    {t('common.remove')}
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
       )}

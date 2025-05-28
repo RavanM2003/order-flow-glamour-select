@@ -63,3 +63,23 @@ export const validateAppointmentTime = (time: string): boolean => {
 export const validateDiscount = (discount: number): boolean => {
   return discount >= 0 && discount <= 100;
 };
+
+// Get current date in YYYY-MM-DD format
+export const getCurrentDate = (): string => {
+  return new Date().toISOString().split('T')[0];
+};
+
+// Check if time is within working hours
+export const isWithinWorkingHours = (time: string, startTime: string, endTime: string): boolean => {
+  const timeMinutes = timeToMinutes(time);
+  const startMinutes = timeToMinutes(startTime);
+  const endMinutes = timeToMinutes(endTime);
+  
+  return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
+};
+
+// Helper function to convert time string to minutes
+const timeToMinutes = (time: string): number => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
