@@ -13,9 +13,9 @@ export const customerService = {
         last_name: (data as any).last_name || '',
         full_name: (data as any).full_name || data.name,
         phone: data.phone,
-        gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : 'other',
+        gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : 'other' as 'male' | 'female' | 'other',
         birth_date: (data as any).birth_date,
-        note: (data as any).note || data.notes,
+        note: (data as any).note || data.note,
         role: 'customer',
         hashed_password: '',
       };
@@ -134,7 +134,7 @@ export const customerService = {
         phone: data.phone,
         gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : undefined,
         birth_date: (data as any).birth_date,
-        note: data.notes || (data as any).note,
+        note: data.note || (data as any).note,
       };
       
       const { data: user, error } = await supabase
