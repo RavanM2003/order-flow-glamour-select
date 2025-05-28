@@ -43,7 +43,7 @@ const ServicesTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {services.length === 0 ? (
+          {!services || services.length === 0 ? (
             <TableRow>
               <TableCell colSpan={7} className="text-center py-8">
                 No services found
@@ -140,7 +140,10 @@ const ServicesTab = () => {
     fetchServices();
   }, [fetchServices]);
 
-  const filteredServices = services.filter(
+  // Add defensive check for services array
+  const safeServices = Array.isArray(services) ? services : [];
+
+  const filteredServices = safeServices.filter(
     (service) =>
       service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       service.description?.toLowerCase().includes(searchTerm.toLowerCase())

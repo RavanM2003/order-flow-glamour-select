@@ -37,7 +37,7 @@ const ProductsTable = ({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {products.length === 0 ? (
+        {!products || products.length === 0 ? (
           <TableRow>
             <TableCell colSpan={6} className="text-center py-8">
               No products found
@@ -132,7 +132,10 @@ const ProductsTab = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  const filteredProducts = products.filter(
+  // Add defensive check for products array
+  const safeProducts = Array.isArray(products) ? products : [];
+
+  const filteredProducts = safeProducts.filter(
     (product) =>
       product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchTerm.toLowerCase())

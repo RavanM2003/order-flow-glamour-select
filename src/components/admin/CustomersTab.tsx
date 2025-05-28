@@ -48,7 +48,7 @@ const CustomersTable = ({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {customers.length === 0 ? (
+        {!customers || customers.length === 0 ? (
           <TableRow>
             <TableCell colSpan={7} className="text-center py-8">
               No customers found
@@ -151,7 +151,10 @@ const CustomersTab = () => {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  const filteredCustomers = customers.filter(
+  // Add defensive check for customers array
+  const safeCustomers = Array.isArray(customers) ? customers : [];
+  
+  const filteredCustomers = safeCustomers.filter(
     (customer) =>
       (customer.full_name || customer.name)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
