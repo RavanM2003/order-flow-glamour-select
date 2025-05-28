@@ -6,8 +6,11 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/context/LanguageContext';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define valid table names that exist in our database
+type ValidTableName = 'services' | 'products';
+
 interface ServerSearchAndFilterProps<T> {
-  tableName: string;
+  tableName: ValidTableName;
   searchFields: string[];
   onFilteredDataChange: (data: T[]) => void;
   currentPage: number;
@@ -17,7 +20,7 @@ interface ServerSearchAndFilterProps<T> {
   initialData?: T[];
 }
 
-function ServerSearchAndFilter<T extends { id: number }>({
+function ServerSearchAndFilter<T extends { id: number; name: string }>({
   tableName,
   searchFields,
   onFilteredDataChange,
@@ -34,7 +37,7 @@ function ServerSearchAndFilter<T extends { id: number }>({
   const [totalCount, setTotalCount] = useState(0);
 
   // Server-side search function
-  const performServerSearch = async (term: string, page: number) => {
+  const performServerSearch = async (term: string, page: number): Promise<T[]> => {
     try {
       setIsLoading(true);
       let query = supabase
@@ -56,7 +59,7 @@ function ServerSearchAndFilter<T extends { id: number }>({
       if (error) throw error;
       
       setTotalCount(count || 0);
-      return data as T[] || [];
+      return (data || []) as T[];
     } catch (error) {
       console.error('Server search error:', error);
       return [];
