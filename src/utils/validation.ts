@@ -1,4 +1,3 @@
-
 import { useLanguage } from '@/context/LanguageContext';
 
 // Duration validation
@@ -30,18 +29,41 @@ export const validateStock = (stock: number): boolean => {
 
 // Format duration with multi-language support
 export const formatDurationMultiLanguage = (minutes: number, t: any): string => {
-  if (minutes < 60) {
-    return `${minutes} ${t('time.minutes')}`;
-  }
-  
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   
-  if (remainingMinutes === 0) {
-    return `${hours} ${t('time.hours')}`;
+  const lang = t('common.currentLanguage') || 'en';
+  
+  if (hours === 0) {
+    switch (lang) {
+      case 'az':
+        return `${remainingMinutes} dəqiqə`;
+      case 'ru':
+        return `${remainingMinutes}м`;
+      default:
+        return `${remainingMinutes}m`;
+    }
   }
   
-  return `${hours} ${t('time.hours')} ${remainingMinutes} ${t('time.minutes')}`;
+  if (remainingMinutes === 0) {
+    switch (lang) {
+      case 'az':
+        return `${hours} saat`;
+      case 'ru':
+        return `${hours}ч`;
+      default:
+        return `${hours}h`;
+    }
+  }
+  
+  switch (lang) {
+    case 'az':
+      return `${hours} saat ${remainingMinutes} dəqiqə`;
+    case 'ru':
+      return `${hours}ч ${remainingMinutes}м`;
+    default:
+      return `${hours}h ${remainingMinutes}m`;
+  }
 };
 
 // Date validation

@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useProducts } from '@/hooks/use-products';
 import { useOrder } from '@/context/OrderContext';
 import { Button } from '@/components/ui/button';
@@ -9,8 +9,7 @@ import { Product } from '@/models/product.model';
 import DiscountBadge from '@/components/ui/discount-badge';
 import PriceDisplay from '@/components/ui/price-display';
 import { useLanguage } from '@/context/LanguageContext';
-import ProductSearchAndFilter from './ProductSearchAndFilter';
-import { supabase } from '@/integrations/supabase/client';
+import ServerSearchAndFilter from './ServerSearchAndFilter';
 
 const ProductSelection = () => {
   const { products, isLoading, error } = useProducts();
@@ -19,84 +18,41 @@ const ProductSelection = () => {
   
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [allLoadedProducts, setAllLoadedProducts] = useState<Product[]>([]);
 
   const selectedProducts = orderState?.selectedProducts || [];
   const selectedServices = orderState?.selectedServices || [];
 
   // Get recommended products based on selected services
-  const recommendedProductIds = useMemo(() => {
-    return products.slice(0, 3).map(p => p.id);
+  const recommendedProducts = useMemo(() => {
+    // For now, return first 3 products as recommended
+    return products.slice(0, 3);
   }, [products, selectedServices]);
 
-  // Server-side search for recommended products
-  const performRecommendedSearch = async (term: string, page: number) => {
-    try {
-      let query = supabase
-        .from('products')
-        .select('*')
-        .order('name');
-
-      if (term.trim()) {
-        query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
-      }
-
-      const limit = 6;
-      const from = (page - 1) * limit;
-      query = query.range(from, from + limit - 1);
-
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      
-      return data || [];
-    } catch (error) {
-      console.error('Product search error:', error);
-      return [];
-    }
-  };
-
-  // Handle search with server-side functionality
-  const handleSearch = async (term: string) => {
-    setSearchTerm(term);
-    setCurrentPage(1);
-    const results = await performRecommendedSearch(term, 1);
-    setAllLoadedProducts(results);
-    setFilteredProducts(results);
-  };
-
-  // Handle load more with append functionality
-  const handleLoadMore = async () => {
-    const nextPage = currentPage + 1;
-    const newResults = await performRecommendedSearch(searchTerm, nextPage);
-    setCurrentPage(nextPage);
-    setAllLoadedProducts(prev => [...prev, ...newResults]);
-    setFilteredProducts(prev => [...prev, ...newResults]);
-  };
+  // Handle filtered products change
+  const handleFilteredProductsChange = useCallback((newProducts: Product[]) => {
+    setFilteredProducts(newProducts);
+  }, []);
 
   // Initialize with recommended products
   useEffect(() => {
-    if (products.length > 0 && allLoadedProducts.length === 0) {
-      const initialProducts = products.slice(0, 6);
-      setAllLoadedProducts(initialProducts);
-      setFilteredProducts(initialProducts);
+    if (recommendedProducts.length > 0 && filteredProducts.length === 0) {
+      setFilteredProducts(recommendedProducts);
     }
-  }, [products, allLoadedProducts.length]);
+  }, [recommendedProducts, filteredProducts.length]);
 
   const isProductSelected = (productId: number) => {
     return selectedProducts.some(p => p.id === productId);
-  };
-
-  const getProductQuantity = (productId: number) => {
-    const isSelected = selectedProducts.some(p => p.id === productId);
-    return isSelected ? 1 : 0;
   };
 
   const handleProductToggle = (product: Product) => {
     if (isProductSelected(product.id)) {
       removeProduct(product.id);
     } else {
+      // Add product with default quantity of 1
+      const productWithQuantity = {
+        ...product,
+        quantity: 1
+      };
       addProduct(product.id);
     }
   };
@@ -106,13 +62,14 @@ const ProductSelection = () => {
 
   return (
     <div className="space-y-4">
-      <ProductSearchAndFilter
-        products={allLoadedProducts}
-        recommendedProductIds={recommendedProductIds}
-        onFilteredProductsChange={setFilteredProducts}
+      <ServerSearchAndFilter<Product>
+        tableName="products"
+        searchFields={['name', 'description']}
+        onFilteredDataChange={handleFilteredProductsChange}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
-        onSearch={handleSearch}
+        placeholder={t('booking.searchProducts')}
+        initialData={recommendedProducts}
       />
 
       {selectedProducts.length > 0 && (
@@ -150,8 +107,7 @@ const ProductSelection = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredProducts.map((product) => {
           const isSelected = isProductSelected(product.id);
-          const quantity = getProductQuantity(product.id);
-          const isRecommended = recommendedProductIds.includes(product.id);
+          const isRecommended = recommendedProducts.some(rp => rp.id === product.id);
           
           return (
             <Card 
@@ -187,8 +143,8 @@ const ProductSelection = () => {
                         <DiscountBadge discount={product.discount} />
                       )}
                     </div>
-                    {isSelected && quantity > 0 && (
-                      <Badge variant="default">{quantity}x</Badge>
+                    {isSelected && (
+                      <Badge variant="default">1x</Badge>
                     )}
                   </div>
                 </div>
@@ -208,17 +164,6 @@ const ProductSelection = () => {
             </Card>
           );
         })}
-      </div>
-
-      {/* Load More Button */}
-      <div className="flex justify-center mt-4">
-        <Button 
-          variant="outline" 
-          onClick={handleLoadMore}
-          disabled={isLoading}
-        >
-          {isLoading ? t('common.loading') : t('booking.loadMore')}
-        </Button>
       </div>
     </div>
   );

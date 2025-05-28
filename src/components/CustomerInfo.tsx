@@ -18,7 +18,7 @@ const CustomerInfo = () => {
     email: orderState.customer?.email || '',
     phone: orderState.customer?.phone || '',
     gender: orderState.customer?.gender || 'female',
-    appointmentNotes: orderState.customer?.notes || '' // This will be saved to appointments.notes
+    appointmentNotes: orderState.customer?.notes || ''
   });
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -41,17 +41,30 @@ const CustomerInfo = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      // Validate that the date is not in the past
+      // Validate that the date is not in the past and within allowed range
       if (date < today) {
         return; // Don't set past dates
       }
     }
     setSelectedDate(date);
+    setAppointmentDate(date);
+  };
+
+  const validateBookingRequirements = () => {
+    const hasServices = orderState.selectedServices && orderState.selectedServices.length > 0;
+    const hasProducts = orderState.selectedProducts && orderState.selectedProducts.length > 0;
+    return hasServices || hasProducts;
   };
 
   const handleSubmit = () => {
     if (!formData.name || !formData.email || !formData.phone || !selectedDate || !selectedTime) {
       alert(t('booking.fillAllFields'));
+      return;
+    }
+
+    // Validate booking requirements
+    if (!validateBookingRequirements()) {
+      alert(t('booking.selectServiceOrProduct'));
       return;
     }
 
@@ -76,7 +89,7 @@ const CustomerInfo = () => {
       gender: formData.gender as 'male' | 'female' | 'other',
       lastVisit: '',
       totalSpent: 0,
-      notes: formData.appointmentNotes // Store notes for appointment
+      notes: formData.appointmentNotes // This will be used for appointments.notes
     });
     
     setAppointmentDate(selectedDate);
