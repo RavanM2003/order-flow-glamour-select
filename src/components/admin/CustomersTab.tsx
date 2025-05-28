@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { useCustomers } from "@/hooks/use-customers";
+import { usePagination } from "@/hooks/use-pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,10 +12,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { formatDate } from "@/utils/format";
-import { PlusIcon, SearchIcon, EyeIcon, CalendarIcon } from "lucide-react";
+import { PlusIcon, SearchIcon } from "lucide-react";
 import CustomerForm from "@/components/admin/CustomerForm";
 import CustomerOrdersAccordion from "@/components/admin/CustomerOrdersAccordion";
+import CustomerDetailsDrawer from "@/components/admin/CustomerDetailsDrawer";
+import CustomerActions from "@/components/admin/CustomerActions";
 import CreateAppointmentModal from "@/components/admin/CreateAppointmentModal";
 import DetailDrawer from "@/components/common/DetailDrawer";
 import {
@@ -25,13 +36,15 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useNavigate } from "react-router-dom";
 import { Customer } from "@/models/customer.model";
+
+const ITEMS_PER_PAGE = 10;
 
 const CustomersTable = ({ 
   customers, 
   onViewOrders, 
   onCreateAppointment,
+  onViewDetails,
   className = ""
 }) => (
   <div className={`overflow-x-auto ${className}`}>
@@ -44,7 +57,7 @@ const CustomersTable = ({
           <TableHead className="hidden md:table-cell">Gender</TableHead>
           <TableHead className="hidden lg:table-cell">Last Visit</TableHead>
           <TableHead className="hidden md:table-cell">Status</TableHead>
-          <TableHead className="text-right min-w-[120px]">Actions</TableHead>
+          <TableHead className="text-right min-w-[140px]">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -77,26 +90,12 @@ const CustomersTable = ({
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 justify-end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onViewOrders(customer)}
-                    className="text-xs px-2 py-1"
-                  >
-                    <EyeIcon className="h-3 w-3 mr-1" />
-                    Orders
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onCreateAppointment(customer)}
-                    className="text-xs px-2 py-1"
-                  >
-                    <CalendarIcon className="h-3 w-3 mr-1" />
-                    Appointment
-                  </Button>
-                </div>
+                <CustomerActions
+                  customer={customer}
+                  onViewOrders={onViewOrders}
+                  onCreateAppointment={onCreateAppointment}
+                  onViewDetails={onViewDetails}
+                />
               </TableCell>
             </TableRow>
           ))
@@ -128,30 +127,18 @@ const CustomersHeader = ({ searchTerm, setSearchTerm, onAddClick }) => (
   </CardHeader>
 );
 
-const AddCustomerDialogContent = ({ onSuccess }) => {
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle>Add New Customer</DialogTitle>
-      </DialogHeader>
-      <CustomerForm onSuccess={onSuccess} />
-    </>
-  );
-};
-
 const CustomersTab = () => {
   const { customers, isLoading, error, fetchCustomers } = useCustomers();
   const [searchTerm, setSearchTerm] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedCustomerForOrders, setSelectedCustomerForOrders] = useState<Customer | null>(null);
+  const [selectedCustomerForDetails, setSelectedCustomerForDetails] = useState<Customer | null>(null);
   const [selectedCustomerForAppointment, setSelectedCustomerForAppointment] = useState<Customer | null>(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCustomers();
   }, [fetchCustomers]);
 
-  // Add defensive check for customers array
   const safeCustomers = Array.isArray(customers) ? customers : [];
   
   const filteredCustomers = safeCustomers.filter(
@@ -161,8 +148,26 @@ const CustomersTab = () => {
       customer.phone?.includes(searchTerm)
   );
 
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems,
+    hasNextPage,
+    hasPrevPage,
+    nextPage,
+    prevPage,
+    goToPage
+  } = usePagination({
+    items: filteredCustomers,
+    itemsPerPage: ITEMS_PER_PAGE
+  });
+
   const handleViewOrders = (customer: Customer) => {
     setSelectedCustomerForOrders(customer);
+  };
+
+  const handleViewDetails = (customer: Customer) => {
+    setSelectedCustomerForDetails(customer);
   };
 
   const handleCreateAppointment = (customer: Customer) => {
@@ -182,19 +187,56 @@ const CustomersTab = () => {
         ) : error ? (
           <div className="text-red-500 p-8 text-center">Error: {error}</div>
         ) : (
-          <CustomersTable
-            customers={filteredCustomers}
-            onViewOrders={handleViewOrders}
-            onCreateAppointment={handleCreateAppointment}
-            className="px-4 sm:px-0"
-          />
+          <>
+            <CustomersTable
+              customers={paginatedItems}
+              onViewOrders={handleViewOrders}
+              onCreateAppointment={handleCreateAppointment}
+              onViewDetails={handleViewDetails}
+              className="px-4 sm:px-0"
+            />
+            
+            {totalPages > 1 && (
+              <div className="flex justify-center mt-6">
+                <Pagination>
+                  <PaginationContent>
+                    {hasPrevPage && (
+                      <PaginationItem>
+                        <PaginationPrevious onClick={prevPage} />
+                      </PaginationItem>
+                    )}
+                    
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => goToPage(page)}
+                          isActive={currentPage === page}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                    
+                    {hasNextPage && (
+                      <PaginationItem>
+                        <PaginationNext onClick={nextPage} />
+                      </PaginationItem>
+                    )}
+                  </PaginationContent>
+                </Pagination>
+              </div>
+            )}
+          </>
         )}
       </CardContent>
 
       {/* Add Customer Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
         <DialogContent className="sm:max-w-[600px]">
-          <AddCustomerDialogContent
+          <DialogHeader>
+            <DialogTitle>Add New Customer</DialogTitle>
+          </DialogHeader>
+          <CustomerForm
             onSuccess={() => {
               setIsFormOpen(false);
               fetchCustomers();
@@ -202,6 +244,18 @@ const CustomersTab = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Customer Details Drawer */}
+      <DetailDrawer
+        open={!!selectedCustomerForDetails}
+        onOpenChange={(open) => !open && setSelectedCustomerForDetails(null)}
+        title={`Customer Details - ${selectedCustomerForDetails?.name || 'Customer'}`}
+        position="right"
+      >
+        {selectedCustomerForDetails && (
+          <CustomerDetailsDrawer customer={selectedCustomerForDetails} />
+        )}
+      </DetailDrawer>
 
       {/* Customer Orders Drawer */}
       <DetailDrawer

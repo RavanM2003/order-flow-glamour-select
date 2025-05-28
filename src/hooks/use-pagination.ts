@@ -10,18 +10,32 @@ interface UsePaginationProps<T> {
 export function usePagination<T>({ items, itemsPerPage, initialPage = 1 }: UsePaginationProps<T>) {
   const [currentPage, setCurrentPage] = useState(initialPage);
 
+  const totalPages = Math.ceil(items.length / itemsPerPage);
+  
   const paginatedItems = useMemo(() => {
-    const startIndex = 0;
-    const endIndex = currentPage * itemsPerPage;
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
     return items.slice(startIndex, endIndex);
   }, [items, currentPage, itemsPerPage]);
 
-  const hasMore = currentPage * itemsPerPage < items.length;
-  const totalPages = Math.ceil(items.length / itemsPerPage);
+  const hasNextPage = currentPage < totalPages;
+  const hasPrevPage = currentPage > 1;
 
-  const loadMore = () => {
-    if (hasMore) {
+  const nextPage = () => {
+    if (hasNextPage) {
       setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (hasPrevPage) {
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
+  const goToPage = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
     }
   };
 
@@ -31,10 +45,13 @@ export function usePagination<T>({ items, itemsPerPage, initialPage = 1 }: UsePa
 
   return {
     currentPage,
-    paginatedItems,
-    hasMore,
     totalPages,
-    loadMore,
+    paginatedItems,
+    hasNextPage,
+    hasPrevPage,
+    nextPage,
+    prevPage,
+    goToPage,
     reset,
     setCurrentPage
   };
