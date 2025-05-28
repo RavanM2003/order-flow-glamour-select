@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronRight, Search } from "lucide-react";
@@ -50,7 +49,7 @@ const ProductList = () => {
     (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const { paginatedItems, hasMore, loadMore } = usePagination({
+  const { paginatedItems, hasNextPage, nextPage } = usePagination({
     items: filteredProducts,
     itemsPerPage: 6
   });
@@ -142,11 +141,11 @@ const ProductList = () => {
       </div>
       
       {/* Load More Button */}
-      {hasMore && (
+      {hasNextPage && (
         <div className="mt-8 text-center">
           <Button 
             variant="outline" 
-            onClick={loadMore}
+            onClick={nextPage}
             className="px-8"
           >
             {t("products.loadMore")}
