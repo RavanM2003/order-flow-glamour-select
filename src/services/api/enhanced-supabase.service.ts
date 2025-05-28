@@ -25,7 +25,7 @@ export class EnhancedUserService extends BaseApiService {
     return filteredQuery;
   }
 
-  async getCustomers(filters?: FilterOptions): Promise<ApiResponse<User[]>> {
+  async getCustomers(filters?: FilterOptions): Promise<ApiResponse<any[]>> {
     return this.executeQuery('getCustomers', async () => {
       let query = supabase
         .from('users')
@@ -40,7 +40,7 @@ export class EnhancedUserService extends BaseApiService {
     });
   }
 
-  async getStaff(filters?: FilterOptions): Promise<ApiResponse<User[]>> {
+  async getStaff(filters?: FilterOptions): Promise<ApiResponse<any[]>> {
     return this.executeQuery('getStaff', async () => {
       let query = supabase
         .from('users')

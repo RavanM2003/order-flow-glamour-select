@@ -2,10 +2,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse, FilterOptions, PaginatedResponse } from '@/types/database';
 import { useQueryStore } from '@/stores/useQueryStore';
-import { useErrorHandler } from '@/hooks/useErrorHandler';
-import { Database } from '@/integrations/supabase/types';
 
-type TableName = keyof Database['public']['Tables'];
+type TableName = 'users' | 'services' | 'products' | 'appointments' | 'staff' | 'service_categories' | 'transactions' | 'payments' | 'invoices';
 
 export class BaseApiService {
   protected tableName: TableName;
@@ -123,7 +121,7 @@ export class BaseApiService {
     return query;
   }
 
-  async getAll<T = any>(filters?: FilterOptions): Promise<ApiResponse<T[]>> {
+  async getAll(filters?: FilterOptions): Promise<ApiResponse<any[]>> {
     return this.executeQuery('getAll', async () => {
       let query = supabase.from(this.tableName).select('*');
       
@@ -135,7 +133,7 @@ export class BaseApiService {
     });
   }
 
-  async getById<T = any>(id: string | number): Promise<ApiResponse<T>> {
+  async getById(id: string | number): Promise<ApiResponse<any>> {
     return this.executeQuery('getById', async () => {
       return supabase
         .from(this.tableName)
@@ -145,7 +143,7 @@ export class BaseApiService {
     });
   }
 
-  async create<T = any>(data: Record<string, any>): Promise<ApiResponse<T>> {
+  async create(data: Record<string, any>): Promise<ApiResponse<any>> {
     return this.executeQuery('create', async () => {
       return supabase
         .from(this.tableName)
@@ -155,7 +153,7 @@ export class BaseApiService {
     });
   }
 
-  async update<T = any>(id: string | number, updates: Record<string, any>): Promise<ApiResponse<T>> {
+  async update(id: string | number, updates: Record<string, any>): Promise<ApiResponse<any>> {
     return this.executeQuery('update', async () => {
       return supabase
         .from(this.tableName)

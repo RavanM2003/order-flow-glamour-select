@@ -162,6 +162,44 @@ export interface Database {
         };
       };
     };
+    Functions: {
+      get_appointment_summary: {
+        Args: { appointment_id: number };
+        Returns: {
+          appointment_info: any;
+          services_info: any;
+          products_info: any;
+          payment_info: any;
+        }[];
+      };
+      check_staff_booking_conflict: {
+        Args: {
+          staff_id: string;
+          appointment_date: string;
+          start_time: string;
+          end_time: string;
+          exclude_appointment_id?: number;
+        };
+        Returns: boolean;
+      };
+      get_staff_by_service: {
+        Args: { service_id: number };
+        Returns: { user_id: string; full_name: string }[];
+      };
+      get_available_staff_by_service_and_date: {
+        Args: { service_id: number; reservation_date: string };
+        Returns: { user_id: string; full_name: string }[];
+      };
+      create_invoice_with_appointment: {
+        Args: {
+          p_invoice_number: string;
+          p_total_amount: number;
+          p_status: string;
+          p_appointment_json: any;
+        };
+        Returns: any[];
+      };
+    };
   };
 }
 
