@@ -10,6 +10,8 @@ import DiscountBadge from '@/components/ui/discount-badge';
 import PriceDisplay from '@/components/ui/price-display';
 import { useLanguage } from '@/context/LanguageContext';
 import StaffSelection from './StaffSelection';
+import ServiceSearchAndFilter from './ServiceSearchAndFilter';
+import { formatDurationMultiLanguage } from '@/utils/validation';
 
 const ServiceSelection = () => {
   const { services, isLoading, error } = useServices();
@@ -17,19 +19,19 @@ const ServiceSelection = () => {
   const { t } = useLanguage();
   const [expandedServices, setExpandedServices] = useState<Set<number>>(new Set());
   const [selectedStaff, setSelectedStaff] = useState<Record<number, string>>({});
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const selectedServices = orderState?.selectedServices || [];
 
   const handleServiceToggle = (service: Service) => {
     if (selectedServices.includes(service.id)) {
       unselectService(service.id);
-      // Remove from expanded services
       setExpandedServices(prev => {
         const newSet = new Set(prev);
         newSet.delete(service.id);
         return newSet;
       });
-      // Remove selected staff
       setSelectedStaff(prev => {
         const newStaff = { ...prev };
         delete newStaff[service.id];
@@ -37,7 +39,6 @@ const ServiceSelection = () => {
       });
     } else {
       selectService(service.id);
-      // Expand the service to show staff selection
       setExpandedServices(prev => new Set([...prev, service.id]));
     }
   };
@@ -63,12 +64,33 @@ const ServiceSelection = () => {
     });
   };
 
+  const totalDuration = selectedServices.reduce((total, serviceId) => {
+    const service = services.find(s => s.id === serviceId);
+    return total + (service?.duration || 0);
+  }, 0);
+
   if (isLoading) return <div>Loading services...</div>;
   if (error) return <div>Error loading services: {error}</div>;
 
   return (
     <div className="space-y-4">
-      {services.map((service) => {
+      <ServiceSearchAndFilter
+        services={services}
+        onFilteredServicesChange={setFilteredServices}
+        currentPage={currentPage}
+        onPageChange={setCurrentPage}
+      />
+
+      {totalDuration > 0 && (
+        <div className="bg-glamour-50 p-4 rounded-lg">
+          <h3 className="font-medium text-glamour-800 mb-2">{t('booking.totalDuration')}</h3>
+          <p className="text-lg font-semibold text-glamour-700">
+            {formatDurationMultiLanguage(totalDuration, t)}
+          </p>
+        </div>
+      )}
+
+      {filteredServices.map((service) => {
         const isSelected = selectedServices.includes(service.id);
         const isExpanded = expandedServices.has(service.id);
         
@@ -102,7 +124,7 @@ const ServiceSelection = () => {
                   <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 mr-1" />
-                      <span>{service.duration} {t('booking.minutes')}</span>
+                      <span>{formatDurationMultiLanguage(service.duration, t)}</span>
                     </div>
                     <Button
                       variant="ghost"
@@ -122,7 +144,6 @@ const ServiceSelection = () => {
               </div>
             </div>
 
-            {/* Staff Selection - only show if service is selected */}
             {isSelected && (
               <div className="border-t border-gray-200 p-4 bg-gray-50">
                 <StaffSelection

@@ -1,103 +1,113 @@
-import { useNavigate } from "react-router-dom";
-import { useOrder } from "@/context/OrderContext";
-import { useToast } from "@/hooks/use-toast";
 
-const CustomerInfo = ({ customer }) => (
-  <div className="space-y-2">
-    <h3 className="text-lg font-medium">Müştəri Məlumatı</h3>
-    <p>
-      <span className="font-medium">Ad:</span> {customer?.name}
-    </p>
-    <p>
-      <span className="font-medium">Email:</span> {customer?.email}
-    </p>
-    <p>
-      <span className="font-medium">Telefon:</span> {customer?.phone}
-    </p>
-  </div>
-);
-
-const ServiceInfo = ({
-  selectedService,
-  selectedStaff,
-  formattedDate,
-  formattedTime,
-}) => (
-  <div className="space-y-2">
-    <h3 className="text-lg font-medium">Xidmət Məlumatı</h3>
-    <p>
-      <span className="font-medium">Xidmət:</span> {selectedService?.name}
-    </p>
-    <p>
-      <span className="font-medium">Təchizatçı:</span> {selectedStaff?.name}
-    </p>
-    <p>
-      <span className="font-medium">Tarix:</span> {formattedDate}
-    </p>
-    <p>
-      <span className="font-medium">Saat:</span> {formattedTime}
-    </p>
-  </div>
-);
+import React, { useState } from 'react';
+import { useOrder } from '@/context/OrderContext';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { CreditCard, Banknote, Building2 } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
+import CardPayment from '@/components/CardPayment';
 
 const PaymentDetails = () => {
-  const { orderState, calculateTotal } = useOrder();
-  const {
-    selectedService,
-    selectedStaff,
-    appointmentDate,
-    appointmentTime,
-    customer,
-  } = orderState;
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const { t } = useLanguage();
+  const { orderState, setPaymentMethod } = useOrder();
+  const [selectedMethod, setSelectedMethod] = useState(orderState.paymentMethod || '');
+  const [showCardForm, setShowCardForm] = useState(false);
 
-  const totalPrice = calculateTotal();
-  const formattedDate = appointmentDate
-    ? appointmentDate.toLocaleDateString()
-    : "N/A";
-  const formattedTime = appointmentTime || "N/A";
+  const paymentMethods = [
+    {
+      id: 'card',
+      name: t('booking.cardPayment'),
+      icon: CreditCard,
+      description: t('booking.cardPaymentDesc')
+    },
+    {
+      id: 'cash',
+      name: t('booking.cashPayment'),
+      icon: Banknote,
+      description: t('booking.cashPaymentDesc')
+    },
+    {
+      id: 'bank',
+      name: t('booking.bankTransfer'),
+      icon: Building2,
+      description: t('booking.bankTransferDesc')
+    }
+  ];
 
-  const handleConfirmPayment = () => {
-    toast({
-      title: "Ödəniş təsdiqləndi",
-      description: "Ödəniş uğurla tamamlandı!",
-    });
-    navigate("/confirmation");
+  const handleMethodChange = (method: string) => {
+    setSelectedMethod(method);
+    setPaymentMethod(method);
+    setShowCardForm(method === 'card');
   };
 
+  const totalAmount = orderState.totalAmount || 0;
+
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold mb-4">Ödəniş Detalları</h2>
-      <div className="mb-6">
-        <p className="text-gray-600">
-          Zəhmət olmasa aşağıdakı məlumatları yoxlayın və ödənişi təsdiqləyin.
-        </p>
-      </div>
+    <div className="space-y-6">
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">{t('booking.orderSummary')}</h3>
+        
+        <div className="space-y-2 mb-4">
+          {orderState.selectedService && (
+            <div className="flex justify-between">
+              <span>{orderState.selectedService.name}</span>
+              <span>{orderState.selectedService.price} AZN</span>
+            </div>
+          )}
+          
+          {orderState.selectedProducts?.map((product) => (
+            <div key={product.id} className="flex justify-between">
+              <span>{product.name} x{product.quantity || 1}</span>
+              <span>{((product.price || 0) * (product.quantity || 1)).toFixed(2)} AZN</span>
+            </div>
+          ))}
+        </div>
+        
+        <div className="border-t pt-2">
+          <div className="flex justify-between font-semibold text-lg">
+            <span>{t('booking.total')}</span>
+            <span>{totalAmount.toFixed(2)} AZN</span>
+          </div>
+        </div>
+      </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <CustomerInfo customer={customer} />
-        <ServiceInfo
-          selectedService={selectedService}
-          selectedStaff={selectedStaff}
-          formattedDate={formattedDate}
-          formattedTime={formattedTime}
-        />
-      </div>
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold mb-4">{t('booking.paymentMethod')}</h3>
+        
+        <RadioGroup value={selectedMethod} onValueChange={handleMethodChange}>
+          {paymentMethods.map((method) => {
+            const IconComponent = method.icon;
+            return (
+              <div key={method.id} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50">
+                <RadioGroupItem value={method.id} id={method.id} />
+                <div className="flex items-center space-x-3 flex-1">
+                  <IconComponent className="h-5 w-5 text-gray-500" />
+                  <div>
+                    <Label htmlFor={method.id} className="font-medium cursor-pointer">
+                      {method.name}
+                    </Label>
+                    <p className="text-sm text-gray-500">{method.description}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </RadioGroup>
+      </Card>
 
-      <div className="mb-6">
-        <h3 className="text-xl font-semibold">Toplam Qiymət</h3>
-        <p className="text-green-600 text-xl">{totalPrice} AZN</p>
-      </div>
+      {showCardForm && (
+        <Card className="p-6">
+          <CardPayment amount={totalAmount} />
+        </Card>
+      )}
 
-      <div>
-        <button
-          onClick={handleConfirmPayment}
-          className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Ödənişi Təsdiqlə
-        </button>
-      </div>
+      {selectedMethod && !showCardForm && (
+        <Button className="w-full" size="lg">
+          {t('booking.confirmPayment')} - {totalAmount.toFixed(2)} AZN
+        </Button>
+      )}
     </div>
   );
 };

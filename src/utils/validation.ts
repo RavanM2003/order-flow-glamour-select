@@ -1,34 +1,35 @@
 
+import { useLanguage } from '@/context/LanguageContext';
+
+// Duration validation
+export const validateDuration = (duration: number): boolean => {
+  return duration > 0 && duration <= 480; // Max 8 hours
+};
+
+// Email validation
 export const validateEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
 
-export const getCurrentDate = (): string => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
+// Phone validation (Azerbaijan format)
+export const validatePhone = (phone: string): boolean => {
+  const phoneRegex = /^\+994[0-9]{9}$/;
+  return phoneRegex.test(phone);
 };
 
-export const isWithinWorkingHours = (time: string, startTime: string, endTime: string): boolean => {
-  if (!time || !startTime || !endTime) return false;
-  
-  const timeMinutes = convertTimeToMinutes(time);
-  const startMinutes = convertTimeToMinutes(startTime);
-  const endMinutes = convertTimeToMinutes(endTime);
-  
-  return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
+// Price validation
+export const validatePrice = (price: number): boolean => {
+  return price >= 0 && price <= 10000;
 };
 
-export const isValidBookingDate = (date: Date | string): boolean => {
-  const selectedDate = typeof date === 'string' ? new Date(date) : date;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  selectedDate.setHours(0, 0, 0, 0);
-  
-  return selectedDate >= today;
+// Stock validation
+export const validateStock = (stock: number): boolean => {
+  return stock >= 0 && stock <= 1000;
 };
 
-export const formatDurationMultiLanguage = (minutes: number, t: (key: string) => string): string => {
+// Format duration with multi-language support
+export const formatDurationMultiLanguage = (minutes: number, t: any): string => {
   if (minutes < 60) {
     return `${minutes} ${t('time.minutes')}`;
   }
@@ -43,7 +44,22 @@ export const formatDurationMultiLanguage = (minutes: number, t: (key: string) =>
   return `${hours} ${t('time.hours')} ${remainingMinutes} ${t('time.minutes')}`;
 };
 
-const convertTimeToMinutes = (time: string): number => {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
+// Date validation
+export const validateAppointmentDate = (date: Date): boolean => {
+  const today = new Date();
+  const maxDate = new Date();
+  maxDate.setDate(today.getDate() + 30);
+  
+  return date >= today && date <= maxDate;
+};
+
+// Time validation
+export const validateAppointmentTime = (time: string): boolean => {
+  const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+  return timeRegex.test(time);
+};
+
+// Discount validation
+export const validateDiscount = (discount: number): boolean => {
+  return discount >= 0 && discount <= 100;
 };

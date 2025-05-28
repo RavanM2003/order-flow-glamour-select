@@ -1,144 +1,156 @@
-import { useState } from "react";
-import { useOrder } from "@/context/OrderContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Customer } from "@/models/customer.model";
 
-// Define the type for booking mode
-export type BookingMode = "salon" | "home";
+import React, { useState } from 'react';
+import { useOrder } from '@/context/OrderContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import GenderSelector from '@/components/GenderSelector';
+import BookingDatePicker from '@/components/BookingDatePicker';
+import { useLanguage } from '@/context/LanguageContext';
 
-// Define props for the component
-export interface CustomerInfoProps {
-  onSubmit: () => void;
-}
-
-// Define the schema for form validation
-const customerSchema = z.object({
-  name: z.string().min(3, { message: "Adınız ən azı 3 simvol olmalıdır" }),
-  email: z.string().email({ message: "Etibarlı e-poçt daxil edin" }),
-  phone: z
-    .string()
-    .min(9, { message: "Telefon nömrəsi ən azı 9 rəqəm olmalıdır" }),
-});
-
-// Define the type for the customer form
-type CustomerFormValues = z.infer<typeof customerSchema>;
-
-const FormFieldInput = ({ control, name, label, placeholder }) => (
-  <FormField
-    control={control}
-    name={name}
-    render={({ field }) => (
-      <FormItem>
-        <FormLabel>{label}</FormLabel>
-        <FormControl>
-          <Input placeholder={placeholder} {...field} />
-        </FormControl>
-        <FormMessage />
-      </FormItem>
-    )}
-  />
-);
-
-const CustomerForm = ({ form, onSubmit, isLoading }) => (
-  <Form {...form}>
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <FormFieldInput
-        control={form.control}
-        name="name"
-        label="Ad və Soyad"
-        placeholder="Ad və Soyad"
-      />
-      <FormFieldInput
-        control={form.control}
-        name="email"
-        label="Email"
-        placeholder="Email"
-      />
-      <FormFieldInput
-        control={form.control}
-        name="phone"
-        label="Telefon"
-        placeholder="Telefon"
-      />
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Gözləyin..." : "Davam et"}
-      </Button>
-    </form>
-  </Form>
-);
-
-const CustomerInfo: React.FC<CustomerInfoProps> = ({ onSubmit }) => {
-  const { orderState, setCustomer, setNextStep } = useOrder();
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Initialize form with react-hook-form
-  const form = useForm<CustomerFormValues>({
-    resolver: zodResolver(customerSchema),
-    defaultValues: {
-      name: orderState.customer?.name || "",
-      email: orderState.customer?.email || "",
-      phone: orderState.customer?.phone || "",
-    },
+const CustomerInfo = () => {
+  const { t } = useLanguage();
+  const { orderState, setCustomer, setAppointmentDate, setAppointmentTime, setNextStep } = useOrder();
+  
+  const [formData, setFormData] = useState({
+    name: orderState.customer?.name || '',
+    email: orderState.customer?.email || '',
+    phone: orderState.customer?.phone || '',
+    gender: orderState.customer?.gender || 'female',
+    notes: '' // This will be saved to appointments.notes instead of users table
   });
+  
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    orderState.appointmentDate || undefined
+  );
+  const [selectedTime, setSelectedTime] = useState(orderState.appointmentTime || '');
 
-  // Submit handler
-  const handleSubmit = async (values: CustomerFormValues) => {
-    setIsLoading(true);
+  const timeSlots = [
+    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+    '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
+    '15:00', '15:30', '16:00', '16:30', '17:00', '17:30', '18:00'
+  ];
 
-    try {
-      // Update customer data in order context with necessary default values
-      const customerData: Partial<Customer> = {
-        name: values.name,
-        email: values.email,
-        phone: values.phone,
-        // Add required fields with default values
-        id: orderState.customer?.id || "temp-id",
-        gender: orderState.customer?.gender || "other",
-        lastVisit: orderState.customer?.lastVisit || new Date().toISOString(),
-        totalSpent: orderState.customer?.totalSpent || 0,
-      };
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
-      // Update customer data in order context
-      setCustomer(customerData as Customer);
-
-      // Move to next step in checkout flow
-      setNextStep();
-
-      // Call the onSubmit prop to notify parent component
-      onSubmit();
-    } catch (error) {
-      console.error("Error submitting customer information:", error);
-    } finally {
-      setIsLoading(false);
+  const handleSubmit = () => {
+    if (!formData.name || !formData.email || !formData.phone || !selectedDate || !selectedTime) {
+      alert(t('booking.fillAllFields'));
+      return;
     }
+
+    // Validate that selected services have available staff
+    if (orderState.selectedServices && orderState.selectedServices.length > 0) {
+      const servicesWithoutStaff = orderState.selectedServices.filter(serviceId => {
+        const serviceProvider = orderState.serviceProviders?.find(sp => sp.serviceId === serviceId);
+        return !serviceProvider;
+      });
+
+      if (servicesWithoutStaff.length > 0) {
+        alert(t('booking.selectStaffForAllServices'));
+        return;
+      }
+    }
+
+    setCustomer({
+      id: '',
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      gender: formData.gender as 'male' | 'female' | 'other',
+      lastVisit: '',
+      totalSpent: 0,
+      notes: formData.notes // Store notes for appointment
+    });
+    
+    setAppointmentDate(selectedDate);
+    setAppointmentTime(selectedTime);
+    setNextStep();
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Müştəri məlumatları</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <CustomerForm
-          form={form}
-          onSubmit={handleSubmit}
-          isLoading={isLoading}
+    <div className="space-y-6">
+      <div>
+        <Label htmlFor="name">{t('booking.fullName')} *</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => handleInputChange('name', e.target.value)}
+          placeholder={t('booking.enterFullName')}
         />
-      </CardContent>
-    </Card>
+      </div>
+
+      <div>
+        <Label htmlFor="email">{t('booking.email')} *</Label>
+        <Input
+          id="email"
+          type="email"
+          value={formData.email}
+          onChange={(e) => handleInputChange('email', e.target.value)}
+          placeholder={t('booking.enterEmail')}
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="phone">{t('booking.phone')} *</Label>
+        <Input
+          id="phone"
+          value={formData.phone}
+          onChange={(e) => handleInputChange('phone', e.target.value)}
+          placeholder={t('booking.enterPhone')}
+        />
+      </div>
+
+      <div>
+        <Label>{t('booking.gender')} *</Label>
+        <GenderSelector
+          value={formData.gender}
+          onChange={(value) => handleInputChange('gender', value)}
+        />
+      </div>
+
+      <div>
+        <Label>{t('booking.date')} *</Label>
+        <BookingDatePicker
+          value={selectedDate}
+          onChange={setSelectedDate}
+        />
+      </div>
+
+      <div>
+        <Label>{t('booking.time')} *</Label>
+        <div className="grid grid-cols-4 gap-2 mt-2">
+          {timeSlots.map((time) => (
+            <Button
+              key={time}
+              variant={selectedTime === time ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedTime(time)}
+            >
+              {time}
+            </Button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <Label htmlFor="notes">{t('booking.notes')}</Label>
+        <Textarea
+          id="notes"
+          value={formData.notes}
+          onChange={(e) => handleInputChange('notes', e.target.value)}
+          placeholder={t('booking.enterNotes')}
+          rows={3}
+        />
+      </div>
+
+      <Button onClick={handleSubmit} className="w-full">
+        {t('booking.continue')}
+      </Button>
+    </div>
   );
 };
 
