@@ -9,3 +9,7 @@ export * from './auth.service';
 export * from './supabase.service';
 export * from './role.service';
 export * from './settings.service';
+
+// Enhanced services
+export * from './api/enhanced-supabase.service';
+export * from './api/base.service';
