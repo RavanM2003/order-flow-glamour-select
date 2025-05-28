@@ -14,18 +14,6 @@ export interface Product {
   quantity?: number;
 }
 
-export interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  gender: 'male' | 'female' | 'other';
-  lastVisit: string;
-  totalSpent: number;
-  appointmentNotes?: string; // For storing appointment notes
-  notes?: string; // Legacy field
-}
-
 export interface OrderState {
   currentStep: number;
   bookingMode: BookingMode;

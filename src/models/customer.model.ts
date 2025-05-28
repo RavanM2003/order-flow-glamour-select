@@ -8,6 +8,7 @@ export interface Customer {
   lastVisit: string;
   totalSpent: number;
   notes?: string;
+  appointmentNotes?: string; // For storing appointment-specific notes
   // Additional database fields
   full_name?: string;
   first_name?: string;
@@ -25,6 +26,7 @@ export interface CustomerFormData {
   phone: string;
   gender: 'male' | 'female' | 'other';
   notes?: string;
+  appointmentNotes?: string; // For storing appointment-specific notes
   // Additional fields for compatibility
   full_name?: string;
   first_name?: string;
