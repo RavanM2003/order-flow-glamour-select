@@ -14,8 +14,7 @@ const BookingDetailsPage = () => {
       <Header />
 
       <main className="w-full px-2 sm:px-4 md:container md:py-8">
-        <div className="w-full md:max-w-4xl md:mx-auto">
-          <h1 className="text-3xl font-bold text-glamour-800 mb-8 text-center">Booking Details</h1>
+        <div className="w-full">
           <OrderProvider>
             <BookingDetails invoiceId={orderId} />
           </OrderProvider>
@@ -27,5 +26,4 @@ const BookingDetailsPage = () => {
   );
 };
 
-// Export as memoized component to prevent unnecessary re-renders
 export default React.memo(BookingDetailsPage);
