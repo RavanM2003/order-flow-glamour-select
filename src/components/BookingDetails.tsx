@@ -8,6 +8,53 @@ interface BookingDetailsProps {
   invoiceId?: string;
 }
 
+// Type guards and interfaces for appointment_json
+interface AppointmentJson {
+  customer_info?: {
+    full_name?: string;
+    email?: string;
+    number?: string;
+    gender?: string;
+    date?: string;
+    time?: string;
+    note?: string;
+  };
+  services?: Array<{
+    id: number;
+    name: string;
+    price: number;
+    discount: number;
+    discounted_price: number;
+    duration: number;
+  }>;
+  products?: Array<{
+    id: number;
+    name: string;
+    price: number;
+    discount: number;
+    quantity: number;
+    discounted_price: number;
+  }>;
+  payment_details?: {
+    method?: string;
+    paid_amount?: number;
+    total_amount?: number;
+    discount_amount?: number;
+  };
+  request_info?: {
+    ip?: string;
+    browser?: string;
+    device?: string;
+    os?: string;
+    page?: string;
+    entry_time?: string;
+  };
+}
+
+const isValidAppointmentJson = (data: any): data is AppointmentJson => {
+  return data && typeof data === 'object' && !Array.isArray(data);
+};
+
 const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId }) => {
   const [invoice, setInvoice] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -55,8 +102,16 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId }) => {
           return;
         }
 
+        // Type cast and validate the appointment_json
+        const appointmentJson = data.appointment_json as any;
+        
+        if (!isValidAppointmentJson(appointmentJson)) {
+          console.error('appointment_json is not a valid object');
+          setError('Invalid invoice data: malformed appointment information');
+          return;
+        }
+
         // Check for required fields in appointment_json
-        const appointmentJson = data.appointment_json;
         if (!appointmentJson.customer_info) {
           console.error('Missing customer_info in appointment_json');
           setError('Invalid invoice data: missing customer information');
