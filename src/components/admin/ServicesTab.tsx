@@ -162,6 +162,12 @@ const ServicesTab = () => {
     fetchServices();
   };
 
+  const handleFormSubmit = (data) => {
+    // TODO: Implement actual service creation/update logic
+    console.log('Form submitted:', data);
+    handleFormSuccess();
+  };
+
   return (
     <Card>
       <ServicesHeader
@@ -195,9 +201,9 @@ const ServicesTab = () => {
         position="right"
       >
         <ServiceForm
-          service={editingService}
-          onSuccess={handleFormSuccess}
-          onCancel={() => setIsFormOpen(false)}
+          initialData={editingService}
+          onSubmit={handleFormSubmit}
+          isSubmitting={false}
         />
       </DetailDrawer>
     </Card>

@@ -154,6 +154,12 @@ const ProductsTab = () => {
     fetchProducts();
   };
 
+  const handleFormSubmit = (data) => {
+    // TODO: Implement actual product creation/update logic
+    console.log('Form submitted:', data);
+    handleFormSuccess();
+  };
+
   return (
     <Card>
       <ProductsHeader
@@ -187,9 +193,9 @@ const ProductsTab = () => {
         position="right"
       >
         <ProductForm
-          product={editingProduct}
-          onSuccess={handleFormSuccess}
-          onCancel={() => setIsFormOpen(false)}
+          initialData={editingProduct}
+          onSubmit={handleFormSubmit}
+          isSubmitting={false}
         />
       </DetailDrawer>
     </Card>
