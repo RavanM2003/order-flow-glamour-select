@@ -3,7 +3,7 @@ import { Customer } from "@/models/customer.model";
 import { Service } from "@/models/service.model";
 import { Staff } from "@/models/staff.model";
 
-export type BookingMode = 'salon' | 'home';
+export type BookingMode = 'salon' | 'home' | 'customer';
 
 export interface Product {
   id: number;
@@ -11,6 +11,19 @@ export interface Product {
   price?: number;
   description?: string;
   image?: string;
+  quantity?: number;
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  gender: 'male' | 'female' | 'other';
+  lastVisit: string;
+  totalSpent: number;
+  appointmentNotes?: string; // For storing appointment notes
+  notes?: string; // Legacy field
 }
 
 export interface OrderState {
@@ -76,4 +89,4 @@ export interface Order {
   payment_method?: 'cash' | 'card' | 'transfer';
 }
 
-export { Customer, Service, Staff };
+export { Service, Staff };

@@ -20,11 +20,12 @@ interface Booking {
 interface BookingFormData {
   invoice_number: string;
   customer_info: {
+    customer_id?: string;
     full_name: string;
     gender: string;
     email: string;
     number: string;
-    note: string;
+    note: string; // This will be used for appointments.notes
     date: string;
     time: string;
   };
@@ -82,7 +83,9 @@ export const createBooking = async (
       },
     };
 
-    // Use the SQL function to properly handle gender enum casting
+    console.log('Creating booking with appointment JSON:', appointmentJson);
+
+    // Use the SQL function to properly handle gender enum casting and appointment notes
     const { data, error } = await supabase.rpc('create_invoice_with_appointment', {
       p_invoice_number: bookingData.invoice_number,
       p_total_amount: bookingData.payment_details.total_amount,
@@ -102,6 +105,7 @@ export const createBooking = async (
       return { error: "No booking data returned" };
     }
 
+    console.log('Booking created successfully:', bookingResult);
     return { data: bookingResult };
   } catch (error) {
     console.error("Service error:", error);

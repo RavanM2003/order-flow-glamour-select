@@ -18,7 +18,7 @@ const CustomerInfo = () => {
     email: orderState.customer?.email || '',
     phone: orderState.customer?.phone || '',
     gender: orderState.customer?.gender || 'female',
-    appointmentNotes: orderState.customer?.notes || ''
+    appointmentNotes: '' // This will be stored in appointments.notes, not users table
   });
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -62,7 +62,7 @@ const CustomerInfo = () => {
       return;
     }
 
-    // Validate booking requirements
+    // Critical validation: Check if services or products are selected
     if (!validateBookingRequirements()) {
       alert(t('booking.selectServiceOrProduct'));
       return;
@@ -81,6 +81,7 @@ const CustomerInfo = () => {
       }
     }
 
+    // Store customer info (notes will be handled separately for appointments)
     setCustomer({
       id: '',
       name: formData.name,
@@ -89,7 +90,7 @@ const CustomerInfo = () => {
       gender: formData.gender as 'male' | 'female' | 'other',
       lastVisit: '',
       totalSpent: 0,
-      notes: formData.appointmentNotes // This will be used for appointments.notes
+      appointmentNotes: formData.appointmentNotes // This will be used for appointments.notes
     });
     
     setAppointmentDate(selectedDate);

@@ -1,43 +1,52 @@
+
 import { useLanguage } from '@/context/LanguageContext';
 
-// Duration validation
-export const validateDuration = (duration: number): boolean => {
-  return duration > 0 && duration <= 480; // Max 8 hours
-};
+export function formatPhoneNumber(phone: string): string {
+  const cleaned = phone.replace(/\D/g, '');
+  
+  if (cleaned.length === 10) {
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+  }
+  
+  return phone;
+}
 
-// Email validation
-export const validateEmail = (email: string): boolean => {
+export function validateEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
-};
+}
 
-// Phone validation (Azerbaijan format)
-export const validatePhone = (phone: string): boolean => {
-  const phoneRegex = /^\+994[0-9]{9}$/;
+export function validatePhone(phone: string): boolean {
+  const phoneRegex = /^\+?[\d\s\-\(\)]{10,}$/;
   return phoneRegex.test(phone);
-};
+}
 
-// Price validation
-export const validatePrice = (price: number): boolean => {
-  return price >= 0 && price <= 10000;
-};
-
-// Stock validation
-export const validateStock = (stock: number): boolean => {
-  return stock >= 0 && stock <= 1000;
-};
-
-// Format duration with multi-language support
-export const formatDurationMultiLanguage = (minutes: number, t: any): string => {
+export function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
   
-  const lang = t('common.currentLanguage') || 'en';
+  if (hours === 0) {
+    return `${remainingMinutes}min`;
+  }
+  
+  if (remainingMinutes === 0) {
+    return `${hours}h`;
+  }
+  
+  return `${hours}h ${remainingMinutes}min`;
+}
+
+export function formatDurationMultiLanguage(minutes: number, t: any): string {
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  
+  // Get current language from context or default to 'en'
+  const currentLang = t('booking.language') || 'en';
   
   if (hours === 0) {
-    switch (lang) {
+    switch (currentLang) {
       case 'az':
-        return `${remainingMinutes} dəqiqə`;
+        return `${remainingMinutes}d`;
       case 'ru':
         return `${remainingMinutes}м`;
       default:
@@ -46,9 +55,9 @@ export const formatDurationMultiLanguage = (minutes: number, t: any): string => 
   }
   
   if (remainingMinutes === 0) {
-    switch (lang) {
+    switch (currentLang) {
       case 'az':
-        return `${hours} saat`;
+        return `${hours}s`;
       case 'ru':
         return `${hours}ч`;
       default:
@@ -56,52 +65,53 @@ export const formatDurationMultiLanguage = (minutes: number, t: any): string => 
     }
   }
   
-  switch (lang) {
+  switch (currentLang) {
     case 'az':
-      return `${hours} saat ${remainingMinutes} dəqiqə`;
+      return `${hours}s ${remainingMinutes}d`;
     case 'ru':
       return `${hours}ч ${remainingMinutes}м`;
     default:
       return `${hours}h ${remainingMinutes}m`;
   }
-};
+}
 
-// Date validation
-export const validateAppointmentDate = (date: Date): boolean => {
-  const today = new Date();
-  const maxDate = new Date();
-  maxDate.setDate(today.getDate() + 30);
+export function validateBookingData(data: any): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
   
-  return date >= today && date <= maxDate;
-};
-
-// Time validation
-export const validateAppointmentTime = (time: string): boolean => {
-  const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-  return timeRegex.test(time);
-};
-
-// Discount validation
-export const validateDiscount = (discount: number): boolean => {
-  return discount >= 0 && discount <= 100;
-};
-
-// Get current date in YYYY-MM-DD format
-export const getCurrentDate = (): string => {
-  return new Date().toISOString().split('T')[0];
-};
-
-// Check if time is within working hours
-export const isWithinWorkingHours = (time: string, startTime: string, endTime: string): boolean => {
-  const timeMinutes = timeToMinutes(time);
-  const startMinutes = timeToMinutes(startTime);
-  const endMinutes = timeToMinutes(endTime);
+  if (!data.customer?.name) {
+    errors.push('Customer name is required');
+  }
   
-  return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
-};
+  if (!data.customer?.email || !validateEmail(data.customer.email)) {
+    errors.push('Valid email is required');
+  }
+  
+  if (!data.customer?.phone || !validatePhone(data.customer.phone)) {
+    errors.push('Valid phone number is required');
+  }
+  
+  if (!data.appointmentDate) {
+    errors.push('Appointment date is required');
+  }
+  
+  if (!data.appointmentTime) {
+    errors.push('Appointment time is required');
+  }
+  
+  if (!data.selectedServices?.length && !data.selectedProducts?.length) {
+    errors.push('At least one service or product must be selected');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
 
-// Helper function to convert time string to minutes
-const timeToMinutes = (time: string): number => {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
-};
+export function canCancelAppointment(appointmentDateTime: Date): boolean {
+  const now = new Date();
+  const timeDifference = appointmentDateTime.getTime() - now.getTime();
+  const hoursUntilAppointment = timeDifference / (1000 * 60 * 60);
+  
+  return hoursUntilAppointment >= 2;
+}
