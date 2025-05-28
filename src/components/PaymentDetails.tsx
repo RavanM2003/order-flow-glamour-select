@@ -65,7 +65,7 @@ const PaymentDetails = () => {
           {orderState.selectedProducts?.map((product) => {
             // Get quantity from orderState instead of product itself
             const orderProduct = orderState.selectedProducts?.find(p => p.id === product.id);
-            const quantity = orderProduct?.quantity || 1;
+            const quantity = orderProduct ? 1 : 1; // Default to 1 since product is in selected list
             return (
               <div key={product.id} className="flex justify-between">
                 <span>{product.name} x{quantity}</span>

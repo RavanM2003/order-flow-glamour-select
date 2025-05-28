@@ -1,4 +1,3 @@
-
 import { Customer, CustomerFormData } from '@/models/customer.model';
 import { CustomerWithUserFormData } from '@/models/user.model';
 import { ApiResponse } from './staff.service';
@@ -16,7 +15,7 @@ export const customerService = {
         gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : 'other' as 'male' | 'female' | 'other',
         birth_date: (data as any).birth_date,
         note: (data as any).note || data.note,
-        role: 'customer',
+        role: 'customer' as const,
         hashed_password: '',
       };
       

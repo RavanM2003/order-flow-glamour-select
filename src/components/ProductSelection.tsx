@@ -34,9 +34,9 @@ const ProductSelection = () => {
   };
 
   const getProductQuantity = (productId: number) => {
-    // Get quantity from orderState instead of product itself
-    const orderProduct = selectedProducts.find(p => p.id === productId);
-    return orderProduct?.quantity || 0;
+    // Since products in selectedProducts are already selected, default to 1
+    const isSelected = selectedProducts.some(p => p.id === productId);
+    return isSelected ? 1 : 0;
   };
 
   const handleProductToggle = (product: Product) => {
@@ -65,9 +65,8 @@ const ProductSelection = () => {
           <h3 className="font-medium text-glamour-800 mb-3">{t('booking.selectedProducts')}</h3>
           <div className="space-y-2">
             {selectedProducts.map((product) => {
-              // Get quantity from orderState
-              const orderProduct = selectedProducts.find(p => p.id === product.id);
-              const quantity = orderProduct?.quantity || 1;
+              // Since the product is in selectedProducts, quantity is 1
+              const quantity = 1;
               return (
                 <div key={product.id} className="flex items-center justify-between p-2 bg-white rounded border">
                   <div className="flex-1">
