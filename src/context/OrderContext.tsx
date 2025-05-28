@@ -14,6 +14,7 @@ import {
   Staff,
   Product,
 } from "./OrderContext.d";
+import { Customer } from "@/models/customer.model";
 
 type OrderProviderProps = {
   children: ReactNode;
