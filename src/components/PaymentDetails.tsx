@@ -63,9 +63,7 @@ const PaymentDetails = () => {
           )}
           
           {orderState.selectedProducts?.map((product) => {
-            // Get quantity from orderState instead of product itself
-            const orderProduct = orderState.selectedProducts?.find(p => p.id === product.id);
-            const quantity = orderProduct ? 1 : 1; // Default to 1 since product is in selected list
+            const quantity = 1; // Default quantity is always 1
             return (
               <div key={product.id} className="flex justify-between">
                 <span>{product.name} x{quantity}</span>
@@ -108,12 +106,10 @@ const PaymentDetails = () => {
       </Card>
 
       {showCardForm && (
-        <Card className="p-6">
-          <CardPayment 
-            totalAmount={totalAmount}
-            onPaymentSubmit={handlePaymentSubmit}
-          />
-        </Card>
+        <CardPayment 
+          totalAmount={totalAmount}
+          onPaymentSubmit={handlePaymentSubmit}
+        />
       )}
 
       {selectedMethod && !showCardForm && (

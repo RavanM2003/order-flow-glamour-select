@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useServices } from '@/hooks/use-services';
 import { useOrder } from '@/context/OrderContext';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { useLanguage } from '@/context/LanguageContext';
 import StaffSelection from './StaffSelection';
 import ServiceSearchAndFilter from './ServiceSearchAndFilter';
 import { formatDurationMultiLanguage } from '@/utils/validation';
+import { supabase } from '@/integrations/supabase/client';
 
 const ServiceSelection = () => {
   const { services, isLoading, error } = useServices();
@@ -21,8 +22,64 @@ const ServiceSelection = () => {
   const [selectedStaff, setSelectedStaff] = useState<Record<number, string>>({});
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [allLoadedServices, setAllLoadedServices] = useState<Service[]>([]);
 
   const selectedServices = orderState?.selectedServices || [];
+
+  // Server-side search function
+  const performServerSearch = async (term: string, page: number) => {
+    try {
+      let query = supabase
+        .from('services')
+        .select('*')
+        .order('name');
+
+      if (term.trim()) {
+        query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
+      }
+
+      const limit = 6;
+      const from = (page - 1) * limit;
+      query = query.range(from, from + limit - 1);
+
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      return data || [];
+    } catch (error) {
+      console.error('Server search error:', error);
+      return [];
+    }
+  };
+
+  // Handle search with server-side functionality
+  const handleSearch = async (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const results = await performServerSearch(term, 1);
+    setAllLoadedServices(results);
+    setFilteredServices(results);
+  };
+
+  // Handle load more with append functionality
+  const handleLoadMore = async () => {
+    const nextPage = currentPage + 1;
+    const newResults = await performServerSearch(searchTerm, nextPage);
+    setCurrentPage(nextPage);
+    setAllLoadedServices(prev => [...prev, ...newResults]);
+    setFilteredServices(prev => [...prev, ...newResults]);
+  };
+
+  // Initialize with default services
+  useEffect(() => {
+    if (services.length > 0 && allLoadedServices.length === 0) {
+      const initialServices = services.slice(0, 6);
+      setAllLoadedServices(initialServices);
+      setFilteredServices(initialServices);
+    }
+  }, [services, allLoadedServices.length]);
 
   const handleServiceToggle = (service: Service) => {
     if (selectedServices.includes(service.id)) {
@@ -32,11 +89,10 @@ const ServiceSelection = () => {
         newSet.delete(service.id);
         return newSet;
       });
-      setSelectedStaff(prev => {
-        const newStaff = { ...prev };
-        delete newStaff[service.id];
-        return newStaff;
-      });
+      // Preserve staff selection for this service
+      const newSelectedStaff = { ...selectedStaff };
+      delete newSelectedStaff[service.id];
+      setSelectedStaff(newSelectedStaff);
     } else {
       selectService(service.id);
       setExpandedServices(prev => new Set([...prev, service.id]));
@@ -75,10 +131,11 @@ const ServiceSelection = () => {
   return (
     <div className="space-y-4">
       <ServiceSearchAndFilter
-        services={services}
+        services={allLoadedServices}
         onFilteredServicesChange={setFilteredServices}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
+        onSearch={handleSearch}
       />
 
       {totalDuration > 0 && (
@@ -156,6 +213,17 @@ const ServiceSelection = () => {
           </Card>
         );
       })}
+
+      {/* Load More Button */}
+      <div className="flex justify-center mt-4">
+        <Button 
+          variant="outline" 
+          onClick={handleLoadMore}
+          disabled={isLoading}
+        >
+          {isLoading ? t('common.loading') : t('booking.loadMore')}
+        </Button>
+      </div>
     </div>
   );
 };

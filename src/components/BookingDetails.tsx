@@ -61,10 +61,14 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumbe
   const { t } = useLanguage();
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [canCancel, setCanCancel] = useState(false);
 
   useEffect(() => {
     const fetchBookingDetails = async () => {
+      setLoading(true);
+      setError(null);
+      
       try {
         let query = supabase.from('invoices').select('*');
         
@@ -73,12 +77,22 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumbe
         } else if (invoiceNumber) {
           query = query.eq('invoice_number', invoiceNumber);
         } else if (appointmentId) {
-          query = query.eq('id', parseInt(appointmentId));
+          query = query.eq('appointment_id', parseInt(appointmentId));
+        } else {
+          throw new Error('No identifier provided');
         }
         
-        const { data, error } = await query.single();
+        const { data, error: fetchError } = await query.maybeSingle();
         
-        if (error) throw error;
+        if (fetchError) {
+          console.error('Fetch error:', fetchError);
+          throw fetchError;
+        }
+        
+        if (!data) {
+          setError('Booking not found');
+          return;
+        }
         
         setBooking(data);
         
@@ -92,8 +106,9 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumbe
           
           setCanCancel(hoursDiff > 2 && data.status !== 'cancelled');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching booking details:', error);
+        setError(error.message || 'Failed to load booking details');
       } finally {
         setLoading(false);
       }
@@ -101,6 +116,9 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumbe
 
     if (invoiceId || invoiceNumber || appointmentId) {
       fetchBookingDetails();
+    } else {
+      setLoading(false);
+      setError('No booking identifier provided');
     }
   }, [invoiceId, invoiceNumber, appointmentId]);
 
@@ -129,6 +147,14 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId, invoiceNumbe
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-lg">{t('common.loading')}</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-8">
+        <div className="text-lg text-red-600">Error: {error}</div>
       </div>
     );
   }

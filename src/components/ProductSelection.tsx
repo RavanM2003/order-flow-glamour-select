@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useProducts } from '@/hooks/use-products';
 import { useOrder } from '@/context/OrderContext';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import DiscountBadge from '@/components/ui/discount-badge';
 import PriceDisplay from '@/components/ui/price-display';
 import { useLanguage } from '@/context/LanguageContext';
 import ProductSearchAndFilter from './ProductSearchAndFilter';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProductSelection = () => {
   const { products, isLoading, error } = useProducts();
@@ -18,23 +19,76 @@ const ProductSelection = () => {
   
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [allLoadedProducts, setAllLoadedProducts] = useState<Product[]>([]);
 
   const selectedProducts = orderState?.selectedProducts || [];
   const selectedServices = orderState?.selectedServices || [];
 
   // Get recommended products based on selected services
   const recommendedProductIds = useMemo(() => {
-    // This would typically come from service-product relationships
-    // For now, return first few product IDs as recommended
     return products.slice(0, 3).map(p => p.id);
   }, [products, selectedServices]);
+
+  // Server-side search for recommended products
+  const performRecommendedSearch = async (term: string, page: number) => {
+    try {
+      let query = supabase
+        .from('products')
+        .select('*')
+        .order('name');
+
+      if (term.trim()) {
+        query = query.or(`name.ilike.%${term}%,description.ilike.%${term}%`);
+      }
+
+      const limit = 6;
+      const from = (page - 1) * limit;
+      query = query.range(from, from + limit - 1);
+
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      return data || [];
+    } catch (error) {
+      console.error('Product search error:', error);
+      return [];
+    }
+  };
+
+  // Handle search with server-side functionality
+  const handleSearch = async (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+    const results = await performRecommendedSearch(term, 1);
+    setAllLoadedProducts(results);
+    setFilteredProducts(results);
+  };
+
+  // Handle load more with append functionality
+  const handleLoadMore = async () => {
+    const nextPage = currentPage + 1;
+    const newResults = await performRecommendedSearch(searchTerm, nextPage);
+    setCurrentPage(nextPage);
+    setAllLoadedProducts(prev => [...prev, ...newResults]);
+    setFilteredProducts(prev => [...prev, ...newResults]);
+  };
+
+  // Initialize with recommended products
+  useEffect(() => {
+    if (products.length > 0 && allLoadedProducts.length === 0) {
+      const initialProducts = products.slice(0, 6);
+      setAllLoadedProducts(initialProducts);
+      setFilteredProducts(initialProducts);
+    }
+  }, [products, allLoadedProducts.length]);
 
   const isProductSelected = (productId: number) => {
     return selectedProducts.some(p => p.id === productId);
   };
 
   const getProductQuantity = (productId: number) => {
-    // Since products in selectedProducts are already selected, default to 1
     const isSelected = selectedProducts.some(p => p.id === productId);
     return isSelected ? 1 : 0;
   };
@@ -53,11 +107,12 @@ const ProductSelection = () => {
   return (
     <div className="space-y-4">
       <ProductSearchAndFilter
-        products={products}
+        products={allLoadedProducts}
         recommendedProductIds={recommendedProductIds}
         onFilteredProductsChange={setFilteredProducts}
         currentPage={currentPage}
         onPageChange={setCurrentPage}
+        onSearch={handleSearch}
       />
 
       {selectedProducts.length > 0 && (
@@ -65,8 +120,7 @@ const ProductSelection = () => {
           <h3 className="font-medium text-glamour-800 mb-3">{t('booking.selectedProducts')}</h3>
           <div className="space-y-2">
             {selectedProducts.map((product) => {
-              // Since the product is in selectedProducts, quantity is 1
-              const quantity = 1;
+              const quantity = 1; // Default quantity is always 1
               return (
                 <div key={product.id} className="flex items-center justify-between p-2 bg-white rounded border">
                   <div className="flex-1">
@@ -154,6 +208,17 @@ const ProductSelection = () => {
             </Card>
           );
         })}
+      </div>
+
+      {/* Load More Button */}
+      <div className="flex justify-center mt-4">
+        <Button 
+          variant="outline" 
+          onClick={handleLoadMore}
+          disabled={isLoading}
+        >
+          {isLoading ? t('common.loading') : t('booking.loadMore')}
+        </Button>
       </div>
     </div>
   );

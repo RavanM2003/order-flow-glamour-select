@@ -18,7 +18,7 @@ const CustomerInfo = () => {
     email: orderState.customer?.email || '',
     phone: orderState.customer?.phone || '',
     gender: orderState.customer?.gender || 'female',
-    notes: orderState.customer?.notes || '' // This will be saved to appointments.notes
+    appointmentNotes: orderState.customer?.notes || '' // This will be saved to appointments.notes
   });
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
@@ -34,6 +34,19 @@ const CustomerInfo = () => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Validate that the date is not in the past
+      if (date < today) {
+        return; // Don't set past dates
+      }
+    }
+    setSelectedDate(date);
   };
 
   const handleSubmit = () => {
@@ -63,7 +76,7 @@ const CustomerInfo = () => {
       gender: formData.gender as 'male' | 'female' | 'other',
       lastVisit: '',
       totalSpent: 0,
-      notes: formData.notes // Store notes for appointment
+      notes: formData.appointmentNotes // Store notes for appointment
     });
     
     setAppointmentDate(selectedDate);
@@ -116,7 +129,8 @@ const CustomerInfo = () => {
         <Label>{t('booking.date')} *</Label>
         <BookingDatePicker
           value={selectedDate}
-          onChange={setSelectedDate}
+          onChange={handleDateChange}
+          disablePastDates={true}
         />
       </div>
 
@@ -137,11 +151,11 @@ const CustomerInfo = () => {
       </div>
 
       <div>
-        <Label htmlFor="notes">{t('booking.notes')}</Label>
+        <Label htmlFor="appointmentNotes">{t('booking.notes')}</Label>
         <Textarea
-          id="notes"
-          value={formData.notes}
-          onChange={(e) => handleInputChange('notes', e.target.value)}
+          id="appointmentNotes"
+          value={formData.appointmentNotes}
+          onChange={(e) => handleInputChange('appointmentNotes', e.target.value)}
           placeholder={t('booking.enterNotes')}
           rows={3}
         />
