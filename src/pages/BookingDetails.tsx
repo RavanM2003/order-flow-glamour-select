@@ -1,14 +1,11 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
 import { OrderProvider } from '@/context/OrderContext';
 import BookingDetails from '@/components/BookingDetails';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 const BookingDetailsPage = () => {
-  const { orderId } = useParams<{ orderId: string }>();
-
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -16,7 +13,7 @@ const BookingDetailsPage = () => {
       <main className="w-full px-2 sm:px-4 md:container md:py-8">
         <div className="w-full">
           <OrderProvider>
-            <BookingDetails invoiceId={orderId} />
+            <BookingDetails />
           </OrderProvider>
         </div>
       </main>
