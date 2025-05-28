@@ -1,3 +1,4 @@
+
 import { Route, Routes, BrowserRouter } from "react-router-dom";
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -140,7 +141,7 @@ const AuthProviders = ({ children }: { children: React.ReactNode }) => (
 const UserProviders = ({ children }: { children: React.ReactNode }) => (
   <UserProvider>
     <AuthProviders>{children}</AuthProviders>
-  </UserProviders>
+  </UserProvider>
 );
 
 const LanguageProviders = ({ children }: { children: React.ReactNode }) => (
