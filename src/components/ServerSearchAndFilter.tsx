@@ -59,7 +59,7 @@ function ServerSearchAndFilter<T extends { id: number; name: string }>({
       if (error) throw error;
       
       setTotalCount(count || 0);
-      return (data || []) as T[];
+      return (data as unknown) as T[];
     } catch (error) {
       console.error('Server search error:', error);
       return [];
