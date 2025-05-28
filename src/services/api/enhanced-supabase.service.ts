@@ -194,9 +194,23 @@ export class EnhancedAppointmentService extends BaseApiService {
 
   async getAppointmentSummary(appointmentId: number): Promise<ApiResponse<any>> {
     return this.executeQuery('getAppointmentSummary', async () => {
-      return supabase.rpc('get_appointment_summary', {
-        appointment_id: appointmentId
-      });
+      // Use direct SQL query since the function might not be available yet
+      return supabase
+        .from('appointments')
+        .select(`
+          *,
+          appointment_services (
+            *,
+            service:service_id (*)
+          ),
+          appointment_products (
+            *,
+            product:product_id (*)
+          ),
+          payments (*)
+        `)
+        .eq('id', appointmentId)
+        .single();
     });
   }
 
@@ -208,16 +222,30 @@ export class EnhancedAppointmentService extends BaseApiService {
     excludeAppointmentId?: number
   ): Promise<ApiResponse<boolean>> {
     return this.executeQuery('checkStaffAvailability', async () => {
-      const result = await supabase.rpc('check_staff_booking_conflict', {
-        staff_id: staffId,
-        appointment_date: date,
-        start_time: startTime,
-        end_time: endTime,
-        exclude_appointment_id: excludeAppointmentId || null
-      });
+      // Use direct query to check for conflicts
+      let query = supabase
+        .from('appointments')
+        .select(`
+          id,
+          appointment_services!inner (
+            staff_user_id
+          )
+        `)
+        .eq('appointment_date', date)
+        .eq('appointment_services.staff_user_id', staffId)
+        .not('status', 'in', '(cancelled,no_show)')
+        .or(
+          `and(start_time.lte.${startTime},end_time.gt.${startTime}),and(start_time.lt.${endTime},end_time.gte.${endTime}),and(start_time.gte.${startTime},end_time.lte.${endTime})`
+        );
+
+      if (excludeAppointmentId) {
+        query = query.neq('id', excludeAppointmentId);
+      }
+
+      const result = await query;
       
       return {
-        data: !result.data, // Invert because function returns true for conflict
+        data: !result.data || result.data.length === 0, // Available if no conflicts
         error: result.error
       };
     });
