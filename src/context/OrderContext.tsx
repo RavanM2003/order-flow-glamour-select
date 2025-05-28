@@ -1,3 +1,4 @@
+
 import React, {
   createContext,
   useContext,
@@ -9,7 +10,6 @@ import {
   OrderContextType,
   OrderState,
   BookingMode,
-  Customer,
   Service,
   Staff,
   Product,
