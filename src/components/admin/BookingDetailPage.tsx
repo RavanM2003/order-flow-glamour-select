@@ -47,30 +47,30 @@ interface BookingDetailProps {
     status: string;
     total_amount: number;
     appointment_json: {
-      customer_info: {
-        full_name: string;
-        email: string;
-        number: string;
-        gender: string;
-        date: string;
-        time: string;
-        note: string;
+      customer_info?: {
+        full_name?: string;
+        email?: string;
+        number?: string;
+        gender?: string;
+        date?: string;
+        time?: string;
+        note?: string;
       };
-      services: ServiceItem[];
-      products: ProductItem[];
-      payment_details: {
-        method: string;
-        paid_amount: number;
-        total_amount: number;
-        discount_amount: number;
+      services?: ServiceItem[];
+      products?: ProductItem[];
+      payment_details?: {
+        method?: string;
+        paid_amount?: number;
+        total_amount?: number;
+        discount_amount?: number;
       };
-      request_info: {
-        ip: string;
-        browser: string;
-        device: string;
-        os: string;
-        page: string;
-        entry_time: string;
+      request_info?: {
+        ip?: string;
+        browser?: string;
+        device?: string;
+        os?: string;
+        page?: string;
+        entry_time?: string;
       };
     };
   };
@@ -78,7 +78,25 @@ interface BookingDetailProps {
 
 const BookingDetailPage: React.FC<BookingDetailProps> = ({ invoice }) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  
+  console.log('BookingDetailPage: Received invoice:', invoice);
+  
   const { appointment_json } = invoice;
+  
+  // Provide default values to prevent errors
+  const customerInfo = appointment_json?.customer_info || {};
+  const services = appointment_json?.services || [];
+  const products = appointment_json?.products || [];
+  const paymentDetails = appointment_json?.payment_details || {};
+  const requestInfo = appointment_json?.request_info || {};
+
+  console.log('BookingDetailPage: Parsed data:', {
+    customerInfo,
+    services,
+    products,
+    paymentDetails,
+    requestInfo
+  });
 
   const getStatusBadge = (status: string) => {
     const statusColors = {
@@ -96,7 +114,12 @@ const BookingDetailPage: React.FC<BookingDetailProps> = ({ invoice }) => {
   };
 
   const formatDateTime = (dateString: string) => {
-    return format(new Date(dateString), "MMM dd, yyyy 'at' HH:mm");
+    try {
+      return format(new Date(dateString), "MMM dd, yyyy 'at' HH:mm");
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
   };
 
   const handlePrint = () => {
@@ -175,20 +198,20 @@ const BookingDetailPage: React.FC<BookingDetailProps> = ({ invoice }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Customer Info */}
-        <CustomerInfoCard customerInfo={appointment_json.customer_info} />
+        <CustomerInfoCard customerInfo={customerInfo} />
         
         {/* Payment Summary */}
-        <PaymentSummaryCard paymentDetails={appointment_json.payment_details} />
+        <PaymentSummaryCard paymentDetails={paymentDetails} />
       </div>
 
       {/* Services Section */}
-      <ServicesCard services={appointment_json.services} />
+      <ServicesCard services={services} />
 
       {/* Products Section */}
-      <ProductsCard products={appointment_json.products} />
+      <ProductsCard products={products} />
 
       {/* Request Info (Debug Panel) */}
-      <RequestInfoCard requestInfo={appointment_json.request_info} />
+      <RequestInfoCard requestInfo={requestInfo} />
     </div>
   );
 };
@@ -203,25 +226,25 @@ const CustomerInfoCard: React.FC<{ customerInfo: any }> = ({ customerInfo }) => 
     </CardHeader>
     <CardContent className="space-y-3">
       <div>
-        <p className="font-semibold text-lg">{customerInfo.full_name}</p>
-        <p className="text-gray-600">{customerInfo.email}</p>
-        <p className="text-gray-600">{customerInfo.number}</p>
+        <p className="font-semibold text-lg">{customerInfo.full_name || 'N/A'}</p>
+        <p className="text-gray-600">{customerInfo.email || 'N/A'}</p>
+        <p className="text-gray-600">{customerInfo.number || 'N/A'}</p>
       </div>
       <Separator />
       <div className="grid grid-cols-2 gap-4 text-sm">
         <div>
           <p className="font-medium">Gender</p>
-          <p className="text-gray-600 capitalize">{customerInfo.gender}</p>
+          <p className="text-gray-600 capitalize">{customerInfo.gender || 'N/A'}</p>
         </div>
         <div>
           <p className="font-medium">Appointment</p>
           <p className="text-gray-600 flex items-center gap-1">
             <Calendar className="h-4 w-4" />
-            {customerInfo.date}
+            {customerInfo.date || 'N/A'}
           </p>
           <p className="text-gray-600 flex items-center gap-1">
             <Clock className="h-4 w-4" />
-            {customerInfo.time}
+            {customerInfo.time || 'N/A'}
           </p>
         </div>
       </div>
@@ -250,22 +273,22 @@ const PaymentSummaryCard: React.FC<{ paymentDetails: any }> = ({ paymentDetails 
       <div className="space-y-2">
         <div className="flex justify-between">
           <span>Subtotal:</span>
-          <span>${paymentDetails.total_amount.toFixed(2)}</span>
+          <span>${(paymentDetails.total_amount || 0).toFixed(2)}</span>
         </div>
         <div className="flex justify-between text-green-600">
           <span>Discount:</span>
-          <span>-${paymentDetails.discount_amount.toFixed(2)}</span>
+          <span>-${(paymentDetails.discount_amount || 0).toFixed(2)}</span>
         </div>
         <Separator />
         <div className="flex justify-between font-semibold text-lg">
           <span>Total Paid:</span>
-          <span>${paymentDetails.paid_amount.toFixed(2)}</span>
+          <span>${(paymentDetails.paid_amount || 0).toFixed(2)}</span>
         </div>
       </div>
       <Separator />
       <div>
         <p className="font-medium text-sm">Payment Method</p>
-        <p className="text-gray-600 capitalize">{paymentDetails.method}</p>
+        <p className="text-gray-600 capitalize">{paymentDetails.method || 'N/A'}</p>
       </div>
     </CardContent>
   </Card>
@@ -277,25 +300,29 @@ const ServicesCard: React.FC<{ services: ServiceItem[] }> = ({ services }) => (
       <CardTitle>Services</CardTitle>
     </CardHeader>
     <CardContent>
-      <div className="space-y-3">
-        {services.map((service, index) => (
-          <div key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div className="flex-1">
-              <h4 className="font-semibold">{service.name}</h4>
-              <p className="text-sm text-gray-600">{service.duration} minutes</p>
+      {services.length === 0 ? (
+        <p className="text-gray-500 text-center py-4">No services found</p>
+      ) : (
+        <div className="space-y-3">
+          {services.map((service, index) => (
+            <div key={service.id || index} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex-1">
+                <h4 className="font-semibold">{service.name || 'Unnamed Service'}</h4>
+                <p className="text-sm text-gray-600">{service.duration || 0} minutes</p>
+              </div>
+              <div className="text-right mt-2 sm:mt-0">
+                {(service.discount || 0) > 0 && (
+                  <p className="text-sm text-gray-500 line-through">${(service.price || 0).toFixed(2)}</p>
+                )}
+                <p className="font-semibold">${(service.discounted_price || service.price || 0).toFixed(2)}</p>
+                {(service.discount || 0) > 0 && (
+                  <p className="text-xs text-green-600">{service.discount}% off</p>
+                )}
+              </div>
             </div>
-            <div className="text-right mt-2 sm:mt-0">
-              {service.discount > 0 && (
-                <p className="text-sm text-gray-500 line-through">${service.price.toFixed(2)}</p>
-              )}
-              <p className="font-semibold">${service.discounted_price.toFixed(2)}</p>
-              {service.discount > 0 && (
-                <p className="text-xs text-green-600">{service.discount}% off</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </CardContent>
   </Card>
 );
@@ -309,25 +336,29 @@ const ProductsCard: React.FC<{ products: ProductItem[] }> = ({ products }) => (
       </CardTitle>
     </CardHeader>
     <CardContent>
-      <div className="space-y-3">
-        {products.map((product, index) => (
-          <div key={product.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg">
-            <div className="flex-1">
-              <h4 className="font-semibold">{product.name}</h4>
-              <p className="text-sm text-gray-600">Quantity: {product.quantity}</p>
+      {products.length === 0 ? (
+        <p className="text-gray-500 text-center py-4">No products found</p>
+      ) : (
+        <div className="space-y-3">
+          {products.map((product, index) => (
+            <div key={product.id || index} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex-1">
+                <h4 className="font-semibold">{product.name || 'Unnamed Product'}</h4>
+                <p className="text-sm text-gray-600">Quantity: {product.quantity || 0}</p>
+              </div>
+              <div className="text-right mt-2 sm:mt-0">
+                {(product.discount || 0) > 0 && (
+                  <p className="text-sm text-gray-500 line-through">${((product.price || 0) * (product.quantity || 0)).toFixed(2)}</p>
+                )}
+                <p className="font-semibold">${((product.discounted_price || product.price || 0) * (product.quantity || 0)).toFixed(2)}</p>
+                {(product.discount || 0) > 0 && (
+                  <p className="text-xs text-green-600">{product.discount}% off</p>
+                )}
+              </div>
             </div>
-            <div className="text-right mt-2 sm:mt-0">
-              {product.discount > 0 && (
-                <p className="text-sm text-gray-500 line-through">${(product.price * product.quantity).toFixed(2)}</p>
-              )}
-              <p className="font-semibold">${(product.discounted_price * product.quantity).toFixed(2)}</p>
-              {product.discount > 0 && (
-                <p className="text-xs text-green-600">{product.discount}% off</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </CardContent>
   </Card>
 );
@@ -348,31 +379,33 @@ const RequestInfoCard: React.FC<{ requestInfo: any }> = ({ requestInfo }) => (
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
                 <span className="font-medium">IP Address:</span>
-                <span className="text-gray-600">{requestInfo.ip}</span>
+                <span className="text-gray-600">{requestInfo.ip || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Monitor className="h-4 w-4" />
                 <span className="font-medium">Device:</span>
-                <span className="text-gray-600">{requestInfo.device}</span>
+                <span className="text-gray-600">{requestInfo.device || 'N/A'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4" />
                 <span className="font-medium">OS:</span>
-                <span className="text-gray-600">{requestInfo.os}</span>
+                <span className="text-gray-600">{requestInfo.os || 'N/A'}</span>
               </div>
             </div>
             <div className="space-y-2">
               <div>
                 <p className="font-medium">Browser:</p>
-                <p className="text-gray-600 text-xs">{requestInfo.browser}</p>
+                <p className="text-gray-600 text-xs">{requestInfo.browser || 'N/A'}</p>
               </div>
               <div>
                 <p className="font-medium">Entry Page:</p>
-                <p className="text-gray-600">{requestInfo.page}</p>
+                <p className="text-gray-600">{requestInfo.page || 'N/A'}</p>
               </div>
               <div>
                 <p className="font-medium">Entry Time:</p>
-                <p className="text-gray-600">{format(new Date(requestInfo.entry_time), "MMM dd, yyyy HH:mm:ss")}</p>
+                <p className="text-gray-600">
+                  {requestInfo.entry_time ? format(new Date(requestInfo.entry_time), "MMM dd, yyyy HH:mm:ss") : 'N/A'}
+                </p>
               </div>
             </div>
           </div>
@@ -382,57 +415,66 @@ const RequestInfoCard: React.FC<{ requestInfo: any }> = ({ requestInfo }) => (
   </Card>
 );
 
-const InvoicePrintView: React.FC<{ invoice: any }> = ({ invoice }) => (
-  <div className="p-6 bg-white">
-    <div className="text-center mb-6">
-      <h1 className="text-2xl font-bold">INVOICE</h1>
-      <p className="text-gray-600">#{invoice.invoice_number}</p>
-    </div>
-    
-    <div className="grid grid-cols-2 gap-6 mb-6">
-      <div>
-        <h3 className="font-semibold mb-2">Customer:</h3>
-        <p>{invoice.appointment_json.customer_info.full_name}</p>
-        <p>{invoice.appointment_json.customer_info.email}</p>
-        <p>{invoice.appointment_json.customer_info.number}</p>
-      </div>
-      <div>
-        <h3 className="font-semibold mb-2">Appointment:</h3>
-        <p>Date: {invoice.appointment_json.customer_info.date}</p>
-        <p>Time: {invoice.appointment_json.customer_info.time}</p>
-        <p>Status: {invoice.status}</p>
-      </div>
-    </div>
+const InvoicePrintView: React.FC<{ invoice: any }> = ({ invoice }) => {
+  const customerInfo = invoice.appointment_json?.customer_info || {};
+  const services = invoice.appointment_json?.services || [];
+  const products = invoice.appointment_json?.products || [];
+  const paymentDetails = invoice.appointment_json?.payment_details || {};
 
-    <div className="mb-6">
-      <h3 className="font-semibold mb-3">Services:</h3>
-      {invoice.appointment_json.services.map((service: ServiceItem) => (
-        <div key={service.id} className="flex justify-between py-1">
-          <span>{service.name} ({service.duration}min)</span>
-          <span>${service.discounted_price.toFixed(2)}</span>
+  return (
+    <div className="p-6 bg-white">
+      <div className="text-center mb-6">
+        <h1 className="text-2xl font-bold">INVOICE</h1>
+        <p className="text-gray-600">#{invoice.invoice_number}</p>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-6 mb-6">
+        <div>
+          <h3 className="font-semibold mb-2">Customer:</h3>
+          <p>{customerInfo.full_name || 'N/A'}</p>
+          <p>{customerInfo.email || 'N/A'}</p>
+          <p>{customerInfo.number || 'N/A'}</p>
         </div>
-      ))}
-    </div>
-
-    {invoice.appointment_json.products.length > 0 && (
-      <div className="mb-6">
-        <h3 className="font-semibold mb-3">Products:</h3>
-        {invoice.appointment_json.products.map((product: ProductItem) => (
-          <div key={product.id} className="flex justify-between py-1">
-            <span>{product.name} (x{product.quantity})</span>
-            <span>${(product.discounted_price * product.quantity).toFixed(2)}</span>
-          </div>
-        ))}
+        <div>
+          <h3 className="font-semibold mb-2">Appointment:</h3>
+          <p>Date: {customerInfo.date || 'N/A'}</p>
+          <p>Time: {customerInfo.time || 'N/A'}</p>
+          <p>Status: {invoice.status}</p>
+        </div>
       </div>
-    )}
 
-    <div className="border-t pt-4">
-      <div className="flex justify-between font-semibold text-lg">
-        <span>Total Paid:</span>
-        <span>${invoice.appointment_json.payment_details.paid_amount.toFixed(2)}</span>
+      {services.length > 0 && (
+        <div className="mb-6">
+          <h3 className="font-semibold mb-3">Services:</h3>
+          {services.map((service: ServiceItem, index: number) => (
+            <div key={service.id || index} className="flex justify-between py-1">
+              <span>{service.name || 'Unnamed Service'} ({service.duration || 0}min)</span>
+              <span>${(service.discounted_price || service.price || 0).toFixed(2)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {products.length > 0 && (
+        <div className="mb-6">
+          <h3 className="font-semibold mb-3">Products:</h3>
+          {products.map((product: ProductItem, index: number) => (
+            <div key={product.id || index} className="flex justify-between py-1">
+              <span>{product.name || 'Unnamed Product'} (x{product.quantity || 0})</span>
+              <span>${((product.discounted_price || product.price || 0) * (product.quantity || 0)).toFixed(2)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="border-t pt-4">
+        <div className="flex justify-between font-semibold text-lg">
+          <span>Total Paid:</span>
+          <span>${(paymentDetails.paid_amount || 0).toFixed(2)}</span>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default BookingDetailPage;

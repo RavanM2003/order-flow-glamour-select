@@ -14,31 +14,78 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('BookingDetails: invoiceId received:', invoiceId);
     if (invoiceId) {
       fetchInvoiceDetails();
+    } else {
+      setError('No invoice ID provided');
+      setLoading(false);
     }
   }, [invoiceId]);
 
   const fetchInvoiceDetails = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('Fetching invoice with invoice_number:', invoiceId);
+      
       const { data, error } = await supabase
         .from('invoices')
         .select('*')
         .eq('invoice_number', invoiceId)
         .single();
 
+      console.log('Supabase query result:', { data, error });
+
       if (error) {
-        console.error('Error fetching invoice:', error);
+        console.error('Supabase error:', error);
         setError('Invoice not found');
         return;
       }
 
       if (data) {
+        console.log('Invoice data found:', data);
+        console.log('appointment_json structure:', data.appointment_json);
+        
+        // Validate appointment_json structure
+        if (!data.appointment_json) {
+          console.error('appointment_json is null or undefined');
+          setError('Invalid invoice data: missing appointment information');
+          return;
+        }
+
+        // Check for required fields in appointment_json
+        const appointmentJson = data.appointment_json;
+        if (!appointmentJson.customer_info) {
+          console.error('Missing customer_info in appointment_json');
+          setError('Invalid invoice data: missing customer information');
+          return;
+        }
+
+        if (!appointmentJson.services) {
+          console.error('Missing services in appointment_json');
+        }
+
+        if (!appointmentJson.products) {
+          console.error('Missing products in appointment_json');
+        }
+
+        if (!appointmentJson.payment_details) {
+          console.error('Missing payment_details in appointment_json');
+        }
+
+        if (!appointmentJson.request_info) {
+          console.error('Missing request_info in appointment_json');
+        }
+
         setInvoice(data);
+      } else {
+        console.error('No data returned from query');
+        setError('Invoice not found');
       }
     } catch (err) {
-      console.error('Error:', err);
+      console.error('Error in fetchInvoiceDetails:', err);
       setError('Failed to load invoice details');
     } finally {
       setLoading(false);
@@ -70,6 +117,11 @@ const BookingDetails: React.FC<BookingDetailsProps> = ({ invoiceId }) => {
             {error || 'The invoice you are looking for does not exist.'}
           </p>
           <p className="text-sm text-gray-500">Invoice ID: {invoiceId}</p>
+          <div className="mt-4 p-4 bg-gray-100 rounded-lg text-left">
+            <h3 className="font-semibold mb-2">Debug Information:</h3>
+            <p className="text-sm">Searched for invoice_number: {invoiceId}</p>
+            <p className="text-sm">Check the console for more details</p>
+          </div>
         </div>
       </div>
     );
