@@ -21,6 +21,26 @@ export function validatePhone(phone: string): boolean {
   return phoneRegex.test(phone);
 }
 
+export function getCurrentDate(): string {
+  const today = new Date();
+  return today.toISOString().split('T')[0];
+}
+
+export function isWithinWorkingHours(time: string, startTime: string, endTime: string): boolean {
+  if (!time || !startTime || !endTime) return false;
+  
+  const timeMinutes = convertTimeToMinutes(time);
+  const startMinutes = convertTimeToMinutes(startTime);
+  const endMinutes = convertTimeToMinutes(endTime);
+  
+  return timeMinutes >= startMinutes && timeMinutes <= endMinutes;
+}
+
+function convertTimeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+}
+
 export function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const remainingMinutes = minutes % 60;
