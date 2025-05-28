@@ -1,3 +1,4 @@
+
 import { Customer, CustomerFormData } from '@/models/customer.model';
 import { CustomerWithUserFormData } from '@/models/user.model';
 import { ApiResponse } from './staff.service';
@@ -6,21 +7,22 @@ import { supabase } from '@/integrations/supabase/client';
 export const customerService = {
   create: async (data: CustomerFormData | CustomerWithUserFormData): Promise<ApiResponse<Customer>> => {
     try {
-      // For simplicity, let's use the existing users table instead of trying to create a customers table
+      const customerData = {
+        email: data.email,
+        first_name: (data as any).first_name || '',
+        last_name: (data as any).last_name || '',
+        full_name: (data as any).full_name || data.name,
+        phone: data.phone,
+        gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : 'other',
+        birth_date: (data as any).birth_date,
+        note: (data as any).note || data.notes,
+        role: 'customer',
+        hashed_password: '',
+      };
+      
       const { data: customer, error } = await supabase
         .from('users')
-        .insert({
-          email: data.email,
-          first_name: data.first_name || '',
-          last_name: data.last_name || '',
-          full_name: data.full_name || data.name,
-          phone: data.phone,
-          gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : 'other',
-          birth_date: data.birth_date,
-          note: data.note,
-          role: 'customer',
-          hashed_password: '', // Required field for users table
-        })
+        .insert(customerData)
         .select('*')
         .single();
       
@@ -28,24 +30,24 @@ export const customerService = {
         return { error: error.message };
       }
       
-      // Convert user data to Customer format
-      const customerData: Customer = {
+      const customerResponse: Customer = {
         id: customer.id,
         name: customer.full_name || `${customer.first_name || ''} ${customer.last_name || ''}`.trim(),
         email: customer.email,
         phone: customer.phone,
         gender: customer.gender,
+        lastVisit: '',
+        totalSpent: 0,
+        full_name: customer.full_name,
+        first_name: customer.first_name,
+        last_name: customer.last_name,
         birth_date: customer.birth_date,
         note: customer.note,
         created_at: customer.created_at,
         updated_at: customer.updated_at,
-        // Add these for consistency
-        first_name: customer.first_name,
-        last_name: customer.last_name,
-        full_name: customer.full_name
       };
       
-      return { data: customerData };
+      return { data: customerResponse };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       return { error: errorMessage };
@@ -63,13 +65,17 @@ export const customerService = {
         return { error: error.message };
       }
       
-      // Convert user data to Customer format
       const customers: Customer[] = data.map(user => ({
         id: user.id,
         name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim(),
         email: user.email,
         phone: user.phone,
         gender: user.gender,
+        lastVisit: '',
+        totalSpent: 0,
+        full_name: user.full_name,
+        first_name: user.first_name,
+        last_name: user.last_name,
         birth_date: user.birth_date,
         note: user.note,
         created_at: user.created_at,
@@ -96,13 +102,17 @@ export const customerService = {
         return { error: error.message };
       }
       
-      // Convert user data to Customer format
       const customer: Customer = {
         id: data.id,
         name: data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim(),
         email: data.email,
         phone: data.phone,
         gender: data.gender,
+        lastVisit: '',
+        totalSpent: 0,
+        full_name: data.full_name,
+        first_name: data.first_name,
+        last_name: data.last_name,
         birth_date: data.birth_date,
         note: data.note,
         created_at: data.created_at,
@@ -118,16 +128,18 @@ export const customerService = {
   
   update: async (id: string, data: Partial<CustomerFormData>): Promise<ApiResponse<Customer>> => {
     try {
+      const updateData = {
+        full_name: data.name,
+        email: data.email,
+        phone: data.phone,
+        gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : undefined,
+        birth_date: (data as any).birth_date,
+        note: data.notes || (data as any).note,
+      };
+      
       const { data: user, error } = await supabase
         .from('users')
-        .update({
-          full_name: data.name,
-          email: data.email,
-          phone: data.phone,
-          gender: data.gender === 'male' || data.gender === 'female' || data.gender === 'other' ? data.gender : undefined,
-          birth_date: data.birth_date,
-          note: data.note,
-        })
+        .update(updateData)
         .eq('id', id)
         .eq('role', 'customer')
         .select('*')
@@ -137,13 +149,17 @@ export const customerService = {
         return { error: error.message };
       }
       
-      // Convert user data to Customer format
       const customer: Customer = {
         id: user.id,
         name: user.full_name || `${user.first_name || ''} ${user.last_name || ''}`.trim(),
         email: user.email,
         phone: user.phone,
         gender: user.gender,
+        lastVisit: '',
+        totalSpent: 0,
+        full_name: user.full_name,
+        first_name: user.first_name,
+        last_name: user.last_name,
         birth_date: user.birth_date,
         note: user.note,
         created_at: user.created_at,
@@ -159,10 +175,9 @@ export const customerService = {
   
   delete: async (id: string): Promise<ApiResponse<boolean>> => {
     try {
-      // Update user role to maintain referential integrity
       const { error } = await supabase
         .from('users')
-        .update({ role: 'customer' }) // Use 'customer' instead of 'inactive' to match UserRole type
+        .update({ role: 'customer' })
         .eq('id', id)
         .eq('role', 'customer');
         

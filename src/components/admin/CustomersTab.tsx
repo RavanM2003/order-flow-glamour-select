@@ -59,8 +59,8 @@ const CustomersTable = ({ customers, onViewCustomer }) => (
               {customer.lastVisit ? formatDate(customer.lastVisit) : "Never"}
             </TableCell>
             <TableCell>
-              <Badge variant={customer.user_id ? "default" : "outline"}>
-                {customer.user_id ? "Active" : "Inactive"}
+              <Badge variant={(customer.user_id || customer.id) ? "default" : "outline"}>
+                {(customer.user_id || customer.id) ? "Active" : "Inactive"}
               </Badge>
             </TableCell>
             <TableCell className="text-right">
@@ -124,7 +124,7 @@ const CustomersTab = () => {
 
   const filteredCustomers = customers.filter(
     (customer) =>
-      customer.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (customer.full_name || customer.name)?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.phone?.includes(searchTerm)
   );

@@ -270,19 +270,21 @@ class SupabaseService {
 
       if (error) throw error;
 
-      // Map the customer data to match Customer interface
       const customers = data.map((customer) => ({
         id: customer.id,
         name: customer.full_name,
         email: customer.email || "",
         phone: customer.phone || "",
         gender: customer.gender || "other",
+        lastVisit: "",
+        totalSpent: 0,
+        full_name: customer.full_name,
+        first_name: customer.first_name,
+        last_name: customer.last_name,
         birth_date: customer.birth_date || "",
         note: customer.note || "",
         created_at: customer.created_at || "",
         updated_at: customer.updated_at || "",
-        lastVisit: "",
-        totalSpent: 0,
       }));
 
       return customers as Customer[];
@@ -303,19 +305,21 @@ class SupabaseService {
 
       if (error) throw error;
 
-      // Map the customer data to match Customer interface
       const customer = {
         id: data.id,
         name: data.full_name,
         email: data.email || "",
         phone: data.phone || "",
         gender: data.gender || "other",
+        lastVisit: "",
+        totalSpent: 0,
+        full_name: data.full_name,
+        first_name: data.first_name,
+        last_name: data.last_name,
         birth_date: data.birth_date || "",
         note: data.note || "",
         created_at: data.created_at || "",
         updated_at: data.updated_at || "",
-        lastVisit: "",
-        totalSpent: 0,
       };
 
       return customer as Customer;
@@ -327,14 +331,13 @@ class SupabaseService {
 
   async createCustomer(customer: Customer): Promise<Customer> {
     try {
-      // Transform the frontend Customer model to match the database schema
       const dbCustomer = {
         full_name: customer.name,
         email: customer.email,
         phone: customer.phone,
         gender: customer.gender,
         birth_date: customer.birth_date || null,
-        note: customer.note || "",
+        note: customer.notes || customer.note || "",
         user_id: customer.user_id || null,
         role: "customer",
       };
@@ -347,7 +350,6 @@ class SupabaseService {
 
       if (error) throw error;
 
-      // Transform the database response back to the frontend Customer model
       return {
         id: data.id,
         name: data.full_name,
@@ -356,6 +358,9 @@ class SupabaseService {
         gender: data.gender || "other",
         lastVisit: "",
         totalSpent: 0,
+        full_name: data.full_name,
+        first_name: data.first_name,
+        last_name: data.last_name,
         birth_date: data.birth_date || "",
         note: data.note || "",
         created_at: data.created_at || "",
@@ -372,16 +377,16 @@ class SupabaseService {
     updates: Partial<Customer>
   ): Promise<Customer> {
     try {
-      // Transform the frontend Customer model to match the database schema
       const dbUpdates: DatabaseCustomerUpdate = {};
 
       if (updates.name) dbUpdates.full_name = updates.name;
       if (updates.email !== undefined) dbUpdates.email = updates.email;
       if (updates.phone !== undefined) dbUpdates.phone = updates.phone;
       if (updates.gender !== undefined) dbUpdates.gender = updates.gender;
-      if (updates.birth_date !== undefined)
-        dbUpdates.birth_date = updates.birth_date;
-      if (updates.note !== undefined) dbUpdates.note = updates.note;
+      if (updates.birth_date !== undefined) dbUpdates.birth_date = updates.birth_date;
+      if (updates.notes !== undefined || updates.note !== undefined) {
+        dbUpdates.note = updates.notes || updates.note;
+      }
 
       const { data, error } = await this.supabase
         .from("users")
@@ -393,7 +398,6 @@ class SupabaseService {
 
       if (error) throw error;
 
-      // Transform the database response back to the frontend Customer model
       return {
         id: data.id,
         name: data.full_name,
@@ -402,6 +406,9 @@ class SupabaseService {
         gender: data.gender || "other",
         lastVisit: "",
         totalSpent: 0,
+        full_name: data.full_name,
+        first_name: data.first_name,
+        last_name: data.last_name,
         birth_date: data.birth_date || "",
         note: data.note || "",
         created_at: data.created_at || "",

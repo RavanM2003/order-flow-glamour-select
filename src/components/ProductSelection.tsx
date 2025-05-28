@@ -64,7 +64,7 @@ const ProductSelection = () => {
           <h3 className="font-medium text-glamour-800 mb-3">{t('booking.selectedProducts')}</h3>
           <div className="space-y-2">
             {selectedProducts.map((product) => {
-              const quantity = getProductQuantity(product.id);
+              const quantity = product.quantity || 1;
               return (
                 <div key={product.id} className="flex items-center justify-between p-2 bg-white rounded border">
                   <div className="flex-1">

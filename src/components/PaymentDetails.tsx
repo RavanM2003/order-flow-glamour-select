@@ -42,6 +42,11 @@ const PaymentDetails = () => {
     setShowCardForm(method === 'card');
   };
 
+  const handlePaymentSubmit = (cardData: any) => {
+    console.log('Payment submitted:', cardData);
+    // Handle payment submission logic here
+  };
+
   const totalAmount = orderState.totalAmount || 0;
 
   return (
@@ -57,12 +62,15 @@ const PaymentDetails = () => {
             </div>
           )}
           
-          {orderState.selectedProducts?.map((product) => (
-            <div key={product.id} className="flex justify-between">
-              <span>{product.name} x{product.quantity || 1}</span>
-              <span>{((product.price || 0) * (product.quantity || 1)).toFixed(2)} AZN</span>
-            </div>
-          ))}
+          {orderState.selectedProducts?.map((product) => {
+            const quantity = product.quantity || 1;
+            return (
+              <div key={product.id} className="flex justify-between">
+                <span>{product.name} x{quantity}</span>
+                <span>{((product.price || 0) * quantity).toFixed(2)} AZN</span>
+              </div>
+            );
+          })}
         </div>
         
         <div className="border-t pt-2">
@@ -99,7 +107,10 @@ const PaymentDetails = () => {
 
       {showCardForm && (
         <Card className="p-6">
-          <CardPayment />
+          <CardPayment 
+            totalAmount={totalAmount}
+            onPaymentSubmit={handlePaymentSubmit}
+          />
         </Card>
       )}
 

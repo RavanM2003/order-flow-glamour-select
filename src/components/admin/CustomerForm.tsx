@@ -48,7 +48,6 @@ const CustomerForm = ({ onSuccess }: CustomerFormProps) => {
       email: "",
       phone: "",
       gender: undefined,
-      // Don't include birth_date and note if they're not in the schema
     },
   });
 
@@ -56,11 +55,11 @@ const CustomerForm = ({ onSuccess }: CustomerFormProps) => {
     try {
       // Adjust data to match CustomerFormData type expected by createCustomer
       const customerData = {
-        name: data.full_name, // Map full_name to name
+        name: data.full_name,
         full_name: data.full_name,
         email: data.email,
         phone: data.phone,
-        gender: data.gender,
+        gender: (data.gender as 'male' | 'female' | 'other') || 'other',
       };
 
       await createCustomer(customerData);

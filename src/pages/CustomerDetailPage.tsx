@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatDate } from '@/utils/format';
 
 export function formatAppointmentDate(appointment: any): string {
-  // Using created_at instead of createdAt
   return new Date(appointment.created_at).toLocaleDateString();
 }
 
@@ -22,8 +21,6 @@ const CustomerDetailPage: React.FC = () => {
       try {
         if (!id) return;
         
-        // Fetch customer details
-        // This is a placeholder - implement actual API call
         const mockCustomer: Customer = {
           id: id,
           name: "John Doe",
@@ -90,8 +87,6 @@ const CustomerDetailPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-      
-      {/* Add more sections here like appointment history, purchase history, etc. */}
     </div>
   );
 };
