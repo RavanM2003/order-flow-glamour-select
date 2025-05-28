@@ -12,12 +12,14 @@ interface BookingDatePickerProps {
   value?: Date;
   onChange: (date: Date | undefined) => void;
   maxAdvanceDays?: number;
+  disablePastDates?: boolean;
 }
 
 const BookingDatePicker: React.FC<BookingDatePickerProps> = ({
   value,
   onChange,
-  maxAdvanceDays = 30
+  maxAdvanceDays = 30,
+  disablePastDates = true
 }) => {
   const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +28,9 @@ const BookingDatePicker: React.FC<BookingDatePickerProps> = ({
   const maxDate = addDays(today, maxAdvanceDays);
 
   const isDateDisabled = (date: Date) => {
-    return isBefore(date, today) || isBefore(maxDate, date);
+    const isPastDate = disablePastDates && isBefore(date, today);
+    const isFutureDate = isBefore(maxDate, date);
+    return isPastDate || isFutureDate;
   };
 
   const handleDateSelect = (selectedDate: Date | undefined) => {

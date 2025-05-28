@@ -12,6 +12,7 @@ interface ProductSearchAndFilterProps {
   onFilteredProductsChange: (products: Product[]) => void;
   currentPage: number;
   onPageChange: (page: number) => void;
+  onSearch?: (term: string) => Promise<void>;
   productsPerPage?: number;
 }
 
@@ -21,6 +22,7 @@ const ProductSearchAndFilter: React.FC<ProductSearchAndFilterProps> = ({
   onFilteredProductsChange,
   currentPage,
   onPageChange,
+  onSearch,
   productsPerPage = 6
 }) => {
   const { t } = useLanguage();
@@ -64,9 +66,13 @@ const ProductSearchAndFilter: React.FC<ProductSearchAndFilterProps> = ({
     }
   };
 
-  const handleSearch = (value: string) => {
+  const handleSearch = async (value: string) => {
     setSearchTerm(value);
     onPageChange(1);
+    
+    if (onSearch) {
+      await onSearch(value);
+    }
   };
 
   return (

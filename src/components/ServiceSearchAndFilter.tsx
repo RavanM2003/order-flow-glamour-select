@@ -11,6 +11,7 @@ interface ServiceSearchAndFilterProps {
   onFilteredServicesChange: (services: Service[]) => void;
   currentPage: number;
   onPageChange: (page: number) => void;
+  onSearch?: (term: string) => Promise<void>;
   servicesPerPage?: number;
 }
 
@@ -19,6 +20,7 @@ const ServiceSearchAndFilter: React.FC<ServiceSearchAndFilterProps> = ({
   onFilteredServicesChange,
   currentPage,
   onPageChange,
+  onSearch,
   servicesPerPage = 6
 }) => {
   const { t } = useLanguage();
@@ -54,9 +56,13 @@ const ServiceSearchAndFilter: React.FC<ServiceSearchAndFilterProps> = ({
     }
   };
 
-  const handleSearch = (value: string) => {
+  const handleSearch = async (value: string) => {
     setSearchTerm(value);
     onPageChange(1); // Reset to first page when searching
+    
+    if (onSearch) {
+      await onSearch(value);
+    }
   };
 
   return (
