@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+
+import { useEffect, useState } from "react";
+import { useServices } from "@/hooks/use-services";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -12,453 +11,196 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useServices } from "@/hooks/use-services";
-import { Service, ServiceFormData } from "@/models/service.model";
-import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { PlusIcon, SearchIcon, EditIcon, PowerIcon } from "lucide-react";
+import ServiceForm from "@/components/ServiceForm";
+import DetailDrawer from "@/components/common/DetailDrawer";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import PriceDisplay from "@/components/ui/price-display";
+import { formatDurationMultiLanguage } from "@/utils/validation";
+import { useLanguage } from "@/context/LanguageContext";
 
-const ServiceTableRow = ({ service, onEdit, onDelete }) => (
-  <TableRow key={service.id}>
-    <TableCell className="font-medium">{service.name}</TableCell>
-    <TableCell>{service.duration} min</TableCell>
-    <TableCell>${service.price.toFixed(2)}</TableCell>
-    <TableCell className="text-right">
-      <Button variant="ghost" size="sm" onClick={() => onEdit(service)}>
-        <Pencil className="h-4 w-4" />
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => onDelete(service)}>
-        <Trash2 className="h-4 w-4 text-destructive" />
-      </Button>
-    </TableCell>
-  </TableRow>
-);
-
-const ServiceTableHeader = () => (
-  <TableHeader>
-    <TableRow>
-      <TableHead>Name</TableHead>
-      <TableHead>Duration</TableHead>
-      <TableHead>Price</TableHead>
-      <TableHead className="text-right">Actions</TableHead>
-    </TableRow>
-  </TableHeader>
-);
-
-const ServiceTable = ({ services, onEdit, onDelete }) => (
-  <Card>
-    <CardContent className="p-0">
+const ServicesTable = ({ 
+  services, 
+  onEdit, 
+  onToggleStatus,
+  className = ""
+}) => {
+  const { t } = useLanguage();
+  
+  return (
+    <div className={`overflow-x-auto ${className}`}>
       <Table>
-        <ServiceTableHeader />
+        <TableHeader>
+          <TableRow>
+            <TableHead className="min-w-[150px]">Name</TableHead>
+            <TableHead className="hidden sm:table-cell min-w-[100px]">Duration</TableHead>
+            <TableHead className="min-w-[80px]">Price</TableHead>
+            <TableHead className="hidden md:table-cell">Category</TableHead>
+            <TableHead className="hidden lg:table-cell min-w-[200px]">Description</TableHead>
+            <TableHead className="hidden md:table-cell">Status</TableHead>
+            <TableHead className="text-right min-w-[120px]">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
         <TableBody>
-          {services.map((service) => (
-            <ServiceTableRow
-              key={service.id}
-              service={service}
-              onEdit={onEdit}
-              onDelete={onDelete}
-            />
-          ))}
+          {services.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={7} className="text-center py-8">
+                No services found
+              </TableCell>
+            </TableRow>
+          ) : (
+            services.map((service) => (
+              <TableRow key={service.id}>
+                <TableCell className="font-medium">
+                  <div>
+                    <div className="font-medium">{service.name}</div>
+                    <div className="text-sm text-gray-500 sm:hidden">
+                      {formatDurationMultiLanguage(service.duration, t)} • <PriceDisplay price={service.price} />
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {formatDurationMultiLanguage(service.duration, t)}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <PriceDisplay price={service.price} discount={service.discount} />
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  {service.category_id || "Uncategorized"}
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  <div className="max-w-[200px] truncate">
+                    {service.description || "No description"}
+                  </div>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">
+                  <Badge variant="default">Active</Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex flex-col sm:flex-row gap-1 sm:gap-2 justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEdit(service)}
+                      className="text-xs px-2 py-1"
+                    >
+                      <EditIcon className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onToggleStatus(service.id)}
+                      className="text-xs px-2 py-1 text-orange-600 hover:text-orange-700"
+                    >
+                      <PowerIcon className="h-3 w-3 mr-1" />
+                      Disable
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
-    </CardContent>
-  </Card>
-);
+    </div>
+  );
+};
 
-const ServiceFormFields = ({
-  formData,
-  handleInputChange,
-  handleBenefitsChange,
-}) => (
-  <div className="grid gap-4 py-4">
-    <div className="grid gap-2">
-      <Label htmlFor="name">Name *</Label>
-      <Input
-        id="name"
-        name="name"
-        value={formData.name}
-        onChange={handleInputChange}
-        required
-      />
-    </div>
-    <div className="grid gap-2">
-      <Label htmlFor="description">Description</Label>
-      <Textarea
-        id="description"
-        name="description"
-        value={formData.description}
-        onChange={handleInputChange}
-        rows={3}
-      />
-    </div>
-    <div className="grid grid-cols-2 gap-4">
-      <div className="grid gap-2">
-        <Label htmlFor="duration">Duration (minutes) *</Label>
+const ServicesHeader = ({ searchTerm, setSearchTerm, onAddClick }) => (
+  <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <CardTitle>Services</CardTitle>
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+      <div className="relative">
+        <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input
-          id="duration"
-          name="duration"
-          type="number"
-          min="1"
-          value={formData.duration}
-          onChange={handleInputChange}
-          required
+          type="search"
+          placeholder="Search services..."
+          className="w-full sm:w-[200px] pl-8"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
-      <div className="grid gap-2">
-        <Label htmlFor="price">Price ($) *</Label>
-        <Input
-          id="price"
-          name="price"
-          type="number"
-          min="0"
-          step="0.01"
-          value={formData.price}
-          onChange={handleInputChange}
-          required
-        />
-      </div>
-    </div>
-    <div className="grid gap-2">
-      <Label htmlFor="benefits">Benefits (one per line)</Label>
-      <Textarea
-        id="benefits"
-        name="benefits"
-        value={formData.benefits?.join("\n") || ""}
-        onChange={handleBenefitsChange}
-        rows={3}
-        placeholder="Enter each benefit on a new line"
-      />
-    </div>
-  </div>
-);
-
-const DialogContentWrapper = ({ title, description, children }) => (
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogDescription>{description}</DialogDescription>
-    </DialogHeader>
-    {children}
-  </DialogContent>
-);
-
-const ServiceForm = ({
-  onSubmit,
-  formData,
-  handleInputChange,
-  handleBenefitsChange,
-  resetForm,
-  onOpenChange,
-  submitText,
-}) => (
-  <form onSubmit={onSubmit}>
-    <ServiceFormFields
-      formData={formData}
-      handleInputChange={handleInputChange}
-      handleBenefitsChange={handleBenefitsChange}
-    />
-    <DialogFooter>
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => {
-          resetForm();
-          onOpenChange(false);
-        }}
-      >
-        Cancel
+      <Button onClick={onAddClick} className="w-full sm:w-auto">
+        <PlusIcon className="mr-2 h-4 w-4" />
+        Add Service
       </Button>
-      <Button type="submit">{submitText}</Button>
-    </DialogFooter>
-  </form>
-);
-
-const CreateServiceDialog = ({
-  open,
-  onOpenChange,
-  formData,
-  handleInputChange,
-  handleBenefitsChange,
-  handleCreateSubmit,
-  resetForm,
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContentWrapper
-      title="Create New Service"
-      description="Add a new service to your catalog."
-    >
-      <ServiceForm
-        onSubmit={handleCreateSubmit}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        handleBenefitsChange={handleBenefitsChange}
-        resetForm={resetForm}
-        onOpenChange={onOpenChange}
-        submitText="Create Service"
-      />
-    </DialogContentWrapper>
-  </Dialog>
-);
-
-const EditServiceDialog = ({
-  open,
-  onOpenChange,
-  formData,
-  handleInputChange,
-  handleBenefitsChange,
-  handleEditSubmit,
-  resetForm,
-}) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContentWrapper
-      title="Edit Service"
-      description="Update the service details."
-    >
-      <ServiceForm
-        onSubmit={handleEditSubmit}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        handleBenefitsChange={handleBenefitsChange}
-        resetForm={resetForm}
-        onOpenChange={onOpenChange}
-        submitText="Update Service"
-      />
-    </DialogContentWrapper>
-  </Dialog>
-);
-
-const DeleteServiceDialog = ({ open, onOpenChange, onConfirm }) => (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContentWrapper
-      title="Delete Service"
-      description="Are you sure you want to delete this service? This action cannot be undone."
-    >
-      <DialogFooter>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => onOpenChange(false)}
-        >
-          Cancel
-        </Button>
-        <Button type="button" variant="destructive" onClick={onConfirm}>
-          Delete
-        </Button>
-      </DialogFooter>
-    </DialogContentWrapper>
-  </Dialog>
+    </div>
+  </CardHeader>
 );
 
 const ServicesTab = () => {
-  const {
-    services,
-    isLoading,
-    error,
-    fetchServices,
-    createService,
-    updateService,
-    deleteService,
-  } = useServices();
-  const { toast } = useToast();
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [currentService, setCurrentService] = useState<Service | null>(null);
-  const [formData, setFormData] = useState<ServiceFormData>({
-    name: "",
-    description: "",
-    duration: 30,
-    price: 0,
-    benefits: [],
-  });
+  const { services, isLoading, error, fetchServices } = useServices();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingService, setEditingService] = useState(null);
 
   useEffect(() => {
     fetchServices();
   }, [fetchServices]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+  const filteredServices = services.filter(
+    (service) =>
+      service.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-    if (name === "duration" || name === "price") {
-      setFormData({
-        ...formData,
-        [name]: parseFloat(value) || 0,
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
+  const handleEdit = (service) => {
+    setEditingService(service);
+    setIsFormOpen(true);
   };
 
-  const handleBenefitsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const benefitsText = e.target.value;
-    const benefitsArray = benefitsText
-      .split("\n")
-      .map((benefit) => benefit.trim())
-      .filter((benefit) => benefit !== "");
-
-    setFormData({
-      ...formData,
-      benefits: benefitsArray,
-    });
+  const handleToggleStatus = (serviceId) => {
+    // TODO: Implement disable service functionality
+    console.log('Disable service:', serviceId);
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      description: "",
-      duration: 30,
-      price: 0,
-      benefits: [],
-    });
-    setCurrentService(null);
+  const handleFormSuccess = () => {
+    setIsFormOpen(false);
+    setEditingService(null);
+    fetchServices();
   };
-
-  const handleCreateSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.name || formData.price <= 0 || formData.duration <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Please fill in all required fields with valid values.",
-      });
-      return;
-    }
-
-    const result = await createService(formData);
-    if (result) {
-      setIsCreateDialogOpen(false);
-      resetForm();
-    }
-  };
-
-  const handleEditClick = (service: Service) => {
-    setCurrentService(service);
-    setFormData({
-      name: service.name,
-      description: service.description || "",
-      duration: service.duration,
-      price: service.price,
-      benefits: service.benefits || [],
-      category_id: service.category_id,
-      image_urls: service.image_urls,
-    });
-    setIsEditDialogOpen(true);
-  };
-
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!currentService) return;
-
-    if (!formData.name || formData.price <= 0 || formData.duration <= 0) {
-      toast({
-        variant: "destructive",
-        title: "Validation Error",
-        description: "Please fill in all required fields with valid values.",
-      });
-      return;
-    }
-
-    const result = await updateService(currentService.id.toString(), formData);
-    if (result) {
-      setIsEditDialogOpen(false);
-      resetForm();
-    }
-  };
-
-  const handleDeleteClick = (service: Service) => {
-    setCurrentService(service);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!currentService) return;
-
-    const result = await deleteService(currentService.id.toString());
-    if (result) {
-      setIsDeleteDialogOpen(false);
-      resetForm();
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="text-center text-red-500 p-4">
-        Error loading services: {error}
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Services</h2>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Add Service
-        </Button>
-      </div>
+    <Card>
+      <ServicesHeader
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        onAddClick={() => {
+          setEditingService(null);
+          setIsFormOpen(true);
+        }}
+      />
+      <CardContent className="p-0 sm:p-6">
+        {isLoading ? (
+          <div className="flex justify-center p-8">Loading services...</div>
+        ) : error ? (
+          <div className="text-red-500 p-8 text-center">Error: {error}</div>
+        ) : (
+          <ServicesTable
+            services={filteredServices}
+            onEdit={handleEdit}
+            onToggleStatus={handleToggleStatus}
+            className="px-4 sm:px-0"
+          />
+        )}
+      </CardContent>
 
-      {services.length === 0 ? (
-        <Card>
-          <CardContent className="p-6 text-center text-muted-foreground">
-            No services found. Create your first service to get started.
-          </CardContent>
-        </Card>
-      ) : (
-        <ServiceTable
-          services={services}
-          onEdit={handleEditClick}
-          onDelete={handleDeleteClick}
+      {/* Service Form Drawer */}
+      <DetailDrawer
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        title={editingService ? "Edit Service" : "Add New Service"}
+        position="right"
+      >
+        <ServiceForm
+          service={editingService}
+          onSuccess={handleFormSuccess}
+          onCancel={() => setIsFormOpen(false)}
         />
-      )}
-
-      <CreateServiceDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        handleBenefitsChange={handleBenefitsChange}
-        handleCreateSubmit={handleCreateSubmit}
-        resetForm={resetForm}
-      />
-
-      <EditServiceDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        formData={formData}
-        handleInputChange={handleInputChange}
-        handleBenefitsChange={handleBenefitsChange}
-        handleEditSubmit={handleEditSubmit}
-        resetForm={resetForm}
-      />
-
-      <DeleteServiceDialog
-        open={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleDeleteConfirm}
-      />
-    </div>
+      </DetailDrawer>
+    </Card>
   );
 };
 
