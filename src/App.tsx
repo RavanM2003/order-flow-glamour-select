@@ -43,7 +43,7 @@ const AppRoutes = () => (
     <Route path="/products" element={<Products />} />
     <Route path="/products/:id" element={<ProductDetail />} />
     <Route path="/booking" element={<Booking />} />
-    <Route path="/booking/:id" element={<BookingDetails />} />
+    <Route path="/booking/:orderId" element={<BookingDetails />} />
     <Route path="/login" element={<Login />} />
     <Route path="/auth" element={<LoginPage />} />
 
@@ -140,7 +140,7 @@ const AuthProviders = ({ children }: { children: React.ReactNode }) => (
 const UserProviders = ({ children }: { children: React.ReactNode }) => (
   <UserProvider>
     <AuthProviders>{children}</AuthProviders>
-  </UserProvider>
+  </UserProviders>
 );
 
 const LanguageProviders = ({ children }: { children: React.ReactNode }) => (

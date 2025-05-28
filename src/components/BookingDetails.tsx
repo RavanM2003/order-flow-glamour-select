@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, AlertCircle } from "lucide-react";
 import BookingDetailPage from "@/components/admin/BookingDetailPage";
 
 // Type guards and interfaces for appointment_json
@@ -65,10 +65,13 @@ const BookingDetails: React.FC = () => {
 
   useEffect(() => {
     console.log('BookingDetails: orderId from URL params:', orderId);
+    console.log('BookingDetails: Current URL:', window.location.href);
+    
     if (orderId) {
       fetchInvoiceDetails();
     } else {
-      setError('Sifariş ID-si tapılmadı');
+      console.error('BookingDetails: No orderId found in URL params');
+      setError('Sifariş ID-si URL-də tapılmadı');
       setLoading(false);
     }
   }, [orderId]);
@@ -78,7 +81,7 @@ const BookingDetails: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching invoice with invoice_number:', orderId);
+      console.log('BookingDetails: Fetching invoice with invoice_number:', orderId);
       
       const { data, error } = await supabase
         .from('invoices')
@@ -86,21 +89,25 @@ const BookingDetails: React.FC = () => {
         .eq('invoice_number', orderId)
         .single();
 
-      console.log('Supabase query result:', { data, error });
+      console.log('BookingDetails: Supabase query result:', { data, error });
 
       if (error) {
-        console.error('Supabase error:', error);
-        setError('Sifariş tapılmadı');
+        console.error('BookingDetails: Supabase error:', error);
+        if (error.code === 'PGRST116') {
+          setError(`Sifariş "${orderId}" tapılmadı`);
+        } else {
+          setError('Məlumat bazası xətası baş verdi');
+        }
         return;
       }
 
       if (data) {
-        console.log('Invoice data found:', data);
-        console.log('appointment_json structure:', data.appointment_json);
+        console.log('BookingDetails: Invoice data found:', data);
+        console.log('BookingDetails: appointment_json structure:', data.appointment_json);
         
         // Validate appointment_json structure
         if (!data.appointment_json) {
-          console.error('appointment_json is null or undefined');
+          console.error('BookingDetails: appointment_json is null or undefined');
           setError('Sifariş məlumatları natamam: təyinat məlumatları yoxdur');
           return;
         }
@@ -109,25 +116,26 @@ const BookingDetails: React.FC = () => {
         const appointmentJson = data.appointment_json as any;
         
         if (!isValidAppointmentJson(appointmentJson)) {
-          console.error('appointment_json is not a valid object');
+          console.error('BookingDetails: appointment_json is not a valid object');
           setError('Sifariş məlumatları səhvdir: təyinat məlumatları düzgün formatda deyil');
           return;
         }
 
         // Check for required fields in appointment_json
         if (!appointmentJson.customer_info) {
-          console.error('Missing customer_info in appointment_json');
+          console.error('BookingDetails: Missing customer_info in appointment_json');
           setError('Sifariş məlumatları natamam: müştəri məlumatları yoxdur');
           return;
         }
 
+        console.log('BookingDetails: All validations passed, setting invoice data');
         setInvoice(data);
       } else {
-        console.error('No data returned from query');
+        console.error('BookingDetails: No data returned from query');
         setError('Sifariş tapılmadı');
       }
     } catch (err) {
-      console.error('Error in fetchInvoiceDetails:', err);
+      console.error('BookingDetails: Error in fetchInvoiceDetails:', err);
       setError('Sifariş məlumatları yüklənə bilmədi');
     } finally {
       setLoading(false);
@@ -140,24 +148,28 @@ const BookingDetails: React.FC = () => {
     }
   };
 
+  const handleGoBack = () => {
+    window.history.back();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
         <div className="max-w-4xl mx-auto space-y-6">
-          <div className="text-center py-8">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm">
-              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-slate-600 font-medium">Sifariş məlumatları yüklənir...</span>
+          <div className="text-center py-12">
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-white rounded-full shadow-lg">
+              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-slate-700 font-medium text-lg">Sifariş məlumatları yüklənir...</span>
             </div>
           </div>
-          <div className="space-y-4">
-            <Skeleton className="h-24 w-full rounded-xl" />
+          <div className="space-y-6">
+            <Skeleton className="h-32 w-full rounded-xl" />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Skeleton className="h-56 w-full rounded-xl" />
-              <Skeleton className="h-56 w-full rounded-xl" />
+              <Skeleton className="h-64 w-full rounded-xl" />
+              <Skeleton className="h-64 w-full rounded-xl" />
             </div>
-            <Skeleton className="h-40 w-full rounded-xl" />
-            <Skeleton className="h-40 w-full rounded-xl" />
+            <Skeleton className="h-48 w-full rounded-xl" />
+            <Skeleton className="h-48 w-full rounded-xl" />
           </div>
         </div>
       </div>
@@ -167,49 +179,51 @@ const BookingDetails: React.FC = () => {
   if (error || !invoice) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-        <div className="max-w-2xl mx-auto pt-16">
-          <Card className="border-0 shadow-xl bg-white/80 backdrop-blur-sm">
-            <CardHeader className="text-center space-y-4 pb-6">
-              <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
+        <div className="max-w-2xl mx-auto pt-20">
+          <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-sm">
+            <CardHeader className="text-center space-y-6 pb-6">
+              <div className="mx-auto w-20 h-20 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertCircle className="w-10 h-10 text-red-600" />
               </div>
               <div>
-                <CardTitle className="text-2xl font-bold text-slate-800 mb-2">
+                <CardTitle className="text-3xl font-bold text-slate-800 mb-3">
                   Sifariş Tapılmadı
                 </CardTitle>
-                <p className="text-slate-600">
+                <p className="text-slate-600 text-lg">
                   {error || 'Axtardığınız sifariş mövcud deyil.'}
                 </p>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-8">
               <Alert className="border-amber-200 bg-amber-50">
+                <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="text-amber-800">
-                  <div className="space-y-2">
-                    <p className="font-medium">Məlumat:</p>
-                    <p>Sifariş ID: <Badge variant="outline" className="ml-1">{orderId || 'Təyin edilməyib'}</Badge></p>
-                    <p className="text-sm">Axtarılan invoice_number: {orderId}</p>
+                  <div className="space-y-3">
+                    <p className="font-semibold">Debug məlumatları:</p>
+                    <div className="space-y-2 text-sm">
+                      <p>Sifariş ID: <Badge variant="outline" className="ml-1 font-mono">{orderId || 'Təyin edilməyib'}</Badge></p>
+                      <p>Axtarılan invoice_number: <code className="bg-amber-100 px-2 py-1 rounded text-xs">{orderId}</code></p>
+                      <p>URL: <code className="bg-amber-100 px-2 py-1 rounded text-xs break-all">{window.location.href}</code></p>
+                    </div>
                   </div>
                 </AlertDescription>
               </Alert>
               
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
                   onClick={handleRetry}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
                   disabled={!orderId}
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <RefreshCw className="h-5 w-5 mr-2" />
                   Yenidən Cəhd Et
                 </Button>
                 <Button 
                   variant="outline" 
-                  onClick={() => window.history.back()}
-                  className="px-6"
+                  onClick={handleGoBack}
+                  className="px-8 py-3 text-lg border-2"
                 >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  <ArrowLeft className="h-5 w-5 mr-2" />
                   Geri Qayıt
                 </Button>
               </div>
