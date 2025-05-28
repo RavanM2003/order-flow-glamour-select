@@ -3,20 +3,27 @@ import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse, FilterOptions, PaginatedResponse } from '@/types/database';
 import { useQueryStore } from '@/stores/useQueryStore';
 import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { Database } from '@/integrations/supabase/types';
+
+type TableName = keyof Database['public']['Tables'];
 
 export class BaseApiService {
-  protected tableName: string;
+  protected tableName: TableName;
   
-  constructor(tableName: string) {
+  constructor(tableName: TableName) {
     this.tableName = tableName;
   }
 
   protected handleError = (error: unknown, operation: string): ApiResponse<never> => {
-    const { handleError } = useErrorHandler();
-    const errorMessage = handleError(error as Error, {
-      title: `${operation} Error`,
-      logError: true
-    });
+    console.error(`${this.tableName} ${operation} error:`, error);
+    
+    let errorMessage = 'An unexpected error occurred';
+    
+    if (error instanceof Error) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
     
     useQueryStore.getState().setOperationError(`${this.tableName}-${operation}`, errorMessage);
     
@@ -116,7 +123,7 @@ export class BaseApiService {
     return query;
   }
 
-  async getAll<T>(filters?: FilterOptions): Promise<ApiResponse<T[]>> {
+  async getAll<T = any>(filters?: FilterOptions): Promise<ApiResponse<T[]>> {
     return this.executeQuery('getAll', async () => {
       let query = supabase.from(this.tableName).select('*');
       
@@ -128,7 +135,7 @@ export class BaseApiService {
     });
   }
 
-  async getById<T>(id: string | number): Promise<ApiResponse<T>> {
+  async getById<T = any>(id: string | number): Promise<ApiResponse<T>> {
     return this.executeQuery('getById', async () => {
       return supabase
         .from(this.tableName)
@@ -138,7 +145,7 @@ export class BaseApiService {
     });
   }
 
-  async create<T>(data: Partial<T>): Promise<ApiResponse<T>> {
+  async create<T = any>(data: Record<string, any>): Promise<ApiResponse<T>> {
     return this.executeQuery('create', async () => {
       return supabase
         .from(this.tableName)
@@ -148,7 +155,7 @@ export class BaseApiService {
     });
   }
 
-  async update<T>(id: string | number, updates: Partial<T>): Promise<ApiResponse<T>> {
+  async update<T = any>(id: string | number, updates: Record<string, any>): Promise<ApiResponse<T>> {
     return this.executeQuery('update', async () => {
       return supabase
         .from(this.tableName)

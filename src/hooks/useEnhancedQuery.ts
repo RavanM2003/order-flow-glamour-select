@@ -9,7 +9,7 @@ interface UseEnhancedQueryOptions<T> {
   queryFn: () => Promise<ApiResponse<T>>;
   enabled?: boolean;
   staleTime?: number;
-  cacheTime?: number;
+  gcTime?: number;
   refetchOnWindowFocus?: boolean;
   refetchOnMount?: boolean;
   retry?: number | boolean;
@@ -22,7 +22,7 @@ export function useEnhancedQuery<T>({
   queryFn,
   enabled = true,
   staleTime = 5 * 60 * 1000, // 5 minutes
-  cacheTime = 10 * 60 * 1000, // 10 minutes
+  gcTime = 10 * 60 * 1000, // 10 minutes
   refetchOnWindowFocus = false,
   refetchOnMount = true,
   retry = 3,
@@ -45,15 +45,24 @@ export function useEnhancedQuery<T>({
     },
     enabled,
     staleTime,
-    cacheTime,
+    gcTime,
     refetchOnWindowFocus,
     refetchOnMount,
     retry,
-    onSuccess,
-    onError: (error: Error) => {
-      onError?.(error.message);
-    }
   });
+
+  // Handle success/error callbacks
+  useEffect(() => {
+    if (query.isSuccess && query.data && onSuccess) {
+      onSuccess(query.data);
+    }
+  }, [query.isSuccess, query.data, onSuccess]);
+
+  useEffect(() => {
+    if (query.isError && query.error && onError) {
+      onError(query.error.message);
+    }
+  }, [query.isError, query.error, onError]);
 
   // Handle query invalidation
   useEffect(() => {
@@ -145,12 +154,12 @@ export function usePaginatedQuery<T>(
   limit: number = 10,
   filters: FilterOptions = {}
 ) {
-  const queryKey = [baseQueryKey, 'paginated', page, limit, JSON.stringify(filters)];
+  const queryKey = [baseQueryKey, 'paginated', page.toString(), limit.toString(), JSON.stringify(filters)];
   
   return useEnhancedQuery({
     queryKey,
     queryFn: () => queryFn(page, limit, filters),
     staleTime: 30 * 1000,
-    cacheTime: 5 * 60 * 1000 // Keep paginated data for 5 minutes
+    gcTime: 5 * 60 * 1000 // Keep paginated data for 5 minutes
   });
 }
