@@ -32,15 +32,24 @@ const CustomerOrdersAccordion: React.FC<CustomerOrdersAccordionProps> = ({ custo
   const { data: invoices, isLoading } = useQuery({
     queryKey: ['customer-invoices', customerId],
     queryFn: async () => {
+      console.log('Fetching invoices for customer:', customerId);
+      
+      // Fix the JSON query syntax - use the correct PostgreSQL JSON path operators
       const { data, error } = await supabase
         .from('invoices')
         .select('*')
-        .eq('appointment_json->>customer_info->>customer_id', customerId)
+        .eq('appointment_json->customer_info->>customer_id', customerId)
         .order('issued_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching invoices:', error);
+        throw error;
+      }
+      
+      console.log('Fetched invoices:', data);
       return data as Invoice[];
     },
+    enabled: !!customerId,
   });
 
   if (isLoading) {
