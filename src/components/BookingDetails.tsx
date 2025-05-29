@@ -10,49 +10,61 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, RefreshCw, AlertCircle } from "lucide-react";
 import BookingDetailPage from "@/components/admin/BookingDetailPage";
 
-// Type guards and interfaces for appointment_json
-interface AppointmentJson {
-  customer_info?: {
-    full_name?: string;
-    email?: string;
-    number?: string;
-    gender?: string;
-    date?: string;
-    time?: string;
-    note?: string;
-  };
-  services?: Array<{
-    id: number;
-    name: string;
-    price: number;
-    discount: number;
-    discounted_price: number;
-    duration: number;
-  }>;
-  products?: Array<{
-    id: number;
-    name: string;
-    price: number;
-    discount: number;
-    quantity: number;
-    discounted_price: number;
-  }>;
-  payment_details?: {
-    method?: string;
-    paid_amount?: number;
-    total_amount?: number;
-    discount_amount?: number;
-  };
-  request_info?: {
-    ip?: string;
-    browser?: string;
-    device?: string;
-    os?: string;
-    page?: string;
-    entry_time?: string;
-  };
+// Proper TypeScript interfaces for appointment_json
+interface CustomerInfo {
+  full_name?: string;
+  email?: string;
+  number?: string;
+  gender?: string;
+  date?: string;
+  time?: string;
+  note?: string;
 }
 
+interface ServiceInfo {
+  id: number;
+  name: string;
+  price: number;
+  discount: number;
+  discounted_price: number;
+  duration: number;
+  user_id?: string;
+}
+
+interface ProductInfo {
+  id: number;
+  name: string;
+  price: number;
+  discount: number;
+  quantity: number;
+  discounted_price: number;
+}
+
+interface PaymentDetails {
+  method?: string;
+  paid_amount?: number;
+  total_amount?: number;
+  discount_amount?: number;
+}
+
+interface RequestInfo {
+  ip?: string;
+  browser?: string;
+  device?: string;
+  os?: string;
+  page?: string;
+  entry_time?: string;
+}
+
+interface AppointmentJson {
+  customer_info?: CustomerInfo;
+  services?: ServiceInfo[];
+  products?: ProductInfo[];
+  payment_details?: PaymentDetails;
+  request_info?: RequestInfo;
+}
+
+// Type guard to check if data is valid AppointmentJson
 const isValidAppointmentJson = (data: any): data is AppointmentJson => {
   return data && typeof data === 'object' && !Array.isArray(data);
 };
@@ -105,15 +117,25 @@ const BookingDetails: React.FC = () => {
         console.log('BookingDetails: Invoice data found:', data);
         console.log('BookingDetails: appointment_json structure:', data.appointment_json);
         
-        // Validate appointment_json structure
+        // Safely parse appointment_json with proper type checking
         if (!data.appointment_json) {
           console.error('BookingDetails: appointment_json is null or undefined');
           setError('Sifariş məlumatları natamam: təyinat məlumatları yoxdur');
           return;
         }
 
-        // Type cast and validate the appointment_json
-        const appointmentJson = data.appointment_json as any;
+        // Parse the JSON data safely
+        let appointmentJson: AppointmentJson;
+        try {
+          // If it's already an object, use it directly; if it's a string, parse it
+          appointmentJson = typeof data.appointment_json === 'string' 
+            ? JSON.parse(data.appointment_json) 
+            : data.appointment_json as AppointmentJson;
+        } catch (parseError) {
+          console.error('BookingDetails: Error parsing appointment_json:', parseError);
+          setError('Sifariş məlumatları səhvdir: JSON formatında deyil');
+          return;
+        }
         
         if (!isValidAppointmentJson(appointmentJson)) {
           console.error('BookingDetails: appointment_json is not a valid object');

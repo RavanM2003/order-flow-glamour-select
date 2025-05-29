@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { useApi } from './use-api';
 import { productService } from '@/services';
@@ -8,10 +9,14 @@ import { toast } from '@/components/ui/use-toast';
 export function useProducts() {
   const api = useApi<Product[]>();
   const [products, setProducts] = useState<Product[]>([]);
-  const [fetchedRef, setFetchedRef] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   const fetchProducts = useCallback(async () => {
+    if (isInitialized) return; // Prevent multiple calls
+    
     try {
+      setIsInitialized(true);
+      
       // First try using the service abstraction
       const data = await api.execute(
         () => productService.getAll(),
@@ -22,7 +27,6 @@ export function useProducts() {
       
       if (data && data.length > 0) {
         setProducts(data);
-        setFetchedRef(true);
         return;
       }
       
@@ -44,7 +48,6 @@ export function useProducts() {
       
       if (supabaseData && supabaseData.length > 0) {
         setProducts(supabaseData);
-        setFetchedRef(true);
         console.log('Products loaded directly from Supabase:', supabaseData.length);
       } else {
         console.log('No products found in Supabase');
@@ -57,13 +60,11 @@ export function useProducts() {
         description: "Failed to load products data"
       });
     }
-  }, [api]);
+  }, [api, isInitialized]);
   
   useEffect(() => {
-    if (!fetchedRef) {
-      fetchProducts();
-    }
-  }, [fetchProducts, fetchedRef]);
+    fetchProducts();
+  }, [fetchProducts]);
   
   const getProduct = useCallback(async (id: number | string) => {
     const response = await productService.getById(id);
@@ -83,6 +84,8 @@ export function useProducts() {
         successMessage: 'Product created successfully',
         errorPrefix: 'Failed to create product',
         onSuccess: () => {
+          // Reset initialization to allow refetch
+          setIsInitialized(false);
           fetchProducts();
         }
       }
@@ -99,6 +102,8 @@ export function useProducts() {
         successMessage: 'Product updated successfully',
         errorPrefix: 'Failed to update product',
         onSuccess: () => {
+          // Reset initialization to allow refetch
+          setIsInitialized(false);
           fetchProducts();
         }
       }
@@ -115,6 +120,8 @@ export function useProducts() {
         successMessage: 'Product deleted successfully',
         errorPrefix: 'Failed to delete product',
         onSuccess: () => {
+          // Reset initialization to allow refetch
+          setIsInitialized(false);
           fetchProducts();
         }
       }

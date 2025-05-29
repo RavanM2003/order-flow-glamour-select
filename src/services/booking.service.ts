@@ -25,7 +25,7 @@ interface BookingFormData {
     gender: string;
     email: string;
     number: string;
-    note: string; // This will be used for appointments.notes
+    note: string;
     date: string;
     time: string;
   };
@@ -74,13 +74,49 @@ export const createBooking = async (
       return "other";
     };
 
-    // Create the appointment JSON with properly typed gender
+    // Create the appointment JSON with properly typed gender and ensure all required fields
     const appointmentJson = {
-      ...bookingData,
       customer_info: {
-        ...bookingData.customer_info,
+        full_name: bookingData.customer_info.full_name,
         gender: normalizeGender(bookingData.customer_info.gender),
+        email: bookingData.customer_info.email,
+        number: bookingData.customer_info.number,
+        note: bookingData.customer_info.note || '',
+        date: bookingData.customer_info.date,
+        time: bookingData.customer_info.time,
+        customer_id: bookingData.customer_info.customer_id || null
       },
+      services: bookingData.services.map(service => ({
+        id: service.id,
+        name: service.name,
+        price: service.price,
+        duration: service.duration,
+        discount: service.discount || 0,
+        discounted_price: service.discounted_price,
+        user_id: service.user_id
+      })),
+      products: bookingData.products.map(product => ({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: product.quantity,
+        discount: product.discount || 0,
+        discounted_price: product.discounted_price
+      })),
+      payment_details: {
+        method: bookingData.payment_details.method,
+        total_amount: bookingData.payment_details.total_amount,
+        discount_amount: bookingData.payment_details.discount_amount || 0,
+        paid_amount: bookingData.payment_details.paid_amount
+      },
+      request_info: {
+        ip: bookingData.request_info.ip || 'unknown',
+        device: bookingData.request_info.device || 'unknown',
+        os: bookingData.request_info.os || 'unknown',
+        browser: bookingData.request_info.browser || 'unknown',
+        entry_time: bookingData.request_info.entry_time || new Date().toISOString(),
+        page: bookingData.request_info.page || 'booking'
+      }
     };
 
     console.log('Creating booking with appointment JSON:', appointmentJson);
@@ -90,7 +126,7 @@ export const createBooking = async (
       p_invoice_number: bookingData.invoice_number,
       p_total_amount: bookingData.payment_details.total_amount,
       p_status: "waiting",
-      p_appointment_json: appointmentJson
+      p_appointment_json: appointmentJson as any
     });
 
     if (error) {
@@ -102,7 +138,7 @@ export const createBooking = async (
     const bookingResult = Array.isArray(data) ? data[0] : data;
     
     if (!bookingResult) {
-      return { error: "No booking data returned" };
+      return { error: "No booking data returned from database function" };
     }
 
     console.log('Booking created successfully:', bookingResult);
