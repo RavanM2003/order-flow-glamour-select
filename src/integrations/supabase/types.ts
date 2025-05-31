@@ -280,6 +280,7 @@ export type Database = {
           issued_at: string | null
           status: string | null
           total_amount: number
+          updated_at: string | null
         }
         Insert: {
           appointment_id?: number | null
@@ -290,6 +291,7 @@ export type Database = {
           issued_at?: string | null
           status?: string | null
           total_amount: number
+          updated_at?: string | null
         }
         Update: {
           appointment_id?: number | null
@@ -300,6 +302,7 @@ export type Database = {
           issued_at?: string | null
           status?: string | null
           total_amount?: number
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -817,11 +820,10 @@ export type Database = {
           bio: string | null
           birth_date: string | null
           created_at: string | null
-          email: string | null
+          email: string
           first_name: string | null
           full_name: string | null
           gender: Database["public"]["Enums"]["gender_enum"] | null
-          hashed_password: string
           id: string
           last_name: string | null
           note: string | null
@@ -835,11 +837,10 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           created_at?: string | null
-          email?: string | null
+          email: string
           first_name?: string | null
           full_name?: string | null
           gender?: Database["public"]["Enums"]["gender_enum"] | null
-          hashed_password: string
           id?: string
           last_name?: string | null
           note?: string | null
@@ -853,11 +854,10 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           created_at?: string | null
-          email?: string | null
+          email?: string
           first_name?: string | null
           full_name?: string | null
           gender?: Database["public"]["Enums"]["gender_enum"] | null
-          hashed_password?: string
           id?: string
           last_name?: string | null
           note?: string | null
@@ -904,12 +904,24 @@ export type Database = {
           full_name: string
         }[]
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["Enums"]["role_enum"]
+      }
       get_staff_by_service: {
         Args: { service_id: number }
         Returns: {
           user_id: string
           full_name: string
         }[]
+      }
+      is_admin_or_staff: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
     }
     Enums: {
