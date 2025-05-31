@@ -24,7 +24,17 @@
 
   "admin": {
     "login": "Administrator kirishi",
-    "demoLogin": "Demo rejimida test foydalanuvchilari bilan kirishingiz mumkin"
+    "demoLogin": "Demo rejimida test foydalanuvchilari bilan kirishingiz mumkin",
+    "dashboard": "Boshqaruv paneli",
+    "customers": "Mijozlar",
+    "services": "Xizmatlar",
+    "products": "Mahsulotlar",
+    "appointments": "Uchrashuvlar",
+    "cash": "Kassa",
+    "staff": "Xodimlar",
+    "profile": "Profil",
+    "logout": "Chiqish",
+    "searchPlaceholder": "Qidirish..."
   },
 
   "common": {

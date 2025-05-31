@@ -24,7 +24,17 @@
 
   "admin": {
     "login": "Admin Login",
-    "demoLogin": "You can login with test users in demo mode"
+    "demoLogin": "You can login with test users in demo mode",
+    "dashboard": "Dashboard",
+    "customers": "Customers",
+    "services": "Services",
+    "products": "Products",
+    "appointments": "Appointments",
+    "cash": "Cash",
+    "staff": "Staff",
+    "profile": "Profile",
+    "logout": "Logout",
+    "searchPlaceholder": "Search..."
   },
 
   "common": {
