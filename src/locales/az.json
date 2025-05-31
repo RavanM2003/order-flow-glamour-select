@@ -41,6 +41,7 @@
     "delete": "Sil",
     "save": "Saxla",
     "add": "Əlavə et",
+    "minutes": "dəqiqə",
     "duration": "Müddət"
   },
 
@@ -85,7 +86,8 @@
     "howToUse": "İstifadə qaydası",
     "ingredients": "Tərkibi",
     "relatedServices": "Əlaqəli xidmətlər",
-    "viewServiceDetails": "Xidmət təfərrüatlarına bax"
+    "viewServiceDetails": "Xidmət təfərrüatlarına bax",
+    "bookAppointment": "Rezervasiya et"
   },
 
   "contact": {

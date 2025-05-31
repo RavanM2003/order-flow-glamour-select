@@ -41,6 +41,7 @@
     "delete": "Удалить",
     "save": "Сохранить",
     "add": "Добавить",
+    "minutes": "минут",
     "duration": "Продолжительность"
   },
 
@@ -85,7 +86,8 @@
     "howToUse": "Как использовать",
     "ingredients": "Состав",
     "relatedServices": "Связанные услуги",
-    "viewServiceDetails": "Подробнее об услуге"
+    "viewServiceDetails": "Подробнее об услуге",
+    "bookAppointment": "Записаться"
   },
 
   "contact": {

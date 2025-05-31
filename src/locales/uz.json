@@ -41,6 +41,7 @@
     "delete": "O'chirish",
     "save": "Saqlash",
     "add": "Qo'shish",
+    "minutes": "daqiqa",
     "duration": "Davomiyligi"
   },
 
@@ -85,7 +86,8 @@
     "howToUse": "Qo'llash usuli",
     "ingredients": "Tarkibi",
     "relatedServices": "Bog'liq xizmatlar",
-    "viewServiceDetails": "Xizmat tafsilotlarini ko'rish"
+    "viewServiceDetails": "Xizmat tafsilotlarini ko'rish",
+    "bookAppointment": "Uchrashuvni band qilish"
   },
 
   "contact": {

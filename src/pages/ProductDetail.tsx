@@ -57,7 +57,7 @@ const ProductDetails = ({
       {product.details && (
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-glamour-800 mb-2">
-            {t("product.details")}
+            {t("products.details")}
           </h2>
           <p className="text-gray-600">{product.details}</p>
         </div>
@@ -66,7 +66,7 @@ const ProductDetails = ({
       {product.how_to_use && (
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-glamour-800 mb-2">
-            {t("product.howToUse")}
+            {t("products.howToUse")}
           </h2>
           <p className="text-gray-600">{product.how_to_use}</p>
         </div>
@@ -75,7 +75,7 @@ const ProductDetails = ({
       {product.ingredients && (
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-glamour-800 mb-2">
-            {t("product.ingredients")}
+            {t("products.ingredients")}
           </h2>
           <p className="text-gray-600">{product.ingredients}</p>
         </div>
@@ -88,7 +88,7 @@ const ProductDetails = ({
           onClick={onBookAppointment}
         >
           <Calendar className="mr-2 h-5 w-5" />
-          {t("product.bookAppointment")}
+          {t("products.bookAppointment")}
         </Button>
       </div>
     </div>
@@ -104,7 +104,7 @@ const RelatedServices = ({
 }) => (
   <div className="mt-16">
     <h2 className="text-2xl font-bold text-glamour-800 mb-6">
-      {t("product.relatedServices")}
+      {t("products.relatedServices")}
     </h2>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {services.map((service) => (
@@ -130,7 +130,7 @@ const RelatedServices = ({
             <Button variant="outline" className="w-full" asChild>
               <Link to={`/services/${service.id}`}>
                 <Scissors className="mr-2 h-4 w-4" />
-                {t("product.viewServiceDetails")}
+                {t("products.viewServiceDetails")}
               </Link>
             </Button>
           </div>
