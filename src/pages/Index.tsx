@@ -54,9 +54,7 @@ const HeroContent = ({
           {t("admin.login")}
         </Link>
       </Button>
-      <p className="mt-2 text-xs text-amber-700">
-        Demo rejimdə test istifadəçiləri ilə giriş edə bilərsiniz
-      </p>
+      <p className="mt-2 text-xs text-amber-700">{t("admin.demoLogin")}</p>
     </div>
   </div>
 );

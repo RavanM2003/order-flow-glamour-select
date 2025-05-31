@@ -1,10 +1,9 @@
-
-import React, { useState, useMemo } from 'react';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Product } from '@/models/product.model';
-import { useLanguage } from '@/context/LanguageContext';
+import React, { useState, useMemo } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Product } from "@/models/product.model";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ProductSearchAndFilterProps {
   products: Product[];
@@ -23,27 +22,30 @@ const ProductSearchAndFilter: React.FC<ProductSearchAndFilterProps> = ({
   currentPage,
   onPageChange,
   onSearch,
-  productsPerPage = 6
+  productsPerPage = 6,
 }) => {
   const { t } = useLanguage();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const recommendedProducts = useMemo(() => {
-    return products.filter(product => 
+    return products.filter((product) =>
       recommendedProductIds.includes(product.id)
     );
   }, [products, recommendedProductIds]);
 
   const filteredProducts = useMemo(() => {
-    const productsToFilter = recommendedProducts.length > 0 ? recommendedProducts : products;
-    
+    const productsToFilter =
+      recommendedProducts.length > 0 ? recommendedProducts : products;
+
     if (!searchTerm.trim()) {
       return productsToFilter;
     }
-    
-    return productsToFilter.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
+
+    return productsToFilter.filter(
+      (product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.description &&
+          product.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [products, recommendedProducts, searchTerm]);
 
@@ -69,7 +71,7 @@ const ProductSearchAndFilter: React.FC<ProductSearchAndFilterProps> = ({
   const handleSearch = async (value: string) => {
     setSearchTerm(value);
     onPageChange(1);
-    
+
     if (onSearch) {
       await onSearch(value);
     }
@@ -80,21 +82,27 @@ const ProductSearchAndFilter: React.FC<ProductSearchAndFilterProps> = ({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
-          placeholder={t('booking.searchProducts')}
+          placeholder={t("services.products")}
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           className="pl-10"
         />
       </div>
-      
+
       <div className="text-sm text-gray-600">
         {recommendedProducts.length > 0 ? (
-          <span>{t('booking.showingRecommended')} ({paginatedProducts.length}/{filteredProducts.length})</span>
+          <span>
+            {t("booking.showingRecommended")} ({paginatedProducts.length}/
+            {filteredProducts.length})
+          </span>
         ) : (
-          <span>{t('booking.showingAll')} ({paginatedProducts.length}/{filteredProducts.length})</span>
+          <span>
+            {t("booking.showingAll")} ({paginatedProducts.length}/
+            {filteredProducts.length})
+          </span>
         )}
       </div>
-      
+
       {paginatedProducts.length < filteredProducts.length && (
         <div className="text-center">
           <Button
@@ -102,7 +110,7 @@ const ProductSearchAndFilter: React.FC<ProductSearchAndFilterProps> = ({
             onClick={handleLoadMore}
             disabled={!hasMore}
           >
-            {t('booking.loadMore')}
+            {t("common.loadMore")}
           </Button>
         </div>
       )}

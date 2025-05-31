@@ -1,10 +1,9 @@
-
-import React, { useState, useMemo } from 'react';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Service } from '@/models/service.model';
-import { useLanguage } from '@/context/LanguageContext';
+import React, { useState, useMemo } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Service } from "@/models/service.model";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ServiceSearchAndFilterProps {
   services: Service[];
@@ -21,19 +20,21 @@ const ServiceSearchAndFilter: React.FC<ServiceSearchAndFilterProps> = ({
   currentPage,
   onPageChange,
   onSearch,
-  servicesPerPage = 6
+  servicesPerPage = 6,
 }) => {
   const { t } = useLanguage();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredServices = useMemo(() => {
     if (!searchTerm.trim()) {
       return services;
     }
-    
-    return services.filter(service =>
-      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase()))
+
+    return services.filter(
+      (service) =>
+        service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (service.description &&
+          service.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   }, [services, searchTerm]);
 
@@ -59,7 +60,7 @@ const ServiceSearchAndFilter: React.FC<ServiceSearchAndFilterProps> = ({
   const handleSearch = async (value: string) => {
     setSearchTerm(value);
     onPageChange(1); // Reset to first page when searching
-    
+
     if (onSearch) {
       await onSearch(value);
     }
@@ -70,13 +71,13 @@ const ServiceSearchAndFilter: React.FC<ServiceSearchAndFilterProps> = ({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
-          placeholder={t('booking.searchServices')}
+          placeholder={t("services.search")}
           value={searchTerm}
           onChange={(e) => handleSearch(e.target.value)}
           className="pl-10"
         />
       </div>
-      
+
       {paginatedServices.length < filteredServices.length && (
         <div className="text-center">
           <Button
@@ -84,7 +85,8 @@ const ServiceSearchAndFilter: React.FC<ServiceSearchAndFilterProps> = ({
             onClick={handleLoadMore}
             disabled={!hasMore}
           >
-            {t('booking.loadMore')} ({paginatedServices.length}/{filteredServices.length})
+            {t("common.loadMore")} ({paginatedServices.length}/
+            {filteredServices.length})
           </Button>
         </div>
       )}

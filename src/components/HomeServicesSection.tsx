@@ -39,7 +39,7 @@ const ServiceCard = ({ service }: { service: Service }) => {
           <div className="flex items-center">
             <Clock className="h-4 w-4 mr-1" />
             <span>
-              {service.duration} {t("services.minutes")}
+              {service.duration} {t("common.minutes")}
             </span>
           </div>
         </div>

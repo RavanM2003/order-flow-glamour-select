@@ -21,7 +21,8 @@
   },
 
   "admin": {
-    "login": "İdarəçi girişi"
+    "login": "İdarəçi girişi",
+    "demoLogin": "Demo rejimdə test istifadəçiləri ilə giriş edə bilərsiniz"
   },
 
   "common": {
@@ -33,18 +34,22 @@
     "noData": "Məlumat tapılmadı",
     "loading": "Yüklənir...",
     "error": "Xəta",
-    "success": "Müvəffəqiyyətli"
+    "success": "Müvəffəqiyyətli",
+    "cancel": "Ləğv et",
+    "close": "Bağla",
+    "edit": "Redaktə et",
+    "delete": "Sil",
+    "save": "Saxla",
+    "add": "Əlavə et",
+    "minutes": "dəqiqə",
+    "duration": "Müddət"
   },
 
   "services": {
     "title": "Xidmətlərimiz",
     "description": "Peşəkar komandamızla keyfiyyətli gözəllik xidmətləri",
     "search": "Xidmətləri axtar...",
-    "duration": "Müddət",
-    "minutes": "dəqiqə",
     "benefits": "Faydalar",
-    "viewDetails": "Ətraflı bax",
-    "loadMore": "Daha çox",
     "cta": "Rezervasiya et",
     "bookNow": "İndi rezerv et",
     "noDescription": "Təsvir mövcud deyil",
@@ -60,7 +65,6 @@
     "notFound": "Xidmət tapılmadı",
     "notFoundMessage": "Axtardığınız xidmət mövcud deyil",
     "browseServices": "Xidmətlərə bax",
-    "minutes": "dəqiqə",
     "benefits": "Faydalar",
     "bookNow": "İndi rezerv et",
     "recommendedProducts": "Tövsiyə olunan məhsullar",
@@ -77,12 +81,10 @@
     "noDescription": "Təsvir mövcud deyil",
     "noProductsAdded": "Hələ heç bir məhsul əlavə edilməyib",
     "viewProductsPage": "Məhsullar səhifəsinə bax",
-    "loadMore": "Daha çox",
     "details": "Ətraflı məlumat",
     "backToProducts": "Məhsullara qayıt",
     "howToUse": "İstifadə qaydası",
     "ingredients": "Tərkibi",
-    "bookAppointment": "Təyinat rezerv et",
     "relatedServices": "Əlaqəli xidmətlər",
     "viewServiceDetails": "Xidmət təfərrüatlarına bax"
   },
@@ -108,8 +110,6 @@
   "booking": {
     "title": "Təyinat Rezervasiyası",
     "customerInfo": "Müştəri məlumatları",
-    "services": "Xidmətlər",
-    "products": "Məhsullar",
     "payment": "Ödəniş",
     "confirmation": "Təsdiq",
     "detailed": "Ətraflı məlumat",
@@ -136,19 +136,14 @@
     "timeOutsideWorkingHours": "Seçilən vaxt iş saatları xaricindədir",
     "next": "Növbəti",
     "previous": "Əvvəlki",
-    "searchServices": "Xidmətləri axtar...",
-    "minutes": "dəqiqə",
     "selectStaff": "İşçi seçin",
     "selectedServices": "Seçilmiş xidmətlər",
     "servicesTotal": "Xidmətlər cəmi",
     "totalDuration": "Ümumi müddət",
-    "duration": "Müddət",
     "endTime": "Bitmə vaxtı",
     "servicesRequired": "Ən azı bir xidmət seçilməlidir",
     "staffRequired": "Bütün xidmətlər üçün işçi seçilməlidir",
     "staffConflict": "İşçi seçilən vaxtda mövcud deyil",
-    "loadMore": "Daha çox",
-    "searchProducts": "Məhsulları axtar...",
     "recommendedProducts": "Tövsiyə olunan məhsullar",
     "allProducts": "Bütün məhsullar",
     "selectedProducts": "Seçilmiş məhsullar",
@@ -183,10 +178,9 @@
     "swiftCode": "AIIBAZ2X",
     "confirmBooking": "Rezervasiyanı təsdiqlə",
     "bookingDetails": "Rezervasiya məlumatları",
-    "bookingDate": "5/25/2025 10:15",
-    "customer": "asddddddddddddddddd",
-    "contact": "sdasdasdasd",
-    "totalAmount": "192.00 AZN",
+    "bookingDate": "Rezervin tarixi",
+    "customer": "Müştəri",
+    "totalAmount": "Rezervin ümumi məbləği",
     "saveBookingDetails": "Rezervasiya məlumatlarını yadda saxla",
     "print": "Çap et",
     "backToHome": "Ana səhifəyə qayıt"
