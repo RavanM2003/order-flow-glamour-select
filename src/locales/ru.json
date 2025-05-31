@@ -5,7 +5,9 @@
     "products": "Продукты",
     "about": "О нас",
     "contact": "Контакты",
-    "bookNow": "Записаться"
+    "bookNow": "Записаться",
+    "servicesTotal": "Итого услуги",
+    "productsTotal": "Итого продукты"
   },
 
   "home": {
@@ -78,7 +80,7 @@
     "cta": "Заказать",
     "viewDetails": "Подробнее",
     "bookNow": "Заказать",
-    "noDescription": "Описание недоступно",
+    "noDescription": "Описание отсутствует",
     "noProductsAdded": "Продукты еще не добавлены",
     "viewProductsPage": "Перейти на страницу продуктов",
     "details": "Подробности",
@@ -166,17 +168,17 @@
     "customerDetails": "Данные клиента",
     "total": "Общая сумма",
     "paymentMethod": "Способ оплаты",
-    "cashPayment": "Наличный платеж",
+    "cashPayment": "Оплата наличными",
     "cashPaymentDesc": "Вы можете оплатить сумму наличными",
     "cardPaymentDesc": "Вы можете оплатить кредитной или дебетовой картой",
     "posTerminal": "POS-терминал",
     "posTerminalDesc": "Вы можете оплатить с помощью POS-терминала в магазине",
     "bankTransferDesc": "Вы можете оплатить через банковский перевод",
     "bankDetails": "Банковские реквизиты",
-    "bankName": "Kapital Bank",
-    "accountName": "Glamour Studio LLC",
-    "accountNumber": "AZ21AIIB33009803804954123456",
-    "swiftCode": "AIIBAZ2X",
+    "bankName": "Название банка",
+    "accountName": "Владелец счета",
+    "accountNumber": "Номер счета",
+    "swiftCode": "SWIFT код",
     "confirmBooking": "Подтвердить бронирование",
     "bookingDetails": "Детали бронирования",
     "bookingDate": "Дата бронирования",
@@ -184,7 +186,8 @@
     "totalAmount": "Общая сумма",
     "saveBookingDetails": "Сохранить детали бронирования",
     "print": "Печать",
-    "backToHome": "Вернуться на главную"
+    "backToHome": "Вернуться на главную",
+    "appointmentDate": "Дата встречи"
   },
 
   "time": {

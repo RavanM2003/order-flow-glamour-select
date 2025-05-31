@@ -5,7 +5,9 @@
     "products": "Products",
     "about": "About",
     "contact": "Contact",
-    "bookNow": "Book Now"
+    "bookNow": "Book Now",
+    "servicesTotal": "Services Total",
+    "productsTotal": "Products Total"
   },
 
   "home": {
@@ -184,7 +186,8 @@
     "totalAmount": "Total Amount",
     "saveBookingDetails": "Save Booking Details",
     "print": "Print",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "appointmentDate": "Appointment Date"
   },
 
   "time": {

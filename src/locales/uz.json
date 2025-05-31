@@ -5,7 +5,9 @@
     "products": "Mahsulotlar",
     "about": "Biz haqimizda",
     "contact": "Aloqa",
-    "bookNow": "Buyurtma berish"
+    "bookNow": "Buyurtma berish",
+    "servicesTotal": "Xizmatlar jami",
+    "productsTotal": "Mahsulotlar jami"
   },
 
   "home": {
@@ -150,7 +152,7 @@
     "selectedProducts": "Tanlangan mahsulotlar",
     "cardPayment": "Karta bilan to'lov",
     "bankTransfer": "Bank o'tkazmasi",
-    "cash": "Naqd",
+    "cash": "Naqd pul",
     "bookingConfirmed": "Uchrashuv tasdiqlandi",
     "confirmationMessage": "Uchrashuvingiz muvaffaqiyatli ro'yxatga olindi",
     "error": "Xato",
@@ -173,10 +175,10 @@
     "posTerminalDesc": "Do'konda mavjud bo'lgan POS terminal orqali to'lashingiz mumkin",
     "bankTransferDesc": "Bank o'tkazmasi orqali to'lashingiz mumkin",
     "bankDetails": "Bank ma'lumotlari",
-    "bankName": "Kapital Bank",
-    "accountName": "Glamour Studio LLC",
-    "accountNumber": "AZ21AIIB33009803804954123456",
-    "swiftCode": "AIIBAZ2X",
+    "bankName": "Bank nomi",
+    "accountName": "Hisob egasi",
+    "accountNumber": "Hisob raqami",
+    "swiftCode": "SWIFT kodi",
     "confirmBooking": "Band qilishni tasdiqlash",
     "bookingDetails": "Band qilish ma'lumotlari",
     "bookingDate": "Band qilish sanasi",
@@ -184,7 +186,8 @@
     "totalAmount": "Umumiy summa",
     "saveBookingDetails": "Band qilish ma'lumotlarini saqlash",
     "print": "Chop etish",
-    "backToHome": "Bosh sahifaga qaytish"
+    "backToHome": "Bosh sahifaga qaytish",
+    "appointmentDate": "Uchrashuv sanasi"
   },
 
   "time": {
