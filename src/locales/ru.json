@@ -21,7 +21,8 @@
   },
 
   "admin": {
-    "login": "Вход администратора"
+    "login": "Вход администратора",
+    "demoLogin": "Вы можете войти с тестовыми пользователями в демо-режиме"
   },
 
   "common": {
@@ -33,24 +34,40 @@
     "noData": "Данные не найдены",
     "loading": "Загрузка...",
     "error": "Ошибка",
-    "success": "Успешно"
+    "success": "Успешно",
+    "cancel": "Отмена",
+    "close": "Закрыть",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "save": "Сохранить",
+    "add": "Добавить",
+    "duration": "Продолжительность"
   },
 
   "services": {
     "title": "Наши услуги",
     "description": "Профессиональные услуги красоты с нашей экспертной командой",
     "search": "Поиск услуг...",
-    "duration": "Продолжительность",
-    "minutes": "минут",
     "benefits": "Преимущества",
-    "viewDetails": "Подробнее",
-    "loadMore": "Загрузить еще",
     "cta": "Записаться",
     "bookNow": "Записаться сейчас",
     "noDescription": "Описание отсутствует",
     "noServicesAdded": "Услуги пока не добавлены",
     "viewServicesPage": "Страница услуг",
-    "viewAllServices": "Все услуги"
+    "viewAllServices": "Все услуги",
+    "noResults": "не найдено результатов для",
+    "moreBenefits": "больше преимуществ"
+  },
+
+  "service": {
+    "backToServices": "Вернуться к услугам",
+    "notFound": "Услуга не найдена",
+    "notFoundMessage": "Услуга, которую вы ищете, не существует",
+    "browseServices": "Просмотр услуг",
+    "benefits": "Преимущества",
+    "bookNow": "Записаться сейчас",
+    "recommendedProducts": "Рекомендуемые продукты",
+    "viewProductDetails": "Просмотр деталей продукта"
   },
 
   "products": {
@@ -63,12 +80,10 @@
     "noDescription": "Описание недоступно",
     "noProductsAdded": "Продукты еще не добавлены",
     "viewProductsPage": "Перейти на страницу продуктов",
-    "loadMore": "Загрузить еще",
     "details": "Подробности",
     "backToProducts": "Вернуться к продуктам",
     "howToUse": "Как использовать",
     "ingredients": "Состав",
-    "bookAppointment": "Записаться",
     "relatedServices": "Связанные услуги",
     "viewServiceDetails": "Подробнее об услуге"
   },
@@ -94,8 +109,6 @@
   "booking": {
     "title": "Запись на прием",
     "customerInfo": "Информация о клиенте",
-    "services": "Услуги",
-    "products": "Продукты",
     "payment": "Оплата",
     "confirmation": "Подтверждение",
     "detailed": "Подробная информация",
@@ -104,7 +117,7 @@
     "female": "Женский",
     "fullName": "Полное имя",
     "fullNamePlaceholder": "например: Иван Петров",
-    "fullNameValidation": "Полное имя должно содержать минимум 10 символов",
+    "fullNameValidation": "Полное имя должно содержать от 10 до 100 символов",
     "genderRequired": "Необходимо выбрать пол",
     "email": "Email",
     "emailPlaceholder": "example@example.com",
@@ -122,19 +135,14 @@
     "timeOutsideWorkingHours": "Выбранное время вне рабочих часов",
     "next": "Далее",
     "previous": "Назад",
-    "searchServices": "Поиск услуг...",
-    "minutes": "минут",
     "selectStaff": "Выберите сотрудника",
     "selectedServices": "Выбранные услуги",
     "servicesTotal": "Итого услуги",
     "totalDuration": "Общая продолжительность",
-    "duration": "Продолжительность",
     "endTime": "Время окончания",
     "servicesRequired": "Необходимо выбрать хотя бы одну услугу",
     "staffRequired": "Необходимо выбрать сотрудника для всех услуг",
     "staffConflict": "Сотрудник недоступен в выбранное время",
-    "loadMore": "Загрузить еще",
-    "searchProducts": "Поиск продуктов...",
     "recommendedProducts": "Рекомендуемые продукты",
     "allProducts": "Все продукты",
     "selectedProducts": "Выбранные продукты",
@@ -158,11 +166,9 @@
     "paymentMethod": "Способ оплаты",
     "cashPayment": "Наличный платеж",
     "cashPaymentDesc": "Вы можете оплатить сумму наличными",
-    "cardPayment": "Оплата картой",
     "cardPaymentDesc": "Вы можете оплатить кредитной или дебетовой картой",
     "posTerminal": "POS-терминал",
     "posTerminalDesc": "Вы можете оплатить с помощью POS-терминала в магазине",
-    "bankTransfer": "Банковский перевод",
     "bankTransferDesc": "Вы можете оплатить через банковский перевод",
     "bankDetails": "Банковские реквизиты",
     "bankName": "Kapital Bank",
@@ -171,10 +177,9 @@
     "swiftCode": "AIIBAZ2X",
     "confirmBooking": "Подтвердить бронирование",
     "bookingDetails": "Детали бронирования",
-    "bookingDate": "5/25/2025 10:15",
-    "customer": "asddddddddddddddddd",
-    "contact": "sdasdasdasd",
-    "totalAmount": "192.00 AZN",
+    "bookingDate": "Дата бронирования",
+    "customer": "Клиент",
+    "totalAmount": "Общая сумма",
     "saveBookingDetails": "Сохранить детали бронирования",
     "print": "Печать",
     "backToHome": "Вернуться на главную"

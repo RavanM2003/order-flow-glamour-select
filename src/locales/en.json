@@ -21,7 +21,8 @@
   },
 
   "admin": {
-    "login": "Admin Login"
+    "login": "Admin Login",
+    "demoLogin": "You can login with test users in demo mode"
   },
 
   "common": {
@@ -33,24 +34,41 @@
     "noData": "No data found",
     "loading": "Loading...",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "cancel": "Cancel",
+    "close": "Close",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "add": "Add",
+    "minutes": "minutes",
+    "duration": "Duration"
   },
 
   "services": {
     "title": "Our Services",
     "description": "Professional beauty services with our expert team",
     "search": "Search services...",
-    "duration": "Duration",
-    "minutes": "minutes",
     "benefits": "Benefits",
-    "viewDetails": "View Details",
-    "loadMore": "Load More",
     "cta": "Book Now",
     "bookNow": "Book Now",
     "noDescription": "No description available",
     "noServicesAdded": "No services added yet",
     "viewServicesPage": "View Services Page",
-    "viewAllServices": "View All Services"
+    "viewAllServices": "View All Services",
+    "noResults": "no results found for",
+    "moreBenefits": "more benefits"
+  },
+
+  "service": {
+    "backToServices": "Back to Services",
+    "notFound": "Service not found",
+    "notFoundMessage": "The service you are looking for does not exist",
+    "browseServices": "Browse Services",
+    "benefits": "Benefits",
+    "bookNow": "Book Now",
+    "recommendedProducts": "Recommended Products",
+    "viewProductDetails": "View Product Details"
   },
 
   "products": {
@@ -63,12 +81,10 @@
     "noDescription": "No description available",
     "noProductsAdded": "No products added yet",
     "viewProductsPage": "View Products Page",
-    "loadMore": "Load More",
     "details": "Details",
     "backToProducts": "Back to Products",
     "howToUse": "How to Use",
     "ingredients": "Ingredients",
-    "bookAppointment": "Book Appointment",
     "relatedServices": "Related Services",
     "viewServiceDetails": "View Service Details"
   },
@@ -94,8 +110,6 @@
   "booking": {
     "title": "Appointment Booking",
     "customerInfo": "Customer Information",
-    "services": "Services",
-    "products": "Products",
     "payment": "Payment",
     "confirmation": "Confirmation",
     "detailed": "Detailed Information",
@@ -104,7 +118,7 @@
     "female": "Female",
     "fullName": "Full Name",
     "fullNamePlaceholder": "e.g. John Smith",
-    "fullNameValidation": "Full name must be at least 10 characters",
+    "fullNameValidation": "Full name must be between 10-100 characters",
     "genderRequired": "Gender must be selected",
     "email": "Email",
     "emailPlaceholder": "example@example.com",
@@ -122,19 +136,14 @@
     "timeOutsideWorkingHours": "Selected time is outside working hours",
     "next": "Next",
     "previous": "Previous",
-    "searchServices": "Search services...",
-    "minutes": "minutes",
     "selectStaff": "Select Staff",
     "selectedServices": "Selected Services",
     "servicesTotal": "Services Total",
     "totalDuration": "Total Duration",
-    "duration": "Duration",
     "endTime": "End Time",
     "servicesRequired": "At least one service must be selected",
     "staffRequired": "Staff must be selected for all services",
     "staffConflict": "Staff is not available at selected time",
-    "loadMore": "Load More",
-    "searchProducts": "Search products...",
     "recommendedProducts": "Recommended Products",
     "allProducts": "All Products",
     "selectedProducts": "Selected Products",
@@ -158,11 +167,9 @@
     "paymentMethod": "Payment Method",
     "cashPayment": "Cash Payment",
     "cashPaymentDesc": "You can pay the amount in cash",
-    "cardPayment": "Card Payment",
     "cardPaymentDesc": "You can pay with credit or debit card",
     "posTerminal": "POS Terminal",
     "posTerminalDesc": "You can pay using the POS terminal available in the store",
-    "bankTransfer": "Bank Transfer",
     "bankTransferDesc": "You can pay via bank transfer",
     "bankDetails": "Bank Details",
     "bankName": "Kapital Bank",
@@ -171,10 +178,9 @@
     "swiftCode": "AIIBAZ2X",
     "confirmBooking": "Confirm Booking",
     "bookingDetails": "Booking Details",
-    "bookingDate": "5/25/2025 10:15",
-    "customer": "asddddddddddddddddd",
-    "contact": "sdasdasdasd",
-    "totalAmount": "192.00 AZN",
+    "bookingDate": "Booking Date",
+    "customer": "Customer",
+    "totalAmount": "Total Amount",
     "saveBookingDetails": "Save Booking Details",
     "print": "Print",
     "backToHome": "Back to Home"

@@ -21,7 +21,8 @@
   },
 
   "admin": {
-    "login": "Administrator kirishi"
+    "login": "Administrator kirishi",
+    "demoLogin": "Demo rejimida test foydalanuvchilari bilan kirishingiz mumkin"
   },
 
   "common": {
@@ -33,24 +34,40 @@
     "noData": "Ma'lumot topilmadi",
     "loading": "Yuklanmoqda...",
     "error": "Xato",
-    "success": "Muvaffaqiyatli"
+    "success": "Muvaffaqiyatli",
+    "cancel": "Bekor qilish",
+    "close": "Yopish",
+    "edit": "Tahrirlash",
+    "delete": "O'chirish",
+    "save": "Saqlash",
+    "add": "Qo'shish",
+    "duration": "Davomiyligi"
   },
 
   "services": {
     "title": "Bizning xizmatlarimiz",
     "description": "Mutaxassis jamoamiz bilan professional go'zallik xizmatlari",
     "search": "Xizmatlarni qidirish...",
-    "duration": "Davomiyligi",
-    "minutes": "daqiqa",
     "benefits": "Afzalliklari",
-    "viewDetails": "Batafsil ko'rish",
-    "loadMore": "Ko'proq yuklash",
     "cta": "Buyurtma berish",
     "bookNow": "Hozir buyurtma berish",
     "noDescription": "Tavsif mavjud emas",
     "noServicesAdded": "Hali xizmatlar qo'shilmagan",
     "viewServicesPage": "Xizmatlar sahifasini ko'rish",
-    "viewAllServices": "Barcha xizmatlarni ko'rish"
+    "viewAllServices": "Barcha xizmatlarni ko'rish",
+    "noResults": "uchun natija topilmadi",
+    "moreBenefits": "ko'proq afzalliklar"
+  },
+
+  "service": {
+    "backToServices": "Xizmatlarga qaytish",
+    "notFound": "Xizmat topilmadi",
+    "notFoundMessage": "Qidirayotgan xizmat mavjud emas",
+    "browseServices": "Xizmatlarni ko'rish",
+    "benefits": "Afzalliklari",
+    "bookNow": "Hozir buyurtma berish",
+    "recommendedProducts": "Tavsiya etilgan mahsulotlar",
+    "viewProductDetails": "Mahsulot tafsilotlarini ko'rish"
   },
 
   "products": {
@@ -63,12 +80,10 @@
     "noDescription": "Tavsif mavjud emas",
     "noProductsAdded": "Hali hech qanday mahsulot qo'shilmagan",
     "viewProductsPage": "Mahsulotlar sahifasiga o'tish",
-    "loadMore": "Ko'proq yuklash",
     "details": "Batafsil ma'lumot",
     "backToProducts": "Mahsulotlarga qaytish",
     "howToUse": "Qo'llash usuli",
     "ingredients": "Tarkibi",
-    "bookAppointment": "Uchrashuvni band qilish",
     "relatedServices": "Bog'liq xizmatlar",
     "viewServiceDetails": "Xizmat tafsilotlarini ko'rish"
   },
@@ -94,8 +109,6 @@
   "booking": {
     "title": "Uchrashuv belgilash",
     "customerInfo": "Mijoz ma'lumotlari",
-    "services": "Xizmatlar",
-    "products": "Mahsulotlar",
     "payment": "To'lov",
     "confirmation": "Tasdiqlash",
     "detailed": "Batafsil ma'lumot",
@@ -104,7 +117,7 @@
     "female": "Ayol",
     "fullName": "To'liq ism",
     "fullNamePlaceholder": "masalan: Alisher Navoiy",
-    "fullNameValidation": "To'liq ism kamida 10 ta belgidan iborat bo'lishi kerak",
+    "fullNameValidation": "To'liq ism 10-100 belgi orasida bo'lishi kerak",
     "genderRequired": "Jins tanlanishi shart",
     "email": "Email",
     "emailPlaceholder": "example@example.com",
@@ -122,19 +135,14 @@
     "timeOutsideWorkingHours": "Tanlangan vaqt ish soatlari tashqarisida",
     "next": "Keyingi",
     "previous": "Oldingi",
-    "searchServices": "Xizmatlarni qidirish...",
-    "minutes": "daqiqa",
     "selectStaff": "Xodimni tanlang",
     "selectedServices": "Tanlangan xizmatlar",
     "servicesTotal": "Xizmatlar jami",
     "totalDuration": "Umumiy davomiylik",
-    "duration": "Davomiylik",
     "endTime": "Tugash vaqti",
     "servicesRequired": "Kamida bitta xizmat tanlanishi kerak",
     "staffRequired": "Barcha xizmatlar uchun xodim tanlanishi kerak",
     "staffConflict": "Xodim tanlangan vaqtda mavjud emas",
-    "loadMore": "Ko'proq yuklash",
-    "searchProducts": "Mahsulotlarni qidirish...",
     "recommendedProducts": "Tavsiya etilgan mahsulotlar",
     "allProducts": "Barcha mahsulotlar",
     "selectedProducts": "Tanlangan mahsulotlar",
@@ -158,11 +166,9 @@
     "paymentMethod": "To'lov usuli",
     "cashPayment": "Naqd pul to'lovi",
     "cashPaymentDesc": "Summani naqd pulda to'lashingiz mumkin",
-    "cardPayment": "Karta orqali to'lov",
     "cardPaymentDesc": "Kredit yoki debit kartasi bilan to'lashingiz mumkin",
     "posTerminal": "POS terminal",
     "posTerminalDesc": "Do'konda mavjud bo'lgan POS terminal orqali to'lashingiz mumkin",
-    "bankTransfer": "Bank o'tkazmasi",
     "bankTransferDesc": "Bank o'tkazmasi orqali to'lashingiz mumkin",
     "bankDetails": "Bank ma'lumotlari",
     "bankName": "Kapital Bank",
@@ -171,11 +177,9 @@
     "swiftCode": "AIIBAZ2X",
     "confirmBooking": "Band qilishni tasdiqlash",
     "bookingDetails": "Band qilish ma'lumotlari",
-    "bookingDate": "5/25/2025 10:15",
-    "customer": "asddddddddddddddddd",
-    "contact": "sdasdasdasd",
-    "paymentMethod": "pos",
-    "totalAmount": "192.00 AZN",
+    "bookingDate": "Band qilish sanasi",
+    "customer": "Mijoz",
+    "totalAmount": "Umumiy summa",
     "saveBookingDetails": "Band qilish ma'lumotlarini saqlash",
     "print": "Chop etish",
     "backToHome": "Bosh sahifaga qaytish"
