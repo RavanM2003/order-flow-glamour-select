@@ -1,3 +1,4 @@
+
 import { Link, useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -29,7 +30,7 @@ const UserInfo = ({ user }) => (
     <div className="w-8 h-8 rounded-full bg-gray-200"></div>
     <div className="ml-3">
       <p className="text-sm font-medium">
-        {user?.first_name || ""} {user?.last_name || ""}
+        {user?.user_metadata?.full_name || user?.email || ""}
       </p>
       <p className="text-xs text-gray-500">{user?.email || ""}</p>
     </div>
@@ -84,12 +85,12 @@ const AdminVerticalNav = ({
   onTabChange,
   notifications = 0,
 }: AdminVerticalNavProps) => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  // Get user role from auth context and ensure it's a valid UserRole
-  const userRole = (user?.role || "customer") as UserRole;
+  // Get user role from user metadata or default to customer
+  const userRole = (user?.user_metadata?.role || "customer") as UserRole;
 
   // Filter sidebar items based on user role
   const filteredItems = SIDEBAR_ITEMS.filter((item) =>
@@ -97,8 +98,8 @@ const AdminVerticalNav = ({
   );
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/login");
+    await signOut();
+    navigate("/auth");
   };
 
   return (

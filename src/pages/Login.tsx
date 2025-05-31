@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -116,7 +117,7 @@ const LoginCard = ({
     <CardFooter className="flex flex-col">
       <p className="text-sm text-center text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link to="/register" className="text-primary hover:underline">
+        <Link to="/auth" className="text-primary hover:underline">
           Create one
         </Link>
       </p>
@@ -125,7 +126,7 @@ const LoginCard = ({
 );
 
 const Login: React.FC = () => {
-  const { login, user, session, isLoading, error } = useAuth();
+  const { signIn, user, session, isLoading, error } = useAuth();
   const navigate = useNavigate();
   const [loginError, setLoginError] = useState<string | null>(null);
 
@@ -138,8 +139,12 @@ const Login: React.FC = () => {
   const onSubmit = async (data: FormData) => {
     setLoginError(null);
     try {
-      await login(data.email, data.password);
-      navigate("/admin");
+      const { error } = await signIn(data.email, data.password);
+      if (error) {
+        setLoginError(error.message);
+      } else {
+        navigate("/admin");
+      }
     } catch (err) {
       console.error("Login error:", err);
       setLoginError(err instanceof Error ? err.message : "Failed to login");
