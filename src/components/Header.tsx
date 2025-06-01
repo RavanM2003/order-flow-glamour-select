@@ -6,16 +6,16 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import LanguageSelector from '@/components/LanguageSelector';
 import { useLanguage } from '@/context/LanguageContext';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-simple-auth';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useLanguage();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleSignOut = async () => {
-    await signOut();
+  const handleSignOut = () => {
+    logout();
     navigate('/');
   };
 
@@ -76,15 +76,15 @@ const Header = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="h-4 w-4 mr-2" />
-                      Sign Out
+                      Çıxış
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </>
             ) : (
-              <Link to="/auth">
+              <Link to="/admin-login">
                 <Button size="sm">
-                  Sign In
+                  Admin Girişi
                 </Button>
               </Link>
             )}
@@ -127,14 +127,14 @@ const Header = () => {
                   </Link>
                   <Button variant="ghost" size="sm" className="w-full" onClick={handleSignOut}>
                     <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
+                    Çıxış
                   </Button>
                 </div>
               ) : (
                 <div className="px-3 py-2">
-                  <Link to="/auth" onClick={() => setIsOpen(false)}>
+                  <Link to="/admin-login" onClick={() => setIsOpen(false)}>
                     <Button size="sm" className="w-full">
-                      Sign In
+                      Admin Girişi
                     </Button>
                   </Link>
                 </div>
