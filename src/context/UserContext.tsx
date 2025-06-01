@@ -9,6 +9,9 @@ interface UserContextProps {
   user: User | null;
   loading: boolean;
   error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  register: (email: string, password: string, userData?: Partial<User>) => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
   fetchUserProfile: () => Promise<User | null>;
   userId: string | null;
@@ -19,6 +22,9 @@ export const UserContext = createContext<UserContextProps>({
   user: null,
   loading: true,
   error: null,
+  login: async () => {},
+  logout: async () => {},
+  register: async () => {},
   updateProfile: async () => {},
   fetchUserProfile: async () => null,
   userId: null
@@ -124,6 +130,114 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     }
   };
 
+  // Login function
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        const userProfile = await fetchUserProfile(data.user.id);
+        
+        if (userProfile) {
+          setUser(userProfile);
+          setUserId(userProfile.id);
+          toast({
+            title: "Uğurla daxil oldunuz",
+            description: `Xoş gəldin, ${userProfile.full_name || userProfile.email}!`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error instanceof Error ? error.message : 'Login failed');
+      toast({
+        variant: "destructive",
+        title: "Daxil ola bilmədi",
+        description: error instanceof Error ? error.message : 'Xəta baş verdi',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Logout function
+  const logout = async () => {
+    setLoading(true);
+    
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      setUserId(null);
+      toast({
+        title: "Çıxış edildi",
+        description: "Uğurla hesabdan çıxış etdiniz.",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      setError(error instanceof Error ? error.message : 'Logout failed');
+      toast({
+        variant: "destructive",
+        title: "Çıxış edilə bilmədi",
+        description: error instanceof Error ? error.message : 'Xəta baş verdi',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Register function
+  const register = async (email: string, password: string, userData?: Partial<User>) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            first_name: userData?.first_name || userData?.firstName,
+            last_name: userData?.last_name || userData?.lastName,
+            full_name: userData?.full_name || `${userData?.first_name || userData?.firstName || ''} ${userData?.last_name || userData?.lastName || ''}`.trim(),
+            // Add any other user data here
+          }
+        }
+      });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        // Optionally create or update the user profile in the users table
+        // This might be needed if you have additional user fields not in auth.users
+        if (userData && Object.keys(userData).length > 0) {
+          await updateProfile(userData);
+        }
+        
+        toast({
+          title: "Qeydiyyat uğurlu oldu",
+          description: "Hesabınız uğurla yaradıldı.",
+        });
+      }
+    } catch (error) {
+      console.error('Register error:', error);
+      setError(error instanceof Error ? error.message : 'Registration failed');
+      toast({
+        variant: "destructive",
+        title: "Qeydiyyat uğursuz oldu",
+        description: error instanceof Error ? error.message : 'Xəta baş verdi',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Update user profile
   const updateProfile = async (updates: Partial<User>) => {
     if (!user) return;
@@ -185,6 +299,9 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       user,
       loading,
       error,
+      login,
+      logout,
+      register,
       updateProfile,
       fetchUserProfile,
       userId

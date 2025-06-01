@@ -1,4 +1,3 @@
-
 import { Link, useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -14,10 +13,10 @@ import {
   LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/use-simple-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { SIDEBAR_ITEMS, UserRole } from "@/models/role.model";
-import { useLanguage } from "@/context/LanguageContext";
+import { useLanguage } from "@/context";
 
 interface AdminVerticalNavProps {
   activeTab: string;
@@ -30,9 +29,9 @@ const UserInfo = ({ user }) => (
     <div className="w-8 h-8 rounded-full bg-gray-200"></div>
     <div className="ml-3">
       <p className="text-sm font-medium">
-        {user?.full_name || user?.email || "Admin User"}
+        {user?.first_name || ""} {user?.last_name || ""}
       </p>
-      <p className="text-xs text-gray-500">{user?.email || "admin@glamour.az"}</p>
+      <p className="text-xs text-gray-500">{user?.email || ""}</p>
     </div>
   </div>
 );
@@ -89,8 +88,8 @@ const AdminVerticalNav = ({
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  // Get user role from user object or default to super_admin for admin users
-  const userRole = (user?.role || "super_admin") as UserRole;
+  // Get user role from auth context and ensure it's a valid UserRole
+  const userRole = (user?.role || "customer") as UserRole;
 
   // Filter sidebar items based on user role
   const filteredItems = SIDEBAR_ITEMS.filter((item) =>
@@ -98,8 +97,8 @@ const AdminVerticalNav = ({
   );
 
   const handleLogout = async () => {
-    logout();
-    navigate("/admin-login");
+    await logout();
+    navigate("/login");
   };
 
   return (

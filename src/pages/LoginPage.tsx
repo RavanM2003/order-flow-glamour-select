@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -276,8 +275,8 @@ const LoginCard = ({
 
 const LoginPage: React.FC = () => {
   const {
-    signIn,
-    signUp,
+    login,
+    register: registerUser,
     user,
     session,
     isLoading,
@@ -314,12 +313,8 @@ const LoginPage: React.FC = () => {
   const handleLogin = async (data: LoginFormData) => {
     setAuthError(null);
     try {
-      const { error } = await signIn(data.email, data.password);
-      if (error) {
-        setAuthError(error.message);
-      } else {
-        navigate("/admin");
-      }
+      await login(data.email, data.password);
+      navigate("/admin");
     } catch (err) {
       console.error("Login error:", err);
       setAuthError(err instanceof Error ? err.message : "Failed to login");
@@ -329,15 +324,11 @@ const LoginPage: React.FC = () => {
   const handleRegister = async (data: RegisterFormData) => {
     setAuthError(null);
     try {
-      const { error } = await signUp(data.email, data.password, {
+      await registerUser(data.email, data.password, {
         first_name: data.first_name,
         last_name: data.last_name,
       });
-      if (error) {
-        setAuthError(error.message);
-      } else {
-        navigate("/admin");
-      }
+      navigate("/admin");
     } catch (err) {
       console.error("Registration error:", err);
       setAuthError(err instanceof Error ? err.message : "Failed to register");

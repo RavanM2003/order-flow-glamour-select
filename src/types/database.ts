@@ -1,5 +1,4 @@
 
-
 // Auto-generated database types based on current schema
 export interface Database {
   public: {
@@ -7,7 +6,7 @@ export interface Database {
       users: {
         Row: {
           id: string;
-          email: string;
+          email: string | null;
           phone: string;
           full_name: string | null;
           first_name: string | null;
@@ -18,11 +17,12 @@ export interface Database {
           avatar_url: string | null;
           bio: string | null;
           note: string | null;
+          hashed_password: string;
           created_at: string | null;
           updated_at: string | null;
         };
         Insert: {
-          email: string;
+          email?: string | null;
           phone: string;
           full_name?: string | null;
           first_name?: string | null;
@@ -33,9 +33,10 @@ export interface Database {
           avatar_url?: string | null;
           bio?: string | null;
           note?: string | null;
+          hashed_password: string;
         };
         Update: {
-          email?: string;
+          email?: string | null;
           phone?: string;
           full_name?: string | null;
           first_name?: string | null;
@@ -46,6 +47,7 @@ export interface Database {
           avatar_url?: string | null;
           bio?: string | null;
           note?: string | null;
+          hashed_password?: string;
         };
       };
       services: {
@@ -230,4 +232,3 @@ export interface FilterOptions {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
-

@@ -24,17 +24,7 @@
 
   "admin": {
     "login": "İdarəçi girişi",
-    "demoLogin": "Demo rejimdə test istifadəçiləri ilə giriş edə bilərsiniz",
-    "dashboard": "İdarə paneli",
-    "customers": "Müştərilər",
-    "services": "Xidmətlər",
-    "products": "Məhsullar",
-    "appointments": "Təyinatlar",
-    "cash": "Kassa",
-    "staff": "İşçilər",
-    "profile": "Profil",
-    "logout": "Çıxış",
-    "searchPlaceholder": "Axtar..."
+    "demoLogin": "Demo rejimdə test istifadəçiləri ilə giriş edə bilərsiniz"
   },
 
   "common": {

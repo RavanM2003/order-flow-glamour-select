@@ -131,17 +131,13 @@ export type Database = {
         Row: {
           appointment_date: string
           cancel_reason: string | null
-          confirmation_token: string | null
           created_at: string | null
           customer_user_id: string | null
-          discount_amount: number | null
           end_time: string
           id: number
-          is_confirmed: boolean | null
           is_no_show: boolean | null
           new_id: string | null
           notes: string | null
-          promo_code: string | null
           start_time: string
           status: Database["public"]["Enums"]["appointment_status"] | null
           total: number | null
@@ -151,17 +147,13 @@ export type Database = {
         Insert: {
           appointment_date: string
           cancel_reason?: string | null
-          confirmation_token?: string | null
           created_at?: string | null
           customer_user_id?: string | null
-          discount_amount?: number | null
           end_time: string
           id?: number
-          is_confirmed?: boolean | null
           is_no_show?: boolean | null
           new_id?: string | null
           notes?: string | null
-          promo_code?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["appointment_status"] | null
           total?: number | null
@@ -171,17 +163,13 @@ export type Database = {
         Update: {
           appointment_date?: string
           cancel_reason?: string | null
-          confirmation_token?: string | null
           created_at?: string | null
           customer_user_id?: string | null
-          discount_amount?: number | null
           end_time?: string
           id?: number
-          is_confirmed?: boolean | null
           is_no_show?: boolean | null
           new_id?: string | null
           notes?: string | null
-          promo_code?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["appointment_status"] | null
           total?: number | null
@@ -292,7 +280,6 @@ export type Database = {
           issued_at: string | null
           status: string | null
           total_amount: number
-          updated_at: string | null
         }
         Insert: {
           appointment_id?: number | null
@@ -303,7 +290,6 @@ export type Database = {
           issued_at?: string | null
           status?: string | null
           total_amount: number
-          updated_at?: string | null
         }
         Update: {
           appointment_id?: number | null
@@ -314,7 +300,6 @@ export type Database = {
           issued_at?: string | null
           status?: string | null
           total_amount?: number
-          updated_at?: string | null
         }
         Relationships: [
           {
@@ -464,9 +449,7 @@ export type Database = {
           created_by: string | null
           discount_percent: number | null
           id: number
-          is_active: boolean | null
           max_usage: number | null
-          usage_count: number | null
           valid_from: string | null
           valid_to: string | null
         }
@@ -476,9 +459,7 @@ export type Database = {
           created_by?: string | null
           discount_percent?: number | null
           id?: number
-          is_active?: boolean | null
           max_usage?: number | null
-          usage_count?: number | null
           valid_from?: string | null
           valid_to?: string | null
         }
@@ -488,9 +469,7 @@ export type Database = {
           created_by?: string | null
           discount_percent?: number | null
           id?: number
-          is_active?: boolean | null
           max_usage?: number | null
-          usage_count?: number | null
           valid_from?: string | null
           valid_to?: string | null
         }
@@ -838,14 +817,12 @@ export type Database = {
           bio: string | null
           birth_date: string | null
           created_at: string | null
-          email: string
+          email: string | null
           first_name: string | null
           full_name: string | null
           gender: Database["public"]["Enums"]["gender_enum"] | null
           hashed_password: string
           id: string
-          is_active: boolean | null
-          is_admin: boolean | null
           last_name: string | null
           note: string | null
           phone: string
@@ -858,14 +835,12 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           created_at?: string | null
-          email: string
+          email?: string | null
           first_name?: string | null
           full_name?: string | null
           gender?: Database["public"]["Enums"]["gender_enum"] | null
-          hashed_password?: string
+          hashed_password: string
           id?: string
-          is_active?: boolean | null
-          is_admin?: boolean | null
           last_name?: string | null
           note?: string | null
           phone: string
@@ -878,14 +853,12 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           created_at?: string | null
-          email?: string
+          email?: string | null
           first_name?: string | null
           full_name?: string | null
           gender?: Database["public"]["Enums"]["gender_enum"] | null
           hashed_password?: string
           id?: string
-          is_active?: boolean | null
-          is_admin?: boolean | null
           last_name?: string | null
           note?: string | null
           phone?: string
@@ -931,24 +904,12 @@ export type Database = {
           full_name: string
         }[]
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: Database["public"]["Enums"]["role_enum"]
-      }
       get_staff_by_service: {
         Args: { service_id: number }
         Returns: {
           user_id: string
           full_name: string
         }[]
-      }
-      is_admin_or_staff: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
       }
     }
     Enums: {
@@ -963,7 +924,6 @@ export type Database = {
         | "no_show"
         | "awaiting_payment"
         | "paid"
-        | "awaiting_confirmation"
       gender_enum: "male" | "female" | "other"
       payment_method:
         | "cash"
@@ -1109,7 +1069,6 @@ export const Constants = {
         "no_show",
         "awaiting_payment",
         "paid",
-        "awaiting_confirmation",
       ],
       gender_enum: ["male", "female", "other"],
       payment_method: ["cash", "card", "bank", "pos", "discount", "promo_code"],
