@@ -745,20 +745,26 @@ export type Database = {
       }
       staff_availability: {
         Row: {
+          created_at: string | null
           end_time: string
-          staff_user_id: string
+          id: string
+          staff_user_id: string | null
           start_time: string
           weekday: number
         }
         Insert: {
+          created_at?: string | null
           end_time: string
-          staff_user_id: string
+          id?: string
+          staff_user_id?: string | null
           start_time: string
           weekday: number
         }
         Update: {
+          created_at?: string | null
           end_time?: string
-          staff_user_id?: string
+          id?: string
+          staff_user_id?: string | null
           start_time?: string
           weekday?: number
         }
