@@ -1,41 +1,87 @@
+
 import React, { useState, useEffect, useCallback } from "react";
 import { useServices } from "@/hooks/use-services";
 import { useOrder } from "@/context/OrderContext";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Clock, Info } from "lucide-react";
+import { Clock, Info, Search } from "lucide-react";
 import { Service } from "@/models/service.model";
 import DiscountBadge from "@/components/ui/discount-badge";
 import PriceDisplay from "@/components/ui/price-display";
 import { useLanguage } from "@/context/LanguageContext";
 import StaffSelection from "./StaffSelection";
-import ServerSearchAndFilter from "./ServerSearchAndFilter";
 import { formatDurationMultiLanguage } from "@/utils/validation";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
+const ITEMS_PER_PAGE = 6;
 
 const ServiceSelection = () => {
-  const { services, isLoading, error } = useServices();
-  const { selectService, unselectService, orderState, addServiceProvider } =
-    useOrder();
+  const { selectService, unselectService, orderState, addServiceProvider } = useOrder();
   const { t } = useLanguage();
-  const [expandedServices, setExpandedServices] = useState<Set<number>>(
-    new Set()
-  );
-  const [selectedStaff, setSelectedStaff] = useState<Record<number, string>>(
-    {}
-  );
-  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
+  const [expandedServices, setExpandedServices] = useState<Set<number>>(new Set());
+  const [selectedStaff, setSelectedStaff] = useState<Record<number, string>>({});
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   const selectedServices = orderState?.selectedServices || [];
 
-  // Handle filtered services change
-  const handleFilteredServicesChange = useCallback((newServices: Service[]) => {
-    setFilteredServices(newServices);
-  }, []);
+  // Fetch services with server-side search and pagination
+  useEffect(() => {
+    fetchServices();
+  }, [currentPage, searchTerm]);
+
+  const fetchServices = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("services")
+        .select("*", { count: 'exact' })
+        .order("discount", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      // Server-side search
+      if (searchTerm.trim()) {
+        query = query.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+      }
+
+      // Pagination
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error("Error fetching services:", error);
+        return;
+      }
+
+      if (data) {
+        setServices(data as Service[]);
+        setTotalCount(count || 0);
+      }
+    } catch (error) {
+      console.error("Failed to fetch services:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
 
   const handleServiceToggle = (service: Service) => {
-    const serviceKey = `service_${service.id}`;
-
     if (selectedServices.includes(service.id)) {
       unselectService(service.id);
       setExpandedServices((prev) => {
@@ -55,11 +101,7 @@ const ServiceSelection = () => {
     }
   };
 
-  const handleStaffSelect = (
-    serviceId: number,
-    staffId: string,
-    staffName: string
-  ) => {
+  const handleStaffSelect = (serviceId: number, staffId: string, staffName: string) => {
     setSelectedStaff((prev) => ({
       ...prev,
       [serviceId]: staffId,
@@ -67,10 +109,7 @@ const ServiceSelection = () => {
     addServiceProvider(serviceId, staffName);
   };
 
-  const toggleServiceExpansion = (
-    serviceId: number,
-    event: React.MouseEvent
-  ) => {
+  const toggleServiceExpansion = (serviceId: number, event: React.MouseEvent) => {
     event.stopPropagation();
     setExpandedServices((prev) => {
       const newSet = new Set(prev);
@@ -83,32 +122,48 @@ const ServiceSelection = () => {
     });
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   const totalDuration = selectedServices.reduce((total, serviceId) => {
     const service = services.find((s) => s.id === serviceId);
     return total + (service?.duration || 0);
   }, 0);
 
-  // Initialize with first batch of services
-  useEffect(() => {
-    if (services.length > 0 && filteredServices.length === 0) {
-      setFilteredServices(services.slice(0, 6));
-    }
-  }, [services, filteredServices.length]);
-
-  if (isLoading) return <div>Loading services...</div>;
-  if (error) return <div>Error loading services: {error}</div>;
+  if (loading && currentPage === 1) {
+    return <div>Xidmətlər yüklənir...</div>;
+  }
 
   return (
     <div className="space-y-4">
-      <ServerSearchAndFilter<Service>
-        tableName="services"
-        searchFields={["name", "description"]}
-        onFilteredDataChange={handleFilteredServicesChange}
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        placeholder={t("services.search")}
-        initialData={services}
-      />
+      {/* Search Bar */}
+      <div className="mb-6 max-w-md">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <Input
+            placeholder={t("services.search")}
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="pl-10"
+          />
+        </div>
+      </div>
+
+      {/* Results Info */}
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">
+          {searchTerm 
+            ? `"${searchTerm}" üçün ${totalCount} nəticə`
+            : `Cəmi ${totalCount} xidmət`
+          }
+        </p>
+      </div>
 
       {totalDuration > 0 && (
         <div className="bg-glamour-50 p-4 rounded-lg">
@@ -121,25 +176,27 @@ const ServiceSelection = () => {
         </div>
       )}
 
-      {filteredServices.map((service) => {
+      {services.map((service) => {
         const isSelected = selectedServices.includes(service.id);
         const isExpanded = expandedServices.has(service.id);
 
         return (
           <Card
             key={service.id}
-            className={`transition-all ${
+            className={`transition-all relative ${
               isSelected
                 ? "border-glamour-700 bg-glamour-50"
                 : "border-gray-200"
             }`}
           >
+            <DiscountBadge discount={service.discount || 0} />
+            
             <div
               className="p-4 cursor-pointer"
               onClick={() => handleServiceToggle(service)}
             >
               <div className="flex items-start justify-between">
-                <div className="flex-1">
+                <div className="flex-1 pr-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-lg font-medium text-gray-900">
                       {service.name}
@@ -150,12 +207,6 @@ const ServiceSelection = () => {
                         discount={service.discount}
                         className="text-right"
                       />
-                      {service.discount && service.discount > 0 && (
-                        <DiscountBadge
-                          discount={service.discount}
-                          className="relative top-0 right-0"
-                        />
-                      )}
                     </div>
                   </div>
 
@@ -166,15 +217,6 @@ const ServiceSelection = () => {
                         {formatDurationMultiLanguage(service.duration, t)}
                       </span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => toggleServiceExpansion(service.id, e)}
-                      className="text-glamour-700 hover:text-glamour-800"
-                    >
-                      <Info className="h-4 w-4 mr-1" />
-                      {t("booking.moreInfo")}
-                    </Button>
                   </div>
 
                   {service.description && (
@@ -183,6 +225,18 @@ const ServiceSelection = () => {
                     </p>
                   )}
                 </div>
+              </div>
+              
+              {/* Info button - bottom right */}
+              <div className="absolute bottom-4 right-4">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => toggleServiceExpansion(service.id, e)}
+                  className="text-glamour-700 hover:text-glamour-800 h-8 w-8 p-0"
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
@@ -200,6 +254,65 @@ const ServiceSelection = () => {
           </Card>
         );
       })}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6 flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                let page;
+                if (totalPages <= 5) {
+                  page = i + 1;
+                } else if (currentPage <= 3) {
+                  page = i + 1;
+                } else if (currentPage >= totalPages - 2) {
+                  page = totalPages - 4 + i;
+                } else {
+                  page = currentPage - 2 + i;
+                }
+                
+                return (
+                  <PaginationItem key={page}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(page)}
+                      isActive={currentPage === page}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+
+      {services.length === 0 && !loading && (
+        <div className="text-center py-8">
+          <p className="text-gray-600">
+            {searchTerm 
+              ? `"${searchTerm}" üçün nəticə tapılmadı`
+              : "Heç bir xidmət tapılmadı"
+            }
+          </p>
+        </div>
+      )}
     </div>
   );
 };

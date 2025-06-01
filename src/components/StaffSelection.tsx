@@ -18,9 +18,12 @@ const StaffSelection: FC<StaffSelectionProps> = ({
   onStaffSelect,
   selectedStaffId,
 }) => {
-  const { staff, loading, error, fetchStaffByService } = useStaffByService();
+  const { fetchStaffByService, getStaffForService } = useStaffByService();
   const { orderState } = useOrder();
   const { t } = useLanguage();
+
+  // Get service-specific data
+  const { staff, loading, error } = getStaffForService(serviceId);
 
   useEffect(() => {
     if (serviceId && orderState.appointmentDate) {
@@ -68,13 +71,10 @@ const StaffSelection: FC<StaffSelectionProps> = ({
         </p>
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
           <p className="text-sm text-yellow-700">
-            No staff available for this service on the selected date
+            Bu xidmət və tarix üçün uyğun işçi tapılmadı
           </p>
           <p className="text-xs text-yellow-600 mt-1">
             Service ID: {serviceId} | Date: {orderState.appointmentDate?.toLocaleDateString()}
-          </p>
-          <p className="text-xs text-yellow-600">
-            Staff array is {staff ? `empty (length: ${staff.length})` : "null/undefined"}
           </p>
         </div>
       </div>
@@ -87,7 +87,7 @@ const StaffSelection: FC<StaffSelectionProps> = ({
         {t("booking.selectStaff")}
       </p>
       <p className="text-xs text-green-600">
-        Found {staff.length} available staff member(s)
+        {staff.length} uyğun işçi tapıldı
       </p>
       <div className="grid grid-cols-1 gap-2">
         {staff.map((staffMember) => (

@@ -12,19 +12,21 @@ interface Staff {
 }
 
 export const useStaffByService = () => {
-  const [staff, setStaff] = useState<Staff[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [staffByService, setStaffByService] = useState<Record<string, Staff[]>>({});
+  const [loadingByService, setLoadingByService] = useState<Record<string, boolean>>({});
+  const [errorByService, setErrorByService] = useState<Record<string, string | null>>({});
 
   const fetchStaffByService = useCallback(async (serviceId: number, date?: Date) => {
     if (!serviceId) {
       console.error('useStaffByService: No serviceId provided');
-      setError('Service ID is required');
+      const serviceKey = `service_${serviceId}`;
+      setErrorByService(prev => ({ ...prev, [serviceKey]: 'Service ID is required' }));
       return;
     }
 
-    setLoading(true);
-    setError(null);
+    const serviceKey = `service_${serviceId}`;
+    setLoadingByService(prev => ({ ...prev, [serviceKey]: true }));
+    setErrorByService(prev => ({ ...prev, [serviceKey]: null }));
     
     try {
       console.log('useStaffByService: Fetching staff for service:', serviceId, 'date:', date);
@@ -49,8 +51,8 @@ export const useStaffByService = () => {
             full_name: s.full_name,
             name: s.full_name
           }));
-          setStaff(mappedStaff);
-          setLoading(false);
+          setStaffByService(prev => ({ ...prev, [serviceKey]: mappedStaff }));
+          setLoadingByService(prev => ({ ...prev, [serviceKey]: false }));
           return;
         }
       }
@@ -64,8 +66,8 @@ export const useStaffByService = () => {
 
       if (staffError) {
         console.error('useStaffByService: Staff function error:', staffError);
-        setError(`Failed to fetch staff: ${staffError.message}`);
-        setStaff([]);
+        setErrorByService(prev => ({ ...prev, [serviceKey]: `Failed to fetch staff: ${staffError.message}` }));
+        setStaffByService(prev => ({ ...prev, [serviceKey]: [] }));
       } else if (staffWithService && staffWithService.length > 0) {
         console.log('useStaffByService: Found staff with service:', staffWithService);
         const mappedStaff = staffWithService.map((s: any) => ({
@@ -73,25 +75,32 @@ export const useStaffByService = () => {
           full_name: s.full_name,
           name: s.full_name
         }));
-        setStaff(mappedStaff);
+        setStaffByService(prev => ({ ...prev, [serviceKey]: mappedStaff }));
       } else {
         console.log('useStaffByService: No staff found for service');
-        setStaff([]);
+        setStaffByService(prev => ({ ...prev, [serviceKey]: [] }));
       }
     } catch (err) {
       console.error('useStaffByService: Unexpected error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setError(errorMessage);
-      setStaff([]);
+      setErrorByService(prev => ({ ...prev, [serviceKey]: errorMessage }));
+      setStaffByService(prev => ({ ...prev, [serviceKey]: [] }));
     } finally {
-      setLoading(false);
+      setLoadingByService(prev => ({ ...prev, [serviceKey]: false }));
     }
   }, []);
 
+  const getStaffForService = useCallback((serviceId: number) => {
+    const serviceKey = `service_${serviceId}`;
+    return {
+      staff: staffByService[serviceKey] || [],
+      loading: loadingByService[serviceKey] || false,
+      error: errorByService[serviceKey] || null
+    };
+  }, [staffByService, loadingByService, errorByService]);
+
   return {
-    staff,
-    loading,
-    error,
-    fetchStaffByService
+    fetchStaffByService,
+    getStaffForService
   };
 };
