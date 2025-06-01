@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useProducts } from "@/hooks/use-products";
 import { useOrder } from "@/context/OrderContext";
@@ -61,7 +62,7 @@ const ProductSelection = () => {
 
   return (
     <div className="space-y-4">
-      <ServerSearchAndFilter<Product>
+      <ServerSearchAndFilter
         tableName="products"
         searchFields={["name", "description"]}
         onFilteredDataChange={handleFilteredProductsChange}
