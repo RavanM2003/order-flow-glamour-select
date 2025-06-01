@@ -968,7 +968,7 @@ const AppointmentsTab = () => {
         title="Book now"
       >
         <OrderProvider>
-          <CheckoutFlow />
+          <CheckoutFlow bookingMode="admin" />
         </OrderProvider>
       </DetailDrawer>
       {/* Accept Drawer */}

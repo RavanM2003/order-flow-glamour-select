@@ -19,7 +19,7 @@ interface CheckoutFlowProps {
 
 const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode }) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const { orderState, clearOrder } = useOrder();
+  const { orderState, resetOrder, setAppointmentDate } = useOrder();
   const { t } = useLanguage();
 
   const steps = [
@@ -43,13 +43,13 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode }) => {
         return orderState.appointmentDate && orderState.appointmentTime;
       case 3: // Customer
         return (
-          orderState.customerInfo &&
-          orderState.customerInfo.full_name &&
-          orderState.customerInfo.email &&
-          orderState.customerInfo.number
+          orderState.customer &&
+          orderState.customer.name &&
+          orderState.customer.email &&
+          orderState.customer.phone
         );
       case 4: // Payment
-        return orderState.paymentDetails && orderState.paymentDetails.method;
+        return orderState.paymentMethod;
       default:
         return true;
     }
@@ -75,7 +75,20 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode }) => {
 
   const resetFlow = () => {
     setCurrentStep(0);
-    clearOrder();
+    resetOrder();
+  };
+
+  // Render the current step component with proper props
+  const renderCurrentStep = () => {
+    if (currentStep === 2 && steps[currentStep].key === "date") {
+      return (
+        <BookingDatePicker
+          value={orderState.appointmentDate}
+          onChange={setAppointmentDate}
+        />
+      );
+    }
+    return <CurrentStepComponent />;
   };
 
   return (
@@ -129,7 +142,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode }) => {
 
       {/* Current Step Content */}
       <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
-        <CurrentStepComponent />
+        {renderCurrentStep()}
       </div>
 
       {/* Navigation Buttons */}
