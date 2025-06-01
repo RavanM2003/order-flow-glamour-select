@@ -16,7 +16,7 @@ const DiscountBadge = ({ discount, className }: DiscountBadgeProps) => {
   return (
     <div
       className={cn(
-        "absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-lg border-2 border-white",
+        "absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full z-10 shadow-lg border-7 border-white",
         className
       )}
     >
