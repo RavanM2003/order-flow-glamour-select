@@ -230,14 +230,14 @@ const ServiceList = () => {
               </Button>
 
               {/* Info Icon - bottom right */}
-              <div className="absolute bottom-4 right-4">
+              {/* <div className="absolute bottom-4 right-4">
                 <Link 
                   to={`/services/${service.id}`}
                   className="text-glamour-600 hover:text-glamour-700 transition-colors"
                 >
                   <Info className="h-4 w-4" />
                 </Link>
-              </div>
+              </div> */}
             </div>
           </div>
         ))}
