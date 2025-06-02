@@ -45,7 +45,7 @@ export const signInWithEmail = async (email: string, password: string) => {
       .select("*")
       .eq("email", email)
       .eq("hashed_password", password)
-      .maybeSingle();
+      .limit(1);
 
     console.log("Database query result:", { userData, userError });
 
