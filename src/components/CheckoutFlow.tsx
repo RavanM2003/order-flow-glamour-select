@@ -31,8 +31,6 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode }) => {
     { key: "confirmation", label: t("booking.confirmation"), component: BookingConfirmation },
   ];
 
-  const CurrentStepComponent = steps[currentStep].component;
-
   const canProceedToNextStep = () => {
     switch (currentStep) {
       case 0: // Services
@@ -88,6 +86,8 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode }) => {
         />
       );
     }
+    
+    const CurrentStepComponent = steps[currentStep].component;
     return <CurrentStepComponent />;
   };
 
