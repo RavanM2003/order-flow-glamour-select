@@ -79,20 +79,29 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode }) => {
   // Render the current step component with proper props
   const renderCurrentStep = () => {
     const currentStepData = steps[currentStep];
-    const CurrentStepComponent = currentStepData.component;
     
-    // Handle BookingDatePicker specifically since it requires props
-    if (currentStepData.key === "date") {
-      return (
-        <BookingDatePicker
-          value={orderState.appointmentDate}
-          onChange={setAppointmentDate}
-        />
-      );
+    // Handle each step specifically to ensure proper props
+    switch (currentStepData.key) {
+      case "services":
+        return <ServiceSelection />;
+      case "products":
+        return <ProductSelection />;
+      case "date":
+        return (
+          <BookingDatePicker
+            value={orderState.appointmentDate}
+            onChange={setAppointmentDate}
+          />
+        );
+      case "customer":
+        return <CustomerInfo />;
+      case "payment":
+        return <PaymentDetails />;
+      case "confirmation":
+        return <BookingConfirmation />;
+      default:
+        return null;
     }
-    
-    // For other components that don't require specific props
-    return <CurrentStepComponent />;
   };
 
   return (
