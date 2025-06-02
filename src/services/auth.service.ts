@@ -39,13 +39,13 @@ export const signInWithEmail = async (email: string, password: string) => {
   try {
     console.log("Attempting login with:", { email, password });
     
-    // Query the public.users table directly using maybeSingle() to avoid errors when no data found
+    // Query the public.users table directly using single() to get one user object
     const { data: userData, error: userError } = await supabase
       .from("users")
       .select("*")
       .eq("email", email)
       .eq("hashed_password", password)
-      .limit(1);
+      .single();
 
     console.log("Database query result:", { userData, userError });
 
@@ -54,7 +54,7 @@ export const signInWithEmail = async (email: string, password: string) => {
       return { 
         user: null, 
         session: null, 
-        error: "Database error occurred" 
+        error: "Invalid login credentials" 
       };
     }
 
