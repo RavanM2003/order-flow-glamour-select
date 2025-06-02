@@ -50,6 +50,7 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
   const [services, setServices] = useState<Service[]>([]);
   const [staffByService, setStaffByService] = useState<Record<number, Staff[]>>({});
   const [loading, setLoading] = useState(true);
+  const [staffLoading, setStaffLoading] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     fetchServices();
@@ -57,12 +58,18 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
 
   const fetchServices = async () => {
     try {
+      console.log('Fetching services...');
       const { data: servicesData, error } = await supabase
         .from('services')
         .select('*')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching services:', error);
+        throw error;
+      }
+      
+      console.log('Services fetched:', servicesData);
       setServices(servicesData || []);
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -72,45 +79,79 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
   };
 
   const fetchStaffForService = async (serviceId: number) => {
-    if (staffByService[serviceId]) return;
+    if (staffByService[serviceId] || staffLoading[serviceId]) {
+      console.log(`Staff already loaded or loading for service ${serviceId}`);
+      return;
+    }
+
+    console.log(`Fetching staff for service ${serviceId}...`);
+    setStaffLoading(prev => ({ ...prev, [serviceId]: true }));
 
     try {
-      const { data: staffData, error } = await supabase
+      // Get staff who can perform this service
+      const { data: staffData, error: staffError } = await supabase
         .rpc('get_staff_by_service', { service_id: serviceId });
 
-      if (error) throw error;
+      if (staffError) {
+        console.error('Error fetching staff by service:', staffError);
+        throw staffError;
+      }
 
-      // Also check availability for the selected date
-      const selectedDateObj = new Date(selectedDate);
-      const weekday = selectedDateObj.getDay();
+      console.log(`Staff for service ${serviceId}:`, staffData);
 
-      const { data: availableStaff, error: availError } = await supabase
-        .from('staff_availability')
-        .select(`
-          staff_user_id,
-          users!inner(id, full_name)
-        `)
-        .eq('weekday', weekday)
-        .in('staff_user_id', staffData?.map((s: any) => s.user_id) || []);
+      if (!staffData || staffData.length === 0) {
+        console.log(`No staff found for service ${serviceId}`);
+        setStaffByService(prev => ({ ...prev, [serviceId]: [] }));
+        return;
+      }
 
-      if (availError) throw availError;
+      // If date is selected, check availability
+      if (selectedDate) {
+        const selectedDateObj = new Date(selectedDate);
+        const weekday = selectedDateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
 
-      const mappedStaff = availableStaff?.map((s: any) => ({
-        id: s.staff_user_id,
-        full_name: s.users.full_name,
-        position: 'Ustad'
-      })) || [];
+        console.log(`Checking availability for weekday ${weekday} and date ${selectedDate}`);
 
-      setStaffByService(prev => ({
-        ...prev,
-        [serviceId]: mappedStaff
-      }));
+        const staffIds = staffData.map((s: any) => s.user_id);
+        
+        const { data: availableStaff, error: availError } = await supabase
+          .from('staff_availability')
+          .select(`
+            staff_user_id,
+            users!inner(id, full_name)
+          `)
+          .eq('weekday', weekday)
+          .in('staff_user_id', staffIds);
+
+        if (availError) {
+          console.error('Error checking staff availability:', availError);
+          throw availError;
+        }
+
+        console.log(`Available staff for weekday ${weekday}:`, availableStaff);
+
+        const mappedStaff = availableStaff?.map((s: any) => ({
+          id: s.staff_user_id,
+          full_name: s.users.full_name,
+          position: 'Ustad'
+        })) || [];
+
+        setStaffByService(prev => ({ ...prev, [serviceId]: mappedStaff }));
+      } else {
+        // No date selected, show all staff for this service
+        const mappedStaff = staffData.map((s: any) => ({
+          id: s.user_id,
+          full_name: s.full_name,
+          position: 'Ustad'
+        }));
+
+        setStaffByService(prev => ({ ...prev, [serviceId]: mappedStaff }));
+      }
     } catch (error) {
-      console.error('Error fetching staff:', error);
-      setStaffByService(prev => ({
-        ...prev,
-        [serviceId]: []
-      }));
+      console.error(`Error fetching staff for service ${serviceId}:`, error);
+      setStaffByService(prev => ({ ...prev, [serviceId]: [] }));
+    } finally {
+      setStaffLoading(prev => ({ ...prev, [serviceId]: false }));
     }
   };
 
@@ -119,16 +160,23 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
   };
 
   const handleServiceSelect = async (service: Service) => {
-    await fetchStaffForService(service.id);
+    console.log('Service selected:', service);
     
     const isSelected = selectedServices.some(s => s.serviceId === service.id);
     if (isSelected) {
       // Remove service
-      onUpdate(selectedServices.filter(s => s.serviceId !== service.id));
+      const updated = selectedServices.filter(s => s.serviceId !== service.id);
+      onUpdate(updated);
+      console.log('Service removed, updated services:', updated);
+    } else {
+      // Add service and fetch staff
+      await fetchStaffForService(service.id);
     }
   };
 
   const handleStaffSelect = (service: Service, staff: Staff) => {
+    console.log('Staff selected:', staff, 'for service:', service);
+    
     const discountedPrice = calculateDiscountedPrice(service.price, service.discount || 0);
     
     const newService: SelectedService = {
@@ -143,7 +191,9 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
     };
 
     const updated = selectedServices.filter(s => s.serviceId !== service.id);
-    onUpdate([...updated, newService]);
+    const finalUpdated = [...updated, newService];
+    onUpdate(finalUpdated);
+    console.log('Staff selected, updated services:', finalUpdated);
   };
 
   const isServiceSelected = (serviceId: number) => {
@@ -155,7 +205,19 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
   };
 
   if (loading) {
-    return <div className="text-center py-8">Xidmətlər yüklənir...</div>;
+    return (
+      <div className="text-center py-8">
+        <div className="text-lg">Xidmətlər yüklənir...</div>
+      </div>
+    );
+  }
+
+  if (services.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-lg text-gray-600">Heç bir xidmət tapılmadı</div>
+      </div>
+    );
   }
 
   return (
@@ -163,6 +225,11 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
       <div className="text-center">
         <h2 className="text-2xl font-bold text-glamour-800 mb-2">Xidmət Seçimi</h2>
         <p className="text-gray-600">İstədiyiniz xidmətləri və işçini seçin</p>
+        {selectedDate && (
+          <p className="text-sm text-gray-500 mt-1">
+            Seçilən tarix: {new Date(selectedDate).toLocaleDateString('az-AZ')}
+          </p>
+        )}
       </div>
 
       <div className="grid gap-4">
@@ -170,6 +237,7 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
           const isSelected = isServiceSelected(service.id);
           const selectedStaff = getSelectedStaff(service.id);
           const availableStaff = staffByService[service.id] || [];
+          const isStaffLoading = staffLoading[service.id] || false;
           
           return (
             <Card key={service.id} className={`p-4 transition-all ${isSelected ? 'ring-2 ring-glamour-500' : ''}`}>
@@ -179,7 +247,9 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
                     <h3 className="font-semibold text-lg">{service.name}</h3>
                     {isSelected && <CheckCircle className="w-5 h-5 text-green-600" />}
                   </div>
-                  <p className="text-gray-600 text-sm mb-2">{service.description}</p>
+                  {service.description && (
+                    <p className="text-gray-600 text-sm mb-2">{service.description}</p>
+                  )}
                   
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
@@ -213,6 +283,7 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
                   onClick={() => handleServiceSelect(service)}
                   variant={isSelected ? "default" : "outline"}
                   size="sm"
+                  className={isSelected ? "bg-glamour-600 hover:bg-glamour-700" : ""}
                 >
                   {isSelected ? 'Seçildi' : 'Seç'}
                 </Button>
@@ -226,7 +297,9 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
                     <span className="font-medium">İşçi seçin:</span>
                   </div>
                   
-                  {availableStaff.length > 0 ? (
+                  {isStaffLoading ? (
+                    <div className="text-sm text-gray-500">İşçilər yüklənir...</div>
+                  ) : availableStaff.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {availableStaff.map(staff => (
                         <Button
@@ -234,14 +307,23 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
                           onClick={() => handleStaffSelect(service, staff)}
                           variant={selectedStaff?.staffId === staff.id ? "default" : "outline"}
                           size="sm"
-                          className="justify-start"
+                          className={`justify-start ${
+                            selectedStaff?.staffId === staff.id 
+                              ? "bg-glamour-600 hover:bg-glamour-700" 
+                              : ""
+                          }`}
                         >
                           {staff.full_name}
                         </Button>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-amber-600 text-sm">Bu tarix üçün uyğun işçi yoxdur</p>
+                    <p className="text-amber-600 text-sm">
+                      {selectedDate 
+                        ? "Bu tarix üçün uyğun işçi yoxdur" 
+                        : "Bu xidmət üçün işçi tapılmadı"
+                      }
+                    </p>
                   )}
                 </div>
               )}
@@ -250,13 +332,33 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
         })}
       </div>
 
+      {/* Selected Services Summary */}
+      {selectedServices.length > 0 && (
+        <Card className="p-4 bg-glamour-50">
+          <h3 className="font-semibold mb-3">Seçilən Xidmətlər:</h3>
+          <div className="space-y-2">
+            {selectedServices.map((service, index) => (
+              <div key={index} className="flex justify-between items-center text-sm">
+                <div>
+                  <span className="font-medium">{service.serviceName}</span>
+                  <span className="text-gray-600 ml-2">- {service.staffName}</span>
+                </div>
+                <span className="font-semibold text-glamour-700">
+                  {service.discountedPrice.toFixed(2)} AZN
+                </span>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
       <div className="flex justify-between">
         <Button onClick={onBack} variant="outline">
           Geri
         </Button>
         <Button 
           onClick={onNext} 
-          disabled={selectedServices.length === 0}
+          disabled={selectedServices.length === 0 || selectedServices.some(s => !s.staffId)}
           className="bg-glamour-600 hover:bg-glamour-700"
         >
           Növbəti Addım

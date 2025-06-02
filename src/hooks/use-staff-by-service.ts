@@ -31,34 +31,7 @@ export const useStaffByService = () => {
     try {
       console.log('useStaffByService: Fetching staff for service:', serviceId, 'date:', date);
       
-      // First try using the Supabase function for available staff by service and date
-      if (date) {
-        const dateString = date.toISOString().split('T')[0];
-        console.log('useStaffByService: Using date-based function with date:', dateString);
-        
-        const { data: availableStaff, error: functionError } = await supabase
-          .rpc('get_available_staff_by_service_and_date', {
-            service_id: serviceId,
-            reservation_date: dateString
-          });
-
-        if (functionError) {
-          console.error('useStaffByService: Function error:', functionError);
-        } else if (availableStaff && availableStaff.length > 0) {
-          console.log('useStaffByService: Found available staff:', availableStaff);
-          const mappedStaff = availableStaff.map((s: any) => ({
-            id: s.user_id,
-            full_name: s.full_name,
-            name: s.full_name
-          }));
-          setStaffByService(prev => ({ ...prev, [serviceKey]: mappedStaff }));
-          setLoadingByService(prev => ({ ...prev, [serviceKey]: false }));
-          return;
-        }
-      }
-
-      // Fallback: Get all staff with this service specialization
-      console.log('useStaffByService: Using fallback method');
+      // First get staff who can perform this service
       const { data: staffWithService, error: staffError } = await supabase
         .rpc('get_staff_by_service', {
           service_id: serviceId
@@ -68,17 +41,58 @@ export const useStaffByService = () => {
         console.error('useStaffByService: Staff function error:', staffError);
         setErrorByService(prev => ({ ...prev, [serviceKey]: `Failed to fetch staff: ${staffError.message}` }));
         setStaffByService(prev => ({ ...prev, [serviceKey]: [] }));
-      } else if (staffWithService && staffWithService.length > 0) {
-        console.log('useStaffByService: Found staff with service:', staffWithService);
+        return;
+      }
+
+      if (!staffWithService || staffWithService.length === 0) {
+        console.log('useStaffByService: No staff found for service');
+        setStaffByService(prev => ({ ...prev, [serviceKey]: [] }));
+        return;
+      }
+
+      console.log('useStaffByService: Found staff with service:', staffWithService);
+
+      // If date is provided, filter by availability
+      if (date) {
+        const weekday = date.getDay();
+        console.log('useStaffByService: Checking availability for weekday:', weekday);
+        
+        const staffIds = staffWithService.map((s: any) => s.user_id);
+        
+        const { data: availableStaff, error: availError } = await supabase
+          .from('staff_availability')
+          .select(`
+            staff_user_id,
+            users!inner(id, full_name)
+          `)
+          .eq('weekday', weekday)
+          .in('staff_user_id', staffIds);
+
+        if (availError) {
+          console.error('useStaffByService: Availability error:', availError);
+          // Fallback to all staff if availability check fails
+          const mappedStaff = staffWithService.map((s: any) => ({
+            id: s.user_id,
+            full_name: s.full_name,
+            name: s.full_name
+          }));
+          setStaffByService(prev => ({ ...prev, [serviceKey]: mappedStaff }));
+        } else {
+          const mappedStaff = availableStaff?.map((s: any) => ({
+            id: s.staff_user_id,
+            full_name: s.users.full_name,
+            name: s.users.full_name
+          })) || [];
+          setStaffByService(prev => ({ ...prev, [serviceKey]: mappedStaff }));
+        }
+      } else {
+        // No date filter, return all staff
         const mappedStaff = staffWithService.map((s: any) => ({
           id: s.user_id,
           full_name: s.full_name,
           name: s.full_name
         }));
         setStaffByService(prev => ({ ...prev, [serviceKey]: mappedStaff }));
-      } else {
-        console.log('useStaffByService: No staff found for service');
-        setStaffByService(prev => ({ ...prev, [serviceKey]: [] }));
       }
     } catch (err) {
       console.error('useStaffByService: Unexpected error:', err);
