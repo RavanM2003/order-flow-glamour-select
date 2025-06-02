@@ -29,6 +29,9 @@ const StaffSelection: FC<StaffSelectionProps> = ({
     if (serviceId && orderState.appointmentDate) {
       console.log('StaffSelection: Fetching staff for service:', serviceId, 'date:', orderState.appointmentDate);
       fetchStaffByService(serviceId, orderState.appointmentDate);
+    } else if (serviceId) {
+      console.log('StaffSelection: Fetching staff for service without date:', serviceId);
+      fetchStaffByService(serviceId);
     }
   }, [serviceId, orderState.appointmentDate, fetchStaffByService]);
 
@@ -36,7 +39,7 @@ const StaffSelection: FC<StaffSelectionProps> = ({
     return (
       <div className="space-y-2">
         <p className="text-sm font-medium text-gray-700">
-          {t("booking.selectStaff")}
+          İşçi seçin
         </p>
         <div className="grid grid-cols-1 gap-2">
           {[1, 2].map((i) => (
@@ -51,12 +54,12 @@ const StaffSelection: FC<StaffSelectionProps> = ({
     return (
       <div className="space-y-2">
         <p className="text-sm font-medium text-gray-700">
-          {t("booking.selectStaff")}
+          İşçi seçin
         </p>
         <div className="bg-red-50 border border-red-200 rounded-md p-3">
-          <p className="text-sm text-red-600">Error: {error}</p>
+          <p className="text-sm text-red-600">Xəta: {error}</p>
           <p className="text-xs text-red-500 mt-1">
-            Service ID: {serviceId}, Date: {orderState.appointmentDate?.toISOString()}
+            Xidmət ID: {serviceId}, Tarix: {orderState.appointmentDate?.toISOString()}
           </p>
         </div>
       </div>
@@ -67,14 +70,14 @@ const StaffSelection: FC<StaffSelectionProps> = ({
     return (
       <div className="space-y-2">
         <p className="text-sm font-medium text-gray-700">
-          {t("booking.selectStaff")}
+          İşçi seçin
         </p>
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
           <p className="text-sm text-yellow-700">
             Bu xidmət və tarix üçün uyğun işçi tapılmadı
           </p>
           <p className="text-xs text-yellow-600 mt-1">
-            Service ID: {serviceId} | Date: {orderState.appointmentDate?.toLocaleDateString()}
+            Xidmət ID: {serviceId} | Tarix: {orderState.appointmentDate?.toLocaleDateString() || 'Seçilməyib'}
           </p>
         </div>
       </div>
@@ -84,7 +87,7 @@ const StaffSelection: FC<StaffSelectionProps> = ({
   return (
     <div className="space-y-2">
       <p className="text-sm font-medium text-gray-700">
-        {t("booking.selectStaff")}
+        İşçi seçin
       </p>
       <p className="text-xs text-green-600">
         {staff.length} uyğun işçi tapıldı
@@ -101,7 +104,7 @@ const StaffSelection: FC<StaffSelectionProps> = ({
             onClick={() =>
               onStaffSelect(
                 staffMember.id,
-                staffMember.full_name || staffMember.name || "Unknown Staff"
+                staffMember.full_name || staffMember.name || "Naməlum İşçi"
               )
             }
           >
@@ -111,7 +114,7 @@ const StaffSelection: FC<StaffSelectionProps> = ({
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">
-                  {staffMember.full_name || staffMember.name || "Unknown Staff"}
+                  {staffMember.full_name || staffMember.name || "Naməlum İşçi"}
                 </p>
                 {staffMember.position && (
                   <p className="text-xs text-gray-500">

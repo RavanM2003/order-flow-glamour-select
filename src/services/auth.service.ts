@@ -286,26 +286,40 @@ export const getCurrentUser = async () => {
  */
 export const getAllStaff = async () => {
   try {
+    console.log('getAllStaff: Fetching staff members...');
+    
     const { data, error } = await supabase
       .from("users")
       .select("*")
       .eq("role", "staff");
 
+    console.log('getAllStaff: Query result:', { data, error });
+
     if (error) {
+      console.error('getAllStaff: Database error:', error);
       return { staff: [], error: error.message };
+    }
+
+    if (!data || data.length === 0) {
+      console.log('getAllStaff: No staff members found');
+      return { staff: [], error: null };
     }
 
     // Cast the data to Staff[]
     const staff = data.map((user) => ({
       id: user.id,
       name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
+      full_name: user.full_name,
       position: "Staff Member", // Default position
       user_id: user.id,
       email: user.email,
       phone: user.phone || "",
       specializations: [],
       avatar_url: user.avatar_url,
+      role: user.role,
     }));
+
+    console.log('getAllStaff: Mapped staff:', staff);
 
     return {
       staff,

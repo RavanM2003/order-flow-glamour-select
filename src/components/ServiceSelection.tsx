@@ -102,6 +102,7 @@ const ServiceSelection = () => {
   };
 
   const handleStaffSelect = (serviceId: number, staffId: string, staffName: string) => {
+    console.log('Staff selected:', { serviceId, staffId, staffName });
     setSelectedStaff((prev) => ({
       ...prev,
       [serviceId]: staffId,
@@ -147,7 +148,7 @@ const ServiceSelection = () => {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <Input
-            placeholder={t("services.search")}
+            placeholder="Xidmət axtarın..."
             value={searchTerm}
             onChange={handleSearchChange}
             className="pl-10"
@@ -168,7 +169,7 @@ const ServiceSelection = () => {
       {totalDuration > 0 && (
         <div className="bg-glamour-50 p-4 rounded-lg">
           <h3 className="font-medium text-glamour-800 mb-2">
-            {t("booking.totalDuration")}
+            Ümumi müddət
           </h3>
           <p className="text-lg font-semibold text-glamour-700">
             {formatDurationMultiLanguage(totalDuration, t)}

@@ -25,18 +25,49 @@ export function useStaff() {
     setIsLoading(true);
     setError("");
     try {
-      const response = await staffService.getStaffMembers();
-      if (response.data) {
-        setStaff(response.data);
-      } else if (response.error) {
-        setError(response.error);
+      console.log('useStaff: Starting fetchStaff...');
+      
+      // Direct Supabase query to get real data
+      const { data: staffData, error: dbError } = await supabase
+        .from("users")
+        .select("*")
+        .eq("role", "staff");
+
+      console.log('useStaff: Direct DB query result:', { staffData, dbError });
+
+      if (dbError) {
+        console.error('useStaff: Database error:', dbError);
+        setError(dbError.message);
         toast({
           variant: "destructive",
           title: "Error",
-          description: `Failed to load staff: ${response.error}`,
+          description: `Failed to load staff: ${dbError.message}`,
         });
+        return;
+      }
+
+      if (staffData && staffData.length > 0) {
+        const mappedStaff = staffData.map((user) => ({
+          id: user.id,
+          name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
+          full_name: user.full_name,
+          position: "Staff Member",
+          user_id: user.id,
+          email: user.email,
+          phone: user.phone || "",
+          specializations: [],
+          avatar_url: user.avatar_url,
+          role: user.role,
+        }));
+        
+        console.log('useStaff: Mapped staff data:', mappedStaff);
+        setStaff(mappedStaff);
+      } else {
+        console.log('useStaff: No staff found in database');
+        setStaff([]);
       }
     } catch (err) {
+      console.error('useStaff: Unexpected error:', err);
       const errorMessage = err instanceof Error ? err.message : String(err);
       setError(errorMessage);
       toast({
