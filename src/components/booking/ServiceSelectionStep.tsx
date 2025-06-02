@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, User, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useStaffByService } from '@/hooks/use-staff-by-service';
 
 interface Service {
   id: number;
@@ -13,12 +14,6 @@ interface Service {
   duration: number;
   price: number;
   discount: number;
-}
-
-interface Staff {
-  id: string;
-  full_name: string;
-  position: string;
 }
 
 interface SelectedService {
@@ -48,9 +43,8 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
   onBack
 }) => {
   const [services, setServices] = useState<Service[]>([]);
-  const [staffByService, setStaffByService] = useState<Record<number, Staff[]>>({});
   const [loading, setLoading] = useState(true);
-  const [staffLoading, setStaffLoading] = useState<Record<number, boolean>>({});
+  const { fetchStaffByService, getStaffForService } = useStaffByService();
 
   useEffect(() => {
     fetchServices();
@@ -78,83 +72,6 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
     }
   };
 
-  const fetchStaffForService = async (serviceId: number) => {
-    if (staffByService[serviceId] || staffLoading[serviceId]) {
-      console.log(`Staff already loaded or loading for service ${serviceId}`);
-      return;
-    }
-
-    console.log(`Fetching staff for service ${serviceId}...`);
-    setStaffLoading(prev => ({ ...prev, [serviceId]: true }));
-
-    try {
-      // Get staff who can perform this service
-      const { data: staffData, error: staffError } = await supabase
-        .rpc('get_staff_by_service', { service_id: serviceId });
-
-      if (staffError) {
-        console.error('Error fetching staff by service:', staffError);
-        throw staffError;
-      }
-
-      console.log(`Staff for service ${serviceId}:`, staffData);
-
-      if (!staffData || staffData.length === 0) {
-        console.log(`No staff found for service ${serviceId}`);
-        setStaffByService(prev => ({ ...prev, [serviceId]: [] }));
-        return;
-      }
-
-      // If date is selected, check availability
-      if (selectedDate) {
-        const selectedDateObj = new Date(selectedDate);
-        const weekday = selectedDateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
-
-        console.log(`Checking availability for weekday ${weekday} and date ${selectedDate}`);
-
-        const staffIds = staffData.map((s: any) => s.user_id);
-        
-        const { data: availableStaff, error: availError } = await supabase
-          .from('staff_availability')
-          .select(`
-            staff_user_id,
-            users!inner(id, full_name)
-          `)
-          .eq('weekday', weekday)
-          .in('staff_user_id', staffIds);
-
-        if (availError) {
-          console.error('Error checking staff availability:', availError);
-          throw availError;
-        }
-
-        console.log(`Available staff for weekday ${weekday}:`, availableStaff);
-
-        const mappedStaff = availableStaff?.map((s: any) => ({
-          id: s.staff_user_id,
-          full_name: s.users.full_name,
-          position: 'Ustad'
-        })) || [];
-
-        setStaffByService(prev => ({ ...prev, [serviceId]: mappedStaff }));
-      } else {
-        // No date selected, show all staff for this service
-        const mappedStaff = staffData.map((s: any) => ({
-          id: s.user_id,
-          full_name: s.full_name,
-          position: 'Ustad'
-        }));
-
-        setStaffByService(prev => ({ ...prev, [serviceId]: mappedStaff }));
-      }
-    } catch (error) {
-      console.error(`Error fetching staff for service ${serviceId}:`, error);
-      setStaffByService(prev => ({ ...prev, [serviceId]: [] }));
-    } finally {
-      setStaffLoading(prev => ({ ...prev, [serviceId]: false }));
-    }
-  };
-
   const calculateDiscountedPrice = (price: number, discount: number) => {
     return price - (price * discount / 100);
   };
@@ -170,20 +87,21 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
       console.log('Service removed, updated services:', updated);
     } else {
       // Add service and fetch staff
-      await fetchStaffForService(service.id);
+      const date = selectedDate ? new Date(selectedDate) : undefined;
+      await fetchStaffByService(service.id, date);
     }
   };
 
-  const handleStaffSelect = (service: Service, staff: Staff) => {
-    console.log('Staff selected:', staff, 'for service:', service);
+  const handleStaffSelect = (service: Service, staffId: string, staffName: string) => {
+    console.log('Staff selected:', { staffId, staffName }, 'for service:', service);
     
     const discountedPrice = calculateDiscountedPrice(service.price, service.discount || 0);
     
     const newService: SelectedService = {
       serviceId: service.id,
       serviceName: service.name,
-      staffId: staff.id,
-      staffName: staff.full_name,
+      staffId: staffId,
+      staffName: staffName,
       duration: service.duration,
       price: service.price,
       discount: service.discount || 0,
@@ -236,8 +154,7 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
         {services.map(service => {
           const isSelected = isServiceSelected(service.id);
           const selectedStaff = getSelectedStaff(service.id);
-          const availableStaff = staffByService[service.id] || [];
-          const isStaffLoading = staffLoading[service.id] || false;
+          const { staff: availableStaff, loading: isStaffLoading, error: staffError } = getStaffForService(service.id);
           
           return (
             <Card key={service.id} className={`p-4 transition-all ${isSelected ? 'ring-2 ring-glamour-500' : ''}`}>
@@ -299,12 +216,14 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
                   
                   {isStaffLoading ? (
                     <div className="text-sm text-gray-500">İşçilər yüklənir...</div>
+                  ) : staffError ? (
+                    <div className="text-sm text-red-600">Xəta: {staffError}</div>
                   ) : availableStaff.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {availableStaff.map(staff => (
                         <Button
                           key={staff.id}
-                          onClick={() => handleStaffSelect(service, staff)}
+                          onClick={() => handleStaffSelect(service, staff.id, staff.full_name || staff.name || 'Unknown')}
                           variant={selectedStaff?.staffId === staff.id ? "default" : "outline"}
                           size="sm"
                           className={`justify-start ${
@@ -313,7 +232,12 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
                               : ""
                           }`}
                         >
-                          {staff.full_name}
+                          <div className="text-left">
+                            <div className="font-medium">{staff.full_name || staff.name}</div>
+                            {staff.position && (
+                              <div className="text-xs opacity-75">{staff.position}</div>
+                            )}
+                          </div>
                         </Button>
                       ))}
                     </div>

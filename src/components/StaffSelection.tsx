@@ -5,7 +5,6 @@ import { useOrder } from "@/context/OrderContext";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { User } from "lucide-react";
-import { useLanguage } from "@/context/LanguageContext";
 
 interface StaffSelectionProps {
   serviceId: number;
@@ -20,7 +19,6 @@ const StaffSelection: FC<StaffSelectionProps> = ({
 }) => {
   const { fetchStaffByService, getStaffForService } = useStaffByService();
   const { orderState } = useOrder();
-  const { t } = useLanguage();
 
   // Get service-specific data
   const { staff, loading, error } = getStaffForService(serviceId);

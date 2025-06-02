@@ -934,10 +934,13 @@ export type Database = {
         }[]
       }
       get_available_staff_by_service_and_date: {
-        Args: { service_id: number; reservation_date: string }
+        Args: { service_id: number; check_date: string }
         Returns: {
           user_id: string
           full_name: string
+          email: string
+          phone: string
+          staff_position: string
         }[]
       }
       get_current_user_role: {
@@ -949,6 +952,9 @@ export type Database = {
         Returns: {
           user_id: string
           full_name: string
+          email: string
+          phone: string
+          staff_position: string
         }[]
       }
       is_admin_or_staff: {

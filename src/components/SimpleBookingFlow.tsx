@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import CustomerInfoStep from './booking/CustomerInfoStep';
 import ServiceSelectionStep from './booking/ServiceSelectionStep';
 import PaymentStep from './booking/PaymentStep';
 import BookingSummary from './booking/BookingSummary';
+import SimpleLogin from './auth/SimpleLogin';
 import { createBooking } from '@/services/booking.service';
+import { Button } from '@/components/ui/button';
 
 export type BookingMode = "customer" | "admin";
 
@@ -37,6 +39,7 @@ interface SimpleBookingFlowProps {
 const SimpleBookingFlow: React.FC<SimpleBookingFlowProps> = ({ bookingMode }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     fullName: '',
@@ -50,6 +53,41 @@ const SimpleBookingFlow: React.FC<SimpleBookingFlowProps> = ({ bookingMode }) =>
   
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
   const [paymentMethod, setPaymentMethod] = useState('');
+
+  // Login statusunu yoxlayırıq
+  useEffect(() => {
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('currentUser');
+    setIsLoggedIn(false);
+    // Reset form
+    setCurrentStep(1);
+    setCustomerInfo({
+      fullName: '',
+      gender: '',
+      phone: '',
+      email: '',
+      date: '',
+      time: '',
+      note: ''
+    });
+    setSelectedServices([]);
+    setPaymentMethod('');
+  };
+
+  // Əgər admin mode-dadırsa və login olmayıbsa, login səhifəsini göstər
+  if (bookingMode === 'admin' && !isLoggedIn) {
+    return <SimpleLogin onLoginSuccess={handleLoginSuccess} />;
+  }
 
   const generateInvoiceNumber = () => {
     const date = new Date();
@@ -191,6 +229,15 @@ const SimpleBookingFlow: React.FC<SimpleBookingFlowProps> = ({ bookingMode }) =>
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Header - admin mode üçün logout düyməsi */}
+      {bookingMode === 'admin' && isLoggedIn && (
+        <div className="flex justify-end mb-4">
+          <Button onClick={handleLogout} variant="outline" size="sm">
+            Çıxış
+          </Button>
+        </div>
+      )}
+
       {/* Progress Indicator */}
       <div className="mb-8">
         <div className="flex items-center justify-center space-x-8">

@@ -31,69 +31,54 @@ export const useStaffByService = () => {
     try {
       console.log('useStaffByService: Fetching staff for service:', serviceId, 'date:', date);
       
-      // First get staff who can perform this service
-      const { data: staffWithService, error: staffError } = await supabase
-        .rpc('get_staff_by_service', {
-          service_id: serviceId
-        });
-
-      if (staffError) {
-        console.error('useStaffByService: Staff function error:', staffError);
-        setErrorByService(prev => ({ ...prev, [serviceKey]: `Failed to fetch staff: ${staffError.message}` }));
-        setStaffByService(prev => ({ ...prev, [serviceKey]: [] }));
-        return;
+      let staffData;
+      
+      if (date) {
+        // Date verilsə, availability yoxlayırıq
+        const { data, error } = await supabase
+          .rpc('get_available_staff_by_service_and_date', {
+            service_id: serviceId,
+            check_date: date.toISOString().split('T')[0]
+          });
+          
+        if (error) {
+          console.error('useStaffByService: Availability function error:', error);
+          throw error;
+        }
+        staffData = data;
+      } else {
+        // Date verilməsə, bütün staff-ları gətiririk
+        const { data, error } = await supabase
+          .rpc('get_staff_by_service', {
+            service_id: serviceId
+          });
+          
+        if (error) {
+          console.error('useStaffByService: Staff function error:', error);
+          throw error;
+        }
+        staffData = data;
       }
 
-      if (!staffWithService || staffWithService.length === 0) {
+      if (!staffData || staffData.length === 0) {
         console.log('useStaffByService: No staff found for service');
         setStaffByService(prev => ({ ...prev, [serviceKey]: [] }));
         return;
       }
 
-      console.log('useStaffByService: Found staff with service:', staffWithService);
+      console.log('useStaffByService: Found staff:', staffData);
 
-      // If date is provided, filter by availability
-      if (date) {
-        const weekday = date.getDay();
-        console.log('useStaffByService: Checking availability for weekday:', weekday);
-        
-        const staffIds = staffWithService.map((s: any) => s.user_id);
-        
-        const { data: availableStaff, error: availError } = await supabase
-          .from('staff_availability')
-          .select(`
-            staff_user_id,
-            users!inner(id, full_name)
-          `)
-          .eq('weekday', weekday)
-          .in('staff_user_id', staffIds);
+      // Staff məlumatlarını map edirik
+      const mappedStaff = staffData.map((s: any) => ({
+        id: s.user_id,
+        full_name: s.full_name,
+        name: s.full_name,
+        position: s.staff_position || 'Ustad',
+        email: s.email,
+        phone: s.phone
+      }));
 
-        if (availError) {
-          console.error('useStaffByService: Availability error:', availError);
-          // Fallback to all staff if availability check fails
-          const mappedStaff = staffWithService.map((s: any) => ({
-            id: s.user_id,
-            full_name: s.full_name,
-            name: s.full_name
-          }));
-          setStaffByService(prev => ({ ...prev, [serviceKey]: mappedStaff }));
-        } else {
-          const mappedStaff = availableStaff?.map((s: any) => ({
-            id: s.staff_user_id,
-            full_name: s.users.full_name,
-            name: s.users.full_name
-          })) || [];
-          setStaffByService(prev => ({ ...prev, [serviceKey]: mappedStaff }));
-        }
-      } else {
-        // No date filter, return all staff
-        const mappedStaff = staffWithService.map((s: any) => ({
-          id: s.user_id,
-          full_name: s.full_name,
-          name: s.full_name
-        }));
-        setStaffByService(prev => ({ ...prev, [serviceKey]: mappedStaff }));
-      }
+      setStaffByService(prev => ({ ...prev, [serviceKey]: mappedStaff }));
     } catch (err) {
       console.error('useStaffByService: Unexpected error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
