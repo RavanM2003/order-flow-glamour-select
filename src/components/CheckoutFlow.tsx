@@ -78,7 +78,11 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode }) => {
 
   // Render the current step component with proper props
   const renderCurrentStep = () => {
-    if (currentStep === 2 && steps[currentStep].key === "date") {
+    const currentStepData = steps[currentStep];
+    const CurrentStepComponent = currentStepData.component;
+    
+    // Handle BookingDatePicker specifically since it requires props
+    if (currentStepData.key === "date") {
       return (
         <BookingDatePicker
           value={orderState.appointmentDate}
@@ -87,7 +91,7 @@ const CheckoutFlow: React.FC<CheckoutFlowProps> = ({ bookingMode }) => {
       );
     }
     
-    const CurrentStepComponent = steps[currentStep].component;
+    // For other components that don't require specific props
     return <CurrentStepComponent />;
   };
 
