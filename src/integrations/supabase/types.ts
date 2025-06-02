@@ -263,6 +263,7 @@ export type Database = {
           id: number
           source_id: string
           table_name: string
+          updated_at: string | null
         }
         Insert: {
           action?: Database["public"]["Enums"]["action_enum"] | null
@@ -271,6 +272,7 @@ export type Database = {
           id?: number
           source_id: string
           table_name: string
+          updated_at?: string | null
         }
         Update: {
           action?: Database["public"]["Enums"]["action_enum"] | null
@@ -279,6 +281,7 @@ export type Database = {
           id?: number
           source_id?: string
           table_name?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

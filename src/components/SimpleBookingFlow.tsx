@@ -1,241 +1,228 @@
 
-import React, { useState } from "react";
-import { useOrder } from "@/context/OrderContext";
-import ServiceSelection from "./ServiceSelection";
-import ProductSelection from "./ProductSelection";
-import BookingDatePicker from "./BookingDatePicker";
-import CustomerInfo from "./CustomerInfo";
-import PaymentDetails from "./PaymentDetails";
-import BookingConfirmation from "./BookingConfirmation";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Calendar, User, CreditCard, CheckCircle, ShoppingBag, Briefcase } from "lucide-react";
-import { useLanguage } from "@/context/LanguageContext";
+import React, { useState } from 'react';
+import { toast } from '@/components/ui/use-toast';
+import CustomerInfoStep from './booking/CustomerInfoStep';
+import ServiceSelectionStep from './booking/ServiceSelectionStep';
+import PaymentStep from './booking/PaymentStep';
+import BookingSummary from './booking/BookingSummary';
+import { createBooking } from '@/services/booking.service';
 
 export type BookingMode = "customer" | "admin";
+
+interface CustomerInfo {
+  fullName: string;
+  gender: string;
+  phone: string;
+  email: string;
+  date: string;
+  time: string;
+  note: string;
+}
+
+interface SelectedService {
+  serviceId: number;
+  serviceName: string;
+  staffId: string;
+  staffName: string;
+  duration: number;
+  price: number;
+  discount: number;
+  discountedPrice: number;
+}
 
 interface SimpleBookingFlowProps {
   bookingMode: BookingMode;
 }
 
 const SimpleBookingFlow: React.FC<SimpleBookingFlowProps> = ({ bookingMode }) => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const { orderState, resetOrder, setAppointmentDate } = useOrder();
-  const { t } = useLanguage();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  
+  const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
+    fullName: '',
+    gender: '',
+    phone: '',
+    email: '',
+    date: '',
+    time: '',
+    note: ''
+  });
+  
+  const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
+  const [paymentMethod, setPaymentMethod] = useState('');
 
-  const steps = [
-    { 
-      key: "services", 
-      label: t("booking.selectServices"), 
-      icon: Briefcase,
-      component: ServiceSelection 
-    },
-    { 
-      key: "products", 
-      label: t("booking.selectProducts"), 
-      icon: ShoppingBag,
-      component: ProductSelection 
-    },
-    { 
-      key: "date", 
-      label: t("booking.selectDate"), 
-      icon: Calendar,
-      component: BookingDatePicker 
-    },
-    { 
-      key: "customer", 
-      label: t("booking.customerInfo"), 
-      icon: User,
-      component: CustomerInfo 
-    },
-    { 
-      key: "payment", 
-      label: t("booking.paymentDetails"), 
-      icon: CreditCard,
-      component: PaymentDetails 
-    },
-    { 
-      key: "confirmation", 
-      label: t("booking.confirmation"), 
-      icon: CheckCircle,
-      component: BookingConfirmation 
-    },
-  ];
-
-  const canProceedToNextStep = () => {
-    switch (currentStep) {
-      case 0: // Services
-        return orderState.selectedServices && orderState.selectedServices.length > 0;
-      case 1: // Products - optional
-        return true;
-      case 2: // Date
-        return orderState.appointmentDate && orderState.appointmentTime;
-      case 3: // Customer
-        return (
-          orderState.customer &&
-          orderState.customer.name &&
-          orderState.customer.email &&
-          orderState.customer.phone
-        );
-      case 4: // Payment
-        return orderState.paymentMethod;
-      default:
-        return true;
-    }
+  const generateInvoiceNumber = () => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `INV-${year}${month}${day}-${random}`;
   };
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1 && canProceedToNextStep()) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-
-  const handleStepClick = (stepIndex: number) => {
-    if (stepIndex <= currentStep) {
-      setCurrentStep(stepIndex);
-    }
-  };
-
-  const resetFlow = () => {
-    setCurrentStep(0);
-    resetOrder();
-  };
-
-  const renderCurrentStep = () => {
-    const currentStepData = steps[currentStep];
+  const handleConfirmBooking = async () => {
+    setLoading(true);
     
-    switch (currentStepData.key) {
-      case "services":
-        return <ServiceSelection />;
-      case "products":
-        return <ProductSelection />;
-      case "date":
+    try {
+      const totalAmount = selectedServices.reduce((sum, service) => sum + service.discountedPrice, 0);
+      const discountAmount = selectedServices.reduce((sum, service) => sum + (service.price - service.discountedPrice), 0);
+
+      const bookingData = {
+        invoice_number: generateInvoiceNumber(),
+        customer_info: {
+          full_name: customerInfo.fullName,
+          gender: customerInfo.gender,
+          email: customerInfo.email,
+          number: customerInfo.phone,
+          note: customerInfo.note,
+          date: customerInfo.date,
+          time: customerInfo.time
+        },
+        services: selectedServices.map(service => ({
+          id: service.serviceId,
+          name: service.serviceName,
+          price: service.price,
+          duration: service.duration,
+          discount: service.discount,
+          discounted_price: service.discountedPrice,
+          user_id: service.staffId
+        })),
+        products: [],
+        request_info: {
+          ip: 'unknown',
+          device: 'web',
+          os: 'unknown',
+          browser: 'unknown',
+          entry_time: new Date().toISOString(),
+          page: 'booking'
+        },
+        payment_details: {
+          method: paymentMethod,
+          total_amount: totalAmount,
+          discount_amount: discountAmount,
+          paid_amount: totalAmount
+        }
+      };
+
+      const result = await createBooking(bookingData);
+      
+      if (result.error) {
+        toast({
+          variant: "destructive",
+          title: "Xəta",
+          description: `Rezervasiya yaradılmadı: ${result.error}`
+        });
+      } else {
+        toast({
+          title: "Uğurlu!",
+          description: "Rezervasiyanız uğurla yaradıldı!"
+        });
+        
+        // Reset form
+        setCurrentStep(1);
+        setCustomerInfo({
+          fullName: '',
+          gender: '',
+          phone: '',
+          email: '',
+          date: '',
+          time: '',
+          note: ''
+        });
+        setSelectedServices([]);
+        setPaymentMethod('');
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast({
+        variant: "destructive",
+        title: "Xəta",
+        description: "Rezervasiya yaradılarkən xəta baş verdi"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
         return (
-          <BookingDatePicker
-            value={orderState.appointmentDate}
-            onChange={setAppointmentDate}
+          <CustomerInfoStep
+            customerInfo={customerInfo}
+            onUpdate={setCustomerInfo}
+            onNext={() => setCurrentStep(2)}
           />
         );
-      case "customer":
-        return <CustomerInfo />;
-      case "payment":
-        return <PaymentDetails />;
-      case "confirmation":
-        return <BookingConfirmation />;
+      case 2:
+        return (
+          <ServiceSelectionStep
+            selectedDate={customerInfo.date}
+            selectedServices={selectedServices}
+            onUpdate={setSelectedServices}
+            onNext={() => setCurrentStep(3)}
+            onBack={() => setCurrentStep(1)}
+          />
+        );
+      case 3:
+        return (
+          <PaymentStep
+            paymentMethod={paymentMethod}
+            onUpdate={setPaymentMethod}
+            onNext={() => setCurrentStep(4)}
+            onBack={() => setCurrentStep(2)}
+          />
+        );
+      case 4:
+        return (
+          <BookingSummary
+            customerInfo={customerInfo}
+            selectedServices={selectedServices}
+            paymentMethod={paymentMethod}
+            onBack={() => setCurrentStep(3)}
+            onConfirm={handleConfirmBooking}
+            loading={loading}
+          />
+        );
       default:
         return null;
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      {/* Modern Progress Steps */}
+    <div className="max-w-4xl mx-auto">
+      {/* Progress Indicator */}
       <div className="mb-8">
-        <div className="flex items-center justify-between relative">
-          {/* Progress Line */}
-          <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 z-0">
-            <div 
-              className="h-full bg-glamour-600 transition-all duration-300"
-              style={{ width: `${(currentStep / (steps.length - 1)) * 100}%` }}
-            />
-          </div>
-          
-          {steps.map((step, index) => {
-            const Icon = step.icon;
-            const isCompleted = index < currentStep;
-            const isCurrent = index === currentStep;
-            const isClickable = index <= currentStep;
-            
-            return (
-              <div
-                key={step.key}
-                className={`relative z-10 flex flex-col items-center cursor-pointer transition-all duration-200 ${
-                  isClickable ? "hover:scale-105" : "cursor-not-allowed"
-                }`}
-                onClick={() => isClickable && handleStepClick(index)}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200 ${
-                    isCompleted
-                      ? "bg-glamour-600 text-white shadow-lg"
-                      : isCurrent
-                      ? "bg-white text-glamour-600 border-2 border-glamour-600 shadow-md"
-                      : "bg-gray-200 text-gray-400 border-2 border-gray-200"
-                  }`}
-                >
-                  {isCompleted ? (
-                    <CheckCircle className="w-4 h-4" />
-                  ) : (
-                    <Icon className="w-4 h-4" />
-                  )}
-                </div>
-                <span
-                  className={`mt-2 text-xs font-medium text-center max-w-20 ${
-                    isCompleted || isCurrent ? "text-glamour-600" : "text-gray-400"
-                  }`}
-                >
-                  {step.label}
-                </span>
+        <div className="flex items-center justify-center space-x-8">
+          {[1, 2, 3, 4].map((step) => (
+            <div key={step} className="flex items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                currentStep >= step 
+                  ? 'bg-glamour-600 text-white' 
+                  : 'bg-gray-200 text-gray-500'
+              }`}>
+                {step}
               </div>
-            );
-          })}
+              {step < 4 && (
+                <div className={`w-16 h-1 mx-2 ${
+                  currentStep > step ? 'bg-glamour-600' : 'bg-gray-200'
+                }`} />
+              )}
+            </div>
+          ))}
         </div>
-      </div>
-
-      {/* Step Content */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 min-h-[400px]">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-            {React.createElement(steps[currentStep].icon, { className: "w-5 h-5 text-glamour-600" })}
-            {steps[currentStep].label}
-          </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Addım {currentStep + 1} / {steps.length}
+        
+        <div className="text-center mt-4">
+          <p className="text-sm text-gray-600">
+            {currentStep === 1 && 'Müştəri məlumatları'}
+            {currentStep === 2 && 'Xidmət seçimi'}
+            {currentStep === 3 && 'Ödəniş növü'}
+            {currentStep === 4 && 'Təsdiqləmə'}
           </p>
         </div>
-        {renderCurrentStep()}
       </div>
 
-      {/* Navigation Buttons */}
-      <div className="flex justify-between items-center">
-        {currentStep < steps.length - 1 ? (
-          <>
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentStep === 0}
-              className="flex items-center gap-2 border-gray-300 hover:border-glamour-600 hover:text-glamour-600"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Əvvəlki
-            </Button>
-
-            <Button
-              onClick={handleNext}
-              disabled={!canProceedToNextStep()}
-              className="flex items-center gap-2 bg-glamour-600 hover:bg-glamour-700 text-white px-6"
-            >
-              Növbəti
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </>
-        ) : (
-          <div className="w-full flex justify-center">
-            <Button
-              onClick={resetFlow}
-              variant="outline"
-              className="border-glamour-600 text-glamour-600 hover:bg-glamour-50 px-8"
-            >
-              Yeni rezervasiya
-            </Button>
-          </div>
-        )}
-      </div>
+      {renderStep()}
     </div>
   );
 };
