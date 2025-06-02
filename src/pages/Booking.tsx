@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { OrderProvider } from "@/context/OrderContext";
-import CheckoutFlow, { BookingMode } from "@/components/CheckoutFlow";
+import SimpleBookingFlow, { BookingMode } from "@/components/SimpleBookingFlow";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/context/LanguageContext";
@@ -11,20 +11,23 @@ const Booking = () => {
   const [bookingMode] = useState<BookingMode>("customer");
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-glamour-50 to-white">
       <Header />
 
       <main className="container py-8">
-        <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold text-glamour-800 mb-8 text-center">
-            {t("booking.title")}
-          </h1>
-
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <OrderProvider>
-              <CheckoutFlow bookingMode={bookingMode} />
-            </OrderProvider>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-glamour-800 mb-3">
+              {t("booking.title")}
+            </h1>
+            <p className="text-lg text-gray-600">
+              Rezervasiya etmək üçün aşağıdakı addımları izləyin
+            </p>
           </div>
+
+          <OrderProvider>
+            <SimpleBookingFlow bookingMode={bookingMode} />
+          </OrderProvider>
         </div>
       </main>
 
