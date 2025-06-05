@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,7 +15,7 @@ interface Service {
   discount: number;
 }
 
-interface SelectedService {
+export interface SelectedService {
   serviceId: string;
   serviceName: string;
   staffId: string;

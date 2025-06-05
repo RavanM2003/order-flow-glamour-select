@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import CustomerInfoStep from './booking/CustomerInfoStep';
-import ServiceSelectionStep from './booking/ServiceSelectionStep';
+import ServiceSelectionStep, { SelectedService } from './booking/ServiceSelectionStep';
 import PaymentStep from './booking/PaymentStep';
 import BookingSummary from './booking/BookingSummary';
 import SimpleLogin from './auth/SimpleLogin';
@@ -18,18 +18,6 @@ interface CustomerInfo {
   date: string;
   time: string;
   note: string;
-}
-
-// Use the SelectedService interface from booking/ServiceSelectionStep
-interface SelectedService {
-  serviceId: string;
-  serviceName: string;
-  staffId: string;
-  staffName: string;
-  duration: number;
-  price: number;
-  discount: number;
-  discountedPrice: number;
 }
 
 interface SimpleBookingFlowProps {
@@ -54,7 +42,6 @@ const SimpleBookingFlow: React.FC<SimpleBookingFlowProps> = ({ bookingMode }) =>
   const [selectedServices, setSelectedServices] = useState<SelectedService[]>([]);
   const [paymentMethod, setPaymentMethod] = useState('');
 
-  // Login statusunu yoxlayırıq
   useEffect(() => {
     const currentUser = localStorage.getItem('currentUser');
     if (currentUser) {
