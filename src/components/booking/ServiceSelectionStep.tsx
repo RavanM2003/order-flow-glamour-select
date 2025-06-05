@@ -122,6 +122,11 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
     return selectedServices.find(s => s.serviceId === serviceId);
   };
 
+  const isReadyForNext = () => {
+    return selectedServices.length > 0 && 
+           selectedServices.every(service => service.staffId && service.staffName);
+  };
+
   if (loading) {
     return (
       <div className="text-center py-8">
@@ -212,6 +217,11 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
                   <div className="flex items-center gap-2 mb-2">
                     <User className="w-4 h-4" />
                     <span className="font-medium">İşçi seçin:</span>
+                    {selectedStaff && (
+                      <Badge variant="secondary" className="ml-2">
+                        {selectedStaff.staffName} seçildi
+                      </Badge>
+                    )}
                   </div>
                   
                   {isStaffLoading ? (
@@ -273,7 +283,22 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
               </div>
             ))}
           </div>
+          <div className="border-t mt-3 pt-2">
+            <div className="flex justify-between font-bold text-glamour-800">
+              <span>Cəmi:</span>
+              <span>{selectedServices.reduce((total, service) => total + service.discountedPrice, 0).toFixed(2)} AZN</span>
+            </div>
+          </div>
         </Card>
+      )}
+
+      {/* Validation Messages */}
+      {selectedServices.length > 0 && !isReadyForNext() && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+          <p className="text-yellow-800 text-sm">
+            Bütün seçilmiş xidmətlər üçün işçi seçilməlidir
+          </p>
+        </div>
       )}
 
       <div className="flex justify-between">
@@ -282,10 +307,10 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
         </Button>
         <Button 
           onClick={onNext} 
-          disabled={selectedServices.length === 0 || selectedServices.some(s => !s.staffId)}
+          disabled={!isReadyForNext()}
           className="bg-glamour-600 hover:bg-glamour-700"
         >
-          Növbəti Addım
+          Növbəti Addım ({selectedServices.length} xidmət seçildi)
         </Button>
       </div>
     </div>

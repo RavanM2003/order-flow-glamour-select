@@ -33,12 +33,35 @@ const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     
-    if (!customerInfo.fullName.trim()) newErrors.fullName = 'Ad və soyad tələb olunur';
-    if (!customerInfo.gender) newErrors.gender = 'Cins seçin';
-    if (!customerInfo.phone.trim()) newErrors.phone = 'Telefon nömrəsi tələb olunur';
-    if (!customerInfo.email.trim()) newErrors.email = 'Email tələb olunur';
-    if (!customerInfo.date) newErrors.date = 'Tarix seçin';
-    if (!customerInfo.time) newErrors.time = 'Vaxt seçin';
+    if (!customerInfo.fullName.trim()) {
+      newErrors.fullName = 'Ad və soyad tələb olunur';
+    }
+    if (!customerInfo.gender) {
+      newErrors.gender = 'Cins seçin';
+    }
+    if (!customerInfo.phone.trim()) {
+      newErrors.phone = 'Telefon nömrəsi tələb olunur';
+    } else if (customerInfo.phone.length < 10) {
+      newErrors.phone = 'Telefon nömrəsi ən azı 10 rəqəm olmalıdır';
+    }
+    if (!customerInfo.email.trim()) {
+      newErrors.email = 'Email tələb olunur';
+    } else if (!/\S+@\S+\.\S+/.test(customerInfo.email)) {
+      newErrors.email = 'Düzgün email daxil edin';
+    }
+    if (!customerInfo.date) {
+      newErrors.date = 'Tarix seçin';
+    } else {
+      const selectedDate = new Date(customerInfo.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        newErrors.date = 'Keçmiş tarix seçə bilməzsiniz';
+      }
+    }
+    if (!customerInfo.time) {
+      newErrors.time = 'Vaxt seçin';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -56,6 +79,10 @@ const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
     '15:00', '15:30', '16:00', '16:30', '17:00', '17:30'
   ];
 
+  // Bugünün tarixini al
+  const today = new Date();
+  const minDate = today.toISOString().split('T')[0];
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -69,7 +96,7 @@ const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
           <div className="md:col-span-2">
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
               <User className="w-4 h-4 mr-2" />
-              Tam Ad və Soyad
+              Tam Ad və Soyad *
             </label>
             <Input
               value={customerInfo.fullName}
@@ -82,7 +109,7 @@ const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
 
           {/* Cins */}
           <div>
-            <label className="text-sm font-medium text-gray-700 mb-2 block">Cins</label>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">Cins *</label>
             <Select value={customerInfo.gender} onValueChange={(value) => onUpdate({ ...customerInfo, gender: value })}>
               <SelectTrigger className={errors.gender ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Cins seçin" />
@@ -100,7 +127,7 @@ const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
           <div>
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
               <Phone className="w-4 h-4 mr-2" />
-              Telefon
+              Telefon *
             </label>
             <Input
               value={customerInfo.phone}
@@ -115,7 +142,7 @@ const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
           <div>
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
               <Mail className="w-4 h-4 mr-2" />
-              Email
+              Email *
             </label>
             <Input
               type="email"
@@ -131,13 +158,13 @@ const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
           <div>
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
               <Calendar className="w-4 h-4 mr-2" />
-              Tarix
+              Tarix *
             </label>
             <Input
               type="date"
               value={customerInfo.date}
               onChange={(e) => onUpdate({ ...customerInfo, date: e.target.value })}
-              min={new Date().toISOString().split('T')[0]}
+              min={minDate}
               className={errors.date ? 'border-red-500' : ''}
             />
             {errors.date && <p className="text-red-500 text-xs mt-1">{errors.date}</p>}
@@ -147,7 +174,7 @@ const CustomerInfoStep: React.FC<CustomerInfoStepProps> = ({
           <div>
             <label className="flex items-center text-sm font-medium text-gray-700 mb-2">
               <Clock className="w-4 h-4 mr-2" />
-              Vaxt
+              Vaxt *
             </label>
             <Select value={customerInfo.time} onValueChange={(value) => onUpdate({ ...customerInfo, time: value })}>
               <SelectTrigger className={errors.time ? 'border-red-500' : ''}>

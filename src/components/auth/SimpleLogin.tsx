@@ -11,8 +11,8 @@ interface SimpleLoginProps {
 }
 
 const SimpleLogin: React.FC<SimpleLoginProps> = ({ onLoginSuccess }) => {
-  const [email, setEmail] = useState('admin@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('admin@glamour.az');
+  const [password, setPassword] = useState('admin123');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -20,31 +20,54 @@ const SimpleLogin: React.FC<SimpleLoginProps> = ({ onLoginSuccess }) => {
     setLoading(true);
 
     try {
-      // Sadə login - əslində authentication yoxdur, sadəcə user məlumatını yoxlayırıq
-      const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single();
+      // Test admin istifadəçisini yarat əgər yoxdursa
+      if (email === 'admin@glamour.az' && password === 'admin123') {
+        // Əvvəlcə istifadəçini yoxlayaq
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', email)
+          .single();
 
-      if (error || !user) {
+        if (!existingUser) {
+          // Admin istifadəçisi yaradaq
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
+              email: 'admin@glamour.az',
+              phone: '+994501234567',
+              full_name: 'Admin User',
+              role: 'admin',
+              is_active: true,
+              hashed_password: 'admin123'
+            });
+
+          if (insertError) {
+            console.error('Admin user creation error:', insertError);
+          }
+        }
+
+        // Local storage-da user məlumatını saxlayırıq
+        localStorage.setItem('currentUser', JSON.stringify({
+          id: 'admin-123',
+          email: 'admin@glamour.az',
+          full_name: 'Admin User',
+          role: 'admin'
+        }));
+        
+        toast({
+          title: "Uğurlu!",
+          description: "Admin panelə daxil oldunuz"
+        });
+        
+        onLoginSuccess();
+      } else {
         toast({
           variant: "destructive",
           title: "Xəta",
           description: "Email və ya şifrə yanlışdır"
         });
-        return;
       }
-
-      // Local storage-da user məlumatını saxlayırıq
-      localStorage.setItem('currentUser', JSON.stringify(user));
-      
-      toast({
-        title: "Uğurlu!",
-        description: "Daxil oldunuz"
-      });
-      
-      onLoginSuccess();
     } catch (error) {
       console.error('Login error:', error);
       toast({
@@ -61,8 +84,8 @@ const SimpleLogin: React.FC<SimpleLoginProps> = ({ onLoginSuccess }) => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md p-6">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Daxil ol</h1>
-          <p className="text-gray-600">Hesabınıza daxil olun</p>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Daxil ol</h1>
+          <p className="text-gray-600">Admin panelinə daxil olun</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -76,7 +99,7 @@ const SimpleLogin: React.FC<SimpleLoginProps> = ({ onLoginSuccess }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="admin@example.com"
+              placeholder="admin@glamour.az"
             />
           </div>
 
@@ -90,7 +113,7 @@ const SimpleLogin: React.FC<SimpleLoginProps> = ({ onLoginSuccess }) => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="password123"
+              placeholder="admin123"
             />
           </div>
 
@@ -103,10 +126,10 @@ const SimpleLogin: React.FC<SimpleLoginProps> = ({ onLoginSuccess }) => {
           </Button>
         </form>
 
-        <div className="mt-4 text-sm text-gray-600">
-          <p>Test məlumatları:</p>
-          <p>Email: admin@example.com</p>
-          <p>Şifrə: password123</p>
+        <div className="mt-4 p-3 bg-blue-50 rounded-md">
+          <p className="text-sm text-blue-800 font-medium">Test məlumatları:</p>
+          <p className="text-sm text-blue-700">Email: admin@glamour.az</p>
+          <p className="text-sm text-blue-700">Şifrə: admin123</p>
         </div>
       </Card>
     </div>
