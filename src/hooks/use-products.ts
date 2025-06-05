@@ -71,7 +71,7 @@ export function useProducts() {
     return response.data;
   }, []);
   
-  const getProductsByService = useCallback(async (serviceId: number | string) => {
+  const getProductsByService = useCallback(async (serviceId: string) => {
     const response = await productService.getByServiceId(serviceId);
     return response.data || [];
   }, []);

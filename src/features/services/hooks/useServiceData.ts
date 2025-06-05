@@ -1,111 +1,62 @@
 
-import { useQuery } from '@tanstack/react-query';
-import { useState, useCallback, useRef } from 'react';
-import { Service, ServiceFilters } from '../types';
-import { serviceService } from '../services/service.service';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/components/ui/use-toast';
+import { useState, useCallback } from 'react';
+import { useApi } from '@/hooks/use-api';
+import { serviceService } from '@/services';
+import { Service } from '@/models/service.model';
 
-export function useServiceData(initialFilters?: ServiceFilters) {
-  const [filters, setFilters] = useState<ServiceFilters>(initialFilters || {});
-  const [service, setService] = useState<Service | null>(null);
-  const fetchedRef = useRef(false);
+export interface ServiceFilters {
+  search?: string;
+  category?: string;
+  sortBy?: 'name' | 'price' | 'created_at';
+  sortOrder?: 'asc' | 'desc';
+}
 
-  // Fetch all services with current filters
-  const {
-    data: services = [],
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['services', filters],
-    queryFn: async () => {
-      // Skip fetching if we've already fetched and just want to modify filters
-      if (fetchedRef.current && Object.keys(filters).length > 0) {
-        return services.filter(service => {
-          if (filters.search && !service.name.toLowerCase().includes(filters.search.toLowerCase())) {
-            return false;
-          }
-          // Add more filter logic as needed
-          return true;
-        });
-      }
-
-      try {
-        // First try using the service abstraction
-        const response = await serviceService.getAll();
-        
-        if (response.data && response.data.length > 0) {
-          fetchedRef.current = true;
-          return response.data;
-        }
-        
-        // Fallback to direct Supabase query
-        console.log('Fetching services directly from Supabase...');
-        const { data: supabaseData, error } = await supabase
-          .from('services')
-          .select('*');
-        
-        if (error) throw error;
-        
-        if (supabaseData) {
-          fetchedRef.current = true;
-          return supabaseData.map(item => ({
-            ...item,
-            relatedProducts: []
-          })) as Service[];
-        }
-        
-        return [];
-      } catch (error) {
-        console.error('Error fetching services:', error);
-        toast({
-          variant: "destructive",
-          title: "Xidmətlər yüklənmədi",
-          description: error instanceof Error ? error.message : "Xəta baş verdi"
-        });
-        return [];
-      }
-    },
-    // Disable automatic refetching
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-
-  // Fetch single service
-  const fetchService = useCallback(async (id: string) => { // Changed from number | string to string
-    try {
-      const response = await serviceService.getById(id);
-      if (response.error) throw new Error(response.error);
-      setService(response.data || null);
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching service ${id}:`, error);
-      toast({
-        variant: "destructive",
-        title: "Xidmət yüklənmədi",
-        description: error instanceof Error ? error.message : "Xəta baş verdi"
-      });
-      throw error;
-    }
+export function useServiceData() {
+  const api = useApi<Service[]>();
+  const [filters, setFilters] = useState<ServiceFilters>({});
+  
+  const services = api.data || [];
+  const service = services[0] || null;
+  
+  const updateFilters = useCallback((newFilters: Partial<ServiceFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
   }, []);
+  
+  const fetchService = useCallback(async (id: string) => {
+    const result = await api.execute(
+      () => serviceService.getById(id),
+      {
+        showErrorToast: true,
+        errorPrefix: 'Failed to load service'
+      }
+    );
+    return result;
+  }, [api]);
 
-  // Update filters
-  const updateFilters = (newFilters: Partial<ServiceFilters>) => {
-    setFilters(prev => ({
-      ...prev,
-      ...newFilters
-    }));
-  };
-
+  const getServiceById = useCallback(async (id: string) => {
+    const response = await serviceService.getById(id);
+    return response.data;
+  }, []);
+  
+  const refetch = useCallback(async (options?: any) => {
+    return api.execute(
+      () => serviceService.getAll(),
+      {
+        showErrorToast: true,
+        errorPrefix: 'Failed to load services'
+      }
+    );
+  }, [api]);
+  
   return {
     services,
     service,
-    isLoading,
-    error,
+    isLoading: api.isLoading,
+    error: api.error,
     filters,
     updateFilters,
     fetchService,
+    getServiceById,
     refetch
   };
 }

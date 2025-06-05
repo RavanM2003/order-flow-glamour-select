@@ -1,11 +1,11 @@
+
 import { BaseApiService } from './base.service';
-import { Database, FilterOptions, ApiResponse } from '@/types/database';
+import { Database, FilterOptions } from '@/types/database';
 import { supabase } from '@/integrations/supabase/client';
 import { Service } from '@/models/service.model';
 import { ApiResponse } from '@/models/types';
 
 type User = Database['public']['Tables']['users']['Row'];
-type Service = Database['public']['Tables']['services']['Row'];
 type Product = Database['public']['Tables']['products']['Row'];
 type Appointment = Database['public']['Tables']['appointments']['Row'];
 

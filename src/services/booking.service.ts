@@ -14,7 +14,7 @@ export interface BookingFormData {
     time: string;
   };
   services: {
-    id: string; // Changed from number to string
+    id: string;
     name: string;
     price: number;
     duration: number;
@@ -54,7 +54,7 @@ export const createBooking = async (bookingData: BookingFormData) => {
         invoice_number: bookingData.invoice_number,
         total_amount: bookingData.payment_details.total_amount,
         status: 'waiting',
-        appointment_json: bookingData
+        appointment_json: bookingData as any // Cast to any to satisfy JSON type
       })
       .select()
       .single();
