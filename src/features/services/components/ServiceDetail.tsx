@@ -21,11 +21,11 @@ const ServiceDetail: React.FC = () => {
   
   useEffect(() => {
     if (id) {
-      fetchServiceAndProducts(parseInt(id, 10));
+      fetchServiceAndProducts(id); // Use string ID directly
     }
   }, [id]);
 
-  const fetchServiceAndProducts = async (serviceId: number) => {
+  const fetchServiceAndProducts = async (serviceId: string) => { // Changed parameter type
     setIsLoading(true);
     setError(null);
     
@@ -34,7 +34,7 @@ const ServiceDetail: React.FC = () => {
       const { data: serviceData, error: serviceError } = await supabase
         .from('services')
         .select('*')
-        .eq('id', serviceId)
+        .eq('id', serviceId) // Use string UUID directly
         .single();
 
       if (serviceError) {
@@ -52,7 +52,7 @@ const ServiceDetail: React.FC = () => {
       const { data: serviceProductsData, error: serviceProductsError } = await supabase
         .from('service_products')
         .select('product_id')
-        .eq('service_id', serviceId);
+        .eq('service_id', serviceId); // Use string UUID directly
 
       if (serviceProductsError) {
         console.error('Error fetching service products:', serviceProductsError);

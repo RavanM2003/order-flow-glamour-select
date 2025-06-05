@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/use-toast';
 import CustomerInfoStep from './booking/CustomerInfoStep';
@@ -21,7 +22,7 @@ interface CustomerInfo {
 }
 
 interface SelectedService {
-  serviceId: string; // Changed from number to string
+  serviceId: string; // Ensure this is string to match UUID
   serviceName: string;
   staffId: string;
   staffName: string;
@@ -116,7 +117,7 @@ const SimpleBookingFlow: React.FC<SimpleBookingFlowProps> = ({ bookingMode }) =>
           time: customerInfo.time
         },
         services: selectedServices.map(service => ({
-          id: service.serviceId, // This is now a string
+          id: service.serviceId, // This is now a string (UUID)
           name: service.serviceName,
           price: service.price,
           duration: service.duration,

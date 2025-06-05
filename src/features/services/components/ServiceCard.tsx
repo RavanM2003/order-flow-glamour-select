@@ -7,7 +7,7 @@ import { Service } from '../types';
 
 interface ServiceCardProps {
   service: Service;
-  onDeleteClick: (id: number) => void;
+  onDeleteClick: (id: string) => void; // Changed from number to string
 }
 
 export default function ServiceCard({ service, onDeleteClick }: ServiceCardProps) {

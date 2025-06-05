@@ -1,4 +1,3 @@
-
 import { Product, ProductFormData } from '@/models/product.model';
 import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from './staff.service';
@@ -115,14 +114,12 @@ export const productService = {
     return productService.delete(id);
   },
   
-  getByServiceId: async (serviceId: string | number): Promise<ApiResponse<Product[]>> => {
+  getByServiceId: async (serviceId: string): Promise<ApiResponse<Product[]>> => {
     try {
-      const numericId = typeof serviceId === 'string' ? parseInt(serviceId, 10) : serviceId;
-      
       const { data, error } = await supabase
         .from('service_products')
         .select('product_id')
-        .eq('service_id', numericId);
+        .eq('service_id', serviceId);
       
       if (error) {
         return { error: error.message };

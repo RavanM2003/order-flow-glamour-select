@@ -1,7 +1,8 @@
-
 import { BaseApiService } from './base.service';
 import { Database, FilterOptions, ApiResponse } from '@/types/database';
 import { supabase } from '@/integrations/supabase/client';
+import { Service } from '@/models/service.model';
+import { ApiResponse } from '@/models/types';
 
 type User = Database['public']['Tables']['users']['Row'];
 type Service = Database['public']['Tables']['services']['Row'];
@@ -125,6 +126,32 @@ export class EnhancedServiceService extends BaseApiService {
         .eq('user_id', staffId)
         .single();
     });
+  }
+
+  async getServices(): Promise<ApiResponse<Service[]>> {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .select(`
+          *,
+          service_categories (
+            name
+          )
+        `);
+      
+      if (error) throw error;
+      
+      // Map the response to match our Service interface with string IDs
+      const services = data.map(item => ({
+        ...item,
+        relatedProducts: [] // Initialize as empty array since we're not fetching them yet
+      })) as Service[];
+      
+      return { data: services };
+    } catch (error) {
+      console.error('Error fetching services:', error);
+      return { error: error instanceof Error ? error.message : 'Failed to fetch services' };
+    }
   }
 }
 
