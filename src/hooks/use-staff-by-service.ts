@@ -16,7 +16,7 @@ export const useStaffByService = () => {
   const [loadingByService, setLoadingByService] = useState<Record<string, boolean>>({});
   const [errorByService, setErrorByService] = useState<Record<string, string | null>>({});
 
-  const fetchStaffByService = useCallback(async (serviceId: number, date?: Date) => {
+  const fetchStaffByService = useCallback(async (serviceId: string, date?: Date) => {
     if (!serviceId) {
       console.error('useStaffByService: No serviceId provided');
       const serviceKey = `service_${serviceId}`;
@@ -89,7 +89,7 @@ export const useStaffByService = () => {
     }
   }, []);
 
-  const getStaffForService = useCallback((serviceId: number) => {
+  const getStaffForService = useCallback((serviceId: string) => {
     const serviceKey = `service_${serviceId}`;
     return {
       staff: staffByService[serviceKey] || [],

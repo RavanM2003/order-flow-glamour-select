@@ -27,7 +27,7 @@ export class ServiceService extends ApiService {
     }
   }
   
-  async getById(id: number): Promise<ApiResponse<Service>> {
+  async getById(id: string): Promise<ApiResponse<Service>> {
     try {
       // Try using direct Supabase query
       const { data, error } = await supabase
@@ -105,7 +105,7 @@ export class ServiceService extends ApiService {
     }
   }
   
-  async update(id: number, data: Partial<ServiceFormData>): Promise<ApiResponse<Service>> {
+  async update(id: string, data: Partial<ServiceFormData>): Promise<ApiResponse<Service>> {
     try {
       // Ensure name is present for update
       if (data.name === undefined) {
@@ -166,7 +166,7 @@ export class ServiceService extends ApiService {
     }
   }
   
-  async delete(id: number): Promise<ApiResponse<boolean>> {
+  async delete(id: string): Promise<ApiResponse<boolean>> {
     try {
       // Delete the service
       const { error } = await supabase

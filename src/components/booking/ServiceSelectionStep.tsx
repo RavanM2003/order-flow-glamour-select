@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useStaffByService } from '@/hooks/use-staff-by-service';
 
 interface Service {
-  id: number;
+  id: string;
   name: string;
   description: string;
   duration: number;
@@ -17,7 +17,7 @@ interface Service {
 }
 
 interface SelectedService {
-  serviceId: number;
+  serviceId: string;
   serviceName: string;
   staffId: string;
   staffName: string;
@@ -114,11 +114,11 @@ const ServiceSelectionStep: React.FC<ServiceSelectionStepProps> = ({
     console.log('Staff selected, updated services:', finalUpdated);
   };
 
-  const isServiceSelected = (serviceId: number) => {
+  const isServiceSelected = (serviceId: string) => {
     return selectedServices.some(s => s.serviceId === serviceId);
   };
 
-  const getSelectedStaff = (serviceId: number) => {
+  const getSelectedStaff = (serviceId: string) => {
     return selectedServices.find(s => s.serviceId === serviceId);
   };
 

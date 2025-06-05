@@ -56,13 +56,6 @@ export type Database = {
             foreignKeyName: "appointment_products_staff_id_fkey"
             columns: ["staff_user_id"]
             isOneToOne: false
-            referencedRelation: "staff_with_services_json"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "appointment_products_staff_id_fkey"
-            columns: ["staff_user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -75,7 +68,7 @@ export type Database = {
           id: number
           price: number | null
           quantity: number | null
-          service_id: number | null
+          service_id: string | null
           staff_user_id: string | null
         }
         Insert: {
@@ -84,7 +77,7 @@ export type Database = {
           id?: number
           price?: number | null
           quantity?: number | null
-          service_id?: number | null
+          service_id?: string | null
           staff_user_id?: string | null
         }
         Update: {
@@ -93,7 +86,7 @@ export type Database = {
           id?: number
           price?: number | null
           quantity?: number | null
-          service_id?: number | null
+          service_id?: string | null
           staff_user_id?: string | null
         }
         Relationships: [
@@ -110,13 +103,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "services"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointment_services_staff_id_fkey"
-            columns: ["staff_user_id"]
-            isOneToOne: false
-            referencedRelation: "staff_with_services_json"
-            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "appointment_services_staff_id_fkey"
@@ -193,22 +179,8 @@ export type Database = {
             foreignKeyName: "appointments_customer_user_id_fkey"
             columns: ["customer_user_id"]
             isOneToOne: false
-            referencedRelation: "staff_with_services_json"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "appointments_customer_user_id_fkey"
-            columns: ["customer_user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "appointments_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "staff_with_services_json"
-            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "appointments_user_id_fkey"
@@ -448,13 +420,6 @@ export type Database = {
             foreignKeyName: "products_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "staff_with_services_json"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "products_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -502,13 +467,6 @@ export type Database = {
             foreignKeyName: "promo_codes_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
-            referencedRelation: "staff_with_services_json"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "promo_codes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -541,13 +499,6 @@ export type Database = {
             foreignKeyName: "service_categories_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
-            referencedRelation: "staff_with_services_json"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "service_categories_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
           },
@@ -556,15 +507,15 @@ export type Database = {
       service_products: {
         Row: {
           product_id: number
-          service_id: number
+          service_id: string
         }
         Insert: {
           product_id: number
-          service_id: number
+          service_id: string
         }
         Update: {
           product_id?: number
-          service_id?: number
+          service_id?: string
         }
         Relationships: [
           {
@@ -591,7 +542,7 @@ export type Database = {
           description: string | null
           discount: number | null
           duration: number
-          id: number
+          id: string
           name: string
           price: number
           updated_at: string | null
@@ -604,7 +555,7 @@ export type Database = {
           description?: string | null
           discount?: number | null
           duration?: number
-          id?: number
+          id?: string
           name: string
           price?: number
           updated_at?: string | null
@@ -617,7 +568,7 @@ export type Database = {
           description?: string | null
           discount?: number | null
           duration?: number
-          id?: number
+          id?: string
           name?: string
           price?: number
           updated_at?: string | null
@@ -630,13 +581,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "service_categories"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "services_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "staff_with_services_json"
-            referencedColumns: ["user_id"]
           },
           {
             foreignKeyName: "services_user_id_fkey"
@@ -709,7 +653,7 @@ export type Database = {
           created_at: string | null
           id: number
           position: string | null
-          specializations: number[] | null
+          specializations: string[] | null
           updated_at: string | null
           user_id: string | null
         }
@@ -717,7 +661,7 @@ export type Database = {
           created_at?: string | null
           id?: number
           position?: string | null
-          specializations?: number[] | null
+          specializations?: string[] | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -725,18 +669,11 @@ export type Database = {
           created_at?: string | null
           id?: number
           position?: string | null
-          specializations?: number[] | null
+          specializations?: string[] | null
           updated_at?: string | null
           user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "staff_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "staff_with_services_json"
-            referencedColumns: ["user_id"]
-          },
           {
             foreignKeyName: "staff_user_id_fkey"
             columns: ["user_id"]
@@ -772,13 +709,6 @@ export type Database = {
           weekday?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "staff_availability_staff_user_id_fkey"
-            columns: ["staff_user_id"]
-            isOneToOne: false
-            referencedRelation: "staff_with_services_json"
-            referencedColumns: ["user_id"]
-          },
           {
             foreignKeyName: "staff_availability_staff_user_id_fkey"
             columns: ["staff_user_id"]
@@ -912,7 +842,15 @@ export type Database = {
           user: Json | null
           user_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "staff_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -934,7 +872,9 @@ export type Database = {
         }[]
       }
       get_available_staff_by_service_and_date: {
-        Args: { service_id: number; check_date: string }
+        Args:
+          | { service_id: number; check_date: string }
+          | { service_id: string; check_date: string }
         Returns: {
           user_id: string
           full_name: string
@@ -948,7 +888,7 @@ export type Database = {
         Returns: Database["public"]["Enums"]["role_enum"]
       }
       get_staff_by_service: {
-        Args: { service_id: number }
+        Args: { service_id: number } | { service_id: string }
         Returns: {
           user_id: string
           full_name: string
