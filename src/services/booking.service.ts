@@ -54,7 +54,7 @@ export const createBooking = async (bookingData: BookingFormData) => {
         invoice_number: bookingData.invoice_number,
         total_amount: bookingData.payment_details.total_amount,
         status: 'waiting',
-        appointment_json: bookingData as any // Cast to any to satisfy JSON type
+        appointment_json: bookingData as any
       })
       .select()
       .single();

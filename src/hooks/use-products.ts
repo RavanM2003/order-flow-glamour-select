@@ -12,16 +12,15 @@ export function useProducts() {
   const [isInitialized, setIsInitialized] = useState(false);
   
   const fetchProducts = useCallback(async () => {
-    if (isInitialized) return; // Prevent multiple calls
+    if (isInitialized) return;
     
     try {
       setIsInitialized(true);
       
-      // First try using the service abstraction
       const data = await api.execute(
         () => productService.getAll(),
         {
-          showErrorToast: false, // We'll handle errors ourselves
+          showErrorToast: false,
         }
       );
       
@@ -30,7 +29,6 @@ export function useProducts() {
         return;
       }
       
-      // If that fails or returns empty, try direct Supabase query
       console.log('Fetching products directly from Supabase...');
       const { data: supabaseData, error } = await supabase
         .from('products')
@@ -67,7 +65,7 @@ export function useProducts() {
   }, [fetchProducts]);
   
   const getProduct = useCallback(async (id: number | string) => {
-    const response = await productService.getById(id);
+    const response = await productService.getById(String(id));
     return response.data;
   }, []);
   
@@ -84,7 +82,6 @@ export function useProducts() {
         successMessage: 'Product created successfully',
         errorPrefix: 'Failed to create product',
         onSuccess: () => {
-          // Reset initialization to allow refetch
           setIsInitialized(false);
           fetchProducts();
         }
@@ -96,13 +93,12 @@ export function useProducts() {
   
   const updateProduct = useCallback(async (id: number | string, data: Partial<ProductFormData>) => {
     const result = await api.execute(
-      () => productService.update(id, data),
+      () => productService.update(String(id), data),
       {
         showSuccessToast: true,
         successMessage: 'Product updated successfully',
         errorPrefix: 'Failed to update product',
         onSuccess: () => {
-          // Reset initialization to allow refetch
           setIsInitialized(false);
           fetchProducts();
         }
@@ -114,13 +110,12 @@ export function useProducts() {
   
   const deleteProduct = useCallback(async (id: number | string) => {
     const result = await api.execute(
-      () => productService.delete(id),
+      () => productService.delete(String(id)),
       {
         showSuccessToast: true,
         successMessage: 'Product deleted successfully',
         errorPrefix: 'Failed to delete product',
         onSuccess: () => {
-          // Reset initialization to allow refetch
           setIsInitialized(false);
           fetchProducts();
         }

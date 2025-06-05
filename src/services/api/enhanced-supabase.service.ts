@@ -3,11 +3,15 @@ import { BaseApiService } from './base.service';
 import { Database, FilterOptions } from '@/types/database';
 import { supabase } from '@/integrations/supabase/client';
 import { Service } from '@/models/service.model';
-import { ApiResponse } from '@/models/types';
 
 type User = Database['public']['Tables']['users']['Row'];
 type Product = Database['public']['Tables']['products']['Row'];
 type Appointment = Database['public']['Tables']['appointments']['Row'];
+
+interface ApiResponse<T> {
+  data?: T;
+  error?: string;
+}
 
 export class EnhancedUserService extends BaseApiService {
   constructor() {
@@ -221,7 +225,6 @@ export class EnhancedAppointmentService extends BaseApiService {
 
   async getAppointmentSummary(appointmentId: number): Promise<ApiResponse<any>> {
     return this.executeQuery('getAppointmentSummary', async () => {
-      // Use direct SQL query since the function might not be available yet
       return supabase
         .from('appointments')
         .select(`
@@ -249,7 +252,6 @@ export class EnhancedAppointmentService extends BaseApiService {
     excludeAppointmentId?: number
   ): Promise<ApiResponse<boolean>> {
     return this.executeQuery('checkStaffAvailability', async () => {
-      // Use direct query to check for conflicts
       let query = supabase
         .from('appointments')
         .select(`
@@ -272,7 +274,7 @@ export class EnhancedAppointmentService extends BaseApiService {
       const result = await query;
       
       return {
-        data: !result.data || result.data.length === 0, // Available if no conflicts
+        data: !result.data || result.data.length === 0,
         error: result.error
       };
     });
