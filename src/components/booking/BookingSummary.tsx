@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, Clock, User, Mail, Phone, CreditCard } from 'lucide-react';
+import { SelectedService } from './ServiceSelectionStep';
 
 interface CustomerInfo {
   fullName: string;
@@ -14,17 +14,6 @@ interface CustomerInfo {
   date: string;
   time: string;
   note: string;
-}
-
-interface SelectedService {
-  serviceId: number;
-  serviceName: string;
-  staffId: string;
-  staffName: string;
-  duration: number;
-  price: number;
-  discount: number;
-  discountedPrice: number;
 }
 
 interface BookingSummaryProps {
