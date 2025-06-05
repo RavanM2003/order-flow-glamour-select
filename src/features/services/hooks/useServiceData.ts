@@ -73,10 +73,9 @@ export function useServiceData(initialFilters?: ServiceFilters) {
   });
 
   // Fetch single service
-  const fetchService = useCallback(async (id: number | string) => {
+  const fetchService = useCallback(async (id: string) => { // Changed from number | string to string
     try {
-      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-      const response = await serviceService.getById(numericId);
+      const response = await serviceService.getById(id);
       if (response.error) throw new Error(response.error);
       setService(response.data || null);
       return response.data;

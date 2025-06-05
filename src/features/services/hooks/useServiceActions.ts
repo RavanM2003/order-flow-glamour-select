@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { useApi } from "@/hooks/use-api";
 import { Service, ServiceFormData } from "../types";
@@ -30,12 +31,11 @@ export function useServiceActions(onSuccess?: () => void) {
 
   // Update service
   const updateService = useCallback(
-    async (id: number | string, data: Partial<ServiceFormData>) => {
+    async (id: string, data: Partial<ServiceFormData>) => { // Changed from number | string to string
       setIsUpdating(true);
       try {
-        const numericId = typeof id === "string" ? parseInt(id, 10) : id;
         const result = await api.execute(
-          () => serviceService.update(numericId, data),
+          () => serviceService.update(id, data),
           {
             showSuccessToast: true,
             successMessage: "Xidmət yeniləndi",
@@ -53,12 +53,11 @@ export function useServiceActions(onSuccess?: () => void) {
 
   // Delete service
   const deleteService = useCallback(
-    async (id: number | string) => {
+    async (id: string) => { // Changed from number | string to string
       setIsDeleting(true);
       try {
-        const numericId = typeof id === "string" ? parseInt(id, 10) : id;
         const result = await api.execute(
-          () => serviceService.delete(numericId),
+          () => serviceService.delete(id),
           {
             showSuccessToast: true,
             successMessage: "Xidmət silindi",

@@ -21,14 +21,12 @@ export const serviceService = {
     }
   },
   
-  getById: async (id: string | number): Promise<ApiResponse<Service>> => {
+  getById: async (id: string): Promise<ApiResponse<Service>> => { // Changed from string | number to string
     try {
-      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-      
       const { data, error } = await supabase
         .from('services')
         .select('*')
-        .eq('id', numericId)
+        .eq('id', id) // No need to convert to number anymore
         .single();
         
       if (error) {
@@ -59,14 +57,12 @@ export const serviceService = {
     }
   },
   
-  update: async (id: string | number, serviceData: Partial<ServiceFormData>): Promise<ApiResponse<Service>> => {
+  update: async (id: string, serviceData: Partial<ServiceFormData>): Promise<ApiResponse<Service>> => { // Changed from string | number to string
     try {
-      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-      
       const { data, error } = await supabase
         .from('services')
         .update(serviceData)
-        .eq('id', numericId)
+        .eq('id', id) // No need to convert to number anymore
         .select()
         .single();
         
@@ -80,14 +76,12 @@ export const serviceService = {
     }
   },
   
-  delete: async (id: string | number): Promise<ApiResponse<boolean>> => {
+  delete: async (id: string): Promise<ApiResponse<boolean>> => { // Changed from string | number to string
     try {
-      const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-      
       const { error } = await supabase
         .from('services')
         .delete()
-        .eq('id', numericId);
+        .eq('id', id); // No need to convert to number anymore
         
       if (error) {
         return { error: error.message };
@@ -104,7 +98,7 @@ export const serviceService = {
     return serviceService.getAll();
   },
   
-  getServiceById: async (id: string | number): Promise<ApiResponse<Service>> => {
+  getServiceById: async (id: string): Promise<ApiResponse<Service>> => { // Changed from string | number to string
     return serviceService.getById(id);
   },
   
@@ -112,11 +106,11 @@ export const serviceService = {
     return serviceService.create(serviceData);
   },
   
-  updateService: async (id: string | number, serviceData: Partial<ServiceFormData>): Promise<ApiResponse<Service>> => {
+  updateService: async (id: string, serviceData: Partial<ServiceFormData>): Promise<ApiResponse<Service>> => { // Changed from string | number to string
     return serviceService.update(id, serviceData);
   },
   
-  deleteService: async (id: string | number): Promise<ApiResponse<boolean>> => {
+  deleteService: async (id: string): Promise<ApiResponse<boolean>> => { // Changed from string | number to string
     return serviceService.delete(id);
   },
   

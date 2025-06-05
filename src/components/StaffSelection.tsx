@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { User } from "lucide-react";
 
 interface StaffSelectionProps {
-  serviceId: number;
+  serviceId: string; // Changed from number to string
   onStaffSelect: (staffId: string, staffName: string) => void;
   selectedStaffId?: string;
 }

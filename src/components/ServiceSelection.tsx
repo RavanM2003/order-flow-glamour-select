@@ -27,8 +27,8 @@ const ITEMS_PER_PAGE = 6;
 const ServiceSelection = () => {
   const { selectService, unselectService, orderState, addServiceProvider } = useOrder();
   const { t } = useLanguage();
-  const [expandedServices, setExpandedServices] = useState<Set<number>>(new Set());
-  const [selectedStaff, setSelectedStaff] = useState<Record<number, string>>({});
+  const [expandedServices, setExpandedServices] = useState<Set<string>>(new Set()); // Changed from number to string
+  const [selectedStaff, setSelectedStaff] = useState<Record<string, string>>({}); // Changed from number to string
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -101,7 +101,7 @@ const ServiceSelection = () => {
     }
   };
 
-  const handleStaffSelect = (serviceId: number, staffId: string, staffName: string) => {
+  const handleStaffSelect = (serviceId: string, staffId: string, staffName: string) => { // Changed serviceId from number to string
     console.log('Staff selected:', { serviceId, staffId, staffName });
     setSelectedStaff((prev) => ({
       ...prev,
@@ -110,7 +110,7 @@ const ServiceSelection = () => {
     addServiceProvider(serviceId, staffName);
   };
 
-  const toggleServiceExpansion = (serviceId: number, event: React.MouseEvent) => {
+  const toggleServiceExpansion = (serviceId: string, event: React.MouseEvent) => { // Changed from number to string
     event.stopPropagation();
     setExpandedServices((prev) => {
       const newSet = new Set(prev);

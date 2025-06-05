@@ -14,7 +14,7 @@ interface Customer {
 }
 
 interface Service {
-  id: number;
+  id: string; // Changed from number to string
   name: string;
   duration: number;
   price: number;
@@ -297,7 +297,7 @@ const BookingConfirmation = () => {
       // 4. Add service to appointment
       const appointmentService = {
         appointment_id: appointment.id,
-        service_id: selectedService.id,
+        service_id: selectedService.id, // This is now a string UUID
         staff_user_id: selectedStaff.id.toString(),
         price: selectedService.price,
         duration: selectedService.duration,

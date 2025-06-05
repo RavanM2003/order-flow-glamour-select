@@ -21,13 +21,13 @@ export interface OrderState {
   selectedService: Service | null;
   selectedStaff: Staff | null;
   selectedProducts: Product[];
-  selectedServices: number[];
+  selectedServices: string[]; // Changed from number[] to string[]
   appointmentDate: Date | null;
   appointmentTime: string | null;
   totalAmount: number;
   paymentMethod: string | null;
   serviceProviders: Array<{
-    serviceId: number;
+    serviceId: string; // Changed from number to string
     name: string;
   }> | null;
 }
@@ -47,16 +47,16 @@ export interface OrderContextType {
   resetOrder: () => void;
   setPaymentMethod: (method: string | null) => void;
   completeOrder: (id: string) => void;
-  addServiceProvider: (serviceId: number, staffName: string) => void;
-  selectService: (serviceId: number) => void;
-  unselectService: (serviceId: number) => void;
+  addServiceProvider: (serviceId: string, staffName: string) => void; // Changed from number to string
+  selectService: (serviceId: string) => void; // Changed from number to string
+  unselectService: (serviceId: string) => void; // Changed from number to string
   setBookingMode: (mode: BookingMode) => void;
   calculateTotal: () => number;
   nextStep: () => void;
   prevStep: () => void;
   setStep: (step: number) => void;
   addService: (service: Service) => void;
-  removeService: (serviceId: number) => void;
+  removeService: (serviceId: string) => void; // Changed from number to string
   setStaff: (staff: Staff | null) => void;
   order?: Order;
 }
