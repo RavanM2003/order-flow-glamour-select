@@ -47,14 +47,14 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   const [selectedService, setSelectedServiceState] = useState<Service | null>(
     null
   );
-  const [selectedServices, setSelectedServices] = useState<number[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]); // Changed to string[]
   const [selectedStaff, setSelectedStaffState] = useState<Staff | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [appointmentDate, setAppointmentDate] = useState<Date | null>(null);
   const [appointmentTime, setAppointmentTime] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [serviceProviders, setServiceProviders] = useState<Array<{
-    serviceId: number;
+    serviceId: string; // Changed to string
     name: string;
   }> | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -154,7 +154,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
   }, []);
 
   const addServiceProvider = useCallback(
-    (serviceId: number, staffName: string) => {
+    (serviceId: string, staffName: string) => { // Changed parameter type to string
       setServiceProviders((prev) => {
         const newProviders = prev ? [...prev] : [];
         const existingIndex = newProviders.findIndex(
@@ -173,7 +173,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
     []
   );
 
-  const selectService = useCallback((serviceId: number) => {
+  const selectService = useCallback((serviceId: string) => { // Changed parameter type to string
     setSelectedServices((prev) => {
       if (!prev.includes(serviceId)) {
         return [...prev, serviceId];
@@ -182,7 +182,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
     });
   }, []);
 
-  const unselectService = useCallback((serviceId: number) => {
+  const unselectService = useCallback((serviceId: string) => { // Changed parameter type to string
     setSelectedServices((prev) => prev.filter((id) => id !== serviceId));
   }, []);
 
@@ -239,7 +239,7 @@ export const OrderProvider: React.FC<OrderProviderProps> = ({
       setSelectedServiceState(service);
       selectService(service.id);
     },
-    removeService: (serviceId: number) => {
+    removeService: (serviceId: string) => { // Changed parameter type to string
       if (selectedService?.id === serviceId) {
         setSelectedServiceState(null);
       }

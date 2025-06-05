@@ -36,11 +36,11 @@ export function useServices() {
   }, [toast]);
 
   const getServiceById = useCallback(
-    async (id: string | number) => {
+    async (id: string) => { // Changed from string | number to string
       try {
         // If service is already loaded in state, use it
         const existingService = services.find(
-          (service) => service.id.toString() === id.toString()
+          (service) => service.id === id
         );
         
         if (existingService) {
@@ -49,8 +49,7 @@ export function useServices() {
         }
 
         // Otherwise fetch from API
-        const idString = typeof id === "number" ? id.toString() : id;
-        const response = await serviceService.getServiceById(idString);
+        const response = await serviceService.getServiceById(id);
         
         if (response.data) {
           setSelectedService(response.data);
@@ -108,11 +107,11 @@ export function useServices() {
         if (response.data) {
           // Update the service in the list
           setServices(prev =>
-            prev.map(s => (s.id.toString() === id ? { ...s, ...response.data } : s))
+            prev.map(s => (s.id === id ? { ...s, ...response.data } : s))
           );
           
           // Update selected service if it matches
-          if (selectedService && selectedService.id.toString() === id) {
+          if (selectedService && selectedService.id === id) {
             setSelectedService({ ...selectedService, ...response.data });
           }
           
@@ -144,10 +143,10 @@ export function useServices() {
         
         if (response.data) {
           // Remove the service from the list
-          setServices(prev => prev.filter(s => s.id.toString() !== id));
+          setServices(prev => prev.filter(s => s.id !== id));
           
           // Clear selected service if it matches
-          if (selectedService && selectedService.id.toString() === id) {
+          if (selectedService && selectedService.id === id) {
             setSelectedService(null);
           }
           
