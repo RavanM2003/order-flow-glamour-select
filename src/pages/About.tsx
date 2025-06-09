@@ -1,3 +1,4 @@
+
 import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -175,7 +176,7 @@ const About = () => {
                   </div>
                 ))}
               </div>
-            ) : staffWithServices && staffWithServices.length > 0 ? (
+            ) : staffWithServices && Array.isArray(staffWithServices) && staffWithServices.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {staffWithServices.map((staffData, index) => (
                   <StaffCard key={index} staffData={staffData} />
