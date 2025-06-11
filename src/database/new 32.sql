@@ -335,13 +335,13 @@ TRUNCATE TABLE histories, staff_availability, invoices, promo_codes, payments, a
 
 -- password: admin123
 -- Insert users-- Unified mock users (admin, staff, customer)
-INSERT INTO users (email, hashed_password, phone, first_name, last_name, full_name, gender, birth_date, note, avatar_url, role)
+INSERT INTO users (id,email, hashed_password, phone, first_name, last_name, full_name, gender, birth_date, note, avatar_url, role)
 VALUES
-('admin@example.com', '$2a$10$X4jD78lGC7jxDhGhpj7xF.dJ5JvTl1MNVgQZGG8QDrDPYOcgUtUcG', '1234567890', 'Irma', 'Wisoky', 'Irma Wisoky', 'female', NULL, NULL, 'https://avatars.githubusercontent.com/u/14069376', 'admin'),
-('staff1@example.com', '$2a$10$X4jD78lGC7jxDhGhpj7xF.dJ5JvTl1MNVgQZGG8QDrDPYOcgUtUcG', '2345678901', 'Virgie', 'Stroman', 'Virgie Stroman', 'female', NULL, NULL, 'https://cdn.jsdelivr.net/gh/faker-js/assets-person-portrait/male/512/2.jpg', 'staff'),
-('customer1@example.com', '$2a$10$X4jD78lGC7jxDhGhpj7xF.dJ5JvTl1MNVgQZGG8QDrDPYOcgUtUcG', '908-455-3024', NULL, NULL, 'Charlotte Satterfield', 'other', '1985-05-16', 'Repellendus patruus ascisco vis coepi.', 'https://randomuser.me/api/portraits/women/1.jpg', 'customer'),
-('customer2@example.com', '$2a$10$X4jD78lGC7jxDhGhpj7xF.dJ5JvTl1MNVgQZGG8QDrDPYOcgUtUcG', '1-700-462-8572', NULL, NULL, 'Milton Wolf', 'male', '1998-08-27', 'Tantillus bellum nesciunt cilicium.', 'https://randomuser.me/api/portraits/men/2.jpg', 'customer'),
-('customer3@example.com', '$2a$10$X4jD78lGC7jxDhGhpj7xF.dJ5JvTl1MNVgQZGG8QDrDPYOcgUtUcG', '257.354.3761 x2070', NULL, NULL, 'Meghan Feeney', 'other', '1995-07-22', 'Aestas rerum tametsi degenero tempus adopto approbo condico tui.', 'https://randomuser.me/api/portraits/women/3.jpg', 'customer');
+('5599e156-42b5-4d8b-882e-2ef1ede5de45','admin@example.com', '$2a$10$X4jD78lGC7jxDhGhpj7xF.dJ5JvTl1MNVgQZGG8QDrDPYOcgUtUcG', '1234567890', 'Irma', 'Wisoky', 'Irma Wisoky', 'female', NULL, NULL, 'https://avatars.githubusercontent.com/u/14069376', 'admin'),
+('5599e156-42b5-4d8b-882e-2ef1ede5de43','staff1@example.com', '$2a$10$X4jD78lGC7jxDhGhpj7xF.dJ5JvTl1MNVgQZGG8QDrDPYOcgUtUcG', '2345678901', 'Virgie', 'Stroman', 'Virgie Stroman', 'female', NULL, NULL, 'https://cdn.jsdelivr.net/gh/faker-js/assets-person-portrait/male/512/2.jpg', 'staff'),
+('5599e156-42b5-4d8b-882e-2ef1ede5de46','customer1@example.com', '$2a$10$X4jD78lGC7jxDhGhpj7xF.dJ5JvTl1MNVgQZGG8QDrDPYOcgUtUcG', '908-455-3024', NULL, NULL, 'Charlotte Satterfield', 'other', '1985-05-16', 'Repellendus patruus ascisco vis coepi.', 'https://randomuser.me/api/portraits/women/1.jpg', 'customer'),
+('5599e156-42b5-4d8b-882e-2ef1ede5de48','customer2@example.com', '$2a$10$X4jD78lGC7jxDhGhpj7xF.dJ5JvTl1MNVgQZGG8QDrDPYOcgUtUcG', '1-700-462-8572', NULL, NULL, 'Milton Wolf', 'male', '1998-08-27', 'Tantillus bellum nesciunt cilicium.', 'https://randomuser.me/api/portraits/men/2.jpg', 'customer'),
+('5599e156-42b5-4d8b-882e-2ef1ede5de47','customer3@example.com', '$2a$10$X4jD78lGC7jxDhGhpj7xF.dJ5JvTl1MNVgQZGG8QDrDPYOcgUtUcG', '257.354.3761 x2070', NULL, NULL, 'Meghan Feeney', 'other', '1995-07-22', 'Aestas rerum tametsi degenero tempus adopto approbo condico tui.', 'https://randomuser.me/api/portraits/women/3.jpg', 'customer');
 
 -- Insert service categories
 INSERT INTO service_categories (id, user_id, name) VALUES
